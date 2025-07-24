@@ -13,7 +13,7 @@ type card struct {
 	image                          ebiten.Image
 }
 
-func newCard(symbol symbol, value value, image ebiten.Image) *card {
+func newCard(value value, symbol symbol, image ebiten.Image) *card {
 	c := card{
 		x:           0,
 		y:           0,
@@ -27,4 +27,27 @@ func newCard(symbol symbol, value value, image ebiten.Image) *card {
 		image:       image,
 	}
 	return &c
+}
+
+func (c *card) Equal(other *card) bool {
+	if c == nil || other == nil {
+		return c == other
+	}
+	if c.value != other.value {
+		return false
+	}
+	if c.symbol != other.symbol {
+		return false
+	}
+	return true
+}
+
+func (c *card) draw(screen *ebiten.Image) {
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(float64(c.x), float64(c.y))
+	if c.hidden {
+		screen.DrawImage(cardBackImage, op)
+	} else {
+		screen.DrawImage(&c.image, op)
+	}
 }
