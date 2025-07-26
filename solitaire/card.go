@@ -44,6 +44,7 @@ func (c *card) Equal(other *card) bool {
 
 func (c *card) draw(screen *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(windowMultiplier, windowMultiplier)
 	op.GeoM.Translate(float64(c.x), float64(c.y))
 	if c.hidden {
 		screen.DrawImage(cardBackImage, op)

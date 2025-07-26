@@ -9,18 +9,18 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
-const windowMultipler = 1
+const windowMultiplier = 2.5
 
 // 16:9 aspect ratio
-const windowWidth = int(1280 * windowMultipler)
-const windowHeight = int(720 * windowMultipler)
+const windowWidth = int(1280 * windowMultiplier)
+const windowHeight = int(720 * windowMultiplier)
 
 // standard card ratio is 5:7
-const cardMultipler = windowMultipler
-const cardHeight = 140 * cardMultipler
-const cardWidth = 100 * cardMultipler
-const cardBorder = 10 * cardMultipler
-const cardNumberHeight = 30 * cardMultipler
+const cardMultipler = windowMultiplier
+const cardHeight = int(140 * cardMultipler)
+const cardWidth = int(100 * cardMultipler)
+const cardBorder = int(10 * cardMultipler)
+const cardNumberHeight = int(30 * cardMultipler)
 
 type symbol int
 
