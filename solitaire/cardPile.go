@@ -13,14 +13,14 @@ type cardPile struct {
 	emptyImage             ebiten.Image
 }
 
-func newCardPile(x, y int) *cardPile {
+func newCardPile(x, y int, cardCountAffectsHeight bool) *cardPile {
 	cp := cardPile{
 		x:                      x,
 		y:                      y,
 		width:                  cardWidth,
 		height:                 cardHeight,
 		cards:                  nil,
-		cardCountAffectsHeight: false,
+		cardCountAffectsHeight: cardCountAffectsHeight,
 		selected:               false,
 		emptyImage:             *cardPlaceholder,
 	}
@@ -45,8 +45,8 @@ func (cp *cardPile) addCard(c card) {
 			priorCard.height = cardNumberHeight
 			cp.height = cp.height + cardNumberHeight
 		} else {
-			priorCard.height = 0
-			priorCard.width = 0
+			c.x = priorCard.x
+			c.y = priorCard.y
 		}
 	}
 
@@ -131,7 +131,7 @@ func (cp *cardPile) splitCardPile(card card) *cardPile {
 		panic("cannot split an empty card pile")
 	}
 
-	var newCardPile = newCardPile(card.x, card.y)
+	var newCardPile = newCardPile(card.x, card.y, true)
 	for ci, c := range cp.cards {
 		if card.Equal(&c) {
 			newCardPile.cards = cp.cards[ci:]

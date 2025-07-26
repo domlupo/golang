@@ -10,7 +10,7 @@ type foundation struct {
 
 func newFoundation(x, y int) *foundation {
 	f := foundation{
-		cardPile: *newCardPile(x, y),
+		cardPile: *newCardPile(x, y, false),
 	}
 	return &f
 }

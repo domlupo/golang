@@ -122,6 +122,8 @@ var cardDeck []card
 
 var foundations [4]*foundation
 var tableaus [7]*tableau
+var stockPile *stock
+var wastePile *waste
 
 func init() {
 	// load card images
@@ -257,8 +259,8 @@ func init() {
 	var stockPileX = cardBorder * 2
 	var stockPileY = firstRowHeight
 
-	//var wastePileX = (cardBorder * 3) + cardWidth
-	//var wastePileY = firstRowHeight
+	var wastePileX = (cardBorder * 3) + cardWidth
+	var wastePileY = firstRowHeight
 
 	var foundationPileOneX = (cardBorder * 5) + (cardWidth * 3)
 	var foundationPileTwoX = (cardBorder * 6) + (cardWidth * 4)
@@ -287,8 +289,8 @@ func init() {
 	var tableauPileSevenY = secondRowHeight
 
 	// stock and waste setup
-	var stockPile = newStock(stockPileX, stockPileY)
-	//var wastePile = newStock(wastePileX, wastePileY)
+	stockPile = newStock(stockPileX, stockPileY)
+	wastePile = newWaste(wastePileX, wastePileY)
 
 	// foundation setup
 	var foundationOne = newFoundation(foundationPileOneX, foundationPileOneY)
@@ -347,6 +349,9 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	// background color
 	screen.Fill(green)
+
+	stockPile.cardPile.draw(screen)
+	wastePile.cardPile.draw(screen)
 
 	// draw foundations
 	for _, f := range foundations {

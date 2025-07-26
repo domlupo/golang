@@ -10,7 +10,7 @@ type tableau struct {
 
 func newTableau(x, y int) *tableau {
 	t := tableau{
-		cardPile: *newCardPile(x, y),
+		cardPile: *newCardPile(x, y, true),
 	}
 	return &t
 }
