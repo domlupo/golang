@@ -167,9 +167,10 @@ func (cp *cardPile) peek() card {
 
 func (cp *cardPile) draw(screen *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(windowMultiplier, windowMultiplier)
+	op.GeoM.Translate(float64(cp.x), float64(cp.y))
 	screen.DrawImage(&cp.emptyImage, op)
 	for _, c := range cp.cards {
 		c.draw(screen)
 	}
-
 }

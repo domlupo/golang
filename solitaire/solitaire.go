@@ -1,6 +1,7 @@
 package main
 
 import (
+	"image/color"
 	_ "image/png"
 	"log"
 	"math/rand"
@@ -21,6 +22,8 @@ const cardHeight = int(140 * cardMultipler)
 const cardWidth = int(100 * cardMultipler)
 const cardBorder = int(10 * cardMultipler)
 const cardNumberHeight = int(30 * cardMultipler)
+
+var green = color.RGBA{120, 200, 120, 0xff}
 
 type symbol int
 
@@ -305,6 +308,7 @@ func init() {
 	tableaus = [7]*tableau{tableauOne, tableauTwo, tableauThree, tableauFour, tableauFive, tableauSix, tableauSeven}
 
 	// distribute cards
+	// TODO: refactor?, this is gross
 	for len(cardDeck) > 0 {
 		var randomCardIndex = rand.Intn(len(cardDeck))
 		var card = cardDeck[randomCardIndex]
@@ -342,6 +346,7 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	// background color
+	screen.Fill(green)
 
 	// draw foundations
 	for _, f := range foundations {
