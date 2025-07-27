@@ -5,6 +5,7 @@ import (
 	_ "image/png"
 	"log"
 	"math/rand"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -24,6 +25,7 @@ const cardBorder = int(10 * cardMultipler)
 const cardNumberHeight = int(30 * cardMultipler)
 
 var green = color.RGBA{120, 200, 120, 0xff}
+var leftMouseButton = ebiten.MouseButton0
 
 type symbol int
 
@@ -52,7 +54,6 @@ const (
 	King
 )
 
-var img *ebiten.Image
 var cardBackImage *ebiten.Image
 var cardPlaceholder *ebiten.Image
 
@@ -116,8 +117,6 @@ var clubJackImage *ebiten.Image
 var clubQueenImage *ebiten.Image
 var clubKingImage *ebiten.Image
 
-var err error
-var cp cardPile
 var cardDeck []card
 
 var foundations [4]*foundation
@@ -136,68 +135,68 @@ func init() {
 	}
 
 	// load card images
-	cardBackImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_card_back.png")
-	cardPlaceholder, _, err = ebitenutil.NewImageFromFile("assets/solitaire_card_placeholder.png")
+	cardBackImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_card_back.png")
+	cardPlaceholder, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_card_placeholder.png")
 
 	// load diamond images
-	diamondAceImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_diamond_one.png")
-	diamondTwoImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_diamond_two.png")
-	diamondThreeImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_diamond_three.png")
-	diamondFourImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_diamond_four.png")
-	diamondFiveImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_diamond_five.png")
-	diamondSixImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_diamond_six.png")
-	diamondSevenImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_diamond_seven.png")
-	diamondEightImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_diamond_eight.png")
-	diamondNineImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_diamond_nine.png")
-	diamondTenImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_diamond_ten.png")
-	diamondJackImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_diamond_jack.png")
-	diamondQueenImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_diamond_queen.png")
-	diamondKingImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_diamond_king.png")
+	diamondAceImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_diamond_one.png")
+	diamondTwoImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_diamond_two.png")
+	diamondThreeImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_diamond_three.png")
+	diamondFourImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_diamond_four.png")
+	diamondFiveImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_diamond_five.png")
+	diamondSixImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_diamond_six.png")
+	diamondSevenImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_diamond_seven.png")
+	diamondEightImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_diamond_eight.png")
+	diamondNineImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_diamond_nine.png")
+	diamondTenImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_diamond_ten.png")
+	diamondJackImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_diamond_jack.png")
+	diamondQueenImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_diamond_queen.png")
+	diamondKingImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_diamond_king.png")
 
 	// load heart images
-	heartAceImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_heart_one.png")
-	heartTwoImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_heart_two.png")
-	heartThreeImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_heart_three.png")
-	heartFourImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_heart_four.png")
-	heartFiveImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_heart_five.png")
-	heartSixImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_heart_six.png")
-	heartSevenImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_heart_seven.png")
-	heartEightImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_heart_eight.png")
-	heartNineImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_heart_nine.png")
-	heartTenImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_heart_ten.png")
-	heartJackImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_heart_jack.png")
-	heartQueenImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_heart_queen.png")
-	heartKingImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_heart_king.png")
+	heartAceImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_heart_one.png")
+	heartTwoImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_heart_two.png")
+	heartThreeImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_heart_three.png")
+	heartFourImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_heart_four.png")
+	heartFiveImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_heart_five.png")
+	heartSixImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_heart_six.png")
+	heartSevenImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_heart_seven.png")
+	heartEightImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_heart_eight.png")
+	heartNineImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_heart_nine.png")
+	heartTenImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_heart_ten.png")
+	heartJackImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_heart_jack.png")
+	heartQueenImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_heart_queen.png")
+	heartKingImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_heart_king.png")
 
 	// load spade images
-	spadeAceImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_spade_one.png")
-	spadeTwoImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_spade_two.png")
-	spadeThreeImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_spade_three.png")
-	spadeFourImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_spade_four.png")
-	spadeFiveImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_spade_five.png")
-	spadeSixImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_spade_six.png")
-	spadeSevenImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_spade_seven.png")
-	spadeEightImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_spade_eight.png")
-	spadeNineImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_spade_nine.png")
-	spadeTenImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_spade_ten.png")
-	spadeJackImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_spade_jack.png")
-	spadeQueenImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_spade_queen.png")
-	spadeKingImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_spade_king.png")
+	spadeAceImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_spade_one.png")
+	spadeTwoImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_spade_two.png")
+	spadeThreeImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_spade_three.png")
+	spadeFourImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_spade_four.png")
+	spadeFiveImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_spade_five.png")
+	spadeSixImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_spade_six.png")
+	spadeSevenImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_spade_seven.png")
+	spadeEightImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_spade_eight.png")
+	spadeNineImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_spade_nine.png")
+	spadeTenImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_spade_ten.png")
+	spadeJackImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_spade_jack.png")
+	spadeQueenImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_spade_queen.png")
+	spadeKingImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_spade_king.png")
 
 	// load club images
-	clubAceImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_club_one.png")
-	clubTwoImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_club_two.png")
-	clubThreeImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_club_three.png")
-	clubFourImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_club_four.png")
-	clubFiveImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_club_five.png")
-	clubSixImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_club_six.png")
-	clubSevenImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_club_seven.png")
-	clubEightImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_club_eight.png")
-	clubNineImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_club_nine.png")
-	clubTenImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_club_ten.png")
-	clubJackImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_club_jack.png")
-	clubQueenImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_club_queen.png")
-	clubKingImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_club_king.png")
+	clubAceImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_club_one.png")
+	clubTwoImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_club_two.png")
+	clubThreeImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_club_three.png")
+	clubFourImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_club_four.png")
+	clubFiveImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_club_five.png")
+	clubSixImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_club_six.png")
+	clubSevenImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_club_seven.png")
+	clubEightImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_club_eight.png")
+	clubNineImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_club_nine.png")
+	clubTenImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_club_ten.png")
+	clubJackImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_club_jack.png")
+	clubQueenImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_club_queen.png")
+	clubKingImage, _, _ = ebitenutil.NewImageFromFile("assets/solitaire_club_king.png")
 
 	// create the 52 playing cards of four suits from ace-king. No jokers needed.
 
@@ -318,8 +317,7 @@ func init() {
 	var tableauSeven = newTableau(tableauPileSevenX, tableauPileSevenY)
 	tableaus = [7]*tableau{tableauOne, tableauTwo, tableauThree, tableauFour, tableauFive, tableauSix, tableauSeven}
 
-	// distribute cards
-	// TODO: refactor?, this is gross
+	// distribute cards NOTE: ported this code directly but it should be refactored to be more golang like
 	for len(cardDeck) > 0 {
 		var randomCardIndex = rand.Intn(len(cardDeck))
 		var card = cardDeck[randomCardIndex]
@@ -344,8 +342,16 @@ func init() {
 		randomCardIndex = rand.Intn(len(cardDeck))
 		card = cardDeck[randomCardIndex]
 	}
+
+	for ti, tableau := range tableaus {
+		for ci := range tableau.cardPile.cards {
+			tableaus[ti].cardPile.cards[ci].active = false
+		}
+	}
+
 	for _, tableau := range tableaus {
 		tableau.cardPile.cards[len(tableau.cardPile.cards)-1].hidden = false
+		tableau.cardPile.cards[len(tableau.cardPile.cards)-1].active = true
 	}
 }
 
@@ -367,8 +373,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		t.cardPile.draw(screen)
 	}
 
-	// redraw selected card last so it always appears on top of other cards
-
+	// redraw selected card last so it always appears on top of other piles
+	if selectedCardPile != nil {
+		for _, card := range selectedCardPile.cards {
+			card.draw(screen)
+		}
+	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -382,6 +392,154 @@ func main() {
 	}
 }
 
+var currentTime time.Time
+var priorTime time.Time
+var wait time.Duration = 1_000_000 * time.Second
+var inputDelay time.Duration = 1000 * time.Millisecond
+var WasteCardSelected = false
+var priorMouseX int
+var priorMouseY int
+var selectedCardPile *cardPile = nil
+var foundationSplitFrom *foundation
+var foundationMergeTo *foundation
+var tableauSplitFrom *tableau
+var tableauMergeTo *tableau
+
 func (g *Game) Update() error {
+	currentTime = time.Now()
+	if wait < inputDelay {
+		wait = wait + currentTime.Sub(priorTime)
+		return nil
+	}
+
+	var x, y = ebiten.CursorPosition()
+	var mouseClicked = ebiten.IsMouseButtonPressed(leftMouseButton)
+
+	if mouseClicked {
+		// draw cards with a delay so a single click doesn't draw multiple
+		if wait >= inputDelay && stockPile.cardPile.containsPoint(x, y) && selectedCardPile == nil {
+			wait = 0
+			var card, _ = stockPile.drawCard()
+			if card != nil {
+				card.hidden = false
+				wastePile.cardPile.addCard(*card)
+			} else {
+				// redeal waste pile since stock is empty
+				var cardToAdd, _ = wastePile.cardPile.removeCard()
+				var emptyWastePile error
+				for emptyWastePile == nil && cardToAdd != nil {
+					cardToAdd.hidden = true
+					stockPile.cardPile.addCard(*cardToAdd)
+					cardToAdd, emptyWastePile = wastePile.cardPile.removeCard()
+				}
+			}
+
+		}
+
+		// select cards to move, no delay needed
+		if selectedCardPile == nil {
+			var wasteCard, _ = wastePile.cardPile.peek()
+			if wasteCard != nil && wasteCard.containsPoint(x, y) {
+				WasteCardSelected = true
+				selectedCardPile = wastePile.cardPile.splitCardPile(*wasteCard)
+			}
+
+			for _, foundation := range foundations {
+				for _, c := range foundation.cardPile.cards {
+					if c.containsPoint(x, y) {
+						selectedCardPile = foundation.cardPile.splitCardPile(c)
+						foundationSplitFrom = foundation
+						break
+					}
+				}
+			}
+
+			for _, tableau := range tableaus {
+				for _, c := range tableau.cardPile.cards {
+					if c.containsPoint(x, y) {
+						selectedCardPile = tableau.cardPile.splitCardPile(c)
+						tableauSplitFrom = tableau
+						break
+					}
+				}
+			}
+		} else {
+			// drag card already selected this update around the screen
+			selectedCardPile = selectedCardPile.move(x-priorMouseX, y-priorMouseY)
+		}
+		// card dragging finished
+	} else if !mouseClicked && selectedCardPile != nil {
+		var selectedXMid = selectedCardPile.xMid()
+		var selectedYMid = selectedCardPile.yMid()
+
+		for _, foundation := range foundations {
+			if foundation.cardPile.containsPoint(selectedXMid, selectedYMid) && foundationSplitFrom != foundation {
+				foundationMergeTo = foundation
+			}
+		}
+
+		for _, tableau := range tableaus {
+			if tableau.cardPile.containsPoint(selectedXMid, selectedYMid) && tableauSplitFrom != tableau {
+				tableauMergeTo = tableau
+			}
+		}
+
+		for i := range selectedCardPile.cards {
+			selectedCardPile.cards[i].x = selectedCardPile.cards[i].unselectedX
+			selectedCardPile.cards[i].y = selectedCardPile.cards[i].unselectedY
+		}
+
+		var movedCardPile = false
+
+		// card requested to be moved to valid position, so move it and update game state
+		if foundationMergeTo != nil {
+			movedCardPile = foundationMergeTo.addCardPileToFoundation(*selectedCardPile)
+		}
+		if tableauMergeTo != nil {
+			movedCardPile = tableauMergeTo.addCardPileToTableau(*selectedCardPile)
+		}
+		// card requested to bne moved to invalid position, so move return it to original position and retain game state
+		if WasteCardSelected && !movedCardPile {
+			wastePile.cardPile.addCardPile(*selectedCardPile)
+		}
+		if foundationSplitFrom != nil && !movedCardPile {
+			foundationSplitFrom.cardPile.addCardPile(*selectedCardPile)
+		}
+		if tableauSplitFrom != nil && !movedCardPile {
+			tableauSplitFrom.cardPile.addCardPile(*selectedCardPile)
+		}
+
+		// ensure top foundation card is always active and other foundation cards are inactive
+		for fi, foundation := range foundations {
+			for ci := range foundation.cardPile.cards {
+				foundations[fi].cardPile.cards[ci].active = false
+			}
+			var c, _ = foundation.cardPile.peek()
+			if c != nil {
+				c.active = true
+			}
+		}
+
+		// activate newly uncovered tableau cards
+		for _, tableau := range tableaus {
+			var c, _ = tableau.cardPile.peek()
+			if c != nil {
+				c.hidden = false
+				c.active = true
+			}
+		}
+
+		selectedCardPile = nil
+		WasteCardSelected = false
+		foundationMergeTo = nil
+		foundationSplitFrom = nil
+		tableauMergeTo = nil
+		tableauSplitFrom = nil
+	}
+
+	priorMouseX = x
+	priorMouseY = y
+	priorTime = currentTime
+
 	return nil
 }

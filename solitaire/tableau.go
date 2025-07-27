@@ -1,9 +1,5 @@
 package main
 
-import (
-	"github.com/hajimehoshi/ebiten/v2"
-)
-
 type tableau struct {
 	cardPile cardPile
 }
@@ -15,7 +11,7 @@ func newTableau(x, y int) *tableau {
 	return &t
 }
 
-func (t tableau) addCardPile(cp cardPile) bool {
+func (t *tableau) addCardPileToTableau(cp cardPile) bool {
 	if len(cp.cards) == 0 {
 		return false
 	}
@@ -31,22 +27,27 @@ func (t tableau) addCardPile(cp cardPile) bool {
 		}
 	}
 
-	var symbol = t.cardPile.peek().symbol
-	if symbol == Club || symbol == Spade && cardToAdd.symbol == Club || cardToAdd.symbol == Spade {
+	var card, _ = t.cardPile.peek()
+	var symbol = card.symbol
+	if (symbol == Club || symbol == Spade) && (cardToAdd.symbol == Club || cardToAdd.symbol == Spade) {
 		return false
 	}
-	if symbol == Heart || symbol == Diamond && cardToAdd.symbol == Heart || cardToAdd.symbol == Diamond {
+	if (symbol == Heart || symbol == Diamond) && (cardToAdd.symbol == Heart || cardToAdd.symbol == Diamond) {
 		return false
 	}
 
 	if t.cardPile.cards[len(t.cardPile.cards)-1].value-1 == cardToAdd.value {
 		t.cardPile.addCardPile(cp)
+
+		for ci, c := range t.cardPile.cards[:len(t.cardPile.cards)-1] {
+			if !c.hidden {
+				t.cardPile.cards[ci].active = true
+				t.cardPile.cards[ci].height = cardNumberHeight
+			}
+		}
+
 		return true
 	}
 
 	return false
-}
-
-func (f *tableau) draw(screen *ebiten.Image) {
-	f.cardPile.draw(screen)
 }

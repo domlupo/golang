@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -9,7 +11,6 @@ type cardPile struct {
 	width, height          int
 	cards                  []card
 	cardCountAffectsHeight bool
-	selected               bool
 	emptyImage             ebiten.Image
 }
 
@@ -21,7 +22,6 @@ func newCardPile(x, y int, cardCountAffectsHeight bool) *cardPile {
 		height:                 cardHeight,
 		cards:                  nil,
 		cardCountAffectsHeight: cardCountAffectsHeight,
-		selected:               false,
 		emptyImage:             *cardPlaceholder,
 	}
 	return &cp
@@ -40,7 +40,7 @@ func (cp *cardPile) addCard(c card) {
 	c.y, c.unselectedY = newY, newY
 
 	if len(cp.cards) > 0 {
-		var priorCard = cp.cards[len(cp.cards)-1]
+		var priorCard = &cp.cards[len(cp.cards)-1]
 		if cp.cardCountAffectsHeight {
 			priorCard.height = cardNumberHeight
 			cp.height = cp.height + cardNumberHeight
@@ -53,9 +53,9 @@ func (cp *cardPile) addCard(c card) {
 	cp.cards = append(cp.cards, c)
 }
 
-func (cp *cardPile) removeCard() card {
+func (cp *cardPile) removeCard() (*card, error) {
 	if len(cp.cards) == 0 {
-		panic("cannot remove cards from an empty card pile")
+		return nil, errors.New("cannot remove cards from an empty card pile")
 	}
 
 	if cp.cardCountAffectsHeight {
@@ -68,52 +68,21 @@ func (cp *cardPile) removeCard() card {
 	cp.cards = cp.cards[:len(cp.cards)-1]
 
 	if len(cp.cards) > 1 {
-		var newLastCard = cp.cards[len(cp.cards)-1]
+		var newLastCard = &cp.cards[len(cp.cards)-1]
 		newLastCard.height = cardHeight
 		newLastCard.width = cardWidth
 	}
 
-	return removedCard
+	return &removedCard, nil
 }
 
 func (cp *cardPile) xMid() int {
-	return (cp.x + cp.width) / 2
+	return cp.x + (cp.width / 2)
 }
 
 func (cp *cardPile) yMid() int {
-	return (cp.y + cp.height) / 2
+	return cp.y + (cp.height / 2)
 }
-
-func (cp *cardPile) hasCard(card card) bool {
-	for _, c := range cp.cards {
-		if card.Equal(&c) {
-			return true
-		}
-	}
-
-	return false
-}
-
-// TODO: delete this if unused
-/*
-func (cp *cardPile) hasCardPile(other cardPile) bool {
-	if len(cp.cards) == 0 {
-		return false
-	}
-
-	if len(other.cards) == 0 {
-		return false
-	}
-
-	for _, c := range other.cards {
-		if cp.hasCard(c) == false {
-			return false
-		}
-	}
-
-	return true
-}
-*/
 
 func (cp *cardPile) addCardPile(other cardPile) {
 	for _, c := range other.cards {
@@ -136,6 +105,9 @@ func (cp *cardPile) splitCardPile(card card) *cardPile {
 		if card.Equal(&c) {
 			newCardPile.cards = cp.cards[ci:]
 			cp.cards = cp.cards[:ci]
+			if len(cp.cards) > 0 {
+				cp.cards[len(cp.cards)-1].height = cardHeight
+			}
 			break
 		}
 	}
@@ -143,26 +115,22 @@ func (cp *cardPile) splitCardPile(card card) *cardPile {
 	return newCardPile
 }
 
-// remove card pile
-func (cp *cardPile) removeCardPile(other cardPile) {
-	if cp == nil {
-		return
-	}
-}
-
-// move
-func (cp *cardPile) move(x, y int) {
+func (cp *cardPile) move(x, y int) *cardPile {
 	cp.x = cp.x + x
 	cp.y = cp.y + y
-	for _, c := range cp.cards {
-		c.x = c.x + x
-		c.y = c.y + y
+	for i := range cp.cards {
+		cp.cards[i].x = cp.cards[i].x + x
+		cp.cards[i].y = cp.cards[i].y + y
 	}
+	return cp
 }
 
-// peek
-func (cp *cardPile) peek() card {
-	return cp.cards[len(cp.cards)-1]
+func (cp *cardPile) peek() (*card, error) {
+	if len(cp.cards) == 0 {
+		return nil, errors.New("card pile is empty")
+	}
+
+	return &cp.cards[len(cp.cards)-1], nil
 }
 
 func (cp *cardPile) draw(screen *ebiten.Image) {

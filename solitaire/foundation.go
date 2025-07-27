@@ -1,9 +1,5 @@
 package main
 
-import (
-	"github.com/hajimehoshi/ebiten/v2"
-)
-
 type foundation struct {
 	cardPile cardPile
 }
@@ -15,8 +11,8 @@ func newFoundation(x, y int) *foundation {
 	return &f
 }
 
-func (f *foundation) addCardPile(cp cardPile) bool {
-	if len(cp.cards) == 0 {
+func (f *foundation) addCardPileToFoundation(cp cardPile) bool {
+	if len(cp.cards) != 1 {
 		return false
 	}
 
@@ -41,8 +37,4 @@ func (f *foundation) addCardPile(cp cardPile) bool {
 	}
 
 	return false
-}
-
-func (f *foundation) draw(screen *ebiten.Image) {
-	f.cardPile.draw(screen)
 }
