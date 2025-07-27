@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -26,12 +25,12 @@ func main() {
 
 func init() {
 	var monitors []*ebiten.MonitorType
-	fmt.Println(monitors)
-	fmt.Println(len(monitors))
-	ebiten.AppendMonitors(monitors)
-	fmt.Println(monitors)
-	fmt.Println(len(monitors))
-	fmt.Println(ebiten.Monitor())
+	monitors = ebiten.AppendMonitors(monitors)
+	for _, m := range monitors {
+		if m.Name() == "DELL U2720Q" {
+			ebiten.SetMonitor(m)
+		}
+	}
 }
 
 func (g *Game) Update() error {
