@@ -126,6 +126,15 @@ var stockPile *stock
 var wastePile *waste
 
 func init() {
+	var monitors []*ebiten.MonitorType
+	monitors = ebiten.AppendMonitors(monitors)
+	// TODO: Remove before release in order to avoid bugs for customers which own this monitor
+	for _, m := range monitors {
+		if m.Name() == "DELL U2720Q" {
+			ebiten.SetMonitor(m)
+		}
+	}
+
 	// load card images
 	cardBackImage, _, err = ebitenutil.NewImageFromFile("assets/solitaire_card_back.png")
 	cardPlaceholder, _, err = ebitenutil.NewImageFromFile("assets/solitaire_card_placeholder.png")
@@ -342,10 +351,6 @@ func init() {
 
 type Game struct{}
 
-func (g *Game) Update() error {
-	return nil
-}
-
 func (g *Game) Draw(screen *ebiten.Image) {
 	// background color
 	screen.Fill(green)
@@ -375,4 +380,8 @@ func main() {
 	if err := ebiten.RunGame(&Game{}); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func (g *Game) Update() error {
+	return nil
 }
