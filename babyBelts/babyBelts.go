@@ -18,9 +18,18 @@ const gridSize = int(40 * windowMultipler)
 
 var grid [32][18]int
 
-func init() {}
-
 type Game struct{}
+
+func init() {
+	var monitors []*ebiten.MonitorType
+	monitors = ebiten.AppendMonitors(monitors)
+	// TODO: Remove before release in order to avoid bugs for customers which own this monitor
+	for _, m := range monitors {
+		if m.Name() == "DELL U2720Q" {
+			ebiten.SetMonitor(m)
+		}
+	}
+}
 
 func (g *Game) Update() error {
 	return nil
