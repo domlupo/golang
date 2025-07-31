@@ -170,9 +170,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	gridTop[6][2] = Mover
 	gridTop[7][2] = MoverLongDown
-	gridTop[8][1] = MoverLongUp
+	gridTop[8][2] = MoverLongUp
 	gridTop[9][2] = MoverShortDown
-	gridTop[10][1] = MoverShortUp
+	gridTop[10][2] = MoverShortUp
 	gridBottom[11][2] = ConsumerCircle
 	gridBottom[12][2] = ConsumerCross
 	gridBottom[13][2] = ConsumerSquare
@@ -258,10 +258,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			case MoverLongDown:
 				image = moverLongDownImage
 			case MoverLongUp:
+				op.GeoM.Translate(0, -float64(gridSize))
 				image = moverLongUpImage
 			case MoverShortDown:
 				image = moverShortDownImage
 			case MoverShortUp:
+				op.GeoM.Translate(0, -float64(gridSize))
 				image = moverShortUpImage
 			default:
 				image = nil
