@@ -15,14 +15,16 @@ const windowHeight = int(720 * windowMultiplier)
 
 const gridSize = int(40 * windowMultiplier)
 
-var grid [32][18][]gridImage
+var gridBottom [32][18]gridBottomImage
+var gridTop [32][18]gridTopImage
 
-// TODO: should this be string instead of int?
-type gridImage int
+// TODO: should these be string instead of int?
+type gridBottomImage int
+type gridTopImage int
 
 const (
-	NoImage  gridImage = iota
-	BeltDown           = iota
+	NoBottomImage gridBottomImage = iota
+	BeltDown
 	BeltDownLeft
 	BeltDownRight
 	BeltLeft
@@ -40,6 +42,15 @@ const (
 	MoverDown
 	MoverUp
 	Producer
+)
+
+const (
+	NoTopImage gridTopImage = iota
+	Mover
+	MoverLongDown
+	MoverLongUp
+	MoverShortDown
+	MoverShortUp
 )
 
 type Game struct{}
@@ -61,10 +72,14 @@ var consumerCircleImage *ebiten.Image
 var consumerCrossImage *ebiten.Image
 var consumerSquareImage *ebiten.Image
 var crossImage *ebiten.Image
-var moverDownImage *ebiten.Image
-var moverUpImage *ebiten.Image
 var producerImage *ebiten.Image
 var squareImage *ebiten.Image
+
+var moverImage *ebiten.Image
+var moverLongDownImage *ebiten.Image
+var moverLongUpImage *ebiten.Image
+var moverShortDownImage *ebiten.Image
+var moverShortUpImage *ebiten.Image
 
 func init() {
 	var monitors []*ebiten.MonitorType
@@ -93,15 +108,19 @@ func init() {
 	consumerCircleImage, _, _ = ebitenutil.NewImageFromFile("assets/consumerCircle.png")
 	consumerCrossImage, _, _ = ebitenutil.NewImageFromFile("assets/consumerCross.png")
 	consumerSquareImage, _, _ = ebitenutil.NewImageFromFile("assets/consumerSquare.png")
-	// mover images
-	moverDownImage, _, _ = ebitenutil.NewImageFromFile("assets/moverDown.png")
-	moverUpImage, _, _ = ebitenutil.NewImageFromFile("assets/moverUp.png")
 	// producer images
 	producerImage, _, _ = ebitenutil.NewImageFromFile("assets/producer.png")
 	// shape images
 	circleImage, _, _ = ebitenutil.NewImageFromFile("assets/circle.png")
 	crossImage, _, _ = ebitenutil.NewImageFromFile("assets/cross.png")
 	squareImage, _, _ = ebitenutil.NewImageFromFile("assets/square.png")
+
+	// mover images
+	moverImage, _, _ = ebitenutil.NewImageFromFile("assets/mover.png")
+	moverLongDownImage, _, _ = ebitenutil.NewImageFromFile("assets/moverLongDown.png")
+	moverLongUpImage, _, _ = ebitenutil.NewImageFromFile("assets/moverLongUp.png")
+	moverShortDownImage, _, _ = ebitenutil.NewImageFromFile("assets/moverShortDown.png")
+	moverShortUpImage, _, _ = ebitenutil.NewImageFromFile("assets/moverShortUp.png")
 }
 
 func (g *Game) Update() error {
@@ -111,107 +130,145 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 
 	// counter clockwise circle
-	grid[1][1] = []gridImage{BeltLeftDown}
-	grid[1][2] = []gridImage{BeltDown}
-	grid[1][3] = []gridImage{BeltDown}
-	grid[1][4] = []gridImage{BeltDownRight}
-	grid[2][4] = []gridImage{BeltRight}
-	grid[3][4] = []gridImage{BeltRight}
-	grid[4][4] = []gridImage{BeltRightUp}
-	grid[4][3] = []gridImage{BeltUp}
-	grid[4][2] = []gridImage{BeltUp}
-	grid[4][1] = []gridImage{BeltUpLeft}
-	grid[3][1] = []gridImage{BeltLeft}
-	grid[2][1] = []gridImage{BeltLeft}
+	gridBottom[1][1] = BeltLeftDown
+	gridBottom[1][2] = BeltDown
+	gridBottom[1][3] = BeltDown
+	gridBottom[1][4] = BeltDownRight
+	gridBottom[2][4] = BeltRight
+	gridBottom[3][4] = BeltRight
+	gridBottom[4][4] = BeltRightUp
+	gridBottom[4][3] = BeltUp
+	gridBottom[4][2] = BeltUp
+	gridBottom[4][1] = BeltUpLeft
+	gridBottom[3][1] = BeltLeft
+	gridBottom[2][1] = BeltLeft
 
 	// counter clockwise circle
-	grid[1][6] = []gridImage{BeltUpRight}
-	grid[1][7] = []gridImage{BeltUp}
-	grid[1][8] = []gridImage{BeltUp}
-	grid[1][9] = []gridImage{BeltLeftUp}
-	grid[2][9] = []gridImage{BeltLeft}
-	grid[3][9] = []gridImage{BeltLeft}
-	grid[4][9] = []gridImage{BeltDownLeft}
-	grid[4][8] = []gridImage{BeltDown}
-	grid[4][7] = []gridImage{BeltDown}
-	grid[4][6] = []gridImage{BeltRightDown}
-	grid[3][6] = []gridImage{BeltRight}
-	grid[2][6] = []gridImage{BeltRight}
+	gridBottom[1][6] = BeltUpRight
+	gridBottom[1][7] = BeltUp
+	gridBottom[1][8] = BeltUp
+	gridBottom[1][9] = BeltLeftUp
+	gridBottom[2][9] = BeltLeft
+	gridBottom[3][9] = BeltLeft
+	gridBottom[4][9] = BeltDownLeft
+	gridBottom[4][8] = BeltDown
+	gridBottom[4][7] = BeltDown
+	gridBottom[4][6] = BeltRightDown
+	gridBottom[3][6] = BeltRight
+	gridBottom[2][6] = BeltRight
 
-	grid[6][1] = []gridImage{BeltRight}
-	grid[7][1] = []gridImage{BeltRight}
-	grid[8][1] = []gridImage{BeltRight}
-	grid[9][1] = []gridImage{BeltRight, MoverDown}
-	grid[10][1] = []gridImage{BeltRight, MoverUp}
-	grid[11][1] = []gridImage{BeltRight}
-	grid[12][1] = []gridImage{BeltRight}
-	grid[13][1] = []gridImage{BeltRight}
-	grid[14][1] = []gridImage{BeltRight}
-	grid[15][1] = []gridImage{BeltRight}
+	gridBottom[6][1] = BeltRight
+	gridBottom[7][1] = BeltRight
+	gridBottom[8][1] = BeltRight
+	gridBottom[9][1] = BeltRight
+	gridBottom[10][1] = BeltRight
+	gridBottom[11][1] = BeltRight
+	gridBottom[12][1] = BeltRight
+	gridBottom[13][1] = BeltRight
+	gridBottom[14][1] = BeltRight
+	gridBottom[15][1] = BeltRight
 
-	grid[7][2] = []gridImage{MoverDown}
-	grid[8][2] = []gridImage{MoverUp}
-	// skip two
-	grid[11][2] = []gridImage{ConsumerCircle}
-	grid[12][2] = []gridImage{ConsumerCross}
-	grid[13][2] = []gridImage{ConsumerSquare}
-	grid[14][2] = []gridImage{Producer}
+	gridTop[6][2] = Mover
+	gridTop[7][2] = MoverLongDown
+	gridTop[8][1] = MoverLongUp
+	gridTop[9][2] = MoverShortDown
+	gridTop[10][1] = MoverShortUp
+	gridBottom[11][2] = ConsumerCircle
+	gridBottom[12][2] = ConsumerCross
+	gridBottom[13][2] = ConsumerSquare
+	gridBottom[14][2] = Producer
 
-	for i := range len(grid) {
-		for j := range len(grid[i]) {
-			for k := range len(grid[i][j]) {
-				var xLeft = float32(gridSize * i)
-				var yUp = float32(gridSize * j)
+	gridBottom[6][3] = BeltRight
+	gridBottom[7][3] = BeltRight
+	gridBottom[8][3] = BeltRight
+	gridBottom[9][3] = BeltRight
+	gridBottom[10][3] = BeltRight
+	gridBottom[11][3] = BeltRight
+	gridBottom[12][3] = BeltRight
+	gridBottom[13][3] = BeltRight
+	gridBottom[14][3] = BeltRight
+	gridBottom[15][3] = BeltRight
 
-				op := &ebiten.DrawImageOptions{}
-				op.GeoM.Scale(windowMultiplier, windowMultiplier)
-				op.GeoM.Translate(float64(xLeft), float64(yUp))
+	for i := range len(gridBottom) {
+		for j := range len(gridBottom[i]) {
+			var xLeft = float32(gridSize * i)
+			var yUp = float32(gridSize * j)
 
-				var image *ebiten.Image
-				switch grid[i][j][k] {
-				case BeltDown:
-					image = beltDownImage
-				case BeltDownLeft:
-					image = beltDownLeftImage
-				case BeltDownRight:
-					image = beltDownRightImage
-				case BeltLeft:
-					image = beltLeftImage
-				case BeltLeftDown:
-					image = beltLeftDownImage
-				case BeltLeftUp:
-					image = beltLeftUpImage
-				case BeltRight:
-					image = beltRightImage
-				case BeltRightDown:
-					image = beltRightDownImage
-				case BeltRightUp:
-					image = beltRightUpImage
-				case BeltUp:
-					image = beltUpImage
-				case BeltUpLeft:
-					image = beltUpLeftImage
-				case BeltUpRight:
-					image = beltUpRightImage
-				case ConsumerCircle:
-					image = consumerCircleImage
-				case ConsumerCross:
-					image = consumerCrossImage
-				case ConsumerSquare:
-					image = consumerSquareImage
-				case MoverUp:
-					image = moverUpImage
-				case MoverDown:
-					image = moverDownImage
-				case Producer:
-					image = producerImage
-				default:
-					image = nil
-				}
+			op := &ebiten.DrawImageOptions{}
+			op.GeoM.Scale(windowMultiplier, windowMultiplier)
+			op.GeoM.Translate(float64(xLeft), float64(yUp))
 
-				if image != nil {
-					screen.DrawImage(image, op)
-				}
+			var image *ebiten.Image
+			switch gridBottom[i][j] {
+			case BeltDown:
+				image = beltDownImage
+			case BeltDownLeft:
+				image = beltDownLeftImage
+			case BeltDownRight:
+				image = beltDownRightImage
+			case BeltLeft:
+				image = beltLeftImage
+			case BeltLeftDown:
+				image = beltLeftDownImage
+			case BeltLeftUp:
+				image = beltLeftUpImage
+			case BeltRight:
+				image = beltRightImage
+			case BeltRightDown:
+				image = beltRightDownImage
+			case BeltRightUp:
+				image = beltRightUpImage
+			case BeltUp:
+				image = beltUpImage
+			case BeltUpLeft:
+				image = beltUpLeftImage
+			case BeltUpRight:
+				image = beltUpRightImage
+			case ConsumerCircle:
+				image = consumerCircleImage
+			case ConsumerCross:
+				image = consumerCrossImage
+			case ConsumerSquare:
+				image = consumerSquareImage
+			case Producer:
+				image = producerImage
+			default:
+				image = nil
+			}
+
+			if image != nil {
+				screen.DrawImage(image, op)
+			}
+		}
+	}
+
+	for i := range len(gridTop) {
+		for j := range len(gridTop[i]) {
+			var xLeft = float32(gridSize * i)
+			var yUp = float32(gridSize * j)
+
+			op := &ebiten.DrawImageOptions{}
+			op.GeoM.Scale(windowMultiplier, windowMultiplier)
+			op.GeoM.Translate(float64(xLeft), float64(yUp))
+
+			var image *ebiten.Image
+			switch gridTop[i][j] {
+			case Mover:
+				image = moverImage
+			case MoverLongDown:
+				image = moverLongDownImage
+			case MoverLongUp:
+				image = moverLongUpImage
+			case MoverShortDown:
+				image = moverShortDownImage
+			case MoverShortUp:
+				image = moverShortUpImage
+			default:
+				image = nil
+			}
+
+			if image != nil {
+				screen.DrawImage(image, op)
 			}
 		}
 	}
