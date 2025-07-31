@@ -1,13 +1,25 @@
 package main
 
 import (
+	"image/color"
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 const windowMultiplier = 2.5
+
+// The debug grid helps debugging display issues. Usually only altering
+// offset is needed, width can remain 1.
+// Offset values should only be 0 - 20 (half of grid size without window multipler)
+// Some helpful values are: 0, 0.5, 1, 19, 19.5, 20
+const debugGridOffsetWithoutWindowMultipler = 0
+const debugGridOffset = debugGridOffsetWithoutWindowMultipler * windowMultiplier
+const debugGridWidth = 1 * windowMultiplier
+
+var debugGridColor = color.White
 
 // 16:9 aspect ratio
 const windowWidth = int(1280 * windowMultiplier)
@@ -313,6 +325,18 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		op.GeoM.Scale(windowMultiplier, windowMultiplier)
 		op.GeoM.Translate(float64(245*windowMultiplier), float64(45*windowMultiplier))
 		screen.DrawImage(crossImage, op)
+	}
+
+	// draw debug grid
+	{
+		for i := range len(gridBottom) {
+			var x = float32(gridSize * i)
+			vector.StrokeLine(screen, x-debugGridOffset, 0, x-debugGridOffset, float32(windowHeight), debugGridWidth, debugGridColor, false)
+			vector.StrokeLine(screen, x+debugGridOffset, 0, x+debugGridOffset, float32(windowHeight), debugGridWidth, debugGridColor, false)
+			var y = float32(gridSize * i)
+			vector.StrokeLine(screen, 0, y-debugGridOffset, float32(windowWidth), y-debugGridOffset, debugGridWidth, debugGridColor, false)
+			vector.StrokeLine(screen, 0, y+debugGridOffset, float32(windowWidth), y+debugGridOffset, debugGridWidth, debugGridColor, false)
+		}
 	}
 
 }
