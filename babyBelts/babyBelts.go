@@ -167,16 +167,33 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	gridBottom[13][1] = BeltRight
 	gridBottom[14][1] = BeltRight
 	gridBottom[15][1] = BeltRight
+	gridBottom[16][1] = BeltRight
+	gridBottom[17][1] = BeltRight
+	gridBottom[18][1] = ConsumerCircle
+	gridBottom[19][1] = ConsumerCross
+	gridBottom[20][1] = ConsumerSquare
+	gridBottom[21][1] = ConsumerCircle
+	gridBottom[22][1] = ConsumerCross
+	gridBottom[23][1] = ConsumerSquare
 
 	gridTop[6][2] = Mover
 	gridTop[7][2] = MoverLongDown
 	gridTop[8][2] = MoverLongUp
 	gridTop[9][2] = MoverShortDown
 	gridTop[10][2] = MoverShortUp
-	gridBottom[11][2] = ConsumerCircle
-	gridBottom[12][2] = ConsumerCross
-	gridBottom[13][2] = ConsumerSquare
-	gridBottom[14][2] = Producer
+	gridTop[11][2] = Mover
+	gridTop[12][2] = MoverLongDown
+	gridTop[13][2] = MoverLongDown
+	gridTop[14][2] = MoverLongDown
+	gridTop[15][2] = MoverShortDown
+	gridTop[16][2] = MoverShortDown
+	gridTop[17][2] = MoverShortDown
+	gridTop[18][2] = MoverLongUp
+	gridTop[19][2] = MoverLongUp
+	gridTop[20][2] = MoverLongUp
+	gridTop[21][2] = MoverShortUp
+	gridTop[22][2] = MoverShortUp
+	gridTop[23][2] = MoverShortUp
 
 	gridBottom[6][3] = BeltRight
 	gridBottom[7][3] = BeltRight
@@ -184,10 +201,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	gridBottom[9][3] = BeltRight
 	gridBottom[10][3] = BeltRight
 	gridBottom[11][3] = BeltRight
-	gridBottom[12][3] = BeltRight
-	gridBottom[13][3] = BeltRight
-	gridBottom[14][3] = BeltRight
-	gridBottom[15][3] = BeltRight
+	gridBottom[12][3] = ConsumerCircle
+	gridBottom[13][3] = ConsumerCross
+	gridBottom[14][3] = ConsumerSquare
+	gridBottom[15][3] = ConsumerCircle
+	gridBottom[16][3] = ConsumerCross
+	gridBottom[17][3] = ConsumerSquare
 
 	for i := range len(gridBottom) {
 		for j := range len(gridBottom[i]) {
