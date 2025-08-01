@@ -193,7 +193,7 @@ func (s *state) drawMovers(screen *ebiten.Image) {
 			// up mover needs to be in space above itself, so shift it up one grid
 			op.GeoM.Translate(0, -float64(gridSize))
 		default:
-			panic(fmt.Sprintf("unexpected main.mover: %#v", v))
+			panic(fmt.Sprintf("cannot draw mover, unexpected main.mover: %#v", v))
 		}
 		screen.DrawImage(image, op)
 	}
@@ -204,6 +204,58 @@ func (s *state) addShape(gridPosition gridPosition, innerGridPosition innerGridP
 	// exist on a single position since a innerGridPosition > GridSize would appear on the next gridPosition
 
 	s.shapes[totalPosition{gridPosition, innerGridPosition}] = shape
+}
+
+func (s *state) addShapeToMover(gridPosition gridPosition, shape shape) {
+	var m mover
+	if s.movers[gridPosition] == m {
+		panic(fmt.Sprintf("A belt must exist to add a shape at: %#v", gridPosition))
+	}
+	m = s.movers[gridPosition]
+
+	var x = (gridSizeWithoutMultiplier / 2) - (shapeSize / 2)
+
+	// TODO: The below y inner grid positions are quite confusing, but I could not think of a better way to represent them.
+	// Most likely there is no obvious fix because the mover y offsets are arbitrary. I suspect these will change in the future.
+	// If true, I will reconsider this issue then.
+	switch m {
+	case mover{none, mNone}:
+		panic("cannot add shape to none mover")
+	case mover{short, mDown}:
+		s.addShape(gridPosition, innerGridPosition{x, gridSizeWithoutMultiplier + (gridSizeWithoutMultiplier / 2) - shapeSize - (beltMiddleLineWidth / 2)}, shape)
+	case mover{long, mDown}:
+		s.addShape(gridPosition, innerGridPosition{x, gridSizeWithoutMultiplier + (gridSizeWithoutMultiplier / 2) + (beltMiddleLineWidth / 2)}, shape)
+	case mover{short, mUp}:
+		s.addShape(gridPosition, innerGridPosition{x, -((gridSizeWithoutMultiplier / 2) - (beltMiddleLineWidth / 2))}, shape)
+	case mover{long, mUp}:
+		s.addShape(gridPosition, innerGridPosition{x, -((gridSizeWithoutMultiplier / 2) + shapeSize + (beltMiddleLineWidth / 2))}, shape)
+	default:
+		panic(fmt.Sprintf("cannot add shape to mover, unexpected main.mover: %#v", m))
+	}
+}
+
+// TODO: Not finished, prioritized other code before handling all cases for this
+func (s *state) addShapeToBeltStart(gridPosition gridPosition, shape shape, directionPriority direction) {
+	var beltDirection beltDirection
+	if s.belts[gridPosition] == 0 {
+		panic(fmt.Sprintf("A belt must exist to add a shape at: %#v", gridPosition))
+	}
+
+	beltDirection = s.belts[gridPosition]
+	var smallerOffset = (gridSizeWithoutMultiplier / 2) - (beltMiddleLineWidth / 2) - shapeSize
+	var largerOffset = (gridSizeWithoutMultiplier / 2) + (beltMiddleLineWidth / 2)
+
+	if beltDirection == bRight && directionPriority == up {
+		s.addShape(gridPosition, innerGridPosition{0, smallerOffset}, shape)
+	} else if beltDirection == bRight && directionPriority == down {
+		s.addShape(gridPosition, innerGridPosition{0, largerOffset}, shape)
+	} else if beltDirection == bUpRight && directionPriority == left {
+		s.addShape(gridPosition, innerGridPosition{smallerOffset, gridSizeWithoutMultiplier - shapeSize}, shape)
+	} else if beltDirection == bUpRight && directionPriority == right {
+		s.addShape(gridPosition, innerGridPosition{largerOffset, gridSizeWithoutMultiplier - shapeSize}, shape)
+	} else {
+		panic(fmt.Sprintf("Need to implement for: %#v", beltDirection))
+	}
 }
 
 func (s *state) drawShapes(screen *ebiten.Image) {

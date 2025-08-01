@@ -14,7 +14,13 @@ const windowMultiplier = 2.5
 const windowWidth = int(1280 * windowMultiplier)
 const windowHeight = int(720 * windowMultiplier)
 
-const gridSize = int(40 * windowMultiplier)
+// HACK: and TODO: Is this better to put elsewere?
+// The windowMultiplier should maybe not be visible here
+// and instead only be seen in draw layer.
+const gridSizeWithoutMultiplier = 40
+const gridSize = (40 * windowMultiplier)
+const shapeSize = 14
+const beltMiddleLineWidth = 2
 
 var backgroundColor = color.RGBA{200, 200, 200, 0xff}
 
@@ -46,6 +52,15 @@ type totalPosition struct {
 	gridPosition      gridPosition
 	innerGridPosition innerGridPosition
 }
+
+type direction int
+
+const (
+	right direction = iota
+	left
+	up
+	down
+)
 
 type game struct{}
 
@@ -119,14 +134,28 @@ func init() {
 	moverShortUpImage, _, _ = ebitenutil.NewImageFromFile("assets/moverShortUp.png")
 
 	gameState = *newState()
-	gameState.addCCWBelt(gridPosition{1, 1})
-	gameState.addCWBelt(gridPosition{1, 6})
+
+	gameState.addMover(gridPosition{2, 0}, mover{short, mDown})
+	gameState.addMover(gridPosition{3, 0}, mover{long, mDown})
+	gameState.addMover(gridPosition{4, 2}, mover{short, mUp})
+	gameState.addMover(gridPosition{5, 2}, mover{long, mUp})
+
+	gameState.addBelt(gridPosition{2, 1}, bRight)
+	gameState.addBelt(gridPosition{3, 1}, bRight)
+	gameState.addBelt(gridPosition{4, 1}, bRight)
+	gameState.addBelt(gridPosition{5, 1}, bRight)
+
+	gameState.addShapeToMover(gridPosition{2, 0}, circle)
+	gameState.addShapeToMover(gridPosition{3, 0}, circle)
+	gameState.addShapeToMover(gridPosition{4, 2}, circle)
+	gameState.addShapeToMover(gridPosition{5, 2}, circle)
+
 	gameState.addMoversAndConsumers(gridPosition{10, 10})
 	gameState.addMoversAndBelts(gridPosition{10, 2})
 	gameState.addProducer(gridPosition{6, 5}, circle)
-	gameState.addShape(gridPosition{6, 2}, innerGridPosition{0, 0}, circle)
-	gameState.addShape(gridPosition{6, 2}, innerGridPosition{20, 0}, cross)
-	gameState.addShape(gridPosition{6, 2}, innerGridPosition{40, 0}, square)
+
+	//gameState.addShapeToBeltStart(gridPosition{2, 1}, circle, up)
+	//gameState.addShapeToBeltStart(gridPosition{1, 1}, circle, right)
 }
 
 func (g *game) Update() error {
