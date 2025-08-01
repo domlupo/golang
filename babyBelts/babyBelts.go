@@ -6,20 +6,9 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 const windowMultiplier = 2.5
-
-// The debug grid helps debugging display issues. Usually only altering
-// offset is needed, width can remain 1.
-// Offset values should only be 0 - 20 (half of grid size without window multipler)
-// Some helpful values are: 0, 0.5, 1, 19, 19.5, 20
-const debugGridOffsetWithoutWindowMultipler = 0
-const debugGridOffset = debugGridOffsetWithoutWindowMultipler * windowMultiplier
-const debugGridWidth = 1 * windowMultiplier
-
-var debugGridColor = color.White
 
 // 16:9 aspect ratio
 const windowWidth = int(1280 * windowMultiplier)
@@ -27,45 +16,38 @@ const windowHeight = int(720 * windowMultiplier)
 
 const gridSize = int(40 * windowMultiplier)
 
-var gridBottom [32][18]gridBottomImage
-var gridTop [32][18]gridTopImage
+var backgroundColor = color.RGBA{200, 200, 200, 0xff}
 
-// TODO: should these be string instead of int?
-type gridBottomImage int
-type gridTopImage int
+// The debug grid helps debugging display issues. Usually only altering
+// offset is needed, width can remain 1.
+// Offset values should only be 0 - 20 (half of grid size without window multipler)
+// Some helpful values are: 0, 0.5, 1, 19, 19.5, 20
+const debugGridOn = true
+const debugGridOffsetWithoutWindowMultipler = 0
+const debugGridOffset = debugGridOffsetWithoutWindowMultipler * windowMultiplier
+const debugGridWidth = 1 * windowMultiplier
+const debugGridSize = 32
 
-const (
-	NoBottomImage gridBottomImage = iota
-	BeltDown
-	BeltDownLeft
-	BeltDownRight
-	BeltLeft
-	BeltLeftDown
-	BeltLeftUp
-	BeltRight
-	BeltRightDown
-	BeltRightUp
-	BeltUp
-	BeltUpLeft
-	BeltUpRight
-	ConsumerCircle
-	ConsumerCross
-	ConsumerSquare
-	MoverDown
-	MoverUp
-	Producer
-)
+var debugGridColor = color.Black
 
-const (
-	NoTopImage gridTopImage = iota
-	Mover
-	MoverLongDown
-	MoverLongUp
-	MoverShortDown
-	MoverShortUp
-)
+// Low resolution position used for grid items like movers, consumers, etc
+type gridPosition struct {
+	x int // 0 - 32
+	y int // 0 - 18
+}
 
-type Game struct{}
+// high resolution position used for non grid items like shapes
+type innerGridPosition struct {
+	x int
+	y int
+}
+
+type totalPosition struct {
+	gridPosition      gridPosition
+	innerGridPosition innerGridPosition
+}
+
+type game struct{}
 
 var beltDownImage *ebiten.Image
 var beltDownLeftImage *ebiten.Image
@@ -92,6 +74,8 @@ var moverLongDownImage *ebiten.Image
 var moverLongUpImage *ebiten.Image
 var moverShortDownImage *ebiten.Image
 var moverShortUpImage *ebiten.Image
+
+var gameState state
 
 func init() {
 	var monitors []*ebiten.MonitorType
@@ -133,221 +117,35 @@ func init() {
 	moverLongUpImage, _, _ = ebitenutil.NewImageFromFile("assets/moverLongUp.png")
 	moverShortDownImage, _, _ = ebitenutil.NewImageFromFile("assets/moverShortDown.png")
 	moverShortUpImage, _, _ = ebitenutil.NewImageFromFile("assets/moverShortUp.png")
+
+	gameState = *newState()
+	gameState.addCCWBelt(gridPosition{1, 1})
+	gameState.addCWBelt(gridPosition{1, 6})
+	gameState.addMoversAndConsumers(gridPosition{10, 10})
+	gameState.addMoversAndBelts(gridPosition{10, 2})
+	gameState.addProducer(gridPosition{6, 5}, circle)
+	gameState.addShape(gridPosition{6, 2}, innerGridPosition{0, 0}, circle)
+	gameState.addShape(gridPosition{6, 2}, innerGridPosition{20, 0}, cross)
+	gameState.addShape(gridPosition{6, 2}, innerGridPosition{40, 0}, square)
 }
 
-func (g *Game) Update() error {
+func (g *game) Update() error {
 	return nil
 }
 
-func (g *Game) Draw(screen *ebiten.Image) {
-
-	// counter clockwise circle
-	gridBottom[1][1] = BeltLeftDown
-	gridBottom[1][2] = BeltDown
-	gridBottom[1][3] = BeltDown
-	gridBottom[1][4] = BeltDownRight
-	gridBottom[2][4] = BeltRight
-	gridBottom[3][4] = BeltRight
-	gridBottom[4][4] = BeltRightUp
-	gridBottom[4][3] = BeltUp
-	gridBottom[4][2] = BeltUp
-	gridBottom[4][1] = BeltUpLeft
-	gridBottom[3][1] = BeltLeft
-	gridBottom[2][1] = BeltLeft
-
-	// counter clockwise circle
-	gridBottom[1][6] = BeltUpRight
-	gridBottom[1][7] = BeltUp
-	gridBottom[1][8] = BeltUp
-	gridBottom[1][9] = BeltLeftUp
-	gridBottom[2][9] = BeltLeft
-	gridBottom[3][9] = BeltLeft
-	gridBottom[4][9] = BeltDownLeft
-	gridBottom[4][8] = BeltDown
-	gridBottom[4][7] = BeltDown
-	gridBottom[4][6] = BeltRightDown
-	gridBottom[3][6] = BeltRight
-	gridBottom[2][6] = BeltRight
-
-	gridBottom[6][1] = BeltRight
-	gridBottom[7][1] = BeltRight
-	gridBottom[8][1] = BeltRight
-	gridBottom[9][1] = BeltRight
-	gridBottom[10][1] = BeltRight
-	gridBottom[11][1] = BeltRight
-	gridBottom[12][1] = BeltRight
-	gridBottom[13][1] = BeltRight
-	gridBottom[14][1] = BeltRight
-	gridBottom[15][1] = BeltRight
-	gridBottom[16][1] = BeltRight
-	gridBottom[17][1] = BeltRight
-	gridBottom[18][1] = ConsumerCircle
-	gridBottom[19][1] = ConsumerCross
-	gridBottom[20][1] = ConsumerSquare
-	gridBottom[21][1] = ConsumerCircle
-	gridBottom[22][1] = ConsumerCross
-	gridBottom[23][1] = ConsumerSquare
-
-	gridTop[6][2] = Mover
-	gridTop[7][2] = MoverLongDown
-	gridTop[8][2] = MoverLongUp
-	gridTop[9][2] = MoverShortDown
-	gridTop[10][2] = MoverShortUp
-	gridTop[11][2] = Mover
-	gridTop[12][2] = MoverLongDown
-	gridTop[13][2] = MoverLongDown
-	gridTop[14][2] = MoverLongDown
-	gridTop[15][2] = MoverShortDown
-	gridTop[16][2] = MoverShortDown
-	gridTop[17][2] = MoverShortDown
-	gridTop[18][2] = MoverLongUp
-	gridTop[19][2] = MoverLongUp
-	gridTop[20][2] = MoverLongUp
-	gridTop[21][2] = MoverShortUp
-	gridTop[22][2] = MoverShortUp
-	gridTop[23][2] = MoverShortUp
-
-	gridBottom[6][3] = BeltRight
-	gridBottom[7][3] = BeltRight
-	gridBottom[8][3] = BeltRight
-	gridBottom[9][3] = BeltRight
-	gridBottom[10][3] = BeltRight
-	gridBottom[11][3] = BeltRight
-	gridBottom[12][3] = ConsumerCircle
-	gridBottom[13][3] = ConsumerCross
-	gridBottom[14][3] = ConsumerSquare
-	gridBottom[15][3] = ConsumerCircle
-	gridBottom[16][3] = ConsumerCross
-	gridBottom[17][3] = ConsumerSquare
-
-	for i := range len(gridBottom) {
-		for j := range len(gridBottom[i]) {
-			var xLeft = float32(gridSize * i)
-			var yUp = float32(gridSize * j)
-
-			op := &ebiten.DrawImageOptions{}
-			op.GeoM.Scale(windowMultiplier, windowMultiplier)
-			op.GeoM.Translate(float64(xLeft), float64(yUp))
-
-			var image *ebiten.Image
-			switch gridBottom[i][j] {
-			case BeltDown:
-				image = beltDownImage
-			case BeltDownLeft:
-				image = beltDownLeftImage
-			case BeltDownRight:
-				image = beltDownRightImage
-			case BeltLeft:
-				image = beltLeftImage
-			case BeltLeftDown:
-				image = beltLeftDownImage
-			case BeltLeftUp:
-				image = beltLeftUpImage
-			case BeltRight:
-				image = beltRightImage
-			case BeltRightDown:
-				image = beltRightDownImage
-			case BeltRightUp:
-				image = beltRightUpImage
-			case BeltUp:
-				image = beltUpImage
-			case BeltUpLeft:
-				image = beltUpLeftImage
-			case BeltUpRight:
-				image = beltUpRightImage
-			case ConsumerCircle:
-				image = consumerCircleImage
-			case ConsumerCross:
-				image = consumerCrossImage
-			case ConsumerSquare:
-				image = consumerSquareImage
-			case Producer:
-				image = producerImage
-			default:
-				image = nil
-			}
-
-			if image != nil {
-				screen.DrawImage(image, op)
-			}
-		}
-	}
-
-	for i := range len(gridTop) {
-		for j := range len(gridTop[i]) {
-			var xLeft = float32(gridSize * i)
-			var yUp = float32(gridSize * j)
-
-			op := &ebiten.DrawImageOptions{}
-			op.GeoM.Scale(windowMultiplier, windowMultiplier)
-			op.GeoM.Translate(float64(xLeft), float64(yUp))
-
-			var image *ebiten.Image
-			switch gridTop[i][j] {
-			case Mover:
-				image = moverImage
-			case MoverLongDown:
-				image = moverLongDownImage
-			case MoverLongUp:
-				op.GeoM.Translate(0, -float64(gridSize))
-				image = moverLongUpImage
-			case MoverShortDown:
-				image = moverShortDownImage
-			case MoverShortUp:
-				op.GeoM.Translate(0, -float64(gridSize))
-				image = moverShortUpImage
-			default:
-				image = nil
-			}
-
-			if image != nil {
-				screen.DrawImage(image, op)
-			}
-		}
-	}
-
-	{
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Scale(windowMultiplier, windowMultiplier)
-		op.GeoM.Translate(float64(285*windowMultiplier), float64(45*windowMultiplier))
-		screen.DrawImage(circleImage, op)
-	}
-
-	{
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Scale(windowMultiplier, windowMultiplier)
-		op.GeoM.Translate(float64(265*windowMultiplier), float64(45*windowMultiplier))
-		screen.DrawImage(squareImage, op)
-	}
-
-	{
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Scale(windowMultiplier, windowMultiplier)
-		op.GeoM.Translate(float64(245*windowMultiplier), float64(45*windowMultiplier))
-		screen.DrawImage(crossImage, op)
-	}
-
-	// draw debug grid
-	{
-		for i := range len(gridBottom) {
-			var x = float32(gridSize * i)
-			vector.StrokeLine(screen, x-debugGridOffset, 0, x-debugGridOffset, float32(windowHeight), debugGridWidth, debugGridColor, false)
-			vector.StrokeLine(screen, x+debugGridOffset, 0, x+debugGridOffset, float32(windowHeight), debugGridWidth, debugGridColor, false)
-			var y = float32(gridSize * i)
-			vector.StrokeLine(screen, 0, y-debugGridOffset, float32(windowWidth), y-debugGridOffset, debugGridWidth, debugGridColor, false)
-			vector.StrokeLine(screen, 0, y+debugGridOffset, float32(windowWidth), y+debugGridOffset, debugGridWidth, debugGridColor, false)
-		}
-	}
-
+func (g *game) Draw(screen *ebiten.Image) {
+	screen.Fill(backgroundColor)
+	gameState.draw(screen)
+	drawDebugGrid(screen, debugGridOn)
 }
 
-func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+func (g *game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return windowWidth, windowHeight
 }
 
 func main() {
 	ebiten.SetWindowSize(windowWidth, windowHeight)
-	if err := ebiten.RunGame(&Game{}); err != nil {
+	if err := ebiten.RunGame(&game{}); err != nil {
 		log.Fatal(err)
 	}
 }
