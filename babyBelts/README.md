@@ -2,13 +2,12 @@
 
 ## A prototype for a simple belt game. Think much simpler than factorio. Even simpler than shapez. 
 
-The simple game will mimic mini metro and mini motorways.
+There will be two genres explored. 
 
-The two other simple games I thought of are:
- - civ
- - cities skyline / soviet republic
+1. A simple game which mimics mini metro and mini motorways. If belts are not fun for this casual type of game,
+   I can explore a civ style. Also another style of cities skyline / soviet republic. 
 
- Theme could be sushi moving along a belt but baby belt name would have to change.
+2. A deckbuilder which mimics balatro (number go higher) or slay the spire (overcome this challenge) but you use a factory.
 
  # First checkpoint
 
