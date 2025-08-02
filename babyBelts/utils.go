@@ -13,12 +13,12 @@ func drawDebugGrid(screen *ebiten.Image, drawDebugGrid bool) {
 	}
 
 	for i := range debugGridSize {
-		var x = float32(gridSize * i)
-		vector.StrokeLine(screen, x-debugGridOffset, 0, x-debugGridOffset, float32(windowHeight), debugGridWidth, debugGridColor, false)
-		vector.StrokeLine(screen, x+debugGridOffset, 0, x+debugGridOffset, float32(windowHeight), debugGridWidth, debugGridColor, false)
-		var y = float32(gridSize * i)
-		vector.StrokeLine(screen, 0, y-debugGridOffset, float32(windowWidth), y-debugGridOffset, debugGridWidth, debugGridColor, false)
-		vector.StrokeLine(screen, 0, y+debugGridOffset, float32(windowWidth), y+debugGridOffset, debugGridWidth, debugGridColor, false)
+		var x = float32(gridSize * windowMultiplier * i)
+		vector.StrokeLine(screen, x-debugGridOffset, 0, x-debugGridOffset, float32(windowHeight*windowMultiplier), debugGridWidth, debugGridColor, false)
+		vector.StrokeLine(screen, x+debugGridOffset, 0, x+debugGridOffset, float32(windowHeight*windowMultiplier), debugGridWidth, debugGridColor, false)
+		var y = float32(gridSize * windowMultiplier * i)
+		vector.StrokeLine(screen, 0, y-debugGridOffset, float32(windowWidth*windowMultiplier), y-debugGridOffset, debugGridWidth, debugGridColor, false)
+		vector.StrokeLine(screen, 0, y+debugGridOffset, float32(windowWidth*windowMultiplier), y+debugGridOffset, debugGridWidth, debugGridColor, false)
 	}
 }
 

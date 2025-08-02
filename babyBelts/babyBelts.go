@@ -8,17 +8,14 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
+// This must only be used for drawing images and windows.
+// Never use for game logic.
 const windowMultiplier = 2.5
 
 // 16:9 aspect ratio
-const windowWidth = int(1280 * windowMultiplier)
-const windowHeight = int(720 * windowMultiplier)
-
-// HACK: and TODO: Is this better to put elsewere?
-// The windowMultiplier should maybe not be visible here
-// and instead only be seen in draw layer.
-const gridSizeWithoutMultiplier = 40
-const gridSize = (40 * windowMultiplier)
+const windowWidth = 1280
+const windowHeight = 720
+const gridSize = 40
 const shapeSize = 14
 const beltMiddleLineWidth = 2
 
@@ -150,11 +147,11 @@ func (g *game) Draw(screen *ebiten.Image) {
 }
 
 func (g *game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return windowWidth, windowHeight
+	return windowWidth * windowMultiplier, windowHeight * windowMultiplier
 }
 
 func main() {
-	ebiten.SetWindowSize(windowWidth, windowHeight)
+	ebiten.SetWindowSize(windowWidth*windowMultiplier, windowHeight*windowMultiplier)
 	if err := ebiten.RunGame(&game{}); err != nil {
 		log.Fatal(err)
 	}

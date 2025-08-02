@@ -88,8 +88,8 @@ func (s *state) addBelt(gridPosition gridPosition, direction beltDirection) {
 
 func (s *state) drawBelts(screen *ebiten.Image) {
 	for k, v := range s.belts {
-		var xLeft = float32(gridSize * k.x)
-		var yUp = float32(gridSize * k.y)
+		var xLeft = float32(gridSize * windowMultiplier * k.x)
+		var yUp = float32(gridSize * windowMultiplier * k.y)
 
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(windowMultiplier, windowMultiplier)
@@ -134,8 +134,8 @@ func (s *state) addConsumer(gridPosition gridPosition, shape shape) {
 
 func (s *state) drawConsumers(screen *ebiten.Image) {
 	for k, v := range s.consumers {
-		var xLeft = float32(gridSize * k.x)
-		var yUp = float32(gridSize * k.y)
+		var xLeft = float32(gridSize * windowMultiplier * k.x)
+		var yUp = float32(gridSize * windowMultiplier * k.y)
 
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(windowMultiplier, windowMultiplier)
@@ -162,8 +162,8 @@ func (s *state) addProducer(gridPosition gridPosition, shape shape) {
 
 func (s *state) drawProducers(screen *ebiten.Image) {
 	for k, v := range s.producers {
-		var xLeft = float32(gridSize * k.x)
-		var yUp = float32(gridSize * k.y)
+		var xLeft = float32(gridSize * windowMultiplier * k.x)
+		var yUp = float32(gridSize * windowMultiplier * k.y)
 
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(windowMultiplier, windowMultiplier)
@@ -190,8 +190,8 @@ func (s *state) addMover(gridPosition gridPosition, mover mover) {
 
 func (s *state) drawMovers(screen *ebiten.Image) {
 	for k, v := range s.movers {
-		var xLeft = float32(gridSize * k.x)
-		var yUp = float32(gridSize * k.y)
+		var xLeft = float32(gridSize * windowMultiplier * k.x)
+		var yUp = float32(gridSize * windowMultiplier * k.y)
 
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(windowMultiplier, windowMultiplier)
@@ -205,14 +205,14 @@ func (s *state) drawMovers(screen *ebiten.Image) {
 			image = moverShortDownImage
 		case mover{short, mUp}:
 			// up mover needs to be in space above itself, so shift it up one grid
-			op.GeoM.Translate(0, -float64(gridSize))
+			op.GeoM.Translate(0, -float64(gridSize*windowMultiplier))
 			image = moverShortUpImage
 		case mover{long, mDown}:
 			image = moverLongDownImage
 		case mover{long, mUp}:
 			image = moverLongUpImage
 			// up mover needs to be in space above itself, so shift it up one grid
-			op.GeoM.Translate(0, -float64(gridSize))
+			op.GeoM.Translate(0, -float64(gridSize*windowMultiplier))
 		default:
 			panic(fmt.Sprintf("cannot draw mover, unexpected main.mover: %#v", v))
 		}
@@ -231,10 +231,10 @@ func (s *state) addShapeToMover(gridPos gridPosition, shape shape) {
 	}
 	m = s.movers[gridPos]
 
-	var x = (gridSizeWithoutMultiplier / 2) - (shapeSize / 2)
+	var x = (gridSize / 2) - (shapeSize / 2)
 
-	var smallOffset = (gridSizeWithoutMultiplier / 2) - shapeSize - (beltMiddleLineWidth / 2)
-	var largeOffset = (gridSizeWithoutMultiplier / 2) + (beltMiddleLineWidth / 2)
+	var smallOffset = (gridSize / 2) - shapeSize - (beltMiddleLineWidth / 2)
+	var largeOffset = (gridSize / 2) + (beltMiddleLineWidth / 2)
 
 	// TODO: The below y inner grid positions are quite confusing, but I could not think of a better way to represent them.
 	// Most likely there is no obvious fix because the mover y offsets are arbitrary. I suspect these will change in the future.
@@ -263,17 +263,17 @@ func (s *state) addShapeToBeltStart(gridPosition gridPosition, shape shape, dire
 	}
 
 	beltDirection = s.belts[gridPosition]
-	var smallerOffset = (gridSizeWithoutMultiplier / 2) - (beltMiddleLineWidth / 2) - shapeSize
-	var largerOffset = (gridSizeWithoutMultiplier / 2) + (beltMiddleLineWidth / 2)
+	var smallerOffset = (gridSize / 2) - (beltMiddleLineWidth / 2) - shapeSize
+	var largerOffset = (gridSize / 2) + (beltMiddleLineWidth / 2)
 
 	if beltDirection == bRight && directionPriority == up {
 		s.addShape(gridPosition, innerGridPosition{0, smallerOffset}, shape)
 	} else if beltDirection == bRight && directionPriority == down {
 		s.addShape(gridPosition, innerGridPosition{0, largerOffset}, shape)
 	} else if beltDirection == bUpRight && directionPriority == left {
-		s.addShape(gridPosition, innerGridPosition{smallerOffset, gridSizeWithoutMultiplier - shapeSize}, shape)
+		s.addShape(gridPosition, innerGridPosition{smallerOffset, gridSize - shapeSize}, shape)
 	} else if beltDirection == bUpRight && directionPriority == right {
-		s.addShape(gridPosition, innerGridPosition{largerOffset, gridSizeWithoutMultiplier - shapeSize}, shape)
+		s.addShape(gridPosition, innerGridPosition{largerOffset, gridSize - shapeSize}, shape)
 	} else {
 		panic(fmt.Sprintf("Need to implement for: %#v", beltDirection))
 	}

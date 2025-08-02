@@ -19,15 +19,15 @@ type pixelPosition struct {
 }
 
 func getPixelPosition(gridPos gridPosition, innerGridPos innerGridPosition) pixelPosition {
-	var x = (gridPos.x * gridSizeWithoutMultiplier) + innerGridPos.x
-	var y = (gridPos.y * gridSizeWithoutMultiplier) + innerGridPos.y
+	var x = (gridPos.x * gridSize) + innerGridPos.x
+	var y = (gridPos.y * gridSize) + innerGridPos.y
 
 	return pixelPosition{x, y}
 }
 
 func getBeltGridPosFromShapePixelPos(pixelPos pixelPosition) gridPosition {
-	var x = ((pixelPos.x + (shapeSize / 2)) / gridSizeWithoutMultiplier)
-	var y = ((pixelPos.y + (shapeSize / 2)) / gridSizeWithoutMultiplier)
+	var x = ((pixelPos.x + (shapeSize / 2)) / gridSize)
+	var y = ((pixelPos.y + (shapeSize / 2)) / gridSize)
 
 	return gridPosition{x, y}
 }
