@@ -36,23 +36,6 @@ const debugGridSize = 32
 
 var debugGridColor = color.Black
 
-// Low resolution position used for grid items like movers, consumers, etc
-type gridPosition struct {
-	x int // 0 - 32
-	y int // 0 - 18
-}
-
-// high resolution position used for non grid items like shapes
-type innerGridPosition struct {
-	x int
-	y int
-}
-
-type totalPosition struct {
-	gridPosition      gridPosition
-	innerGridPosition innerGridPosition
-}
-
 type direction int
 
 const (
@@ -153,12 +136,10 @@ func init() {
 	gameState.addMoversAndConsumers(gridPosition{10, 10})
 	gameState.addMoversAndBelts(gridPosition{10, 2})
 	gameState.addProducer(gridPosition{6, 5}, circle)
-
-	//gameState.addShapeToBeltStart(gridPosition{2, 1}, circle, up)
-	//gameState.addShapeToBeltStart(gridPosition{1, 1}, circle, right)
 }
 
 func (g *game) Update() error {
+	gameState.moveShapes()
 	return nil
 }
 

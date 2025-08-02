@@ -33,7 +33,7 @@ const (
 
 // not enforced, but must be be a singleton
 type state struct {
-	shapes    map[totalPosition]shape
+	shapes    map[pixelPosition]shape
 	belts     map[gridPosition]beltDirection
 	consumers map[gridPosition]shape
 	producers map[gridPosition]shape
@@ -42,7 +42,7 @@ type state struct {
 
 func newState() *state {
 	s := state{
-		shapes:    make(map[totalPosition]shape),
+		shapes:    make(map[pixelPosition]shape),
 		belts:     make(map[gridPosition]beltDirection),
 		consumers: make(map[gridPosition]shape),
 		producers: make(map[gridPosition]shape),
@@ -59,6 +59,27 @@ func (s *state) draw(screen *ebiten.Image) {
 	s.drawMovers(screen)
 	// shapes need to be draw last since they appear above everything else
 	s.drawShapes(screen)
+}
+
+// TODO: This needs thought out more due to complexity. It is only a simple case.
+// The full implementation needs to verify all related shape position are possible
+// before moving forward. It also needs to verify no shapes are being overwritten
+// due to occupying the same pixel position. There is probably also determinism
+// concerns as well as other complexities.
+func (s *state) moveShapes() {
+	var newShapes = make(map[pixelPosition]shape)
+
+	var newPixelPos pixelPosition
+	for oldPixelPos, shape := range s.shapes {
+		if s.belts[getBeltGridPosFromShapePixelPos(oldPixelPos)] == bRight {
+			var desiredPixelPos = pixelPosition{oldPixelPos.x + 1, oldPixelPos.y}
+			newPixelPos = desiredPixelPos
+		} else {
+			newPixelPos = oldPixelPos
+		}
+		newShapes[newPixelPos] = shape
+	}
+	s.shapes = newShapes
 }
 
 func (s *state) addBelt(gridPosition gridPosition, direction beltDirection) {
@@ -200,20 +221,20 @@ func (s *state) drawMovers(screen *ebiten.Image) {
 }
 
 func (s *state) addShape(gridPosition gridPosition, innerGridPosition innerGridPosition, shape shape) {
-	// TODO: verify position. This is very important since no validation means that multiple shapes can
-	// exist on a single position since a innerGridPosition > GridSize would appear on the next gridPosition
-
-	s.shapes[totalPosition{gridPosition, innerGridPosition}] = shape
+	s.shapes[getPixelPosition(gridPosition, innerGridPosition)] = shape
 }
 
-func (s *state) addShapeToMover(gridPosition gridPosition, shape shape) {
+func (s *state) addShapeToMover(gridPos gridPosition, shape shape) {
 	var m mover
-	if s.movers[gridPosition] == m {
-		panic(fmt.Sprintf("A belt must exist to add a shape at: %#v", gridPosition))
+	if s.movers[gridPos] == m {
+		panic(fmt.Sprintf("A belt must exist to add a shape at: %#v", gridPos))
 	}
-	m = s.movers[gridPosition]
+	m = s.movers[gridPos]
 
 	var x = (gridSizeWithoutMultiplier / 2) - (shapeSize / 2)
+
+	var smallOffset = (gridSizeWithoutMultiplier / 2) - shapeSize - (beltMiddleLineWidth / 2)
+	var largeOffset = (gridSizeWithoutMultiplier / 2) + (beltMiddleLineWidth / 2)
 
 	// TODO: The below y inner grid positions are quite confusing, but I could not think of a better way to represent them.
 	// Most likely there is no obvious fix because the mover y offsets are arbitrary. I suspect these will change in the future.
@@ -222,13 +243,13 @@ func (s *state) addShapeToMover(gridPosition gridPosition, shape shape) {
 	case mover{none, mNone}:
 		panic("cannot add shape to none mover")
 	case mover{short, mDown}:
-		s.addShape(gridPosition, innerGridPosition{x, gridSizeWithoutMultiplier + (gridSizeWithoutMultiplier / 2) - shapeSize - (beltMiddleLineWidth / 2)}, shape)
+		s.addShape(gridPosition{gridPos.x, gridPos.y + 1}, innerGridPosition{x, smallOffset}, shape)
 	case mover{long, mDown}:
-		s.addShape(gridPosition, innerGridPosition{x, gridSizeWithoutMultiplier + (gridSizeWithoutMultiplier / 2) + (beltMiddleLineWidth / 2)}, shape)
+		s.addShape(gridPosition{gridPos.x, gridPos.y + 1}, innerGridPosition{x, largeOffset}, shape)
 	case mover{short, mUp}:
-		s.addShape(gridPosition, innerGridPosition{x, -((gridSizeWithoutMultiplier / 2) - (beltMiddleLineWidth / 2))}, shape)
+		s.addShape(gridPosition{gridPos.x, gridPos.y - 1}, innerGridPosition{x, largeOffset}, shape)
 	case mover{long, mUp}:
-		s.addShape(gridPosition, innerGridPosition{x, -((gridSizeWithoutMultiplier / 2) + shapeSize + (beltMiddleLineWidth / 2))}, shape)
+		s.addShape(gridPosition{gridPos.x, gridPos.y - 1}, innerGridPosition{x, smallOffset}, shape)
 	default:
 		panic(fmt.Sprintf("cannot add shape to mover, unexpected main.mover: %#v", m))
 	}
@@ -259,16 +280,16 @@ func (s *state) addShapeToBeltStart(gridPosition gridPosition, shape shape, dire
 }
 
 func (s *state) drawShapes(screen *ebiten.Image) {
-	for k, v := range s.shapes {
-		var xLeft = float64(gridSize*k.gridPosition.x) + (float64(k.innerGridPosition.x) * windowMultiplier)
-		var yUp = float64(gridSize*k.gridPosition.y) + (float64(k.innerGridPosition.y) * windowMultiplier)
+	for pixelPosition, shape := range s.shapes {
+		var xLeft = float64(pixelPosition.x) * windowMultiplier
+		var yUp = float64(pixelPosition.y) * windowMultiplier
 
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(windowMultiplier, windowMultiplier)
 		op.GeoM.Translate(xLeft, float64(yUp))
 
 		var image *ebiten.Image
-		switch v {
+		switch shape {
 		case circle:
 			image = circleImage
 		case cross:
@@ -276,7 +297,7 @@ func (s *state) drawShapes(screen *ebiten.Image) {
 		case square:
 			image = squareImage
 		default:
-			panic(fmt.Sprintf("unexpected main.shape: %#v", v))
+			panic(fmt.Sprintf("cannot draw shape, unexpected main.shape: %#v", shape))
 		}
 		screen.DrawImage(image, op)
 	}
