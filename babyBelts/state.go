@@ -71,12 +71,10 @@ func (s *state) moveShapes() {
 
 	var newPixelPos pixelPosition
 	for oldPixelPos, shape := range s.shapes {
-		if s.belts[getBeltGridPosFromShapePixelPos(oldPixelPos)] == bRight {
-			var desiredPixelPos = pixelPosition{oldPixelPos.x + 1, oldPixelPos.y}
-			newPixelPos = desiredPixelPos
-		} else {
-			newPixelPos = oldPixelPos
-		}
+		var beltDirection = s.belts[getBeltGridPosFromShapePixelPos(oldPixelPos)]
+		var shapeDirection = getDirectionForShape(beltDirection, oldPixelPos)
+		var movement = getPixelPositionFromDirection(shapeDirection)
+		newPixelPos = pixelPosition{oldPixelPos.x + movement.x, oldPixelPos.y + movement.y}
 		newShapes[newPixelPos] = shape
 	}
 	s.shapes = newShapes

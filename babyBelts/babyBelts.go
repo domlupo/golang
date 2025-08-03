@@ -115,24 +115,18 @@ func init() {
 
 	gameState = *newState()
 
+	gameState.addCCWBelt(gridPosition{1, 1})
+	gameState.addCWBelt(gridPosition{11, 1})
+
 	gameState.addMover(gridPosition{2, 0}, mover{short, mDown})
 	gameState.addMover(gridPosition{3, 0}, mover{long, mDown})
-	gameState.addMover(gridPosition{4, 2}, mover{short, mUp})
-	gameState.addMover(gridPosition{5, 2}, mover{long, mUp})
-
-	gameState.addBelt(gridPosition{2, 1}, bRight)
-	gameState.addBelt(gridPosition{3, 1}, bRight)
-	gameState.addBelt(gridPosition{4, 1}, bRight)
-	gameState.addBelt(gridPosition{5, 1}, bRight)
+	gameState.addMover(gridPosition{12, 0}, mover{short, mDown})
+	gameState.addMover(gridPosition{13, 0}, mover{long, mDown})
 
 	gameState.addShapeToMover(gridPosition{2, 0}, circle)
 	gameState.addShapeToMover(gridPosition{3, 0}, circle)
-	gameState.addShapeToMover(gridPosition{4, 2}, circle)
-	gameState.addShapeToMover(gridPosition{5, 2}, circle)
-
-	gameState.addMoversAndConsumers(gridPosition{10, 10})
-	gameState.addMoversAndBelts(gridPosition{10, 2})
-	gameState.addProducer(gridPosition{6, 5}, circle)
+	gameState.addShapeToMover(gridPosition{12, 0}, circle)
+	gameState.addShapeToMover(gridPosition{13, 0}, circle)
 }
 
 func (g *game) Update() error {
