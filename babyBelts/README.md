@@ -4,6 +4,8 @@
 
 There will be two genres explored. 
 
+I will start with the first one since it seems much less design focused. My current bottle neck is design confusion.
+
 1. A simple game which mimics mini metro and mini motorways. If belts are not fun for this casual type of game,
    I can explore a civ style. Also another style of cities skyline / soviet republic. 
 
@@ -11,11 +13,16 @@ There will be two genres explored.
 
  # First checkpoint
 
- - Nodes which produce multiple shapes and consume a single shape
- - Belts which transport items
- - Movers which move items similar to factorio inserters
+ - DONE - Belts which transport items
+ - movers which move items similar to factorio inserters
+ - producers produce a single shape
+ - consumers consume a single shape
 
  # Future checkpoint
 
- - Colors + Shapes rather than just shapes
- - Special items? (shape converter, color converter, etc)
+ - Problem / Goal of game 
+
+ # Item ideas
+
+ - condensor (X -> Y where X > Y)
+ - expander (X -> Y where X < Y )
