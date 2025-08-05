@@ -23,14 +23,6 @@ const (
 	bUpRight
 )
 
-type shape int
-
-const (
-	circle shape = iota
-	cross
-	square
-)
-
 // not enforced, but must be be a singleton
 type state struct {
 	shapes    map[pixelPosition]shape
@@ -74,10 +66,42 @@ func (s *state) moveShapes() {
 		var beltDirection = s.belts[getBeltGridPosFromShapePixelPos(oldPixelPos)]
 		var shapeDirection = getDirectionForShape(beltDirection, oldPixelPos)
 		var movement = getPixelPositionFromDirection(shapeDirection)
-		newPixelPos = pixelPosition{oldPixelPos.x + movement.x, oldPixelPos.y + movement.y}
+		if shape.shapeState == free {
+			newPixelPos = pixelPosition{oldPixelPos.x + movement.x, oldPixelPos.y + movement.y}
+		} else {
+			newPixelPos = oldPixelPos
+		}
 		newShapes[newPixelPos] = shape
 	}
 	s.shapes = newShapes
+}
+
+func (s *state) moveMovers() {
+	for gridPos, m := range s.movers {
+		s.movers[gridPos] = m.update()
+	}
+}
+
+func (s *state) lockShapes() {
+	for gridPos, m := range s.movers {
+		var shapePixelPos = m.getMoverShapePixelPos(gridPos)
+		var shape = s.shapes[shapePixelPos]
+		if shape.shapeState == free {
+			delete(s.shapes, shapePixelPos)
+			s.movers[gridPos] = mover{m.length, m.direction, moving, shape.kind}
+		}
+	}
+}
+
+func (s *state) unlockShapes() {
+	for gridPos, m := range s.movers {
+		if m.moverState == dropping {
+			var shapeKind = m.lockedShapeKind
+			var shapePixelPos = m.getMoverShapePixelPos(gridPos)
+			s.shapes[shapePixelPos] = shape{shapeKind, free}
+			s.movers[gridPos] = mover{m.length, m.direction, waiting, noKind}
+		}
+	}
 }
 
 func (s *state) addBelt(gridPosition gridPosition, direction beltDirection) {
@@ -131,16 +155,16 @@ func (s *state) addConsumer(gridPosition gridPosition, shape shape) {
 }
 
 func (s *state) drawConsumers(screen *ebiten.Image) {
-	for k, v := range s.consumers {
-		var xLeft = float32(gridSize * windowMultiplier * k.x)
-		var yUp = float32(gridSize * windowMultiplier * k.y)
+	for gridPos, shape := range s.consumers {
+		var xLeft = float32(gridSize * windowMultiplier * gridPos.x)
+		var yUp = float32(gridSize * windowMultiplier * gridPos.y)
 
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(windowMultiplier, windowMultiplier)
 		op.GeoM.Translate(float64(xLeft), float64(yUp))
 
 		var image *ebiten.Image
-		switch v {
+		switch shape.kind {
 		case circle:
 			image = consumerCircleImage
 		case cross:
@@ -148,7 +172,7 @@ func (s *state) drawConsumers(screen *ebiten.Image) {
 		case square:
 			image = consumerSquareImage
 		default:
-			panic(fmt.Sprintf("unexpected main.shape: %#v", v))
+			panic(fmt.Sprintf("unexpected main.shape: %#v", shape))
 		}
 		screen.DrawImage(image, op)
 	}
@@ -159,16 +183,16 @@ func (s *state) addProducer(gridPosition gridPosition, shape shape) {
 }
 
 func (s *state) drawProducers(screen *ebiten.Image) {
-	for k, v := range s.producers {
-		var xLeft = float32(gridSize * windowMultiplier * k.x)
-		var yUp = float32(gridSize * windowMultiplier * k.y)
+	for gridPos, shape := range s.producers {
+		var xLeft = float32(gridSize * windowMultiplier * gridPos.x)
+		var yUp = float32(gridSize * windowMultiplier * gridPos.y)
 
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(windowMultiplier, windowMultiplier)
 		op.GeoM.Translate(float64(xLeft), float64(yUp))
 
 		var image *ebiten.Image
-		switch v {
+		switch shape.kind {
 		case circle:
 			image = producerImage
 		case cross:
@@ -176,7 +200,7 @@ func (s *state) drawProducers(screen *ebiten.Image) {
 		case square:
 			image = producerImage
 		default:
-			panic(fmt.Sprintf("unexpected main.shape: %#v", v))
+			panic(fmt.Sprintf("unexpected main.shape: %#v", shape))
 		}
 		screen.DrawImage(image, op)
 	}
@@ -187,39 +211,38 @@ func (s *state) addMover(gridPosition gridPosition, mover mover) {
 }
 
 func (s *state) drawMovers(screen *ebiten.Image) {
-	for k, v := range s.movers {
-		var xLeft = float32(gridSize * windowMultiplier * k.x)
-		var yUp = float32(gridSize * windowMultiplier * k.y)
+	for gridPos, m := range s.movers {
+		var xLeft = float32(gridSize * windowMultiplier * gridPos.x)
+		var yUp = float32(gridSize * windowMultiplier * gridPos.y)
 
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(windowMultiplier, windowMultiplier)
 		op.GeoM.Translate(float64(xLeft), float64(yUp))
 
 		var image *ebiten.Image
-		switch v {
-		case mover{none, mNone}:
+		if (m.length == none && m.direction == mNone) || m.moverState == moving {
 			image = moverImage
-		case mover{short, mDown}:
+		} else if (m.length == short && m.direction == mDown && m.moverState == waiting) || (m.length == short && m.direction == mUp && m.moverState == dropping) {
 			image = moverShortDownImage
-		case mover{short, mUp}:
+		} else if (m.length == long && m.direction == mDown && m.moverState == waiting) || (m.length == long && m.direction == mUp && m.moverState == dropping) {
+			image = moverLongDownImage
+		} else if (m.length == short && m.direction == mUp && m.moverState == waiting) || (m.length == short && m.direction == mDown && m.moverState == dropping) {
 			// up mover needs to be in space above itself, so shift it up one grid
 			op.GeoM.Translate(0, -float64(gridSize*windowMultiplier))
 			image = moverShortUpImage
-		case mover{long, mDown}:
-			image = moverLongDownImage
-		case mover{long, mUp}:
-			image = moverLongUpImage
+		} else if (m.length == long && m.direction == mUp && m.moverState == waiting) || (m.length == long && m.direction == mDown && m.moverState == dropping) {
 			// up mover needs to be in space above itself, so shift it up one grid
 			op.GeoM.Translate(0, -float64(gridSize*windowMultiplier))
-		default:
-			panic(fmt.Sprintf("cannot draw mover, unexpected main.mover: %#v", v))
+			image = moverLongUpImage
+		} else {
+			panic(fmt.Sprintf("cannot draw mover, unexpected main.mover: %#v", m))
 		}
 		screen.DrawImage(image, op)
 	}
 }
 
-func (s *state) addShape(gridPosition gridPosition, innerGridPosition innerGridPosition, shape shape) {
-	s.shapes[getPixelPosition(gridPosition, innerGridPosition)] = shape
+func (s *state) addShape(pixelPos pixelPosition, shape shape) {
+	s.shapes[pixelPos] = shape
 }
 
 func (s *state) addShapeToMover(gridPos gridPosition, shape shape) {
@@ -228,32 +251,11 @@ func (s *state) addShapeToMover(gridPos gridPosition, shape shape) {
 		panic(fmt.Sprintf("A belt must exist to add a shape at: %#v", gridPos))
 	}
 	m = s.movers[gridPos]
-
-	var x = (gridSize / 2) - (shapeSize / 2)
-
-	var smallOffset = (gridSize / 2) - shapeSize - (beltMiddleLineWidth / 2)
-	var largeOffset = (gridSize / 2) + (beltMiddleLineWidth / 2)
-
-	// TODO: The below y inner grid positions are quite confusing, but I could not think of a better way to represent them.
-	// Most likely there is no obvious fix because the mover y offsets are arbitrary. I suspect these will change in the future.
-	// If true, I will reconsider this issue then.
-	switch m {
-	case mover{none, mNone}:
-		panic("cannot add shape to none mover")
-	case mover{short, mDown}:
-		s.addShape(gridPosition{gridPos.x, gridPos.y + 1}, innerGridPosition{x, smallOffset}, shape)
-	case mover{long, mDown}:
-		s.addShape(gridPosition{gridPos.x, gridPos.y + 1}, innerGridPosition{x, largeOffset}, shape)
-	case mover{short, mUp}:
-		s.addShape(gridPosition{gridPos.x, gridPos.y - 1}, innerGridPosition{x, largeOffset}, shape)
-	case mover{long, mUp}:
-		s.addShape(gridPosition{gridPos.x, gridPos.y - 1}, innerGridPosition{x, smallOffset}, shape)
-	default:
-		panic(fmt.Sprintf("cannot add shape to mover, unexpected main.mover: %#v", m))
-	}
+	s.addShape(m.getMoverShapePixelPos(gridPos), shape)
 }
 
 // TODO: Not finished, prioritized other code before handling all cases for this
+/*
 func (s *state) addShapeToBeltStart(gridPosition gridPosition, shape shape, directionPriority direction) {
 	var beltDirection beltDirection
 	if s.belts[gridPosition] == 0 {
@@ -276,6 +278,7 @@ func (s *state) addShapeToBeltStart(gridPosition gridPosition, shape shape, dire
 		panic(fmt.Sprintf("Need to implement for: %#v", beltDirection))
 	}
 }
+*/
 
 func (s *state) drawShapes(screen *ebiten.Image) {
 	for pixelPosition, shape := range s.shapes {
@@ -287,7 +290,7 @@ func (s *state) drawShapes(screen *ebiten.Image) {
 		op.GeoM.Translate(xLeft, float64(yUp))
 
 		var image *ebiten.Image
-		switch shape {
+		switch shape.kind {
 		case circle:
 			image = circleImage
 		case cross:

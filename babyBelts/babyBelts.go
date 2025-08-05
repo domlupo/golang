@@ -113,23 +113,37 @@ func init() {
 	moverShortDownImage, _, _ = ebitenutil.NewImageFromFile("assets/moverShortDown.png")
 	moverShortUpImage, _, _ = ebitenutil.NewImageFromFile("assets/moverShortUp.png")
 
+	// game setup
 	gameState = *newState()
 
+	// other
+	gameState.addMoversAndBelts(gridPosition{20, 0})
+	gameState.addMoversAndConsumers(gridPosition{20, 6})
+
+	// verify short mover
 	gameState.addCCWBelt(gridPosition{1, 1})
-	gameState.addCWBelt(gridPosition{11, 1})
+	gameState.addCWBelt(gridPosition{1, 6})
+	gameState.addMover(gridPosition{2, 0}, mover{short, mDown, waiting, noKind})
+	gameState.addMover(gridPosition{2, 5}, mover{short, mDown, waiting, noKind})
+	gameState.addMover(gridPosition{3, 5}, mover{short, mUp, waiting, noKind})
+	gameState.addShapeToMover(gridPosition{2, 0}, shape{circle, free})
 
-	gameState.addMover(gridPosition{2, 0}, mover{short, mDown})
-	gameState.addMover(gridPosition{3, 0}, mover{long, mDown})
-	gameState.addMover(gridPosition{12, 0}, mover{short, mDown})
-	gameState.addMover(gridPosition{13, 0}, mover{long, mDown})
+	// verify long mover
+	gameState.addCCWBelt(gridPosition{11, 1})
+	gameState.addCWBelt(gridPosition{11, 6})
+	gameState.addMover(gridPosition{12, 0}, mover{long, mDown, waiting, noKind})
+	gameState.addMover(gridPosition{12, 5}, mover{long, mDown, waiting, noKind})
+	gameState.addMover(gridPosition{13, 5}, mover{long, mUp, waiting, noKind})
+	gameState.addShapeToMover(gridPosition{12, 0}, shape{circle, free})
 
-	gameState.addShapeToMover(gridPosition{2, 0}, circle)
-	gameState.addShapeToMover(gridPosition{3, 0}, circle)
-	gameState.addShapeToMover(gridPosition{12, 0}, circle)
-	gameState.addShapeToMover(gridPosition{13, 0}, circle)
+	// HACK: Needed while shapes start on movers
+	gameState.moveShapes()
 }
 
 func (g *game) Update() error {
+	gameState.unlockShapes()
+	gameState.lockShapes()
+	gameState.moveMovers()
 	gameState.moveShapes()
 	return nil
 }

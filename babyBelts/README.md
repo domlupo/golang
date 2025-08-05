@@ -14,7 +14,7 @@ I will start with the first one since it seems much less design focused. My curr
  # First checkpoint
 
  - DONE - Belts which transport items
- - movers which move items similar to factorio inserters
+ - DONE - movers which move items similar to factorio inserters
  - producers produce a single shape
  - consumers consume a single shape
 
@@ -26,3 +26,7 @@ I will start with the first one since it seems much less design focused. My curr
 
  - condensor (X -> Y where X > Y)
  - expander (X -> Y where X < Y )
+
+ # Other ideas
+
+ - baby belts -> pico package? package picker?
