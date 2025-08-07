@@ -3,6 +3,7 @@ package main
 import (
 	"image/color"
 	"log"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -116,39 +117,43 @@ func init() {
 	// game setup
 	gameState = *newState()
 
-	// other
-	gameState.addMoversAndBelts(gridPosition{20, 0})
-	gameState.addMoversAndConsumers(gridPosition{20, 6})
-
-	// verify short mover
+	gameState.addMover(gridPosition{3, 2}, mover{short, mDown, waiting, noKind})
+	gameState.addMover(gridPosition{3, 5}, mover{long, mUp, waiting, noKind})
+	gameState.addProducer(gridPosition{3, 3}, circle)
+	gameState.addConsumer(gridPosition{3, 6}, circle)
 	gameState.addCCWBelt(gridPosition{1, 1})
-	gameState.addCWBelt(gridPosition{1, 6})
-	gameState.addMover(gridPosition{2, 0}, mover{short, mDown, waiting, noKind})
-	gameState.addMover(gridPosition{2, 5}, mover{short, mDown, waiting, noKind})
-	gameState.addMover(gridPosition{3, 5}, mover{short, mUp, waiting, noKind})
-	gameState.addShapeToMover(gridPosition{2, 0}, shape{circle, free})
-
-	// verify long mover
-	gameState.addCCWBelt(gridPosition{11, 1})
-	gameState.addCWBelt(gridPosition{11, 6})
-	gameState.addMover(gridPosition{12, 0}, mover{long, mDown, waiting, noKind})
-	gameState.addMover(gridPosition{12, 5}, mover{long, mDown, waiting, noKind})
-	gameState.addMover(gridPosition{13, 5}, mover{long, mUp, waiting, noKind})
-	gameState.addShapeToMover(gridPosition{12, 0}, shape{circle, free})
 
 	// HACK: Needed while shapes start on movers
 	gameState.moveShapes()
 }
 
+var currentTime time.Time
+var priorTime time.Time
+var wait time.Duration = 1_000_000 * time.Second
+var produceDelay time.Duration = 1 * time.Second
+
 func (g *game) Update() error {
+	currentTime = time.Now()
+
 	gameState.unlockShapes()
 	gameState.lockShapes()
 	gameState.moveMovers()
+	gameState.consumeShapes()
 	gameState.moveShapes()
+
+	if wait < produceDelay {
+		wait = wait + currentTime.Sub(priorTime)
+	} else {
+		wait = 0
+		gameState.produceShapes()
+	}
+
+	priorTime = currentTime
 	return nil
 }
 
 func (g *game) Draw(screen *ebiten.Image) {
+
 	screen.Fill(backgroundColor)
 	gameState.draw(screen)
 	drawDebugGrid(screen, debugGridOn)

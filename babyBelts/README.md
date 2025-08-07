@@ -11,16 +11,12 @@ I will start with the first one since it seems much less design focused. My curr
 
 2. A deckbuilder which mimics balatro (number go higher) or slay the spire (overcome this challenge) but you use a factory.
 
- # First checkpoint
-
- - DONE - Belts which transport items
- - DONE - movers which move items similar to factorio inserters
- - producers produce a single shape
- - consumers consume a single shape
-
- # Future checkpoint
+ # current checkpoint
 
  - Problem / Goal of game 
+ - hub to consume all shapes
+
+ # next checkpoint
 
  # Item ideas
 

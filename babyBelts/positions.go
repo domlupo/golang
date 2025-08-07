@@ -27,6 +27,15 @@ func getPixelPosition(gridPos gridPosition, innerGridPos innerGridPosition) pixe
 	return pixelPosition{x, y}
 }
 
+func splitPixelPosition(pixelPos pixelPosition) (gridPosition, innerGridPosition) {
+	var gridPosX = pixelPos.x / gridSize
+	var gridPosY = pixelPos.y / gridSize
+	var innerGridPosX = pixelPos.x % gridSize
+	var innerGridPosY = pixelPos.y % gridSize
+
+	return gridPosition{gridPosX, gridPosY}, innerGridPosition{innerGridPosX, innerGridPosY}
+}
+
 func getPixelPositionFromDirection(direction direction) pixelPosition {
 	switch direction {
 	case down:
