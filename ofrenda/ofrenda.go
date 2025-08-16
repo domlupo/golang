@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -19,8 +21,6 @@ const windowHeight = 720
 const gridSize = 40
 const offerSize = 14
 
-var leftMouseButton = ebiten.MouseButton0
-var rightMouseButton = ebiten.MouseButton2
 var backgroundColor = color.RGBA{200, 200, 200, 0xff}
 
 // The debug grid helps debugging display issues. Usually only altering
@@ -119,17 +119,24 @@ func init() {
 
 var currentTime time.Time
 var priorTime time.Time
+
+// game vars
 var produceWait time.Duration = 1_000_000 * time.Second
 var produceDelay time.Duration = 1 * time.Second
+var currentBeltDir = bDown
+var currentRound = 0
+
+// mouse button constants
 var rightMouseInputWait time.Duration = 1_000_000 * time.Second
 var rightMouseInputDelay time.Duration = 300 * time.Millisecond
+var middleMouseInputWait time.Duration = 1_000_000 * time.Second
+var middleMouseInputDelay time.Duration = 1 * time.Second
 var leftMouseInputWait time.Duration = 1_000_000 * time.Second
 var leftMouseInputDelay time.Duration = 10 * time.Millisecond
 
+// debug constants
 var debugOutputWait = 1_000_000 * time.Second
 var debugOutputDelay = 1 * time.Second
-
-var currentBeltDir = bDown
 
 func (g *game) Update() error {
 	currentTime = time.Now()
@@ -150,8 +157,9 @@ func (g *game) Update() error {
 	var x = float64(mouseX) / windowMultiplier
 	var y = float64(mouseY) / windowMultiplier
 	var gridPos, _ = splitPixelPosition(pixelPosition{int(x), int(y)})
-	var leftMouseClicked = ebiten.IsMouseButtonPressed(leftMouseButton)
-	var rightMouseClicked = ebiten.IsMouseButtonPressed(rightMouseButton)
+	var leftMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
+	var middleMouseScrollClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonMiddle)
+	var rightMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight)
 
 	if leftMouseInputWait < leftMouseInputDelay {
 		leftMouseInputWait = leftMouseInputWait + currentTime.Sub(priorTime)
@@ -162,6 +170,7 @@ func (g *game) Update() error {
 
 	if rightMouseInputWait < rightMouseInputDelay {
 		rightMouseInputWait = rightMouseInputWait + currentTime.Sub(priorTime)
+		delete(gameState.belts, gridPos)
 	} else if rightMouseClicked {
 		rightMouseInputWait = 0
 		currentBeltDir += 1
@@ -171,11 +180,24 @@ func (g *game) Update() error {
 		gameState.addBelt(gridPosition{31, 17}, currentBeltDir)
 	}
 
+	if middleMouseInputWait < middleMouseInputDelay {
+		middleMouseInputWait = middleMouseInputWait + currentTime.Sub(priorTime)
+	} else if middleMouseScrollClicked {
+		middleMouseInputWait = 0
+	}
+
 	// debug output
 	if debugOutputWait < debugOutputDelay {
 		debugOutputWait = debugOutputWait + currentTime.Sub(priorTime)
 	} else {
-		println("offer count: ", len(gameState.offers))
+		println(strings.Repeat("-", 50))
+		println("round: ", currentRound)
+		println("offers outstanding: ", len(gameState.offers))
+		println("offers consumed:    ", gameState.metrics[bottle]+gameState.metrics[candy]+gameState.metrics[flower]+gameState.metrics[skull])
+		fmt.Println("  bottles: ", gameState.metrics[bottle])
+		fmt.Println("  candy:   ", gameState.metrics[candy])
+		fmt.Println("  flower:  ", gameState.metrics[flower])
+		fmt.Println("  skulls:  ", gameState.metrics[skull])
 		println("")
 		debugOutputWait = 0
 	}
@@ -185,7 +207,6 @@ func (g *game) Update() error {
 }
 
 func (g *game) Draw(screen *ebiten.Image) {
-
 	screen.Fill(backgroundColor)
 	gameState.draw(screen)
 	drawDebugGrid(screen, debugGridOn)

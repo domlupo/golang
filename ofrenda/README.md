@@ -14,6 +14,7 @@
 ## issues
 
 - shapes overwrite each out when they have the same pixel position. What behavior is needed here?
+- drawing oscillates between offers. Most likely due to determinsm. What behavior is needed here?
 
 ## game design
 

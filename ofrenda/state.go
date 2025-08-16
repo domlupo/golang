@@ -31,6 +31,7 @@ type state struct {
 	belts     map[gridPosition]beltDirection
 	consumer  *gridPosition
 	producers map[gridPosition]producer
+	metrics   map[offerType]int
 }
 
 func newState() *state {
@@ -38,7 +39,8 @@ func newState() *state {
 		offers:    make(map[pixelPosition]offer),
 		belts:     make(map[gridPosition]beltDirection),
 		consumer:  nil,
-		producers: make(map[gridPosition]producer)}
+		producers: make(map[gridPosition]producer),
+		metrics:   make(map[offerType]int)}
 	return &s
 }
 
@@ -90,6 +92,7 @@ func (s *state) consumeoffers() {
 	for pixelPos := range s.offers {
 		var gridPos, _ = splitPixelPositionForOffer(pixelPos)
 		if s.consumer.x == gridPos.x && s.consumer.y == gridPos.y {
+			s.metrics[s.offers[pixelPos].offerType] += 1
 			delete(s.offers, pixelPos)
 		}
 	}
