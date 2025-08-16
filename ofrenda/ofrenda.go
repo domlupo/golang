@@ -19,6 +19,8 @@ const windowHeight = 720
 const gridSize = 40
 const offerSize = 14
 
+var leftMouseButton = ebiten.MouseButton0
+var rightMouseButton = ebiten.MouseButton2
 var backgroundColor = color.RGBA{200, 200, 200, 0xff}
 
 // The debug grid helps debugging display issues. Usually only altering
@@ -60,6 +62,7 @@ var producerImage *ebiten.Image
 
 var ofrendaImage *ebiten.Image
 
+var bottleImage *ebiten.Image
 var candyImage *ebiten.Image
 var flowerImage *ebiten.Image
 var skullImage *ebiten.Image
@@ -93,6 +96,7 @@ func init() {
 	ofrendaImage, _, _ = ebitenutil.NewImageFromFile("assets/consumerCircle.png")
 	producerImage, _, _ = ebitenutil.NewImageFromFile("assets/producer.png")
 	// offer images
+	bottleImage, _, _ = ebitenutil.NewImageFromFile("assets/bottle.png")
 	candyImage, _, _ = ebitenutil.NewImageFromFile("assets/candy.png")
 	flowerImage, _, _ = ebitenutil.NewImageFromFile("assets/flower.png")
 	skullImage, _, _ = ebitenutil.NewImageFromFile("assets/skull.png")
@@ -102,11 +106,6 @@ func init() {
 
 	gameState.addConsumer(&gridPosition{4, 1})
 
-	gameState.addBelt(gridPosition{1, 2}, bUp)
-	gameState.addBelt(gridPosition{1, 1}, bUpRight)
-	gameState.addBelt(gridPosition{2, 1}, bRight)
-	gameState.addBelt(gridPosition{3, 1}, bRight)
-
 	gameState.addProducer(gridPosition{2, 2}, skull)
 
 	gameState.addBelt(gridPosition{8, 1}, bLeft)
@@ -115,28 +114,70 @@ func init() {
 	gameState.addBelt(gridPosition{6, 2}, bLeft)
 	gameState.addBelt(gridPosition{5, 2}, bLeftUp)
 	gameState.addBelt(gridPosition{5, 1}, bUpLeft)
-	gameState.addProducer(gridPosition{8, 2}, candy)
-
-	gameState.addProducer(gridPosition{10, 10}, flower)
-	gameState.addCCWBelt(gridPosition{9, 9})
+	gameState.addProducer(gridPosition{8, 2}, bottle)
 }
 
 var currentTime time.Time
 var priorTime time.Time
-var wait time.Duration = 1_000_000 * time.Second
+var produceWait time.Duration = 1_000_000 * time.Second
 var produceDelay time.Duration = 1 * time.Second
+var rightMouseInputWait time.Duration = 1_000_000 * time.Second
+var rightMouseInputDelay time.Duration = 300 * time.Millisecond
+var leftMouseInputWait time.Duration = 1_000_000 * time.Second
+var leftMouseInputDelay time.Duration = 10 * time.Millisecond
+
+var debugOutputWait = 1_000_000 * time.Second
+var debugOutputDelay = 1 * time.Second
+
+var currentBeltDir = bDown
 
 func (g *game) Update() error {
 	currentTime = time.Now()
 
+	// game actions
 	gameState.consumeoffers()
 	gameState.moveoffers()
 
-	if wait < produceDelay {
-		wait = wait + currentTime.Sub(priorTime)
+	if produceWait < produceDelay {
+		produceWait = produceWait + currentTime.Sub(priorTime)
 	} else {
-		wait = 0
+		produceWait = 0
 		gameState.produceOffers()
+	}
+
+	// player actions
+	var mouseX, mouseY = ebiten.CursorPosition()
+	var x = float64(mouseX) / windowMultiplier
+	var y = float64(mouseY) / windowMultiplier
+	var gridPos, _ = splitPixelPosition(pixelPosition{int(x), int(y)})
+	var leftMouseClicked = ebiten.IsMouseButtonPressed(leftMouseButton)
+	var rightMouseClicked = ebiten.IsMouseButtonPressed(rightMouseButton)
+
+	if leftMouseInputWait < leftMouseInputDelay {
+		leftMouseInputWait = leftMouseInputWait + currentTime.Sub(priorTime)
+	} else if leftMouseClicked {
+		leftMouseInputWait = 0
+		gameState.addBelt(gridPos, currentBeltDir)
+	}
+
+	if rightMouseInputWait < rightMouseInputDelay {
+		rightMouseInputWait = rightMouseInputWait + currentTime.Sub(priorTime)
+	} else if rightMouseClicked {
+		rightMouseInputWait = 0
+		currentBeltDir += 1
+		if currentBeltDir == 13 {
+			currentBeltDir = 1
+		}
+		gameState.addBelt(gridPosition{31, 17}, currentBeltDir)
+	}
+
+	// debug output
+	if debugOutputWait < debugOutputDelay {
+		debugOutputWait = debugOutputWait + currentTime.Sub(priorTime)
+	} else {
+		println("offer count: ", len(gameState.offers))
+		println("")
+		debugOutputWait = 0
 	}
 
 	priorTime = currentTime

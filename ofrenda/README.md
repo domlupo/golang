@@ -11,7 +11,11 @@
 - user interace
 - polish producers
 
-## Game Design
+## issues
+
+- shapes overwrite each out when they have the same pixel position. What behavior is needed here?
+
+## game design
 
 The game should be quick and as simple as possible. I want to release it in ~2 months.
 

@@ -174,11 +174,13 @@ func (s *state) drawProducers(screen *ebiten.Image) {
 
 		var image *ebiten.Image
 		switch producer.offerType {
-		case skull:
+		case bottle:
 			image = producerImage
 		case candy:
 			image = producerImage
 		case flower:
+			image = producerImage
+		case skull:
 			image = producerImage
 		default:
 			panic(fmt.Sprintf("unexpected main.producer: %#v", producer))
@@ -202,12 +204,14 @@ func (s *state) drawoffers(screen *ebiten.Image) {
 
 		var image *ebiten.Image
 		switch offer.offerType {
-		case skull:
-			image = skullImage
+		case bottle:
+			image = bottleImage
 		case candy:
 			image = candyImage
 		case flower:
 			image = flowerImage
+		case skull:
+			image = skullImage
 		default:
 			panic(fmt.Sprintf("cannot draw offer, unexpected main.offer: %#v", offer))
 		}
