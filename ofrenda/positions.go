@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-// readable low resolution position used for grid items like belts, movers, consumers, etc
+// readable low resolution position used for grid items like belts, consumers, etc
 type gridPosition struct {
 	x int // 0 - 32
 	y int // 0 - 18
@@ -27,11 +27,14 @@ func getPixelPosition(gridPos gridPosition, innerGridPos innerGridPosition) pixe
 	return pixelPosition{x, y}
 }
 
-func splitPixelPosition(pixelPos pixelPosition) (gridPosition, innerGridPosition) {
-	var gridPosX = pixelPos.x / gridSize
-	var gridPosY = pixelPos.y / gridSize
-	var innerGridPosX = pixelPos.x % gridSize
-	var innerGridPosY = pixelPos.y % gridSize
+func splitPixelPositionForOffer(pixelPos pixelPosition) (gridPosition, innerGridPosition) {
+	var x = pixelPos.x + (offerSize / 2)
+	var y = pixelPos.y + (offerSize / 2)
+
+	var gridPosX = x / gridSize
+	var gridPosY = y / gridSize
+	var innerGridPosX = x % gridSize
+	var innerGridPosY = y % gridSize
 
 	return gridPosition{gridPosX, gridPosY}, innerGridPosition{innerGridPosX, innerGridPosY}
 }
@@ -59,51 +62,33 @@ func getBeltGridPosFromOfferPixelPos(pixelPos pixelPosition) gridPosition {
 }
 
 func getDirectionForOffer(bd beltDirection, pixelPos pixelPosition) direction {
-	var innerGridPos = innerGridPosition{pixelPos.x % gridSize, pixelPos.y % gridSize}
-	var smallOffset = (gridSize / 2) - offerSize - (beltMiddleLineWidth / 2)
-	var largeOffset = (gridSize / 2) + (beltMiddleLineWidth / 2)
+	var innerGridPos = innerGridPosition{(pixelPos.x + 7) % gridSize, (pixelPos.y + 7) % gridSize}
 
 	switch bd {
 	case bDown:
 		return down
 	case bDownLeft:
-		if innerGridPos.x == largeOffset && innerGridPos.y != largeOffset {
-			// outer piece
-			return down
-		} else if innerGridPos.x == smallOffset && innerGridPos.y != smallOffset && (innerGridPos.y <= 4 || innerGridPos.y > 32) {
-			// inner piece
-			return down
-		} else {
+		if innerGridPos.y >= innerGridPos.x {
 			return left
+		} else {
+			return down
 		}
 	case bDownRight:
-		if innerGridPos.x == smallOffset && innerGridPos.y != largeOffset {
-			// outer piece
-			return down
-		} else if innerGridPos.x == largeOffset && innerGridPos.y != largeOffset && (innerGridPos.y <= 4 || innerGridPos.y > 32) {
-			// inner piece
-			return down
-		} else {
+		if (gridSize - innerGridPos.x - 1) <= innerGridPos.y {
 			return right
+		} else {
+			return down
 		}
 	case bLeft:
 		return left
 	case bLeftDown:
-		if innerGridPos.y == smallOffset && innerGridPos.x != smallOffset {
-			// outer piece
-			return left
-		} else if innerGridPos.y == largeOffset && innerGridPos.x != largeOffset && (innerGridPos.x > smallOffset) {
-			// inner piece
+		if innerGridPos.x > innerGridPos.y {
 			return left
 		} else {
 			return down
 		}
 	case bLeftUp:
-		if innerGridPos.y == largeOffset && innerGridPos.x != smallOffset {
-			// outer piece
-			return left
-		} else if innerGridPos.y == smallOffset && innerGridPos.x != largeOffset && (innerGridPos.x > largeOffset) {
-			// inner piece
+		if (gridSize - innerGridPos.x - 1) < innerGridPos.y {
 			return left
 		} else {
 			return up
@@ -111,21 +96,13 @@ func getDirectionForOffer(bd beltDirection, pixelPos pixelPosition) direction {
 	case bRight:
 		return right
 	case bRightDown:
-		if innerGridPos.y == smallOffset && innerGridPos.x != largeOffset {
-			// inner piece
-			return right
-		} else if innerGridPos.y == largeOffset && (innerGridPos.x <= 4 || innerGridPos.x > 32) {
-			// outer piece
+		if (innerGridPos.x + innerGridPos.y) < gridSize-1 {
 			return right
 		} else {
 			return down
 		}
 	case bRightUp:
-		if innerGridPos.y == smallOffset && innerGridPos.x != smallOffset && (innerGridPos.x <= 4 || innerGridPos.x > 32) {
-			// inner piece
-			return right
-		} else if innerGridPos.y == largeOffset && innerGridPos.x != largeOffset {
-			// outer piece
+		if innerGridPos.y > innerGridPos.x {
 			return right
 		} else {
 			return up
@@ -133,24 +110,16 @@ func getDirectionForOffer(bd beltDirection, pixelPos pixelPosition) direction {
 	case bUp:
 		return up
 	case bUpLeft:
-		if innerGridPos.x == largeOffset && innerGridPos.y != smallOffset {
-			// outer piece
-			return up
-		} else if innerGridPos.x == smallOffset && innerGridPos.y != largeOffset && innerGridPos.y > smallOffset {
-			// inner piece
-			return up
-		} else {
+		if (innerGridPos.x + innerGridPos.y) < gridSize {
 			return left
+		} else {
+			return up
 		}
 	case bUpRight:
-		if innerGridPos.x == smallOffset && innerGridPos.y != smallOffset {
-			// outer piece
-			return up
-		} else if innerGridPos.x == largeOffset && innerGridPos.y != largeOffset && innerGridPos.y > smallOffset {
-			// inner piece
-			return up
-		} else {
+		if innerGridPos.x >= innerGridPos.y {
 			return right
+		} else {
+			return up
 		}
 	}
 	panic(fmt.Sprintf("unexpected main.beltDirection: %#v", bd))

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand/v2"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -28,16 +29,16 @@ const (
 type state struct {
 	offers    map[pixelPosition]offer
 	belts     map[gridPosition]beltDirection
-	consumers map[gridPosition]kind
-	producers map[gridPosition]kind
+	consumer  *gridPosition
+	producers map[gridPosition]producer
 }
 
 func newState() *state {
 	s := state{
 		offers:    make(map[pixelPosition]offer),
 		belts:     make(map[gridPosition]beltDirection),
-		consumers: make(map[gridPosition]kind),
-		producers: make(map[gridPosition]kind)}
+		consumer:  nil,
+		producers: make(map[gridPosition]producer)}
 	return &s
 }
 
@@ -60,27 +61,35 @@ func (s *state) moveoffers() {
 	var newPixelPos pixelPosition
 	for oldPixelPos, offer := range s.offers {
 		var movement pixelPosition
-		var beltGridPos = getBeltGridPosFromofferPixelPos(oldPixelPos)
+		var beltGridPos = getBeltGridPosFromOfferPixelPos(oldPixelPos)
 		var beltDirection = s.belts[beltGridPos]
-		var offerDirection = getDirectionForShape(beltDirection, oldPixelPos)
-		movement = getPixelPositionFromDirection(offerDirection)
-		newPixelPos = pixelPosition{oldPixelPos.x + movement.x, oldPixelPos.y + movement.y}
+		if beltDirection == bNone {
+			newPixelPos = oldPixelPos
+		} else {
+			var offerDirection = getDirectionForOffer(beltDirection, oldPixelPos)
+			movement = getPixelPositionFromDirection(offerDirection)
+			newPixelPos = pixelPosition{oldPixelPos.x + movement.x, oldPixelPos.y + movement.y}
+		}
 		newOffers[newPixelPos] = offer
 	}
 	s.offers = newOffers
 }
 
 func (s *state) produceOffers() {
-	for gridPos, kind := range s.producers {
-		var offerPixelPos = getPixelPosition(gridPos, innerGridPosition{13, 5})
-		s.offers[offerPixelPos] = offer{kind}
+	for gridPos, producer := range s.producers {
+		var relativeGridPos = producer.getOfferPosition()
+		var newGridPos = gridPosition{gridPos.x + relativeGridPos.x, gridPos.y + relativeGridPos.y}
+		var newInnerGridX = rand.IntN(gridSize) - (offerSize / 2)
+		var newInnerGridY = rand.IntN(gridSize) - (offerSize / 2)
+		var offerPixelPos = getPixelPosition(newGridPos, innerGridPosition{newInnerGridX, newInnerGridY})
+		s.offers[offerPixelPos] = offer{producer.offerType}
 	}
 }
 
 func (s *state) consumeoffers() {
-	for pixelPos, _ := range s.offers {
-		var gridPos, _ = splitPixelPosition(pixelPos)
-		if s.consumers[gridPos] != noKind {
+	for pixelPos := range s.offers {
+		var gridPos, _ = splitPixelPositionForOffer(pixelPos)
+		if s.consumer.x == gridPos.x && s.consumer.y == gridPos.y {
 			delete(s.offers, pixelPos)
 		}
 	}
@@ -132,40 +141,30 @@ func (s *state) drawBelts(screen *ebiten.Image) {
 	}
 }
 
-func (s *state) addConsumer(gridPosition gridPosition, kind kind) {
-	s.consumers[gridPosition] = kind
+func (s *state) addConsumer(gridPosition *gridPosition) {
+	if s.consumer != nil {
+		panic("cannot have more than one consumer")
+	}
+	s.consumer = gridPosition
 }
 
 func (s *state) drawConsumers(screen *ebiten.Image) {
-	for gridPos, kind := range s.consumers {
-		var xLeft = float32(gridSize * windowMultiplier * gridPos.x)
-		var yUp = float32(gridSize * windowMultiplier * gridPos.y)
 
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Scale(windowMultiplier, windowMultiplier)
-		op.GeoM.Translate(float64(xLeft), float64(yUp))
+	var xLeft = float32(gridSize * windowMultiplier * s.consumer.x)
+	var yUp = float32(gridSize * windowMultiplier * s.consumer.y)
 
-		var image *ebiten.Image
-		switch kind {
-		case skull:
-			image = consumerSkullImage
-		case candy:
-			image = consumerCandyImage
-		case flower:
-			image = consumerFlowerImage
-		default:
-			panic(fmt.Sprintf("unexpected main.offer: %#v", kind))
-		}
-		screen.DrawImage(image, op)
-	}
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(windowMultiplier, windowMultiplier)
+	op.GeoM.Translate(float64(xLeft), float64(yUp))
+	screen.DrawImage(ofrendaImage, op)
 }
 
-func (s *state) addProducer(gridPosition gridPosition, kind kind) {
-	s.producers[gridPosition] = kind
+func (s *state) addProducer(gridPosition gridPosition, ot offerType) {
+	s.producers[gridPosition] = *newProducer(ot)
 }
 
 func (s *state) drawProducers(screen *ebiten.Image) {
-	for gridPos, kind := range s.producers {
+	for gridPos, producer := range s.producers {
 		var xLeft = float32(gridSize * windowMultiplier * gridPos.x)
 		var yUp = float32(gridSize * windowMultiplier * gridPos.y)
 
@@ -174,7 +173,7 @@ func (s *state) drawProducers(screen *ebiten.Image) {
 		op.GeoM.Translate(float64(xLeft), float64(yUp))
 
 		var image *ebiten.Image
-		switch kind {
+		switch producer.offerType {
 		case skull:
 			image = producerImage
 		case candy:
@@ -182,7 +181,7 @@ func (s *state) drawProducers(screen *ebiten.Image) {
 		case flower:
 			image = producerImage
 		default:
-			panic(fmt.Sprintf("unexpected main.offer: %#v", kind))
+			panic(fmt.Sprintf("unexpected main.producer: %#v", producer))
 		}
 		screen.DrawImage(image, op)
 	}
@@ -202,7 +201,7 @@ func (s *state) drawoffers(screen *ebiten.Image) {
 		op.GeoM.Translate(xLeft, float64(yUp))
 
 		var image *ebiten.Image
-		switch offer.kind {
+		switch offer.offerType {
 		case skull:
 			image = skullImage
 		case candy:

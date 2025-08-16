@@ -2,9 +2,6 @@
 
 ## next checkpoint 
 
-- new producers 
-- belts that work with new producers
-- ofrenda which consumes
 - rounds with objectives
 
 ## future checkpoints
@@ -12,6 +9,7 @@
 - iterate on design of game 
 - iterate on goal of game 
 - user interace
+- polish producers
 
 ## Game Design
 
@@ -46,6 +44,7 @@ producer:
 
 ## theme 
 
+- (the) Gnorp Apologue
 - day of the dead
 - vibrant and bright color palette like calaveras
 - mexican

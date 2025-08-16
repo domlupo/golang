@@ -1,22 +1,22 @@
 package main
 
-type kind int
+type offerType int
 
 const (
-	noKind kind = iota
-	skull
+	noOfferType offerType = iota
+	bottle
 	candy
 	flower
-	bottle
+	skull
 )
 
 type offer struct {
-	kind kind
+	offerType offerType
 }
 
-func newOffer(kind kind) *offer {
-	s := offer{
-		kind: kind,
+func newOffer(ot offerType) *offer {
+	o := offer{
+		offerType: ot,
 	}
-	return &s
+	return &o
 }

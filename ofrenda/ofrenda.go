@@ -18,7 +18,6 @@ const windowWidth = 1280
 const windowHeight = 720
 const gridSize = 40
 const offerSize = 14
-const beltMiddleLineWidth = 2
 
 var backgroundColor = color.RGBA{200, 200, 200, 0xff}
 
@@ -59,19 +58,11 @@ var beltUpLeftImage *ebiten.Image
 var beltUpRightImage *ebiten.Image
 var producerImage *ebiten.Image
 
-var consumerSkullImage *ebiten.Image
-var consumerCandyImage *ebiten.Image
-var consumerFlowerImage *ebiten.Image
+var ofrendaImage *ebiten.Image
 
-var skullImage *ebiten.Image
 var candyImage *ebiten.Image
 var flowerImage *ebiten.Image
-
-var moverImage *ebiten.Image
-var moverLongDownImage *ebiten.Image
-var moverLongUpImage *ebiten.Image
-var moverShortDownImage *ebiten.Image
-var moverShortUpImage *ebiten.Image
+var skullImage *ebiten.Image
 
 var gameState state
 
@@ -98,19 +89,36 @@ func init() {
 	beltUpImage, _, _ = ebitenutil.NewImageFromFile("assets/beltUp.png")
 	beltUpLeftImage, _, _ = ebitenutil.NewImageFromFile("assets/beltUpLeft.png")
 	beltUpRightImage, _, _ = ebitenutil.NewImageFromFile("assets/beltUpRight.png")
-	// consumer images
-	consumerSkullImage, _, _ = ebitenutil.NewImageFromFile("assets/consumerCircle.png")
-	consumerCandyImage, _, _ = ebitenutil.NewImageFromFile("assets/consumerCross.png")
-	consumerFlowerImage, _, _ = ebitenutil.NewImageFromFile("assets/consumerSquare.png")
-	// producer images
+	// TODO: update this to ofrenda image
+	ofrendaImage, _, _ = ebitenutil.NewImageFromFile("assets/consumerCircle.png")
 	producerImage, _, _ = ebitenutil.NewImageFromFile("assets/producer.png")
 	// offer images
-	skullImage, _, _ = ebitenutil.NewImageFromFile("assets/circle.png")
-	candyImage, _, _ = ebitenutil.NewImageFromFile("assets/cross.png")
-	flowerImage, _, _ = ebitenutil.NewImageFromFile("assets/square.png")
+	candyImage, _, _ = ebitenutil.NewImageFromFile("assets/candy.png")
+	flowerImage, _, _ = ebitenutil.NewImageFromFile("assets/flower.png")
+	skullImage, _, _ = ebitenutil.NewImageFromFile("assets/skull.png")
 
 	// game setup
 	gameState = *newState()
+
+	gameState.addConsumer(&gridPosition{4, 1})
+
+	gameState.addBelt(gridPosition{1, 2}, bUp)
+	gameState.addBelt(gridPosition{1, 1}, bUpRight)
+	gameState.addBelt(gridPosition{2, 1}, bRight)
+	gameState.addBelt(gridPosition{3, 1}, bRight)
+
+	gameState.addProducer(gridPosition{2, 2}, skull)
+
+	gameState.addBelt(gridPosition{8, 1}, bLeft)
+	gameState.addBelt(gridPosition{7, 1}, bLeftDown)
+	gameState.addBelt(gridPosition{7, 2}, bDownLeft)
+	gameState.addBelt(gridPosition{6, 2}, bLeft)
+	gameState.addBelt(gridPosition{5, 2}, bLeftUp)
+	gameState.addBelt(gridPosition{5, 1}, bUpLeft)
+	gameState.addProducer(gridPosition{8, 2}, candy)
+
+	gameState.addProducer(gridPosition{10, 10}, flower)
+	gameState.addCCWBelt(gridPosition{9, 9})
 }
 
 var currentTime time.Time
@@ -120,6 +128,9 @@ var produceDelay time.Duration = 1 * time.Second
 
 func (g *game) Update() error {
 	currentTime = time.Now()
+
+	gameState.consumeoffers()
+	gameState.moveoffers()
 
 	if wait < produceDelay {
 		wait = wait + currentTime.Sub(priorTime)
