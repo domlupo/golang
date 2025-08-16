@@ -17,7 +17,7 @@ const windowMultiplier = 2.5
 const windowWidth = 1280
 const windowHeight = 720
 const gridSize = 40
-const shapeSize = 14
+const offerSize = 14
 const beltMiddleLineWidth = 2
 
 var backgroundColor = color.RGBA{200, 200, 200, 0xff}
@@ -57,13 +57,15 @@ var beltRightUpImage *ebiten.Image
 var beltUpImage *ebiten.Image
 var beltUpLeftImage *ebiten.Image
 var beltUpRightImage *ebiten.Image
-var circleImage *ebiten.Image
-var consumerCircleImage *ebiten.Image
-var consumerCrossImage *ebiten.Image
-var consumerSquareImage *ebiten.Image
-var crossImage *ebiten.Image
 var producerImage *ebiten.Image
-var squareImage *ebiten.Image
+
+var consumerSkullImage *ebiten.Image
+var consumerCandyImage *ebiten.Image
+var consumerFlowerImage *ebiten.Image
+
+var skullImage *ebiten.Image
+var candyImage *ebiten.Image
+var flowerImage *ebiten.Image
 
 var moverImage *ebiten.Image
 var moverLongDownImage *ebiten.Image
@@ -97,15 +99,15 @@ func init() {
 	beltUpLeftImage, _, _ = ebitenutil.NewImageFromFile("assets/beltUpLeft.png")
 	beltUpRightImage, _, _ = ebitenutil.NewImageFromFile("assets/beltUpRight.png")
 	// consumer images
-	consumerCircleImage, _, _ = ebitenutil.NewImageFromFile("assets/consumerCircle.png")
-	consumerCrossImage, _, _ = ebitenutil.NewImageFromFile("assets/consumerCross.png")
-	consumerSquareImage, _, _ = ebitenutil.NewImageFromFile("assets/consumerSquare.png")
+	consumerSkullImage, _, _ = ebitenutil.NewImageFromFile("assets/consumerCircle.png")
+	consumerCandyImage, _, _ = ebitenutil.NewImageFromFile("assets/consumerCross.png")
+	consumerFlowerImage, _, _ = ebitenutil.NewImageFromFile("assets/consumerSquare.png")
 	// producer images
 	producerImage, _, _ = ebitenutil.NewImageFromFile("assets/producer.png")
-	// shape images
-	circleImage, _, _ = ebitenutil.NewImageFromFile("assets/circle.png")
-	crossImage, _, _ = ebitenutil.NewImageFromFile("assets/cross.png")
-	squareImage, _, _ = ebitenutil.NewImageFromFile("assets/square.png")
+	// offer images
+	skullImage, _, _ = ebitenutil.NewImageFromFile("assets/circle.png")
+	candyImage, _, _ = ebitenutil.NewImageFromFile("assets/cross.png")
+	flowerImage, _, _ = ebitenutil.NewImageFromFile("assets/square.png")
 
 	// game setup
 	gameState = *newState()
@@ -123,7 +125,7 @@ func (g *game) Update() error {
 		wait = wait + currentTime.Sub(priorTime)
 	} else {
 		wait = 0
-		gameState.produceShapes()
+		gameState.produceOffers()
 	}
 
 	priorTime = currentTime

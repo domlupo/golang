@@ -8,13 +8,13 @@ type gridPosition struct {
 	y int // 0 - 18
 }
 
-// readable high resolution position used for non grid items like shapes
+// readable high resolution position used for non grid items like offers
 type innerGridPosition struct {
 	x int
 	y int
 }
 
-// unreadable high resolution position used for non grid items like shape
+// unreadable high resolution position used for non grid items like offers
 type pixelPosition struct {
 	x int
 	y int
@@ -51,16 +51,16 @@ func getPixelPositionFromDirection(direction direction) pixelPosition {
 	}
 }
 
-func getBeltGridPosFromShapePixelPos(pixelPos pixelPosition) gridPosition {
-	var x = ((pixelPos.x + (shapeSize / 2)) / gridSize)
-	var y = ((pixelPos.y + (shapeSize / 2)) / gridSize)
+func getBeltGridPosFromOfferPixelPos(pixelPos pixelPosition) gridPosition {
+	var x = ((pixelPos.x + (offerSize / 2)) / gridSize)
+	var y = ((pixelPos.y + (offerSize / 2)) / gridSize)
 
 	return gridPosition{x, y}
 }
 
-func getDirectionForShape(bd beltDirection, pixelPos pixelPosition) direction {
+func getDirectionForOffer(bd beltDirection, pixelPos pixelPosition) direction {
 	var innerGridPos = innerGridPosition{pixelPos.x % gridSize, pixelPos.y % gridSize}
-	var smallOffset = (gridSize / 2) - shapeSize - (beltMiddleLineWidth / 2)
+	var smallOffset = (gridSize / 2) - offerSize - (beltMiddleLineWidth / 2)
 	var largeOffset = (gridSize / 2) + (beltMiddleLineWidth / 2)
 
 	switch bd {

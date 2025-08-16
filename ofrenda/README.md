@@ -20,9 +20,9 @@ The game should be quick and as simple as possible. I want to release it in ~2 m
 Goal: Collect items for the ofrenda.
 
 Short term goals: 
- - Collect X shape of Y color each round
+ - Collect X offer of Y color each round
  - Maybe let user select 1 of 3 goals or remove 1 and then randomize the remaining
- - Maybe let the users select X shape or Y color
+ - Maybe let the users select X offer or Y color
 
 Long term goals: 
  - Short term goals sum for the next round.
@@ -30,7 +30,7 @@ Long term goals:
  - Ofrenda congestion
 
 producer:
- - at start of game, color, item, shape, rate, size and location is set
+ - at start of game, color, item, offer, rate, size and location is set
  - items can bounce against a wall. So spaces can have different rates within the same producer
 
 ## item ideas

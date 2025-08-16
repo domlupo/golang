@@ -26,7 +26,7 @@ const (
 
 // not enforced, but must be be a singleton
 type state struct {
-	shapes    map[pixelPosition]shape
+	offers    map[pixelPosition]offer
 	belts     map[gridPosition]beltDirection
 	consumers map[gridPosition]kind
 	producers map[gridPosition]kind
@@ -34,11 +34,10 @@ type state struct {
 
 func newState() *state {
 	s := state{
-		shapes:    make(map[pixelPosition]shape),
+		offers:    make(map[pixelPosition]offer),
 		belts:     make(map[gridPosition]beltDirection),
 		consumers: make(map[gridPosition]kind),
-		producers: make(map[gridPosition]kind),
-	}
+		producers: make(map[gridPosition]kind)}
 	return &s
 }
 
@@ -46,47 +45,43 @@ func (s *state) draw(screen *ebiten.Image) {
 	s.drawBelts(screen)
 	s.drawProducers(screen)
 	s.drawConsumers(screen)
-	// shapes need to be draw last since they appear above everything else
-	s.drawShapes(screen)
+	// offers need to be draw last since they appear above everything else
+	s.drawoffers(screen)
 }
 
 // TODO: This needs thought out more due to complexity. It is only a simple case.
-// The full implementation needs to verify all related shape position are possible
-// before moving forward. It also needs to verify no shapes are being overwritten
+// The full implementation needs to verify all related offer position are possible
+// before moving forward. It also needs to verify no offers are being overwritten
 // due to occupying the same pixel position. There is probably also determinism
 // concerns as well as other complexities.
-func (s *state) moveShapes() {
-	var newShapes = make(map[pixelPosition]shape)
+func (s *state) moveoffers() {
+	var newOffers = make(map[pixelPosition]offer)
 
 	var newPixelPos pixelPosition
-	for oldPixelPos, shape := range s.shapes {
+	for oldPixelPos, offer := range s.offers {
 		var movement pixelPosition
-		if shape.shapeState == locked {
-			movement = pixelPosition{0, 0}
-		} else {
-			var beltGridPos = getBeltGridPosFromShapePixelPos(oldPixelPos)
-			var beltDirection = s.belts[beltGridPos]
-			var shapeDirection = getDirectionForShape(beltDirection, oldPixelPos)
-			movement = getPixelPositionFromDirection(shapeDirection)
-		}
+		var beltGridPos = getBeltGridPosFromofferPixelPos(oldPixelPos)
+		var beltDirection = s.belts[beltGridPos]
+		var offerDirection = getDirectionForShape(beltDirection, oldPixelPos)
+		movement = getPixelPositionFromDirection(offerDirection)
 		newPixelPos = pixelPosition{oldPixelPos.x + movement.x, oldPixelPos.y + movement.y}
-		newShapes[newPixelPos] = shape
+		newOffers[newPixelPos] = offer
 	}
-	s.shapes = newShapes
+	s.offers = newOffers
 }
 
-func (s *state) produceShapes() {
+func (s *state) produceOffers() {
 	for gridPos, kind := range s.producers {
-		var shapePixelPos = getPixelPosition(gridPos, innerGridPosition{13, 5})
-		s.shapes[shapePixelPos] = shape{kind, free}
+		var offerPixelPos = getPixelPosition(gridPos, innerGridPosition{13, 5})
+		s.offers[offerPixelPos] = offer{kind}
 	}
 }
 
-func (s *state) consumeShapes() {
-	for pixelPos, _ := range s.shapes {
+func (s *state) consumeoffers() {
+	for pixelPos, _ := range s.offers {
 		var gridPos, _ = splitPixelPosition(pixelPos)
 		if s.consumers[gridPos] != noKind {
-			delete(s.shapes, pixelPos)
+			delete(s.offers, pixelPos)
 		}
 	}
 }
@@ -152,14 +147,14 @@ func (s *state) drawConsumers(screen *ebiten.Image) {
 
 		var image *ebiten.Image
 		switch kind {
-		case circle:
-			image = consumerCircleImage
-		case cross:
-			image = consumerCrossImage
-		case square:
-			image = consumerSquareImage
+		case skull:
+			image = consumerSkullImage
+		case candy:
+			image = consumerCandyImage
+		case flower:
+			image = consumerFlowerImage
 		default:
-			panic(fmt.Sprintf("unexpected main.shape: %#v", kind))
+			panic(fmt.Sprintf("unexpected main.offer: %#v", kind))
 		}
 		screen.DrawImage(image, op)
 	}
@@ -180,25 +175,25 @@ func (s *state) drawProducers(screen *ebiten.Image) {
 
 		var image *ebiten.Image
 		switch kind {
-		case circle:
+		case skull:
 			image = producerImage
-		case cross:
+		case candy:
 			image = producerImage
-		case square:
+		case flower:
 			image = producerImage
 		default:
-			panic(fmt.Sprintf("unexpected main.shape: %#v", kind))
+			panic(fmt.Sprintf("unexpected main.offer: %#v", kind))
 		}
 		screen.DrawImage(image, op)
 	}
 }
 
-func (s *state) addShape(pixelPos pixelPosition, shape shape) {
-	s.shapes[pixelPos] = shape
+func (s *state) addOffer(pixelPos pixelPosition, offer offer) {
+	s.offers[pixelPos] = offer
 }
 
-func (s *state) drawShapes(screen *ebiten.Image) {
-	for pixelPosition, shape := range s.shapes {
+func (s *state) drawoffers(screen *ebiten.Image) {
+	for pixelPosition, offer := range s.offers {
 		var xLeft = float64(pixelPosition.x) * windowMultiplier
 		var yUp = float64(pixelPosition.y) * windowMultiplier
 
@@ -207,15 +202,15 @@ func (s *state) drawShapes(screen *ebiten.Image) {
 		op.GeoM.Translate(xLeft, float64(yUp))
 
 		var image *ebiten.Image
-		switch shape.kind {
-		case circle:
-			image = circleImage
-		case cross:
-			image = crossImage
-		case square:
-			image = squareImage
+		switch offer.kind {
+		case skull:
+			image = skullImage
+		case candy:
+			image = candyImage
+		case flower:
+			image = flowerImage
 		default:
-			panic(fmt.Sprintf("cannot draw shape, unexpected main.shape: %#v", shape))
+			panic(fmt.Sprintf("cannot draw offer, unexpected main.offer: %#v", offer))
 		}
 		screen.DrawImage(image, op)
 	}
