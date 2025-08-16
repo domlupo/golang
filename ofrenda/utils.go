@@ -54,15 +54,7 @@ func (s state) addCWBelt(topLeftCorner gridPosition) *state {
 	return &s
 }
 
-func (s state) addMoversAndBelts(topLeftCorner gridPosition) *state {
-	// first row movers
-	s.addMover(gridPosition{topLeftCorner.x, topLeftCorner.y}, newMover(short, mDown))
-	s.addMover(gridPosition{topLeftCorner.x + 1, topLeftCorner.y}, newMover(short, mDown))
-	s.addMover(gridPosition{topLeftCorner.x + 2, topLeftCorner.y}, newMover(short, mDown))
-	s.addMover(gridPosition{topLeftCorner.x + 3, topLeftCorner.y}, newMover(long, mDown))
-	s.addMover(gridPosition{topLeftCorner.x + 4, topLeftCorner.y}, newMover(long, mDown))
-	s.addMover(gridPosition{topLeftCorner.x + 5, topLeftCorner.y}, newMover(long, mDown))
-
+func (s state) addBelts(topLeftCorner gridPosition) *state {
 	// second row belts
 	s.addBelt(gridPosition{topLeftCorner.x, topLeftCorner.y + 1}, bRight)
 	s.addBelt(gridPosition{topLeftCorner.x + 1, topLeftCorner.y + 1}, bRight)
@@ -78,49 +70,6 @@ func (s state) addMoversAndBelts(topLeftCorner gridPosition) *state {
 	s.addBelt(gridPosition{topLeftCorner.x + 3, topLeftCorner.y + 2}, bRight)
 	s.addBelt(gridPosition{topLeftCorner.x + 4, topLeftCorner.y + 2}, bRight)
 	s.addBelt(gridPosition{topLeftCorner.x + 5, topLeftCorner.y + 2}, bRight)
-
-	// fourth row movers
-	s.addMover(gridPosition{topLeftCorner.x, topLeftCorner.y + 3}, newMover(short, mUp))
-	s.addMover(gridPosition{topLeftCorner.x + 1, topLeftCorner.y + 3}, newMover(short, mUp))
-	s.addMover(gridPosition{topLeftCorner.x + 2, topLeftCorner.y + 3}, newMover(short, mUp))
-	s.addMover(gridPosition{topLeftCorner.x + 3, topLeftCorner.y + 3}, newMover(long, mUp))
-	s.addMover(gridPosition{topLeftCorner.x + 4, topLeftCorner.y + 3}, newMover(long, mUp))
-	s.addMover(gridPosition{topLeftCorner.x + 5, topLeftCorner.y + 3}, newMover(long, mUp))
-	return &s
-}
-
-func (s state) addMoversAndConsumers(topLeftCorner gridPosition) *state {
-	// first row movers
-	s.addMover(gridPosition{topLeftCorner.x, topLeftCorner.y}, newMover(short, mDown))
-	s.addMover(gridPosition{topLeftCorner.x + 1, topLeftCorner.y}, newMover(short, mDown))
-	s.addMover(gridPosition{topLeftCorner.x + 2, topLeftCorner.y}, newMover(short, mDown))
-	s.addMover(gridPosition{topLeftCorner.x + 3, topLeftCorner.y}, newMover(long, mDown))
-	s.addMover(gridPosition{topLeftCorner.x + 4, topLeftCorner.y}, newMover(long, mDown))
-	s.addMover(gridPosition{topLeftCorner.x + 5, topLeftCorner.y}, newMover(long, mDown))
-
-	// second row consumers
-	s.addConsumer(gridPosition{topLeftCorner.x, topLeftCorner.y + 1}, circle)
-	s.addConsumer(gridPosition{topLeftCorner.x + 1, topLeftCorner.y + 1}, cross)
-	s.addConsumer(gridPosition{topLeftCorner.x + 2, topLeftCorner.y + 1}, square)
-	s.addConsumer(gridPosition{topLeftCorner.x + 3, topLeftCorner.y + 1}, circle)
-	s.addConsumer(gridPosition{topLeftCorner.x + 4, topLeftCorner.y + 1}, cross)
-	s.addConsumer(gridPosition{topLeftCorner.x + 5, topLeftCorner.y + 1}, square)
-
-	// third row consumers
-	s.addConsumer(gridPosition{topLeftCorner.x, topLeftCorner.y + 2}, circle)
-	s.addConsumer(gridPosition{topLeftCorner.x + 1, topLeftCorner.y + 2}, cross)
-	s.addConsumer(gridPosition{topLeftCorner.x + 2, topLeftCorner.y + 2}, square)
-	s.addConsumer(gridPosition{topLeftCorner.x + 3, topLeftCorner.y + 2}, circle)
-	s.addConsumer(gridPosition{topLeftCorner.x + 4, topLeftCorner.y + 2}, cross)
-	s.addConsumer(gridPosition{topLeftCorner.x + 5, topLeftCorner.y + 2}, square)
-
-	// fourth row movers
-	s.addMover(gridPosition{topLeftCorner.x, topLeftCorner.y + 3}, newMover(short, mUp))
-	s.addMover(gridPosition{topLeftCorner.x + 1, topLeftCorner.y + 3}, newMover(short, mUp))
-	s.addMover(gridPosition{topLeftCorner.x + 2, topLeftCorner.y + 3}, newMover(short, mUp))
-	s.addMover(gridPosition{topLeftCorner.x + 3, topLeftCorner.y + 3}, newMover(long, mUp))
-	s.addMover(gridPosition{topLeftCorner.x + 4, topLeftCorner.y + 3}, newMover(long, mUp))
-	s.addMover(gridPosition{topLeftCorner.x + 5, topLeftCorner.y + 3}, newMover(long, mUp))
 
 	return &s
 }

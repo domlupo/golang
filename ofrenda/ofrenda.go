@@ -107,24 +107,8 @@ func init() {
 	crossImage, _, _ = ebitenutil.NewImageFromFile("assets/cross.png")
 	squareImage, _, _ = ebitenutil.NewImageFromFile("assets/square.png")
 
-	// mover images
-	moverImage, _, _ = ebitenutil.NewImageFromFile("assets/mover.png")
-	moverLongDownImage, _, _ = ebitenutil.NewImageFromFile("assets/moverLongDown.png")
-	moverLongUpImage, _, _ = ebitenutil.NewImageFromFile("assets/moverLongUp.png")
-	moverShortDownImage, _, _ = ebitenutil.NewImageFromFile("assets/moverShortDown.png")
-	moverShortUpImage, _, _ = ebitenutil.NewImageFromFile("assets/moverShortUp.png")
-
 	// game setup
 	gameState = *newState()
-
-	gameState.addMover(gridPosition{3, 2}, mover{short, mDown, waiting, noKind})
-	gameState.addMover(gridPosition{3, 5}, mover{long, mUp, waiting, noKind})
-	gameState.addProducer(gridPosition{3, 3}, circle)
-	gameState.addConsumer(gridPosition{3, 6}, circle)
-	gameState.addCCWBelt(gridPosition{1, 1})
-
-	// HACK: Needed while shapes start on movers
-	gameState.moveShapes()
 }
 
 var currentTime time.Time
@@ -134,12 +118,6 @@ var produceDelay time.Duration = 1 * time.Second
 
 func (g *game) Update() error {
 	currentTime = time.Now()
-
-	gameState.unlockShapes()
-	gameState.lockShapes()
-	gameState.moveMovers()
-	gameState.consumeShapes()
-	gameState.moveShapes()
 
 	if wait < produceDelay {
 		wait = wait + currentTime.Sub(priorTime)

@@ -30,7 +30,6 @@ type state struct {
 	belts     map[gridPosition]beltDirection
 	consumers map[gridPosition]kind
 	producers map[gridPosition]kind
-	movers    map[gridPosition]mover
 }
 
 func newState() *state {
@@ -39,7 +38,6 @@ func newState() *state {
 		belts:     make(map[gridPosition]beltDirection),
 		consumers: make(map[gridPosition]kind),
 		producers: make(map[gridPosition]kind),
-		movers:    make(map[gridPosition]mover),
 	}
 	return &s
 }
@@ -48,8 +46,6 @@ func (s *state) draw(screen *ebiten.Image) {
 	s.drawBelts(screen)
 	s.drawProducers(screen)
 	s.drawConsumers(screen)
-	// movers need to be drawn after belts, producers and consumsers since they appear above them
-	s.drawMovers(screen)
 	// shapes need to be draw last since they appear above everything else
 	s.drawShapes(screen)
 }
@@ -77,34 +73,6 @@ func (s *state) moveShapes() {
 		newShapes[newPixelPos] = shape
 	}
 	s.shapes = newShapes
-}
-
-func (s *state) moveMovers() {
-	for gridPos, m := range s.movers {
-		s.movers[gridPos] = m.update()
-	}
-}
-
-func (s *state) lockShapes() {
-	for gridPos, m := range s.movers {
-		var shapePixelPos = m.getMoverShapePixelPos(gridPos)
-		var shape = s.shapes[shapePixelPos]
-		if shape.shapeState == free {
-			delete(s.shapes, shapePixelPos)
-			s.movers[gridPos] = mover{m.length, m.direction, moving, shape.kind}
-		}
-	}
-}
-
-func (s *state) unlockShapes() {
-	for gridPos, m := range s.movers {
-		if m.moverState == dropping {
-			var shapeKind = m.lockedShapeKind
-			var shapePixelPos = m.getMoverShapePixelPos(gridPos)
-			s.shapes[shapePixelPos] = shape{shapeKind, free}
-			s.movers[gridPos] = mover{m.length, m.direction, waiting, noKind}
-		}
-	}
 }
 
 func (s *state) produceShapes() {
@@ -225,79 +193,9 @@ func (s *state) drawProducers(screen *ebiten.Image) {
 	}
 }
 
-func (s *state) addMover(gridPosition gridPosition, mover mover) {
-	s.movers[gridPosition] = mover
-}
-
-func (s *state) drawMovers(screen *ebiten.Image) {
-	for gridPos, m := range s.movers {
-		var xLeft = float32(gridSize * windowMultiplier * gridPos.x)
-		var yUp = float32(gridSize * windowMultiplier * gridPos.y)
-
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Scale(windowMultiplier, windowMultiplier)
-		op.GeoM.Translate(float64(xLeft), float64(yUp))
-
-		var image *ebiten.Image
-		if (m.length == none && m.direction == mNone) || m.moverState == moving {
-			image = moverImage
-		} else if (m.length == short && m.direction == mDown && m.moverState == waiting) || (m.length == short && m.direction == mUp && m.moverState == dropping) {
-			image = moverShortDownImage
-		} else if (m.length == long && m.direction == mDown && m.moverState == waiting) || (m.length == long && m.direction == mUp && m.moverState == dropping) {
-			image = moverLongDownImage
-		} else if (m.length == short && m.direction == mUp && m.moverState == waiting) || (m.length == short && m.direction == mDown && m.moverState == dropping) {
-			// up mover needs to be in space above itself, so shift it up one grid
-			op.GeoM.Translate(0, -float64(gridSize*windowMultiplier))
-			image = moverShortUpImage
-		} else if (m.length == long && m.direction == mUp && m.moverState == waiting) || (m.length == long && m.direction == mDown && m.moverState == dropping) {
-			// up mover needs to be in space above itself, so shift it up one grid
-			op.GeoM.Translate(0, -float64(gridSize*windowMultiplier))
-			image = moverLongUpImage
-		} else {
-			panic(fmt.Sprintf("cannot draw mover, unexpected main.mover: %#v", m))
-		}
-		screen.DrawImage(image, op)
-	}
-}
-
 func (s *state) addShape(pixelPos pixelPosition, shape shape) {
 	s.shapes[pixelPos] = shape
 }
-
-func (s *state) addShapeToMover(gridPos gridPosition, shape shape) {
-	var m mover
-	if s.movers[gridPos] == m {
-		panic(fmt.Sprintf("A belt must exist to add a shape at: %#v", gridPos))
-	}
-	m = s.movers[gridPos]
-	s.addShape(m.getMoverShapePixelPos(gridPos), shape)
-}
-
-// TODO: Not finished, prioritized other code before handling all cases for this
-/*
-func (s *state) addShapeToBeltStart(gridPosition gridPosition, shape shape, directionPriority direction) {
-	var beltDirection beltDirection
-	if s.belts[gridPosition] == 0 {
-		panic(fmt.Sprintf("A belt must exist to add a shape at: %#v", gridPosition))
-	}
-
-	beltDirection = s.belts[gridPosition]
-	var smallerOffset = (gridSize / 2) - (beltMiddleLineWidth / 2) - shapeSize
-	var largerOffset = (gridSize / 2) + (beltMiddleLineWidth / 2)
-
-	if beltDirection == bRight && directionPriority == up {
-		s.addShape(gridPosition, innerGridPosition{0, smallerOffset}, shape)
-	} else if beltDirection == bRight && directionPriority == down {
-		s.addShape(gridPosition, innerGridPosition{0, largerOffset}, shape)
-	} else if beltDirection == bUpRight && directionPriority == left {
-		s.addShape(gridPosition, innerGridPosition{smallerOffset, gridSize - shapeSize}, shape)
-	} else if beltDirection == bUpRight && directionPriority == right {
-		s.addShape(gridPosition, innerGridPosition{largerOffset, gridSize - shapeSize}, shape)
-	} else {
-		panic(fmt.Sprintf("Need to implement for: %#v", beltDirection))
-	}
-}
-*/
 
 func (s *state) drawShapes(screen *ebiten.Image) {
 	for pixelPosition, shape := range s.shapes {
