@@ -5,6 +5,7 @@ import (
 	"math/rand/v2"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 type beltDirection int
@@ -89,6 +90,10 @@ func (s *state) produceOffers() {
 }
 
 func (s *state) consumeoffers() {
+	if s.consumer == nil {
+		return
+	}
+
 	for pixelPos := range s.offers {
 		var gridPos, _ = splitPixelPositionForOffer(pixelPos)
 		if s.consumer.x == gridPos.x && s.consumer.y == gridPos.y {
@@ -152,6 +157,9 @@ func (s *state) addConsumer(gridPosition *gridPosition) {
 }
 
 func (s *state) drawConsumers(screen *ebiten.Image) {
+	if s.consumer == nil {
+		return
+	}
 
 	var xLeft = float32(gridSize * windowMultiplier * s.consumer.x)
 	var yUp = float32(gridSize * windowMultiplier * s.consumer.y)
@@ -162,8 +170,8 @@ func (s *state) drawConsumers(screen *ebiten.Image) {
 	screen.DrawImage(ofrendaImage, op)
 }
 
-func (s *state) addProducer(gridPosition gridPosition, ot offerType) {
-	s.producers[gridPosition] = *newProducer(ot)
+func (s *state) addProducer(gridPosition gridPosition, ot offerType, size int) {
+	s.producers[gridPosition] = *newProducer(ot, size)
 }
 
 func (s *state) drawProducers(screen *ebiten.Image) {
@@ -175,20 +183,63 @@ func (s *state) drawProducers(screen *ebiten.Image) {
 		op.GeoM.Scale(windowMultiplier, windowMultiplier)
 		op.GeoM.Translate(float64(xLeft), float64(yUp))
 
-		var image *ebiten.Image
+		screen.DrawImage(producerImage, op)
+		// TODO: This is a hack. 1. It does not consider windowMultiplier
+		// 2. It is eyeballed to be centered, not exact. Need to determine
+		// how this should even be displayed to player, this is just for prototype
+		var offerOffset = float64(30)
+		op.GeoM.Translate(offerOffset, offerOffset)
 		switch producer.offerType {
 		case bottle:
-			image = producerImage
+			screen.DrawImage(bottleImage, op)
 		case candy:
-			image = producerImage
+			screen.DrawImage(candyImage, op)
 		case flower:
-			image = producerImage
+			screen.DrawImage(flowerImage, op)
 		case skull:
-			image = producerImage
+			screen.DrawImage(skullImage, op)
 		default:
 			panic(fmt.Sprintf("unexpected main.producer: %#v", producer))
 		}
-		screen.DrawImage(image, op)
+	}
+}
+
+func (s *state) drawProducerOutputRange(screen *ebiten.Image) {
+	for producerGridPos, p := range s.producers {
+		for _, outputGridPos := range p.getOfferPositions() {
+			// draw top line
+			vector.StrokeLine(screen,
+				float32(producerGridPos.x*gridSize)*windowMultiplier+float32(outputGridPos.x*gridSize)*windowMultiplier,
+				float32(producerGridPos.y*gridSize)*windowMultiplier+float32(outputGridPos.y*gridSize)*windowMultiplier,
+				float32(producerGridPos.x*gridSize+gridSize)*windowMultiplier+float32(outputGridPos.x*gridSize)*windowMultiplier,
+				float32(producerGridPos.y*gridSize)*windowMultiplier+float32(outputGridPos.y*gridSize)*windowMultiplier,
+				float32(producerOutputRangeLineWidth)*windowMultiplier,
+				producerOutputRangeColor, false)
+			// draw left line
+			vector.StrokeLine(screen,
+				float32(producerGridPos.x*gridSize)*windowMultiplier+float32(outputGridPos.x*gridSize)*windowMultiplier,
+				float32(producerGridPos.y*gridSize)*windowMultiplier+float32(outputGridPos.y*gridSize)*windowMultiplier,
+				float32(producerGridPos.x*gridSize)*windowMultiplier+float32(outputGridPos.x*gridSize)*windowMultiplier,
+				float32(producerGridPos.y*gridSize+gridSize)*windowMultiplier+float32(outputGridPos.y*gridSize)*windowMultiplier,
+				float32(producerOutputRangeLineWidth)*windowMultiplier,
+				producerOutputRangeColor, false)
+			// draw right line
+			vector.StrokeLine(screen,
+				float32(producerGridPos.x*gridSize+gridSize)*windowMultiplier+float32(outputGridPos.x*gridSize)*windowMultiplier,
+				float32(producerGridPos.y*gridSize)*windowMultiplier+float32(outputGridPos.y*gridSize)*windowMultiplier,
+				float32(producerGridPos.x*gridSize+gridSize)*windowMultiplier+float32(outputGridPos.x*gridSize)*windowMultiplier,
+				float32(producerGridPos.y*gridSize+gridSize)*windowMultiplier+float32(outputGridPos.y*gridSize)*windowMultiplier,
+				float32(producerOutputRangeLineWidth)*windowMultiplier,
+				producerOutputRangeColor, false)
+			// draw bottom line
+			vector.StrokeLine(screen,
+				float32(producerGridPos.x*gridSize)*windowMultiplier+float32(outputGridPos.x*gridSize)*windowMultiplier,
+				float32(producerGridPos.y*gridSize+gridSize)*windowMultiplier+float32(outputGridPos.y*gridSize)*windowMultiplier,
+				float32(producerGridPos.x*gridSize+gridSize)*windowMultiplier+float32(outputGridPos.x*gridSize)*windowMultiplier,
+				float32(producerGridPos.y*gridSize+gridSize)*windowMultiplier+float32(outputGridPos.y*gridSize)*windowMultiplier,
+				float32(producerOutputRangeLineWidth)*windowMultiplier,
+				producerOutputRangeColor, false)
+		}
 	}
 }
 
@@ -204,7 +255,6 @@ func (s *state) drawoffers(screen *ebiten.Image) {
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(windowMultiplier, windowMultiplier)
 		op.GeoM.Translate(xLeft, float64(yUp))
-
 		var image *ebiten.Image
 		switch offer.offerType {
 		case bottle:

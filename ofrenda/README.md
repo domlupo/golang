@@ -2,7 +2,7 @@
 
 ## next checkpoint 
 
-- rounds with objectives
+- plan next checkpoint
 
 ## future checkpoints
 
@@ -10,6 +10,7 @@
 - iterate on goal of game 
 - user interace
 - polish producers
+- polish round goals
 
 ## issues
 
@@ -23,12 +24,12 @@ The game should be quick and as simple as possible. I want to release it in ~2 m
 Goal: Collect items for the ofrenda.
 
 Short term goals: 
- - Collect X offer of Y color each round
+ - Collect X offer of Y color this round
  - Maybe let user select 1 of 3 goals or remove 1 and then randomize the remaining
  - Maybe let the users select X offer or Y color
 
 Long term goals: 
- - Short term goals sum for the next round.
+ - Short term goals sum for the next round. e.g. collect a total of X over entire game
  - Cannot remove items from board
  - Ofrenda congestion
 

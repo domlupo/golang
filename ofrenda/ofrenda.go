@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"log"
+	"math/rand/v2"
 	"strings"
 	"time"
 
@@ -22,6 +23,10 @@ const gridSize = 40
 const offerSize = 14
 
 var backgroundColor = color.RGBA{200, 200, 200, 0xff}
+var producerOutputRangeColor = color.RGBA{245, 40, 145, 200}
+var producerOutputRangeLineWidth = 1 * windowMultiplier
+
+const debugOutput = true
 
 // The debug grid helps debugging display issues. Usually only altering
 // offset is needed, width can remain 1.
@@ -104,17 +109,25 @@ func init() {
 	// game setup
 	gameState = *newState()
 
-	gameState.addConsumer(&gridPosition{4, 1})
+	// first producer
+	var x = rand.IntN((windowWidth/gridSize)-4) + 2
+	var y = rand.IntN((windowHeight/gridSize)-4) + 2
+	gameState.addProducer(gridPosition{x, y}, bottle, rand.IntN(2)+1)
 
-	gameState.addProducer(gridPosition{2, 2}, skull)
+	// second producer
+	x = rand.IntN((windowWidth/gridSize)-4) + 2
+	y = rand.IntN((windowHeight/gridSize)-4) + 2
+	gameState.addProducer(gridPosition{x, y}, candy, rand.IntN(2)+1)
 
-	gameState.addBelt(gridPosition{8, 1}, bLeft)
-	gameState.addBelt(gridPosition{7, 1}, bLeftDown)
-	gameState.addBelt(gridPosition{7, 2}, bDownLeft)
-	gameState.addBelt(gridPosition{6, 2}, bLeft)
-	gameState.addBelt(gridPosition{5, 2}, bLeftUp)
-	gameState.addBelt(gridPosition{5, 1}, bUpLeft)
-	gameState.addProducer(gridPosition{8, 2}, bottle)
+	// third producer
+	x = rand.IntN((windowWidth/gridSize)-4) + 2
+	y = rand.IntN((windowHeight/gridSize)-4) + 2
+	gameState.addProducer(gridPosition{x, y}, flower, rand.IntN(2)+1)
+
+	// fourth producer
+	x = rand.IntN((windowWidth/gridSize)-4) + 2
+	y = rand.IntN((windowHeight/gridSize)-4) + 2
+	gameState.addProducer(gridPosition{x, y}, skull, rand.IntN(2)+1)
 }
 
 var currentTime time.Time
@@ -125,6 +138,12 @@ var produceWait time.Duration = 1_000_000 * time.Second
 var produceDelay time.Duration = 1 * time.Second
 var currentBeltDir = bDown
 var currentRound = 0
+var roundInProgress = false
+var roundWait time.Duration = 1_000_000 * time.Second
+var roundDelay time.Duration = 30 * time.Second
+var gameOver = false
+var drawProducerOutput = false
+var consumerPlaced = false
 
 // mouse button constants
 var rightMouseInputWait time.Duration = 1_000_000 * time.Second
@@ -142,14 +161,16 @@ func (g *game) Update() error {
 	currentTime = time.Now()
 
 	// game actions
-	gameState.consumeoffers()
-	gameState.moveoffers()
+	if roundInProgress {
+		gameState.consumeoffers()
+		gameState.moveoffers()
 
-	if produceWait < produceDelay {
-		produceWait = produceWait + currentTime.Sub(priorTime)
-	} else {
-		produceWait = 0
-		gameState.produceOffers()
+		if produceWait < produceDelay {
+			produceWait = produceWait + currentTime.Sub(priorTime)
+		} else {
+			produceWait = 0
+			gameState.produceOffers()
+		}
 	}
 
 	// player actions
@@ -160,6 +181,11 @@ func (g *game) Update() error {
 	var leftMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
 	var middleMouseScrollClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonMiddle)
 	var rightMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight)
+
+	if leftMouseClicked && !consumerPlaced {
+		gameState.addConsumer(&gridPos)
+		consumerPlaced = true
+	}
 
 	if leftMouseInputWait < leftMouseInputDelay {
 		leftMouseInputWait = leftMouseInputWait + currentTime.Sub(priorTime)
@@ -172,26 +198,60 @@ func (g *game) Update() error {
 		rightMouseInputWait = rightMouseInputWait + currentTime.Sub(priorTime)
 		delete(gameState.belts, gridPos)
 	} else if rightMouseClicked {
+		drawProducerOutput = true
 		rightMouseInputWait = 0
 		currentBeltDir += 1
 		if currentBeltDir == 13 {
 			currentBeltDir = 1
 		}
 		gameState.addBelt(gridPosition{31, 17}, currentBeltDir)
+	} else {
+		drawProducerOutput = false
 	}
 
 	if middleMouseInputWait < middleMouseInputDelay {
 		middleMouseInputWait = middleMouseInputWait + currentTime.Sub(priorTime)
-	} else if middleMouseScrollClicked {
+	} else if middleMouseScrollClicked && !roundInProgress {
+		currentRound += 1
+		roundInProgress = true
 		middleMouseInputWait = 0
+	}
+
+	if roundWait < roundDelay {
+		roundWait = roundWait + currentTime.Sub(priorTime)
+	} else {
+
+		if currentRound == 1 && gameState.metrics[bottle] < 5 {
+			gameOver = true
+		} else if currentRound == 2 && (gameState.metrics[bottle] < 10 || gameState.metrics[candy] < 5) {
+			gameOver = true
+		}
+
+		roundInProgress = false
+		roundWait = 0
+		clear(gameState.offers)
 	}
 
 	// debug output
 	if debugOutputWait < debugOutputDelay {
 		debugOutputWait = debugOutputWait + currentTime.Sub(priorTime)
+	} else if debugOutput == false {
+		// print nothing
 	} else {
 		println(strings.Repeat("-", 50))
+		if gameOver {
+			println("game is over")
+		} else {
+			println("game in progress")
+		}
+		if roundInProgress {
+			println("round in progress")
+		} else {
+			println("round not in progress")
+		}
 		println("round: ", currentRound)
+		println("round 1 goal:  5 total bottles")
+		println("round 2 goal: 10 total bottles, 5 total candy")
 		println("offers outstanding: ", len(gameState.offers))
 		println("offers consumed:    ", gameState.metrics[bottle]+gameState.metrics[candy]+gameState.metrics[flower]+gameState.metrics[skull])
 		fmt.Println("  bottles: ", gameState.metrics[bottle])
@@ -209,6 +269,9 @@ func (g *game) Update() error {
 func (g *game) Draw(screen *ebiten.Image) {
 	screen.Fill(backgroundColor)
 	gameState.draw(screen)
+	if drawProducerOutput {
+		gameState.drawProducerOutputRange(screen)
+	}
 	drawDebugGrid(screen, debugGridOn)
 }
 

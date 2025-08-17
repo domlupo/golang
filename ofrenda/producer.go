@@ -11,6 +11,8 @@ const (
 	noProducerShape producerShape = iota
 	diamondProducerShape
 	squareProducerShape
+	plusProducerShape
+	crossProducerShape
 )
 
 type producer struct {
@@ -19,28 +21,65 @@ type producer struct {
 	shape     producerShape
 }
 
-func newProducer(ot offerType) *producer {
+func newProducer(ot offerType, size int) *producer {
 	p := producer{
 		offerType: ot,
-		size:      2,
+		size:      size,
 		shape:     squareProducerShape,
 	}
 	return &p
 }
 
 func (p *producer) getOfferPosition() gridPosition {
-	var xGridPos int = 0
-	var yGridPos int = 0
+	var gridPos gridPosition
 
-	for xGridPos == 0 && yGridPos == 0 {
-		switch p.shape {
-		case squareProducerShape:
-			xGridPos = rand.IntN(p.size) - (p.size / 2)
-			yGridPos = rand.IntN(p.size) - (p.size / 2)
-		default:
-			panic(fmt.Sprintf("unexpected main.producerShape: %#v", p.shape))
-		}
+	switch p.shape {
+	case squareProducerShape:
+		var positions = p.getOfferPositions()
+		gridPos = positions[rand.IntN(len(positions))]
+	default:
+		panic(fmt.Sprintf("unexpected main.producerShape: %#v", p.shape))
 	}
 
-	return gridPosition{xGridPos, yGridPos}
+	return gridPos
+}
+
+func (p *producer) getOfferPositions() []gridPosition {
+	var offerPositions []gridPosition
+
+	switch p.shape {
+	case squareProducerShape:
+		if p.size >= 1 {
+			offerPositions = append(offerPositions, gridPosition{0, 1})
+			offerPositions = append(offerPositions, gridPosition{1, 1})
+			offerPositions = append(offerPositions, gridPosition{1, 0})
+			offerPositions = append(offerPositions, gridPosition{1, -1})
+			offerPositions = append(offerPositions, gridPosition{0, -1})
+			offerPositions = append(offerPositions, gridPosition{-1, -1})
+			offerPositions = append(offerPositions, gridPosition{-1, 0})
+			offerPositions = append(offerPositions, gridPosition{-1, 1})
+		}
+		if p.size >= 2 {
+			offerPositions = append(offerPositions, gridPosition{0, 2})
+			offerPositions = append(offerPositions, gridPosition{1, 2})
+			offerPositions = append(offerPositions, gridPosition{2, 2})
+			offerPositions = append(offerPositions, gridPosition{2, 1})
+			offerPositions = append(offerPositions, gridPosition{2, 0})
+			offerPositions = append(offerPositions, gridPosition{2, -1})
+			offerPositions = append(offerPositions, gridPosition{2, -2})
+			offerPositions = append(offerPositions, gridPosition{1, -2})
+			offerPositions = append(offerPositions, gridPosition{0, -2})
+			offerPositions = append(offerPositions, gridPosition{-1, -2})
+			offerPositions = append(offerPositions, gridPosition{-2, -2})
+			offerPositions = append(offerPositions, gridPosition{-2, -1})
+			offerPositions = append(offerPositions, gridPosition{-2, 0})
+			offerPositions = append(offerPositions, gridPosition{-2, 1})
+			offerPositions = append(offerPositions, gridPosition{-2, 2})
+			offerPositions = append(offerPositions, gridPosition{-1, 2})
+		}
+	default:
+		panic(fmt.Sprintf("unexpected main.producerShape: %#v", p.shape))
+	}
+
+	return offerPositions
 }
