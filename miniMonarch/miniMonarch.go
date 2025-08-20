@@ -20,9 +20,14 @@ const windowHeight = 720
 const gridSize = 40
 
 var backgroundColor = color.RGBA{200, 200, 200, 255}
-var playerOneColor = color.RGBA{0, 0, 255, 100}
-var playerTwoColor = color.RGBA{255, 0, 0, 100}
+var playerOneNodeColor = color.RGBA{0, 0, 255, 100}
+var playerOneUnitColor = color.RGBA{0, 0, 255, 255}
+var playerTwoNodeColor = color.RGBA{255, 0, 0, 100}
+var playerTwoUnitColor = color.RGBA{255, 0, 0, 255}
 var targetNodeLineWidth = 1
+
+var unitWidth = 5
+var unitHeight = 5
 
 const debugOutput = true
 
@@ -37,15 +42,6 @@ const debugGridWidth = 1 * windowMultiplier
 const debugGridSize = 32
 
 var debugGridColor = color.Black
-
-type direction int
-
-const (
-	right direction = iota
-	left
-	up
-	down
-)
 
 type game struct{}
 
@@ -86,6 +82,8 @@ func init() {
 var currentTime time.Time
 var priorTime time.Time
 var playerSelected player = noPlayer
+var produceWait time.Duration = 1_000_000 * time.Second
+var produceDelay time.Duration = 1 * time.Millisecond
 
 // debug constants
 var debugOutputWait = 1_000_000 * time.Second
@@ -93,6 +91,16 @@ var debugOutputDelay = 1 * time.Second
 
 func (g *game) Update() error {
 	currentTime = time.Now()
+
+	gameState.moveUnits()
+	gameState.attackUnits()
+
+	if produceWait < produceDelay {
+		produceWait = produceWait + currentTime.Sub(priorTime)
+	} else {
+		produceWait = 0
+		gameState.produceUnits()
+	}
 
 	// player actions
 	var mouseX, mouseY = ebiten.CursorPosition()
@@ -121,6 +129,7 @@ func (g *game) Update() error {
 	} else {
 		println(strings.Repeat("-", 50))
 		println("debug output")
+		println("total units: ", len(gameState.units))
 		println("")
 		debugOutputWait = 0
 	}
