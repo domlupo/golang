@@ -129,7 +129,9 @@ func (s *state) attackUnits() {
 			}
 
 			var distanceBetweenUnits = math.Sqrt(math.Pow(float64(unitPos1.x-unitPos2.x), 2) + math.Pow(float64(unitPos1.y-unitPos2.y), 2))
-			if distanceBetweenUnits <= float64(unit1.vision) {
+			// TODO: setting this <= rather than < caused obvious bugs but it seems more correct
+			// to use <. Need to determine right behavior in the future.
+			if distanceBetweenUnits < float64(unit1.vision) {
 				nearestVisibleUnitPos = &unitPos2
 				nearestVisibleUnit = &unit2
 			}

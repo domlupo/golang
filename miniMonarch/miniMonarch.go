@@ -61,15 +61,21 @@ func init() {
 
 	// setup player one
 	var playerOneNodeOne = newNode(playerOne)
-	playerOneNodeOne.target = &gridPosition{1, 3}
+	var playerOneNodeTwo = newNode(playerOne)
+	playerOneNodeOne.target = &gridPosition{10, 1}
+	playerOneNodeTwo.target = &gridPosition{10, 2}
 
 	// setup player two
 	var playerTwoNodeOne = newNode(playerTwo)
+	var playerTwoNodeTwo = newNode(playerTwo)
 	playerTwoNodeOne.target = &gridPosition{1, 1}
+	playerTwoNodeTwo.target = &gridPosition{1, 2}
 
 	//setup game statejkk
 	gameState.addNode(gridPosition{1, 1}, playerOneNodeOne)
-	gameState.addNode(gridPosition{1, 3}, playerTwoNodeOne)
+	gameState.addNode(gridPosition{1, 2}, playerOneNodeTwo)
+	gameState.addNode(gridPosition{10, 1}, playerTwoNodeOne)
+	gameState.addNode(gridPosition{10, 2}, playerTwoNodeTwo)
 }
 
 // game constants
@@ -87,6 +93,7 @@ func (g *game) Update() error {
 	currentTime = time.Now()
 
 	gameState.moveUnits()
+
 	gameState.attackUnits()
 
 	if produceWait < produceDelay {
