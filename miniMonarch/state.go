@@ -30,6 +30,8 @@ func (s *state) addUnit(nodeGridPos gridPosition, productionNode node) {
 	s.units[unitPos] = newUnit(productionNode.player, *productionNode.target)
 }
 
+// TODO: Need to implement a move algorithm similar to below.
+// https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 func (s *state) moveUnits() {
 	var newUnits = make(map[pixelPosition]unit)
 
@@ -99,7 +101,12 @@ func (s *state) moveUnits() {
 				yDelta = 0
 			}
 		}
-		newUnits[pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta}] = unit1
+
+		if _, alreadyOccupied := newUnits[pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta}]; alreadyOccupied {
+			newUnits[pixelPosition{unitPos1.x, unitPos1.y}] = unit1
+		} else {
+			newUnits[pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta}] = unit1
+		}
 	}
 
 	s.units = newUnits

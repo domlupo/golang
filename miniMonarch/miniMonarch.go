@@ -61,21 +61,15 @@ func init() {
 
 	// setup player one
 	var playerOneNodeOne = newNode(playerOne)
-	var playerOneNodeTwo = newNode(playerOne)
-	playerOneNodeOne.target = &gridPosition{10, 5}
-	playerOneNodeTwo.target = &gridPosition{10, 5}
+	playerOneNodeOne.target = &gridPosition{1, 3}
 
 	// setup player two
 	var playerTwoNodeOne = newNode(playerTwo)
-	var playerTwoNodeTwo = newNode(playerTwo)
 	playerTwoNodeOne.target = &gridPosition{1, 1}
-	playerTwoNodeTwo.target = &gridPosition{10, 1}
 
 	//setup game statejkk
 	gameState.addNode(gridPosition{1, 1}, playerOneNodeOne)
-	gameState.addNode(gridPosition{10, 1}, playerOneNodeTwo)
-	gameState.addNode(gridPosition{10, 5}, playerTwoNodeOne)
-	gameState.addNode(gridPosition{10, 15}, playerTwoNodeTwo)
+	gameState.addNode(gridPosition{1, 3}, playerTwoNodeOne)
 }
 
 // game constants
@@ -83,7 +77,7 @@ var currentTime time.Time
 var priorTime time.Time
 var playerSelected player = noPlayer
 var produceWait time.Duration = 1_000_000 * time.Second
-var produceDelay time.Duration = 1 * time.Millisecond
+var produceDelay time.Duration = 1 * time.Second
 
 // debug constants
 var debugOutputWait = 1_000_000 * time.Second
