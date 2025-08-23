@@ -16,14 +16,16 @@ const (
 )
 
 type node struct {
-	player player
-	target *gridPosition
+	player   player
+	target   *gridPosition
+	selected bool
 }
 
 func newNode(p player) node {
 	n := node{
-		player: p,
-		target: nil,
+		player:   p,
+		target:   nil,
+		selected: false,
 	}
 	return n
 }
@@ -39,15 +41,22 @@ func (n *node) drawNode(screen *ebiten.Image, nodeGridPos gridPosition) {
 		panic("node needs a color")
 	}
 
+	var topLeftPixelPosition = getPixelPosition(nodeGridPos, innerGridPosition{0, 0})
+	var bottomRightPixelPosition = getPixelPosition(nodeGridPos, innerGridPosition{gridSize, gridSize})
+
 	vector.DrawFilledRect(
 		screen,
-		float32(nodeGridPos.x*gridSize)*windowMultiplier,
-		float32(nodeGridPos.y*gridSize)*windowMultiplier,
+		float32(topLeftPixelPosition.x)*windowMultiplier,
+		float32(topLeftPixelPosition.y)*windowMultiplier,
 		gridSize*windowMultiplier,
 		gridSize*windowMultiplier,
 		nodeColor,
 		false,
 	)
+
+	if n.selected {
+		drawUnfilledBoxInt(screen, highlightColor, topLeftPixelPosition.x, topLeftPixelPosition.y, bottomRightPixelPosition.x, bottomRightPixelPosition.y)
+	}
 }
 
 func (n *node) drawTargets(screen *ebiten.Image, nodePos gridPosition, selectedPlayer player) {

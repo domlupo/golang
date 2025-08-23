@@ -8,7 +8,6 @@ Is there a mobile equivalent for war/4x games?
 
 ## next checkpoints and purpose
 
-- dynamic controls -> I can control multipler players at once to manually test rather than program a computer player
 - neutral node generation -> Adds imbalance and randomization to gameplay 
 - capturable neutral nodes -> Add imbalance and randomization to gameplay
 - capturable non neutral nodes -> Needed to add a win condition
@@ -35,6 +34,8 @@ Is there a mobile equivalent for war/4x games?
 - buildings
 - other civ features
 - Do I want to stand out from civ, or be a simpler civ e.g. factorio -> shapez. How does this affect marketing?
+- Should players be able to target thier own nodes?
+- Should a node be able to target itself?
 
 ## theme
 

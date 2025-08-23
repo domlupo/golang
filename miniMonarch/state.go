@@ -26,6 +26,11 @@ func (s *state) addNode(gridPos gridPosition, n node) {
 }
 
 func (s *state) addUnit(nodeGridPos gridPosition, productionNode node) {
+	// TODO: determine game design behavior when target is not set
+	if productionNode.target == nil {
+		return
+	}
+
 	var unitPos = getPixelPosition(nodeGridPos, innerGridPosition{gridSize / 2, gridSize / 2})
 	s.units[unitPos] = newUnit(productionNode.player, *productionNode.target)
 }
@@ -167,6 +172,35 @@ func (s *state) attackUnits() {
 		if !attackedUnit.alive {
 			delete(s.units, attackedUnitPos)
 		}
+	}
+}
+
+func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixelPosition) {
+	// TODO: generalize implementation, for prototype this assumes bottom right release position.
+	// The future implementation needs to handle all four cases for release position.
+
+	var topLeftGridPos, _ = splitPixelPosition(clickPosition)
+	var bottomRightGridPos, _ = splitPixelPosition(releasePosition)
+
+	for nodeGridPos, node := range s.nodes {
+		if (topLeftGridPos.x < nodeGridPos.x) &&
+			(nodeGridPos.x < bottomRightGridPos.x) &&
+			(topLeftGridPos.y < nodeGridPos.y) &&
+			(nodeGridPos.y < bottomRightGridPos.y) {
+			node.selected = true
+		} else {
+			node.selected = false
+		}
+		s.nodes[nodeGridPos] = node
+	}
+}
+
+func (s *state) updateTargets(target *gridPosition) {
+	for nodeGridPos, node := range s.nodes {
+		if node.selected {
+			node.target = target
+		}
+		s.nodes[nodeGridPos] = node
 	}
 }
 

@@ -1,5 +1,7 @@
 package main
 
+// file contains general position utility functions
+
 // readable low resolution position used for grid items like belts, consumers, etc
 type gridPosition struct {
 	x int // 0 - 32
