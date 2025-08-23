@@ -3,7 +3,8 @@ package main
 import (
 	"image/color"
 	"log"
-	"strings"
+	"log/slog"
+	"os"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -18,7 +19,12 @@ const windowWidth = 1280
 const windowHeight = 720
 const gridSize = 40
 
+// graphics setup
 var backgroundColor = color.RGBA{200, 200, 200, 255}
+var highlightColor = color.RGBA{70, 255, 0, 200}
+var selectectionBoxLineWidth = 2
+var targetNodeLineWidth = 1
+var healthLineWidth = 2
 
 // player setup
 var playerOneNodeColor = color.RGBA{0, 0, 255, 100}
@@ -27,22 +33,17 @@ var playerTwoNodeColor = color.RGBA{255, 0, 0, 100}
 var playerTwoUnitColor = color.RGBA{255, 0, 0, 255}
 var neutralNodeColor = color.RGBA{100, 60, 100, 200}
 
-// player actions
-var selectectionBoxLineWidth = 2
-var targetNodeLineWidth = 1
-var healthLineWidth = 2
-var highlightColor = color.RGBA{70, 255, 0, 200}
-
+// unit and node setup
 var unitWidth = 5
 var unitHeight = 5
 var initialNodeHealth = 100
-
-const debugOutput = true
 
 // The debug grid helps debugging display issues. Usually only altering
 // offset is needed, width can remain 1.
 // Offset values should only be 0 - 20 (half of grid size without window multipler)
 // Some helpful values are: 0, 0.5, 1, 19, 19.5, 20
+const filterTimeAndLevelFromLogs = true
+const debugOutput = true
 const debugGridOn = true
 const debugGridOffsetWithoutWindowMultipler = 0
 const debugGridOffset = debugGridOffsetWithoutWindowMultipler * windowMultiplier
@@ -53,6 +54,7 @@ var debugGridColor = color.Black
 
 type game struct{}
 
+var logger *slog.Logger
 var gameState state
 
 func init() {
@@ -65,6 +67,18 @@ func init() {
 		}
 	}
 
+	logOptions := &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+		ReplaceAttr: func(groups []string, attribute slog.Attr) slog.Attr {
+			if filterTimeAndLevelFromLogs && (attribute.Key == "time" || attribute.Key == "level") {
+				return slog.Attr{}
+			} else {
+				return attribute
+			}
+		},
+	}
+
+	logger = slog.New(slog.NewJSONHandler(os.Stderr, logOptions))
 	gameState = *newState()
 
 	// setup  players
@@ -172,7 +186,7 @@ func (g *game) Update() error {
 		leftMouseHeld = true
 	}
 	if middleMouseScrollClicked {
-		println("middle click")
+		logger.Info("middle click")
 	}
 	if rightMouseClicked {
 		gameState.updateTargets(&gridPos)
@@ -190,12 +204,12 @@ func (g *game) Update() error {
 	if debugOutputWait < debugOutputDelay {
 		debugOutputWait = debugOutputWait + currentTime.Sub(priorTime)
 	} else if debugOutput == false {
-		// print nothing
+		// log nothing
 	} else {
-		println(strings.Repeat("-", 50))
-		println("debug output")
-		println("total units: ", len(gameState.units))
-		println("")
+		logger.Info(
+			"game_state",
+			slog.Int("total_units",
+				len(gameState.units)))
 		debugOutputWait = 0
 	}
 
