@@ -35,6 +35,13 @@ func (s *state) addUnit(nodeGridPos gridPosition, productionNode node) {
 	s.units[unitPos] = newUnit(productionNode.player, *productionNode.target)
 }
 
+func (s *state) refreshUnits() {
+	for unitPos, u := range s.units {
+		u.attackedUnitThisTurn = false
+		s.units[unitPos] = u
+	}
+}
+
 // TODO: Need to implement a move algorithm similar to below.
 // https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 func (s *state) moveUnits() {
@@ -107,7 +114,18 @@ func (s *state) moveUnits() {
 			}
 		}
 
-		if _, alreadyOccupied := newUnits[pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta}]; alreadyOccupied {
+		_, alreadyOccupiedByUnit := newUnits[pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta}]
+		var gridPos, _ = splitPixelPosition(pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta})
+		// TODO: Determine behavior wanted when units travel through different player nodes
+		var alreadyOccupiedByOpposingNode = true
+		if s.nodes[gridPos].player == noPlayer || s.nodes[gridPos].player == unit1.player {
+			alreadyOccupiedByOpposingNode = false
+		}
+
+		if alreadyOccupiedByUnit {
+			newUnits[pixelPosition{unitPos1.x, unitPos1.y}] = unit1
+		} else if alreadyOccupiedByOpposingNode {
+			unit1.nextToTargetNode = true
 			newUnits[pixelPosition{unitPos1.x, unitPos1.y}] = unit1
 		} else {
 			newUnits[pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta}] = unit1
@@ -165,12 +183,43 @@ func (s *state) attackUnits() {
 		if float64(unit1.reach) >= math.Sqrt(math.Pow(xMagnitude, 2)+math.Pow(yMagnitude, 2)) {
 			nearestVisibleUnit.alive = false
 			s.units[*nearestVisibleUnitPos] = *nearestVisibleUnit
+			unit1.attackedUnitThisTurn = true
+			s.units[unitPos1] = unit1
 		}
 	}
 
 	for attackedUnitPos, attackedUnit := range s.units {
 		if !attackedUnit.alive {
 			delete(s.units, attackedUnitPos)
+		}
+	}
+}
+
+func (s *state) attackNodes() {
+	for _, unit := range s.units {
+		if unit.attackedUnitThisTurn {
+			continue
+		}
+
+		// TODO: Fix this hack.
+		if unit.nextToTargetNode && s.nodes[unit.target].player != unit.player {
+			var targetNode = s.nodes[unit.target]
+			targetNode.health = max(targetNode.health-1, 0)
+			if targetNode.health == 0 {
+				targetNode.capturedBy = &unit.player
+			}
+			s.nodes[unit.target] = targetNode
+		}
+	}
+}
+
+func (s *state) updateNodeOwnership() {
+	for nodeGridPos, node := range s.nodes {
+		if node.health == 0 {
+			node.health = initialNodeHealth
+			node.player = *node.capturedBy
+			node.capturedBy = nil
+			s.nodes[nodeGridPos] = node
 		}
 	}
 }
@@ -197,6 +246,10 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 
 func (s *state) updateTargets(target *gridPosition) {
 	for nodeGridPos, node := range s.nodes {
+		if node.player == playerNeutral {
+			continue
+		}
+
 		if node.selected {
 			node.target = target
 		}
@@ -206,6 +259,9 @@ func (s *state) updateTargets(target *gridPosition) {
 
 func (s *state) produceUnits() {
 	for nodePos, n := range s.nodes {
+		if n.player == playerNeutral {
+			continue
+		}
 		gameState.addUnit(nodePos, n)
 	}
 }

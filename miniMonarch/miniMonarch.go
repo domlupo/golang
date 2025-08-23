@@ -25,14 +25,17 @@ var playerOneNodeColor = color.RGBA{0, 0, 255, 100}
 var playerOneUnitColor = color.RGBA{0, 0, 255, 255}
 var playerTwoNodeColor = color.RGBA{255, 0, 0, 100}
 var playerTwoUnitColor = color.RGBA{255, 0, 0, 255}
+var neutralNodeColor = color.RGBA{100, 60, 100, 200}
 
 // player actions
 var selectectionBoxLineWidth = 2
 var targetNodeLineWidth = 1
+var healthLineWidth = 2
 var highlightColor = color.RGBA{70, 255, 0, 200}
 
 var unitWidth = 5
 var unitHeight = 5
+var initialNodeHealth = 100
 
 const debugOutput = true
 
@@ -64,19 +67,44 @@ func init() {
 
 	gameState = *newState()
 
-	// setup player one
+	// setup  players
 	var playerOneNodeOne = newNode(playerOne)
-	var playerOneNodeTwo = newNode(playerOne)
-
-	// setup player two
 	var playerTwoNodeOne = newNode(playerTwo)
-	var playerTwoNodeTwo = newNode(playerTwo)
-
-	//setup game state
 	gameState.addNode(gridPosition{1, 1}, playerOneNodeOne)
-	gameState.addNode(gridPosition{1, 10}, playerOneNodeTwo)
-	gameState.addNode(gridPosition{10, 1}, playerTwoNodeOne)
-	gameState.addNode(gridPosition{10, 10}, playerTwoNodeTwo)
+	gameState.addNode(gridPosition{30, 15}, playerTwoNodeOne)
+
+	// setup neutral nodes
+	gameState.addNode(gridPosition{5, 1}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{10, 1}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{15, 1}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{20, 1}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{25, 1}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{30, 1}, newNode(playerNeutral))
+
+	gameState.addNode(gridPosition{1, 5}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{5, 5}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{10, 5}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{15, 5}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{20, 5}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{25, 5}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{30, 5}, newNode(playerNeutral))
+
+	gameState.addNode(gridPosition{1, 10}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{5, 10}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{5, 10}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{10, 10}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{15, 10}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{20, 10}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{25, 10}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{30, 10}, newNode(playerNeutral))
+
+	gameState.addNode(gridPosition{1, 15}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{5, 15}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{5, 15}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{10, 15}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{15, 15}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{20, 15}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{25, 15}, newNode(playerNeutral))
 }
 
 // globals
@@ -109,8 +137,10 @@ func (g *game) Update() error {
 	leftMouseHeld = false
 
 	// update game state prior to player actions
+	gameState.refreshUnits()
 	gameState.moveUnits()
 	gameState.attackUnits()
+	gameState.attackNodes()
 
 	if produceWait < produceDelay {
 		produceWait = produceWait + currentTime.Sub(priorTime)
@@ -154,6 +184,7 @@ func (g *game) Update() error {
 			pixelPosition{int(initialSelectedX), int(initialSelectedY)},
 			pixelPosition{int(currentSelectedX), int(currentSelectedY)})
 	}
+	gameState.updateNodeOwnership()
 
 	// debug output
 	if debugOutputWait < debugOutputDelay {

@@ -13,19 +13,24 @@ const (
 	noPlayer = iota
 	playerOne
 	playerTwo
+	playerNeutral
 )
 
 type node struct {
-	player   player
-	target   *gridPosition
-	selected bool
+	player     player
+	target     *gridPosition
+	selected   bool
+	health     int
+	capturedBy *player
 }
 
 func newNode(p player) node {
 	n := node{
-		player:   p,
-		target:   nil,
-		selected: false,
+		player:     p,
+		target:     nil,
+		selected:   false,
+		health:     initialNodeHealth,
+		capturedBy: nil,
 	}
 	return n
 }
@@ -37,11 +42,14 @@ func (n *node) drawNode(screen *ebiten.Image, nodeGridPos gridPosition) {
 		nodeColor = playerOneNodeColor
 	case playerTwo:
 		nodeColor = playerTwoNodeColor
+	case playerNeutral:
+		nodeColor = neutralNodeColor
 	default:
-		panic("node needs a color")
+		panic("unknown player cannot drawNode")
 	}
 
 	var topLeftPixelPosition = getPixelPosition(nodeGridPos, innerGridPosition{0, 0})
+	var topRightPixelPosition = getPixelPosition(nodeGridPos, innerGridPosition{gridSize, 0})
 	var bottomRightPixelPosition = getPixelPosition(nodeGridPos, innerGridPosition{gridSize, gridSize})
 
 	vector.DrawFilledRect(
@@ -55,7 +63,26 @@ func (n *node) drawNode(screen *ebiten.Image, nodeGridPos gridPosition) {
 	)
 
 	if n.selected {
-		drawUnfilledBoxInt(screen, highlightColor, topLeftPixelPosition.x, topLeftPixelPosition.y, bottomRightPixelPosition.x, bottomRightPixelPosition.y)
+		drawUnfilledBoxInt(
+			screen,
+			highlightColor,
+			topLeftPixelPosition.x,
+			topLeftPixelPosition.y,
+			bottomRightPixelPosition.x,
+			bottomRightPixelPosition.y)
+	}
+
+	if n.health != initialNodeHealth {
+		var healthLineLength = (float32(n.health) / float32(initialNodeHealth)) * gridSize
+		vector.StrokeLine(
+			screen,
+			float32(topLeftPixelPosition.x)*windowMultiplier,
+			float32(topLeftPixelPosition.y+(gridSize/2))*windowMultiplier,
+			(float32(topLeftPixelPosition.x)+healthLineLength)*windowMultiplier,
+			float32(topRightPixelPosition.y+(gridSize/2))*windowMultiplier,
+			float32(healthLineWidth)*windowMultiplier,
+			highlightColor,
+			false)
 	}
 }
 
@@ -66,8 +93,10 @@ func (n *node) drawTargets(screen *ebiten.Image, nodePos gridPosition, selectedP
 		nodeColor = playerOneNodeColor
 	case playerTwo:
 		nodeColor = playerTwoNodeColor
+	case playerNeutral:
+		nodeColor = neutralNodeColor
 	default:
-		panic("node needs a color")
+		panic("unknown player for drawTargets")
 	}
 
 	if n.target != nil && n.player == selectedPlayer {

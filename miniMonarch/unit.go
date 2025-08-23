@@ -8,20 +8,25 @@ import (
 )
 
 type unit struct {
-	player player
-	target gridPosition
-	vision int
-	reach  int
-	alive  bool
+	player               player
+	target               gridPosition
+	vision               int
+	reach                int
+	alive                bool
+	attackedUnitThisTurn bool
+	// TODO: remove this nextToTargetNode HACK
+	nextToTargetNode bool
 }
 
 func newUnit(p player, target gridPosition) unit {
 	u := unit{
-		player: p,
-		target: target,
-		vision: 40,
-		reach:  1,
-		alive:  true,
+		player:               p,
+		target:               target,
+		vision:               40,
+		reach:                1,
+		alive:                true,
+		attackedUnitThisTurn: false,
+		nextToTargetNode:     false,
 	}
 
 	return u

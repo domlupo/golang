@@ -8,16 +8,17 @@ Is there a mobile equivalent for war/4x games?
 
 ## next checkpoints and purpose
 
-- neutral node generation -> Adds imbalance and randomization to gameplay 
-- capturable neutral nodes -> Add imbalance and randomization to gameplay
-- capturable non neutral nodes -> Needed to add a win condition
-- win condition -> Need a game loop to anaylze game design and iterate
+- clean up bugs and hacks -> There are enough to cause bugs while testing game design and game loop
 
 ## future checkpoints and purpose
 
+- analyze and iterate on game design and game loop -> Check design feasability  and improve game
+- add computer AI to versus -> ?
+- initial map generation -> ?
 - range unit which can attack -> ?
 - different terrains -> ?
 - nodes with health and defense system -> ?
+- local multiplayer -> ?
 
 ## issues
 
