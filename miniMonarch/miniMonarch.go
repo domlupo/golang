@@ -26,11 +26,15 @@ var selectectionBoxLineWidth = 2
 var targetNodeLineWidth = 1
 var healthLineWidth = 2
 
+// computer setup
+var blueComputerActive = true
+var redComputerActive = true
+
 // player setup
 var bluePlayerNodeColor = color.RGBA{0, 0, 255, 100}
-var bluePlayerUnitColor = color.RGBA{0, 0, 255, 255}
+var bluePlayerUnitColor = color.RGBA{0, 0, 255, 100}
 var redPlayerNodeColor = color.RGBA{255, 0, 0, 100}
-var redPlayerUnitColor = color.RGBA{255, 0, 0, 255}
+var redPlayerUnitColor = color.RGBA{255, 0, 0, 100}
 var neutralNodeColor = color.RGBA{100, 60, 100, 200}
 
 // unit and node setup
@@ -207,8 +211,12 @@ func (g *game) Update() error {
 	// play computer moves. Computers currently affect game state directly rather
 	// than the same game state being sent to each one before a final update occurs.
 	// This is a hack, but will probably be fine for awhile.
-	compOne.updateActions(gameState)
-	compTwo.updateActions(gameState)
+	if blueComputerActive {
+		compOne.updateActions(gameState)
+	}
+	if redComputerActive {
+		compTwo.updateActions(gameState)
+	}
 
 	// debug output
 	if debugOutputWait < debugOutputDelay {

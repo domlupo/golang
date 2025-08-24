@@ -2,19 +2,19 @@ package main
 
 // file contains general position utility functions
 
-// readable low resolution position used for grid items like belts, consumers, etc
+// readable low resolution position used for grid items e.g. nodes
 type gridPosition struct {
 	x int // 0 - 32
 	y int // 0 - 18
 }
 
-// readable high resolution position used for non grid items like offers
+// readable high resolution position used for non grid items e.g. units
 type innerGridPosition struct {
 	x int
 	y int
 }
 
-// unreadable high resolution position used for non grid items like offers
+// unreadable high resolution position
 type pixelPosition struct {
 	x int
 	y int

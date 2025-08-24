@@ -25,16 +25,6 @@ func (s *state) addNode(gridPos gridPosition, n node) {
 	s.nodes[gridPos] = n
 }
 
-func (s *state) addUnit(nodeGridPos gridPosition, productionNode node) {
-	// TODO: determine game design behavior when target is not set
-	if productionNode.target == nil {
-		return
-	}
-
-	var unitPos = getPixelPosition(nodeGridPos, innerGridPosition{gridSize / 2, gridSize / 2})
-	s.units[unitPos] = newUnit(productionNode.player, *productionNode.target)
-}
-
 func (s *state) refreshUnits() {
 	for unitPos, u := range s.units {
 		u.attackedUnitThisTurn = false
@@ -114,15 +104,20 @@ func (s *state) moveUnits() {
 			}
 		}
 
-		_, alreadyOccupiedByUnit := newUnits[pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta}]
-		var gridPos, _ = splitPixelPosition(pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta})
+		var collides = s.collides(
+			pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta},
+			unit1,
+			s.units)
+
 		// TODO: Determine behavior wanted when units travel through different player nodes
+		// TODO: Add nodes to collision detection
+		var gridPos, _ = splitPixelPosition(pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta})
 		var alreadyOccupiedByOpposingNode = true
 		if s.nodes[gridPos].player == noPlayer || s.nodes[gridPos].player == unit1.player {
 			alreadyOccupiedByOpposingNode = false
 		}
 
-		if alreadyOccupiedByUnit {
+		if collides {
 			newUnits[pixelPosition{unitPos1.x, unitPos1.y}] = unit1
 		} else if alreadyOccupiedByOpposingNode {
 			unit1.nextToTargetNode = true
@@ -135,13 +130,37 @@ func (s *state) moveUnits() {
 	s.units = newUnits
 }
 
+func (s *state) collides(newPos pixelPosition, unit unit, units map[pixelPosition]unit) bool {
+	var left = newPos.x
+	var right = newPos.x + unit.width
+	var top = newPos.y
+	var bottom = newPos.y + unit.height
+
+	for otherPos, otherUnit := range units {
+		if unit.id == otherUnit.id {
+			// unit cannot collide with itself
+			continue
+		}
+
+		// square AABB collision detection
+		if (left <= otherPos.x+otherUnit.width) &&
+			(right >= otherPos.x) &&
+			(top <= otherPos.y+otherUnit.height) &&
+			(bottom >= otherPos.y) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (s *state) attackUnits() {
 	for unitPos1, unit1 := range s.units {
 		// check if unit 1 can attack unit 2
 		var nearestVisibleUnitPos *pixelPosition = nil
 		var nearestVisibleUnit *unit = nil
 		for unitPos2, unit2 := range s.units {
-			if unitPos1.x == unitPos2.x && unitPos1.y == unitPos2.y {
+			if unit1.id == unit2.id {
 				// unit cannot attack itself
 				continue
 			}
@@ -151,7 +170,12 @@ func (s *state) attackUnits() {
 				continue
 			}
 
-			var distanceBetweenUnits = math.Sqrt(math.Pow(float64(unitPos1.x-unitPos2.x), 2) + math.Pow(float64(unitPos1.y-unitPos2.y), 2))
+			var unit1XCenter = unitPos1.x + unit1.width/2
+			var unit2XCenter = unitPos2.x + unit2.width/2
+			var unit1YCenter = unitPos1.y + unit1.height/2
+			var unit2YCenter = unitPos2.y + unit2.height/2
+
+			var distanceBetweenUnits = math.Sqrt(math.Pow(float64(unit1XCenter-unit2XCenter), 2) + math.Pow(float64(unit1YCenter-unit2YCenter), 2))
 			// TODO: setting this <= rather than < caused obvious bugs but it seems more correct
 			// to use <. Need to determine right behavior in the future.
 			if distanceBetweenUnits < float64(unit1.vision) {
@@ -216,10 +240,8 @@ func (s *state) attackNodes() {
 func (s *state) updateNodeOwnership() {
 	for nodeGridPos, node := range s.nodes {
 		if node.health == 0 {
-			node.health = initialNodeHealth
-			node.player = *node.capturedBy
-			node.capturedBy = nil
-			s.nodes[nodeGridPos] = node
+			newNode := newNode(*node.capturedBy)
+			s.nodes[nodeGridPos] = newNode
 		}
 	}
 }
@@ -262,7 +284,17 @@ func (s *state) produceUnits() {
 		if n.player == neutralPlayer {
 			continue
 		}
-		gameState.addUnit(nodePos, n)
+
+		// TODO: determine game design behavior when target is not set
+		if n.target == nil {
+			return
+		}
+
+		// TODO: determine how to produce units during collision
+		var unitPos = getPixelPosition(nodePos, innerGridPosition{gridSize / 2, gridSize / 2})
+		if !s.collides(unitPos, newUnit(n.player, *n.target), s.units) {
+			s.units[unitPos] = newUnit(n.player, *n.target)
+		}
 	}
 }
 

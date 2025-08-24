@@ -8,6 +8,7 @@ Is there a mobile equivalent for war/4x games?
 
 ## next checkpoints and purpose
 
+- determine how game objects should be saved into grid pos. Should top left or center be used
 - analyze and iterate on game design and game loop -> Check design feasability and improve game
 - clean up bugs and hacks -> There are enough to cause bugs while testing game design and game loop
 

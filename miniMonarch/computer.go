@@ -1,6 +1,8 @@
 package main
 
-import "slices"
+import (
+	"slices"
+)
 
 type computer struct {
 	player player
@@ -16,7 +18,7 @@ func newComputer(p player) *computer {
 func (c *computer) updateActions(s state) {
 	nonCapturedTargets := make(map[gridPosition]struct{}, 0)
 	for _, node := range s.nodes {
-		if node.target != nil && node.player == c.player && s.nodes[gridPosition{node.target.x, node.target.y}].player != c.player {
+		if node.player == c.player && node.target != nil && s.nodes[gridPosition{node.target.x, node.target.y}].player != c.player {
 			nonCapturedTargets[gridPosition{node.target.x, node.target.y}] = struct{}{}
 		}
 	}
@@ -130,6 +132,14 @@ func (c *computer) updateActions(s state) {
 		if node.player == c.player {
 			node.target = &target
 			s.nodes[nodeGridPos] = node
+		}
+	}
+
+	for unitGridPos, unit := range s.units {
+		if unit.player == c.player {
+			unit.nextToTargetNode = false
+			unit.target = target
+			s.units[unitGridPos] = unit
 		}
 	}
 }
