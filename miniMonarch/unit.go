@@ -35,10 +35,10 @@ func newUnit(p player, target gridPosition) unit {
 func (u *unit) draw(screen *ebiten.Image, unitPos pixelPosition) {
 	var unitColor color.Color
 	switch u.player {
-	case playerOne:
-		unitColor = playerOneUnitColor
-	case playerTwo:
-		unitColor = playerTwoUnitColor
+	case bluePlayer:
+		unitColor = bluePlayerUnitColor
+	case redPlayer:
+		unitColor = redPlayerUnitColor
 	default:
 		panic("node needs a color")
 	}

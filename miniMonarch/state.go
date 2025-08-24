@@ -246,7 +246,7 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 
 func (s *state) updateTargets(target *gridPosition) {
 	for nodeGridPos, node := range s.nodes {
-		if node.player == playerNeutral {
+		if node.player == neutralPlayer {
 			continue
 		}
 
@@ -259,7 +259,7 @@ func (s *state) updateTargets(target *gridPosition) {
 
 func (s *state) produceUnits() {
 	for nodePos, n := range s.nodes {
-		if n.player == playerNeutral {
+		if n.player == neutralPlayer {
 			continue
 		}
 		gameState.addUnit(nodePos, n)

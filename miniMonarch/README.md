@@ -8,12 +8,11 @@ Is there a mobile equivalent for war/4x games?
 
 ## next checkpoints and purpose
 
+- analyze and iterate on game design and game loop -> Check design feasability and improve game
 - clean up bugs and hacks -> There are enough to cause bugs while testing game design and game loop
-- add computer AI -> Ensure code logic is structured to work long term
 
 ## future checkpoints and purpose
 
-- analyze and iterate on game design and game loop -> Check design feasability and improve game
 - initial map generation -> ?
 - range unit which can attack -> ?
 - different terrains -> ?

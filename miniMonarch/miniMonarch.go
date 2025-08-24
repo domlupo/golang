@@ -27,10 +27,10 @@ var targetNodeLineWidth = 1
 var healthLineWidth = 2
 
 // player setup
-var playerOneNodeColor = color.RGBA{0, 0, 255, 100}
-var playerOneUnitColor = color.RGBA{0, 0, 255, 255}
-var playerTwoNodeColor = color.RGBA{255, 0, 0, 100}
-var playerTwoUnitColor = color.RGBA{255, 0, 0, 255}
+var bluePlayerNodeColor = color.RGBA{0, 0, 255, 100}
+var bluePlayerUnitColor = color.RGBA{0, 0, 255, 255}
+var redPlayerNodeColor = color.RGBA{255, 0, 0, 100}
+var redPlayerUnitColor = color.RGBA{255, 0, 0, 255}
 var neutralNodeColor = color.RGBA{100, 60, 100, 200}
 
 // unit and node setup
@@ -56,6 +56,8 @@ type game struct{}
 
 var logger *slog.Logger
 var gameState state
+var compOne computer
+var compTwo computer
 
 func init() {
 	var monitors []*ebiten.MonitorType
@@ -80,45 +82,47 @@ func init() {
 
 	logger = slog.New(slog.NewJSONHandler(os.Stderr, logOptions))
 	gameState = *newState()
+	compOne = *newComputer(bluePlayer)
+	compTwo = *newComputer(redPlayer)
 
 	// setup  players
-	var playerOneNodeOne = newNode(playerOne)
-	var playerTwoNodeOne = newNode(playerTwo)
-	gameState.addNode(gridPosition{1, 1}, playerOneNodeOne)
-	gameState.addNode(gridPosition{30, 15}, playerTwoNodeOne)
+	var bluePlayerNode = newNode(bluePlayer)
+	var redPlayerNode = newNode(redPlayer)
+	gameState.addNode(gridPosition{1, 1}, bluePlayerNode)
+	gameState.addNode(gridPosition{30, 15}, redPlayerNode)
 
 	// setup neutral nodes
-	gameState.addNode(gridPosition{5, 1}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{10, 1}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{15, 1}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{20, 1}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{25, 1}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{30, 1}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{5, 1}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{10, 1}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{15, 1}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{20, 1}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{25, 1}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{30, 1}, newNode(neutralPlayer))
 
-	gameState.addNode(gridPosition{1, 5}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{5, 5}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{10, 5}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{15, 5}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{20, 5}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{25, 5}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{30, 5}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{1, 5}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{5, 5}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{10, 5}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{15, 5}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{20, 5}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{25, 5}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{30, 5}, newNode(neutralPlayer))
 
-	gameState.addNode(gridPosition{1, 10}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{5, 10}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{5, 10}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{10, 10}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{15, 10}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{20, 10}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{25, 10}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{30, 10}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{1, 10}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{5, 10}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{5, 10}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{10, 10}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{15, 10}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{20, 10}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{25, 10}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{30, 10}, newNode(neutralPlayer))
 
-	gameState.addNode(gridPosition{1, 15}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{5, 15}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{5, 15}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{10, 15}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{15, 15}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{20, 15}, newNode(playerNeutral))
-	gameState.addNode(gridPosition{25, 15}, newNode(playerNeutral))
+	gameState.addNode(gridPosition{1, 15}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{5, 15}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{5, 15}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{10, 15}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{15, 15}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{20, 15}, newNode(neutralPlayer))
+	gameState.addNode(gridPosition{25, 15}, newNode(neutralPlayer))
 }
 
 // globals
@@ -199,6 +203,12 @@ func (g *game) Update() error {
 			pixelPosition{int(currentSelectedX), int(currentSelectedY)})
 	}
 	gameState.updateNodeOwnership()
+
+	// play computer moves. Computers currently affect game state directly rather
+	// than the same game state being sent to each one before a final update occurs.
+	// This is a hack, but will probably be fine for awhile.
+	compOne.updateActions(gameState)
+	compTwo.updateActions(gameState)
 
 	// debug output
 	if debugOutputWait < debugOutputDelay {

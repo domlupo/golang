@@ -11,9 +11,9 @@ type player int
 
 const (
 	noPlayer = iota
-	playerOne
-	playerTwo
-	playerNeutral
+	bluePlayer
+	redPlayer
+	neutralPlayer
 )
 
 type node struct {
@@ -38,11 +38,11 @@ func newNode(p player) node {
 func (n *node) drawNode(screen *ebiten.Image, nodeGridPos gridPosition) {
 	var nodeColor color.Color
 	switch n.player {
-	case playerOne:
-		nodeColor = playerOneNodeColor
-	case playerTwo:
-		nodeColor = playerTwoNodeColor
-	case playerNeutral:
+	case bluePlayer:
+		nodeColor = bluePlayerNodeColor
+	case redPlayer:
+		nodeColor = redPlayerNodeColor
+	case neutralPlayer:
 		nodeColor = neutralNodeColor
 	default:
 		panic("unknown player cannot drawNode")
@@ -89,11 +89,11 @@ func (n *node) drawNode(screen *ebiten.Image, nodeGridPos gridPosition) {
 func (n *node) drawTargets(screen *ebiten.Image, nodePos gridPosition, selectedPlayer player) {
 	var nodeColor color.Color
 	switch n.player {
-	case playerOne:
-		nodeColor = playerOneNodeColor
-	case playerTwo:
-		nodeColor = playerTwoNodeColor
-	case playerNeutral:
+	case bluePlayer:
+		nodeColor = bluePlayerNodeColor
+	case redPlayer:
+		nodeColor = redPlayerNodeColor
+	case neutralPlayer:
 		nodeColor = neutralNodeColor
 	default:
 		panic("unknown player for drawTargets")
