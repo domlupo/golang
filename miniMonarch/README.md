@@ -8,9 +8,11 @@ Is there a mobile equivalent for war/4x games?
 
 ## next checkpoints and purpose
 
-- determine how game objects should be saved into grid pos. Should top left or center be used
-- analyze and iterate on game design and game loop -> Check design feasability and improve game
+- Fix HACK for unit next to capture -> It is causing game hangs
+- Update unit pathing algorithm to Bresenham -> This will most likely be needed long term.
 - clean up bugs and hacks -> There are enough to cause bugs while testing game design and game loop
+- analyze and iterate on game design and game loop -> Check design feasability and improve game
+- determine how game objects should be saved into grid pos. Should top left or center be used
 
 ## future checkpoints and purpose
 
@@ -36,7 +38,7 @@ Is there a mobile equivalent for war/4x games?
 - Do I want to stand out from civ, or be a simpler civ e.g. factorio -> shapez. How does this affect marketing?
 - Should players be able to target thier own nodes?
 - Should a node be able to target itself?
-- grids expand over time to citites, cities can merge together, merged cities are more powerful?
+- grids expand over time to cities, cities can merge together, merged cities are more powerful?
 
 ## theme
 
