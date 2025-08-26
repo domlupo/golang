@@ -1,14 +1,18 @@
 package main
 
 import (
+	"errors"
 	"image/color"
 	"log"
 	"log/slog"
 	"os"
+	"runtime/pprof"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
+
+var runProfiler = false
 
 // This must only be used for drawing images and windows.
 // Never use for game logic.
@@ -134,7 +138,7 @@ var currentTime time.Time
 var priorTime time.Time
 var playerSelected player = noPlayer
 var produceWait time.Duration = 1_000_000 * time.Second
-var produceDelay time.Duration = 1 * time.Second
+var produceDelay time.Duration = 3 * time.Second
 
 var leftMouseClicked = false
 var leftMouseHeld = false
@@ -231,6 +235,25 @@ func (g *game) Update() error {
 		debugOutputWait = 0
 	}
 
+	var blueNodeCount = 0
+	var redNodeCount = 0
+
+	for _, node := range gameState.nodes {
+		switch node.player {
+		case bluePlayer:
+			blueNodeCount = blueNodeCount + 1
+		case redPlayer:
+			redNodeCount = redNodeCount + 1
+		}
+	}
+
+	if blueNodeCount == 0 || redNodeCount == 0 {
+		if runProfiler {
+			pprof.StopCPUProfile()
+		}
+		return errors.New("regular termination")
+	}
+
 	priorTime = currentTime
 	return nil
 }
@@ -257,6 +280,19 @@ func (g *game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func main() {
+	if runProfiler {
+		f, err := os.Create("cpu.prof")
+		if err != nil {
+			logger.Error("could not create CPU profile")
+		}
+		defer f.Close()
+
+		if err := pprof.StartCPUProfile(f); err != nil {
+			logger.Error("could not start CPU profile")
+		}
+		defer pprof.StopCPUProfile()
+	}
+
 	ebiten.SetWindowSize(windowWidth*windowMultiplier, windowHeight*windowMultiplier)
 	if err := ebiten.RunGame(&game{}); err != nil {
 		log.Fatal(err)
