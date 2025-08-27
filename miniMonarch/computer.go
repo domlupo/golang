@@ -16,6 +16,8 @@ func newComputer(p player) *computer {
 }
 
 func (c *computer) updateActions(s state) {
+	// TODO: Determine behavior here. This does not handle the edge case where multiple computers are targeting the same node
+	// and it changs ownership. So the computer will "incorrectly" target an owned node before capturing all neutrals.
 	nonCapturedTargets := make(map[gridPosition]struct{}, 0)
 	for _, node := range s.nodes {
 		if node.player == c.player && node.target != nil && s.nodes[gridPosition{node.target.x, node.target.y}].player != c.player {
@@ -137,8 +139,7 @@ func (c *computer) updateActions(s state) {
 
 	for unitGridPos, unit := range s.units {
 		if unit.player == c.player {
-			unit.nextToTargetNode = false
-			unit.target = target
+			unit.target = &target
 			s.units[unitGridPos] = unit
 		}
 	}

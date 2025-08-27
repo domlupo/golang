@@ -33,6 +33,8 @@ var healthLineWidth = 2
 // computer setup
 var blueComputerActive = true
 var redComputerActive = true
+var bluePlayerActive = !blueComputerActive
+var redPlayerActive = !redComputerActive
 
 // player setup
 var bluePlayerNodeColor = color.RGBA{0, 0, 255, 100}

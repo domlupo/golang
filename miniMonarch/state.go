@@ -59,13 +59,15 @@ func (s *state) moveUnits() {
 
 		var xTargetPixelPos = 0
 		var yTargetPixelPos = 0
-
 		if nearestVisibleUnitPos != nil {
 			xTargetPixelPos = nearestVisibleUnitPos.x
 			yTargetPixelPos = nearestVisibleUnitPos.y
-		} else {
+		} else if unit1.target != nil {
 			xTargetPixelPos = (unit1.target.x * gridSize) + gridSize/2
 			yTargetPixelPos = (unit1.target.y * gridSize) + gridSize/2
+		} else {
+			newUnits[pixelPosition{unitPos1.x, unitPos1.y}] = unit1
+			continue
 		}
 
 		var xDelta = 0
@@ -112,15 +114,14 @@ func (s *state) moveUnits() {
 		// TODO: Determine behavior wanted when units travel through different player nodes
 		// TODO: Add nodes to collision detection
 		var gridPos, _ = splitPixelPosition(pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta})
-		var alreadyOccupiedByOpposingNode = true
-		if s.nodes[gridPos].player == noPlayer || s.nodes[gridPos].player == unit1.player {
-			alreadyOccupiedByOpposingNode = false
+
+		if unit1.target != nil && gridPos.x == unit1.target.x && gridPos.y == unit1.target.y {
+			unit1.nextToTargetNode = true
+		} else {
+			unit1.nextToTargetNode = false
 		}
 
-		if collides {
-			newUnits[pixelPosition{unitPos1.x, unitPos1.y}] = unit1
-		} else if alreadyOccupiedByOpposingNode {
-			unit1.nextToTargetNode = true
+		if collides || unit1.nextToTargetNode {
 			newUnits[pixelPosition{unitPos1.x, unitPos1.y}] = unit1
 		} else {
 			newUnits[pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta}] = unit1
@@ -221,18 +222,26 @@ func (s *state) attackUnits() {
 
 func (s *state) attackNodes() {
 	for _, unit := range s.units {
-		if unit.attackedUnitThisTurn {
+		if unit.target == nil || unit.attackedUnitThisTurn {
 			continue
 		}
 
-		// TODO: Fix this hack.
-		if unit.nextToTargetNode && s.nodes[unit.target].player != unit.player {
-			var targetNode = s.nodes[unit.target]
+		var attackablePlayer player
+		var targetedPlayer = s.nodes[*unit.target].player
+		switch unit.player {
+		case bluePlayer:
+			attackablePlayer = redPlayer
+		case redPlayer:
+			attackablePlayer = bluePlayer
+		}
+
+		if unit.nextToTargetNode && (targetedPlayer == neutralPlayer || targetedPlayer == attackablePlayer) {
+			var targetNode = s.nodes[*unit.target]
 			targetNode.health = max(targetNode.health-1, 0)
 			if targetNode.health == 0 {
 				targetNode.capturedBy = &unit.player
 			}
-			s.nodes[unit.target] = targetNode
+			s.nodes[*unit.target] = targetNode
 		}
 	}
 }
@@ -254,6 +263,14 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 	var bottomRightGridPos, _ = splitPixelPosition(releasePosition)
 
 	for nodeGridPos, node := range s.nodes {
+		if node.player == bluePlayer && !bluePlayerActive {
+			continue
+		} else if node.player == redPlayer && !redPlayerActive {
+			continue
+		} else if node.player == neutralPlayer {
+			continue
+		}
+
 		if (topLeftGridPos.x < nodeGridPos.x) &&
 			(nodeGridPos.x < bottomRightGridPos.x) &&
 			(topLeftGridPos.y < nodeGridPos.y) &&
@@ -264,6 +281,25 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 		}
 		s.nodes[nodeGridPos] = node
 	}
+
+	for unitPixelPos, unit := range s.units {
+		if unit.player == bluePlayer && !bluePlayerActive {
+			continue
+		} else if unit.player == redPlayer && !redPlayerActive {
+			continue
+		}
+
+		if (clickPosition.x < unitPixelPos.x) &&
+			(unitPixelPos.x < releasePosition.x) &&
+			(clickPosition.y < unitPixelPos.y) &&
+			(unitPixelPos.y < releasePosition.y) {
+			unit.selected = true
+		} else {
+			unit.selected = false
+		}
+		s.units[unitPixelPos] = unit
+	}
+
 }
 
 func (s *state) updateTargets(target *gridPosition) {
@@ -277,6 +313,18 @@ func (s *state) updateTargets(target *gridPosition) {
 		}
 		s.nodes[nodeGridPos] = node
 	}
+
+	var targetPlayer = s.nodes[*target].player
+	for unitPixelPos, unit := range s.units {
+		if unit.player == targetPlayer {
+			continue
+		}
+
+		if unit.selected {
+			unit.target = target
+		}
+		s.units[unitPixelPos] = unit
+	}
 }
 
 func (s *state) produceUnits() {
@@ -285,15 +333,10 @@ func (s *state) produceUnits() {
 			continue
 		}
 
-		// TODO: determine game design behavior when target is not set
-		if n.target == nil {
-			return
-		}
-
 		// TODO: determine how to produce units during collision
 		var unitPos = getPixelPosition(nodePos, innerGridPosition{gridSize / 2, gridSize / 2})
-		if !s.collides(unitPos, newUnit(n.player, *n.target), s.units) {
-			s.units[unitPos] = newUnit(n.player, *n.target)
+		if !s.collides(unitPos, newUnit(n.player, n.target), s.units) {
+			s.units[unitPos] = newUnit(n.player, n.target)
 		}
 	}
 }
@@ -306,6 +349,6 @@ func (s *state) draw(screen *ebiten.Image, selectedPlayer player) {
 		node.drawTargets(screen, nodePos, selectedPlayer)
 	}
 	for unitPos, unit := range s.units {
-		unit.draw(screen, unitPos)
+		unit.draw(screen, unitPos, unit.selected)
 	}
 }

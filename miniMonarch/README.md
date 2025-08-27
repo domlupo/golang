@@ -3,19 +3,18 @@
 A prototype for a simple war/4x game. Simple like mini metro or mini motorways. 
 War game like civ, hearts of iron, 9 kings etc. (also other popular war games on steamdb). 
 Graphics may end up similar to the gnorp analogue.
-Think about how this game relates to civilization revolution and catan.
+Think about how this game relates to civilization revolution, catan and RISK.
 Is there a mobile equivalent for war/4x games?
 
 ## next checkpoints and purpose
 
-- Fix HACK for unit next to capture -> It is causing game hangs
-- Update unit pathing algorithm to Bresenham -> This will most likely be needed long term.
-- clean up bugs and hacks -> There are enough to cause bugs while testing game design and game loop
 - analyze and iterate on game design and game loop -> Check design feasability and improve game
 - determine how game objects should be saved into grid pos. Should top left or center be used
 
 ## future checkpoints and purpose
 
+- clean up bugs and hacks -> There are enough to cause bugs while testing game design and game loop
+- Update unit pathing algorithm to Bresenham -> This will most likely be needed long term.
 - initial map generation -> ?
 - range unit which can attack -> ?
 - different terrains -> ?

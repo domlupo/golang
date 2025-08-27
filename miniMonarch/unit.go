@@ -13,16 +13,17 @@ type unit struct {
 	player               player
 	width                int
 	height               int
-	target               gridPosition
+	target               *gridPosition
 	vision               int
 	reach                int
 	alive                bool
 	attackedUnitThisTurn bool
 	// TODO: remove this nextToTargetNode HACK
 	nextToTargetNode bool
+	selected         bool
 }
 
-func newUnit(p player, target gridPosition) unit {
+func newUnit(p player, target *gridPosition) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
 		logger.Error("failed to generate UUID: %v", err)
@@ -38,12 +39,13 @@ func newUnit(p player, target gridPosition) unit {
 		alive:                true,
 		attackedUnitThisTurn: false,
 		nextToTargetNode:     false,
+		selected:             false,
 	}
 
 	return u
 }
 
-func (u *unit) draw(screen *ebiten.Image, unitPos pixelPosition) {
+func (u *unit) draw(screen *ebiten.Image, unitPos pixelPosition, selected bool) {
 	var unitColor color.Color
 	switch u.player {
 	case bluePlayer:
@@ -51,7 +53,7 @@ func (u *unit) draw(screen *ebiten.Image, unitPos pixelPosition) {
 	case redPlayer:
 		unitColor = redPlayerUnitColor
 	default:
-		panic("node needs a color")
+		panic("unit needs a color")
 	}
 
 	var x1 = unitPos.x - (unitWidth / 2) - 1
@@ -67,9 +69,13 @@ func (u *unit) draw(screen *ebiten.Image, unitPos pixelPosition) {
 		false,
 	)
 
+	var outlineColor color.Color = color.Black
+	if selected {
+		outlineColor = highlightColor
+	}
 	drawUnfilledBoxInt(
 		screen,
-		color.Black,
+		outlineColor,
 		x1,
 		y1,
 		x1+unitWidth,
