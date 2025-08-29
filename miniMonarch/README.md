@@ -6,33 +6,69 @@ Think about how this game relates to civilization revolution, catan, RISK, starc
 Graphics may end up similar to the gnorp analogue.
 Is there a mobile equivalent for war/4x games?
 
-## next checkpoints and purpose
+## Checkpoints : Purpose
 
-- range unit which can attack -> Will probably help with below grid question
-- Determine how game objects should be saved into grid pos. Should top left or center be used -> fundamental change which will affect alot
-- Update unit pathing algorithm to Bresenham -> This will most likely be needed long term.
-- analyze and iterate on game design and game loop -> Check design feasability and improve game
+### next checkpoints
 
-## future checkpoints and purpose
+- Verify that top left corner is used for state, collisions, etc:
+  - Finalizes low level aspects to build upon e.g. unit pathing
+- Update unit pathing algorithm to Bresenham:
+  - Unit pathing is fundamental and will need lots of iteration.
+  - Very likely this is needed for final game
+- Range unit which can attack:
+  - First range unit will probably expose issues. 
+  - Multiple units will be in needed for final game.
+- Analyze and iterate on game design and game loop:
+  - Check design feasability 
+  - Improve game
 
-- clean up bugs and hacks -> There are enough to cause bugs while testing game design and game loop
-- determine if FPS lock is needed -> fundmental issue that I have not considered
-- update pathing algorithm to go around obstacles -> More realistic pathing
-- local multiplayer -> ?
-- release to web -> learn how to deploy, check web based issues rather than only mac
-- release to phone -> check phone controls, check resolution
+### future checkpoints
 
-## punted checkpoints
+- update pathing algorithm to fill in around obstacles:
+  - More realistic pathing
+  - Helps close attack behavior decision
+- update pathing algorithm to go around obstacles:
+  - More realistic pathing
+  - Helps close attack behavior decision
+- Determine desired melee attack behavior and bugs:
+  - ?
+- clean up bugs and hacks:
+  - There are enough to cause bugs while testing game design and game loop
+- determine if FPS lock is needed:
+  - fundmental issue that I have not considered
+- controls which work on computer, steam deck, phone, etc: 
+  - multiple platform means more sales
+  - customers can pick favorite device if multiple owned
+- release to web:
+  - learn how to deploy
+  - easier to share with friends
+  - test web based issues rather than only mac
+- release to phone: 
+  - check phone controls
+  - check resolution
+- local multiplayer:
+  - ?
+- save file: 
+  - ?
 
-- nodes with defense system -> ?
-- initial map generation -> ?
-- different terrains -> ?
+### punted checkpoints
+
+- initial map generation:
+  - ?
+- different terrains: 
+  - ?
+
+## Closed decisions
+
+- Save top left corner of unit, nodes, etc into state. Don't save center. This may be a mistake but time will tell.
 
 ## issues
 
-## game design
+- Nothing yet since early prototype stage 
 
-- square, hexagonal, 3d globe or historial battle grounds?
+## game design questions
+
+- square, hexagonal or historial battle grounds?
 - Campaign mode. Specific battles, war or countries? Similar to cities in mini metro and mini motorway
 - hidden or fully visible grid?
 - naval units?
@@ -46,11 +82,18 @@ Is there a mobile equivalent for war/4x games?
 - Should a node be able to target itself?
 - grids expand over time to cities, cities can merge together, merged cities are more powerful?
 - cities have different units, different unit ratios, or different counts produced?
-
-## theme
-
-- the gnorp analogue?
+- traders can go to a node which you own to change what you are producing
+- ammo limit for units
+- nodes with defense system
+- theme is the gnorp analogue?
+- game name
+- workers or resources that can be collected? This is starting to feel too RTS like.
 
 ## misc notes
 
+ - Look into polytopia game
+ - Look into other mobile "civ" games like unciv
+
 ## archive
+
+- Don't do 3d globe visual for game. Too complex.
