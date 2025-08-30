@@ -2,7 +2,8 @@
 
 A prototype for a simple war/4x game. Simple like mini metro or mini motorways. 
 War game like civ, hearts of iron, 9 kings etc. (also other popular war games on steamdb). 
-Think about how this game relates to civilization revolution, catan, RISK, starcraft desert strike, etc.
+Think about how this game relates to civilization revolution, catan, RISK, 
+starcraft desert strike, totally accurate battle simulator, etc.
 Graphics may end up similar to the gnorp analogue.
 Is there a mobile equivalent for war/4x games?
 
@@ -10,28 +11,33 @@ Is there a mobile equivalent for war/4x games?
 
 ### next checkpoints
 
-- Verify that top left corner is used for state, collisions, etc:
-  - Finalizes low level aspects to build upon e.g. unit pathing
+- Computer with dynamic targeting:
+  - Can create more node setups for testing
 - Update unit pathing algorithm to Bresenham:
   - Unit pathing is fundamental and will need lots of iteration.
   - Very likely this is needed for final game
-- Range unit which can attack:
-  - First range unit will probably expose issues. 
-  - Multiple units will be in needed for final game.
-- Analyze and iterate on game design and game loop:
-  - Check design feasability 
-  - Improve game
-
-### future checkpoints
-
 - update pathing algorithm to fill in around obstacles:
   - More realistic pathing
   - Helps close attack behavior decision
 - update pathing algorithm to go around obstacles:
   - More realistic pathing
   - Helps close attack behavior decision
-- Determine desired melee attack behavior and bugs:
-  - ?
+- Determine behavior for multi hit melee combat 
+  - Expose issues with combat
+  - Expose issues with timing
+  - Expose issues with pathing
+  - Will probably lead to bug fix for units not killing correctly
+
+### future checkpoints
+
+- Tool / CLI which launches multiple windows at once to test multiple scenarios
+  - Faster test loop
+- Range unit which can attack:
+  - First range unit will probably expose issues. 
+  - Multiple units will be in needed for final game.
+- Analyze and iterate on game design and game loop:
+  - Check design feasability 
+  - Improve game
 - clean up bugs and hacks:
   - There are enough to cause bugs while testing game design and game loop
 - determine if FPS lock is needed:
@@ -60,7 +66,7 @@ Is there a mobile equivalent for war/4x games?
 
 ## Closed decisions
 
-- Save top left corner of unit, nodes, etc into state. Don't save center. This may be a mistake but time will tell.
+- Save center rather than top left of unit, nodes, etc into state because it makes the engine and game easier to design, test, debug, etc
 
 ## issues
 

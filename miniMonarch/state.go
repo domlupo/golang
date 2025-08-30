@@ -35,23 +35,27 @@ func (s *state) refreshUnits() {
 // TODO: Need to implement a move algorithm similar to below.
 // https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 func (s *state) moveUnits() {
-	var newUnits = make(map[pixelPosition]unit)
+	var unitsMovedCount = 0
+	var unitsWithoutTarget = 0
+	var unitsAtTargetNode = 0
+	var unitsAtNonTargetNode = 0
+	var unitsCollidedCount = 0
 
+	var newUnits = make(map[pixelPosition]unit)
 	for unitPos1, unit1 := range s.units {
+		unit1.nextToTargetNode = false
+
 		// check if unit 1 can see unit 2
 		var nearestVisibleUnitPos *pixelPosition
 		for unitPos2, unit2 := range s.units {
-			if unitPos1.x == unitPos2.x && unitPos1.y == unitPos2.y {
-				// unit cannot see itself
-				continue
-			}
-
 			if unit1.player == unit2.player {
-				// unit cannot see comarades
+				// unit cannot see comrades
 				continue
 			}
 
-			var distanceBetweenUnits = math.Sqrt(math.Pow(float64(unitPos1.x-unitPos2.x), 2) + math.Pow(float64(unitPos1.y-unitPos2.y), 2))
+			var distanceBetweenUnits = math.Sqrt(
+				math.Pow(float64(unitPos1.x-unitPos2.x), 2) +
+					math.Pow(float64(unitPos1.y-unitPos2.y), 2))
 			if distanceBetweenUnits <= float64(unit1.vision) {
 				nearestVisibleUnitPos = &unitPos2
 			}
@@ -63,9 +67,10 @@ func (s *state) moveUnits() {
 			xTargetPixelPos = nearestVisibleUnitPos.x
 			yTargetPixelPos = nearestVisibleUnitPos.y
 		} else if unit1.target != nil {
-			xTargetPixelPos = (unit1.target.x * gridSize) + gridSize/2
-			yTargetPixelPos = (unit1.target.y * gridSize) + gridSize/2
+			xTargetPixelPos = unit1.target.x * gridSize
+			yTargetPixelPos = unit1.target.y * gridSize
 		} else {
+			unitsWithoutTarget++
 			newUnits[pixelPosition{unitPos1.x, unitPos1.y}] = unit1
 			continue
 		}
@@ -106,36 +111,73 @@ func (s *state) moveUnits() {
 			}
 		}
 
-		var collides = s.collides(
+		var collidesWithUnit = s.collidesWithUnit(
 			pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta},
 			unit1,
 			s.units)
 
-		// TODO: Determine behavior wanted when units travel through different player nodes
-		// TODO: Add nodes to collision detection
-		var gridPos, _ = splitPixelPosition(pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta})
+		var collidesWithNode = s.collidesWithNode(
+			pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta},
+			unit1,
+			s.nodes)
 
-		if unit1.target != nil && gridPos.x == unit1.target.x && gridPos.y == unit1.target.y {
-			unit1.nextToTargetNode = true
-		} else {
-			unit1.nextToTargetNode = false
-		}
-
-		if collides || unit1.nextToTargetNode {
+		if collidesWithUnit {
+			unitsCollidedCount++
 			newUnits[pixelPosition{unitPos1.x, unitPos1.y}] = unit1
+		} else if collidesWithNode != nil {
+			if collidesWithNode.x == unit1.target.x && collidesWithNode.y == unit1.target.y {
+				unitsAtTargetNode++
+				unit1.nextToTargetNode = true
+				newUnits[pixelPosition{unitPos1.x, unitPos1.y}] = unit1
+			} else {
+				// TODO: determine behavior. Prob don't want units to pass thru enemy nodes
+				unitsAtNonTargetNode++
+				unitsMovedCount++
+				newUnits[pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta}] = unit1
+			}
 		} else {
+			unitsMovedCount++
 			newUnits[pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta}] = unit1
 		}
 	}
 
+	logger.Debug("moveUnits",
+		"units moved", unitsMovedCount,
+		"units without target", unitsWithoutTarget,
+		"units at target node", unitsAtTargetNode,
+		"units at non target node", unitsAtNonTargetNode,
+		"units collided", unitsCollidedCount,
+	)
+
 	s.units = newUnits
 }
 
-func (s *state) collides(newPos pixelPosition, unit unit, units map[pixelPosition]unit) bool {
-	var left = newPos.x
-	var right = newPos.x + unit.width
-	var top = newPos.y
-	var bottom = newPos.y + unit.height
+func (s *state) collidesWithNode(newPos pixelPosition, unit unit, nodes map[gridPosition]node) *gridPosition {
+	var x1 = newPos.x
+	var y1 = newPos.y
+
+	for nodePos, node := range nodes {
+		if unit.player == node.player {
+			// unit cannot collide with own nodes
+			continue
+		}
+
+		var nodePixelPos = getPixelPosition(nodePos, innerGridPosition{0, 0})
+
+		var x2 = nodePixelPos.x
+		var y2 = nodePixelPos.y
+
+		if math.Pow(float64(x2-x1), 2)+math.Pow(float64(y2-y1), 2) <= math.Pow((float64(unit.radius)+float64(nodeRadius)), 2) {
+			return &nodePos
+		}
+	}
+
+	return nil
+}
+
+func (s *state) collidesWithUnit(newPos pixelPosition, unit unit, units map[pixelPosition]unit) bool {
+	var x1 = newPos.x + unit.radius
+	var y1 = newPos.y + unit.radius
 
 	for otherPos, otherUnit := range units {
 		if unit.id == otherUnit.id {
@@ -143,11 +185,10 @@ func (s *state) collides(newPos pixelPosition, unit unit, units map[pixelPositio
 			continue
 		}
 
-		// square AABB collision detection
-		if (left <= otherPos.x+otherUnit.width) &&
-			(right >= otherPos.x) &&
-			(top <= otherPos.y+otherUnit.height) &&
-			(bottom >= otherPos.y) {
+		var x2 = otherPos.x + otherUnit.radius
+		var y2 = otherPos.y + otherUnit.radius
+
+		if math.Pow(float64(x2-x1), 2)+math.Pow(float64(y2-y1), 2) <= math.Pow((float64(unitRadius)+float64(otherUnit.radius)), 2) {
 			return true
 		}
 	}
@@ -156,10 +197,13 @@ func (s *state) collides(newPos pixelPosition, unit unit, units map[pixelPositio
 }
 
 func (s *state) attackUnits() {
+	var unitsDeletedCount = 0
+	var unitAttackedOtherUnitCount = 0
+
 	for unitPos1, unit1 := range s.units {
 		// check if unit 1 can attack unit 2
 		var nearestVisibleUnitPos *pixelPosition = nil
-		var nearestVisibleUnit *unit = nil
+		var nearestVisibleUnit unit
 		for unitPos2, unit2 := range s.units {
 			if unit1.id == unit2.id {
 				// unit cannot attack itself
@@ -171,17 +215,14 @@ func (s *state) attackUnits() {
 				continue
 			}
 
-			var unit1XCenter = unitPos1.x + unit1.width/2
-			var unit2XCenter = unitPos2.x + unit2.width/2
-			var unit1YCenter = unitPos1.y + unit1.height/2
-			var unit2YCenter = unitPos2.y + unit2.height/2
-
-			var distanceBetweenUnits = math.Sqrt(math.Pow(float64(unit1XCenter-unit2XCenter), 2) + math.Pow(float64(unit1YCenter-unit2YCenter), 2))
+			var distanceBetweenUnits = math.Sqrt(
+				math.Pow(float64(unitPos1.x-unitPos2.x), 2) +
+					math.Pow(float64(unitPos1.y-unitPos2.y), 2))
 			// TODO: setting this <= rather than < caused obvious bugs but it seems more correct
 			// to use <. Need to determine right behavior in the future.
 			if distanceBetweenUnits < float64(unit1.vision) {
 				nearestVisibleUnitPos = &unitPos2
-				nearestVisibleUnit = &unit2
+				nearestVisibleUnit = unit2
 			}
 		}
 
@@ -204,20 +245,27 @@ func (s *state) attackUnits() {
 		} else if unitPos1.y > (yTargetPixelPos) {
 			yMagnitude = math.Abs(float64(unitPos1.y - yTargetPixelPos))
 		}
-
-		if float64(unit1.reach) >= math.Sqrt(math.Pow(xMagnitude, 2)+math.Pow(yMagnitude, 2)) {
+		var distanceToNearestVisibleUnit = math.Sqrt(math.Pow(xMagnitude, 2) + math.Pow(yMagnitude, 2))
+		if float64(unit1.reach) >= distanceToNearestVisibleUnit {
 			nearestVisibleUnit.alive = false
-			s.units[*nearestVisibleUnitPos] = *nearestVisibleUnit
+			s.units[*nearestVisibleUnitPos] = nearestVisibleUnit
 			unit1.attackedUnitThisTurn = true
+			unitAttackedOtherUnitCount++
 			s.units[unitPos1] = unit1
 		}
 	}
 
 	for attackedUnitPos, attackedUnit := range s.units {
 		if !attackedUnit.alive {
+			unitsDeletedCount++
 			delete(s.units, attackedUnitPos)
 		}
 	}
+
+	logger.Debug("moveUnits",
+		"units attacked", unitAttackedOtherUnitCount,
+		"units deleted", unitsDeletedCount,
+	)
 }
 
 func (s *state) attackNodes() {
@@ -334,8 +382,8 @@ func (s *state) produceUnits() {
 		}
 
 		// TODO: determine how to produce units during collision
-		var unitPos = getPixelPosition(nodePos, innerGridPosition{gridSize / 2, gridSize / 2})
-		if !s.collides(unitPos, newUnit(n.player, n.target), s.units) {
+		var unitPos = getPixelPosition(nodePos, innerGridPosition{0, 0})
+		if !s.collidesWithUnit(unitPos, newUnit(n.player, n.target), s.units) {
 			s.units[unitPos] = newUnit(n.player, n.target)
 		}
 	}

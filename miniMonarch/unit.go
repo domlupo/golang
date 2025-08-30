@@ -11,8 +11,7 @@ import (
 type unit struct {
 	id                   uuid.UUID
 	player               player
-	width                int
-	height               int
+	radius               int
 	target               *gridPosition
 	vision               int
 	reach                int
@@ -26,16 +25,15 @@ type unit struct {
 func newUnit(p player, target *gridPosition) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
-		logger.Error("failed to generate UUID: %v", err)
+		logger.Error("newUnit", "failed to generate UUID", err)
 	}
 	u := unit{
 		id:                   id,
 		player:               p,
-		width:                unitWidth,
-		height:               unitHeight,
+		radius:               unitRadius,
 		target:               target,
 		vision:               40,
-		reach:                8,
+		reach:                13,
 		alive:                true,
 		attackedUnitThisTurn: false,
 		nextToTargetNode:     false,
@@ -56,15 +54,11 @@ func (u *unit) draw(screen *ebiten.Image, unitPos pixelPosition, selected bool) 
 		panic("unit needs a color")
 	}
 
-	var x1 = unitPos.x - (unitWidth / 2) - 1
-	var y1 = unitPos.y - (unitWidth / 2) - 1
-
-	vector.DrawFilledRect(
+	vector.DrawFilledCircle(
 		screen,
-		float32(x1)*windowMultiplier,
-		float32(y1)*windowMultiplier,
-		float32(unitWidth)*windowMultiplier,
-		float32(unitHeight)*windowMultiplier,
+		float32(unitPos.x)*windowMultiplier,
+		float32(unitPos.y)*windowMultiplier,
+		float32(unitRadius)*windowMultiplier,
 		unitColor,
 		false,
 	)
@@ -76,9 +70,9 @@ func (u *unit) draw(screen *ebiten.Image, unitPos pixelPosition, selected bool) 
 	drawUnfilledBoxInt(
 		screen,
 		outlineColor,
-		x1,
-		y1,
-		x1+unitWidth,
-		y1+unitHeight,
+		unitPos.x-unitRadius,
+		unitPos.y-unitRadius,
+		unitPos.x+unitRadius,
+		unitPos.y+unitRadius,
 	)
 }

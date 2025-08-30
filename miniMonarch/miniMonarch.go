@@ -26,7 +26,7 @@ const gridSize = 40
 // graphics setup
 var backgroundColor = color.RGBA{200, 200, 200, 255}
 var highlightColor = color.RGBA{70, 255, 0, 200}
-var selectectionBoxLineWidth = 2
+var selectectionBoxLineWidth = 1
 var targetNodeLineWidth = 1
 var healthLineWidth = 2
 
@@ -44,14 +44,16 @@ var redPlayerUnitColor = color.RGBA{255, 0, 0, 100}
 var neutralNodeColor = color.RGBA{100, 60, 100, 200}
 
 // unit and node setup
-var unitWidth = 5
-var unitHeight = 5
+// Note: unitRadius set to an odd number is better for testing due to division bugs
+var unitRadius = 5
+var nodeRadius = gridSize / 2
 var initialNodeHealth = 100
 
 // The debug grid helps debugging display issues. Usually only altering
 // offset is needed, width can remain 1.
 // Offset values should only be 0 - 20 (half of grid size without window multipler)
 // Some helpful values are: 0, 0.5, 1, 19, 19.5, 20
+const logLevel = slog.LevelInfo
 const filterTimeAndLevelFromLogs = true
 const debugOutput = true
 const debugGridOn = true
@@ -80,7 +82,7 @@ func init() {
 	}
 
 	logOptions := &slog.HandlerOptions{
-		Level: slog.LevelInfo,
+		Level: logLevel,
 		ReplaceAttr: func(groups []string, attribute slog.Attr) slog.Attr {
 			if filterTimeAndLevelFromLogs && (attribute.Key == "time" || attribute.Key == "level") {
 				return slog.Attr{}
@@ -94,45 +96,7 @@ func init() {
 	gameState = *newState()
 	compOne = *newComputer(bluePlayer)
 	compTwo = *newComputer(redPlayer)
-
-	// setup  players
-	var bluePlayerNode = newNode(bluePlayer)
-	var redPlayerNode = newNode(redPlayer)
-	gameState.addNode(gridPosition{1, 1}, bluePlayerNode)
-	gameState.addNode(gridPosition{30, 15}, redPlayerNode)
-
-	// setup neutral nodes
-	gameState.addNode(gridPosition{5, 1}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{10, 1}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{15, 1}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{20, 1}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{25, 1}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{30, 1}, newNode(neutralPlayer))
-
-	gameState.addNode(gridPosition{1, 5}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{5, 5}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{10, 5}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{15, 5}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{20, 5}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{25, 5}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{30, 5}, newNode(neutralPlayer))
-
-	gameState.addNode(gridPosition{1, 10}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{5, 10}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{5, 10}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{10, 10}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{15, 10}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{20, 10}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{25, 10}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{30, 10}, newNode(neutralPlayer))
-
-	gameState.addNode(gridPosition{1, 15}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{5, 15}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{5, 15}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{10, 15}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{15, 15}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{20, 15}, newNode(neutralPlayer))
-	gameState.addNode(gridPosition{25, 15}, newNode(neutralPlayer))
+	setupState(gameState, complex)
 }
 
 // globals
@@ -184,6 +148,7 @@ func (g *game) Update() error {
 	var gridPos, _ = splitPixelPosition(pixelPosition{int(x), int(y)})
 
 	priorLeftMouseClicked = leftMouseClicked
+	// TODO: Fix player selected. Reuse collision algorithm or is that overkill?
 	playerSelected = gameState.nodes[gridPos].player
 	leftMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
 	middleMouseScrollClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonMiddle)
