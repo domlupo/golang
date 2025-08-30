@@ -21,8 +21,8 @@ func newState() *state {
 	return &s
 }
 
-func (s *state) addNode(gridPos gridPosition, n node) {
-	s.nodes[gridPos] = n
+func (s *state) addNode(n node) {
+	s.nodes[n.gridPos] = n
 }
 
 func (s *state) refreshUnits() {
@@ -43,7 +43,7 @@ func (s *state) moveUnits() {
 
 	var newUnits = make(map[pixelPosition]unit)
 	for unitPos1, unit1 := range s.units {
-		unit1.nextToTargetNode = false
+		unit1.canReachTargetNode = nil
 
 		// check if unit 1 can see unit 2
 		var nearestVisibleUnitPos *pixelPosition
@@ -67,8 +67,8 @@ func (s *state) moveUnits() {
 			xTargetPixelPos = nearestVisibleUnitPos.x
 			yTargetPixelPos = nearestVisibleUnitPos.y
 		} else if unit1.target != nil {
-			xTargetPixelPos = unit1.target.x * gridSize
-			yTargetPixelPos = unit1.target.y * gridSize
+			xTargetPixelPos = unit1.target.x
+			yTargetPixelPos = unit1.target.y
 		} else {
 			unitsWithoutTarget++
 			newUnits[pixelPosition{unitPos1.x, unitPos1.y}] = unit1
@@ -116,7 +116,7 @@ func (s *state) moveUnits() {
 			unit1,
 			s.units)
 
-		var collidesWithNode = s.collidesWithNode(
+		var collidesWithNode, isTargetNode = s.collidesWithNode(
 			pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta},
 			unit1,
 			s.nodes)
@@ -125,9 +125,10 @@ func (s *state) moveUnits() {
 			unitsCollidedCount++
 			newUnits[pixelPosition{unitPos1.x, unitPos1.y}] = unit1
 		} else if collidesWithNode != nil {
-			if collidesWithNode.x == unit1.target.x && collidesWithNode.y == unit1.target.y {
+			if isTargetNode {
 				unitsAtTargetNode++
-				unit1.nextToTargetNode = true
+				// TODO: HACK, unit can reach further than collide
+				unit1.canReachTargetNode = collidesWithNode
 				newUnits[pixelPosition{unitPos1.x, unitPos1.y}] = unit1
 			} else {
 				// TODO: determine behavior. Prob don't want units to pass thru enemy nodes
@@ -152,13 +153,17 @@ func (s *state) moveUnits() {
 	s.units = newUnits
 }
 
-func (s *state) collidesWithNode(newPos pixelPosition, unit unit, nodes map[gridPosition]node) *gridPosition {
+func (s *state) collidesWithNode(newPos pixelPosition, unit unit, nodes map[gridPosition]node) (*node, bool) {
+	var collidesWithTargetNode = false
 	var x1 = newPos.x
 	var y1 = newPos.y
+	var r1 = unit.radius
 
 	for nodePos, node := range nodes {
 		if unit.player == node.player {
 			// unit cannot collide with own nodes
+			// HACK: This will probably change in the future, and it will most likely break attackNodes logic
+			// since it assumes a unit never collides with its own node
 			continue
 		}
 
@@ -166,18 +171,27 @@ func (s *state) collidesWithNode(newPos pixelPosition, unit unit, nodes map[grid
 
 		var x2 = nodePixelPos.x
 		var y2 = nodePixelPos.y
+		var r2 = node.radius
 
-		if math.Pow(float64(x2-x1), 2)+math.Pow(float64(y2-y1), 2) <= math.Pow((float64(unit.radius)+float64(nodeRadius)), 2) {
-			return &nodePos
+		if math.Pow(float64(x2-x1), 2)+math.Pow(float64(y2-y1), 2) <= math.Pow((float64(r1)+float64(r2)), 2) {
+			var x1 = unit.target.x
+			var y1 = unit.target.y
+			var r1 = 1
+
+			if math.Pow(float64(x2-x1), 2)+math.Pow(float64(y2-y1), 2) <= math.Pow(float64(r1)+float64(r2), 2) {
+				collidesWithTargetNode = true
+			}
+			return &node, collidesWithTargetNode
 		}
 	}
 
-	return nil
+	return nil, collidesWithTargetNode
 }
 
 func (s *state) collidesWithUnit(newPos pixelPosition, unit unit, units map[pixelPosition]unit) bool {
 	var x1 = newPos.x + unit.radius
 	var y1 = newPos.y + unit.radius
+	var r1 = unit.radius
 
 	for otherPos, otherUnit := range units {
 		if unit.id == otherUnit.id {
@@ -187,8 +201,8 @@ func (s *state) collidesWithUnit(newPos pixelPosition, unit unit, units map[pixe
 
 		var x2 = otherPos.x + otherUnit.radius
 		var y2 = otherPos.y + otherUnit.radius
-
-		if math.Pow(float64(x2-x1), 2)+math.Pow(float64(y2-y1), 2) <= math.Pow((float64(unitRadius)+float64(otherUnit.radius)), 2) {
+		var r2 = otherUnit.radius
+		if math.Pow(float64(x2-x1), 2)+math.Pow(float64(y2-y1), 2) <= math.Pow((float64(r1)+float64(r2)), 2) {
 			return true
 		}
 	}
@@ -262,42 +276,54 @@ func (s *state) attackUnits() {
 		}
 	}
 
-	logger.Debug("moveUnits",
+	logger.Debug("attackUnits",
 		"units attacked", unitAttackedOtherUnitCount,
 		"units deleted", unitsDeletedCount,
 	)
 }
 
 func (s *state) attackNodes() {
+	var noTargetNodeCount = 0
+	var attackedUnitThisTurnCount = 0
+	var attackedNodeThisTurnCount = 0
+	var cannotReachNodeCount = 0
+
 	for _, unit := range s.units {
-		if unit.target == nil || unit.attackedUnitThisTurn {
+		if unit.target == nil {
+			noTargetNodeCount++
 			continue
 		}
 
-		var attackablePlayer player
-		var targetedPlayer = s.nodes[*unit.target].player
-		switch unit.player {
-		case bluePlayer:
-			attackablePlayer = redPlayer
-		case redPlayer:
-			attackablePlayer = bluePlayer
+		if unit.attackedUnitThisTurn {
+			attackedUnitThisTurnCount++
+			continue
 		}
 
-		if unit.nextToTargetNode && (targetedPlayer == neutralPlayer || targetedPlayer == attackablePlayer) {
-			var targetNode = s.nodes[*unit.target]
+		if unit.canReachTargetNode != nil {
+			attackedNodeThisTurnCount++
+			var targetNode = unit.canReachTargetNode
 			targetNode.health = max(targetNode.health-1, 0)
 			if targetNode.health == 0 {
 				targetNode.capturedBy = &unit.player
 			}
-			s.nodes[*unit.target] = targetNode
+			s.nodes[targetNode.gridPos] = *targetNode
+		} else {
+			cannotReachNodeCount++
 		}
 	}
+
+	logger.Debug("attackNodes",
+		"no target node", noTargetNodeCount,
+		"attacked unit this turn", attackedUnitThisTurnCount,
+		"attacked node this turn", attackedNodeThisTurnCount,
+		"cannot reach node", cannotReachNodeCount,
+	)
 }
 
 func (s *state) updateNodeOwnership() {
 	for nodeGridPos, node := range s.nodes {
 		if node.health == 0 {
-			newNode := newNode(*node.capturedBy)
+			newNode := newNode(*node.capturedBy, node.gridPos)
 			s.nodes[nodeGridPos] = newNode
 		}
 	}
@@ -350,7 +376,7 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 
 }
 
-func (s *state) updateTargets(target *gridPosition) {
+func (s *state) updateTargets(target *pixelPosition) {
 	for nodeGridPos, node := range s.nodes {
 		if node.player == neutralPlayer {
 			continue
@@ -361,13 +387,7 @@ func (s *state) updateTargets(target *gridPosition) {
 		}
 		s.nodes[nodeGridPos] = node
 	}
-
-	var targetPlayer = s.nodes[*target].player
 	for unitPixelPos, unit := range s.units {
-		if unit.player == targetPlayer {
-			continue
-		}
-
 		if unit.selected {
 			unit.target = target
 		}

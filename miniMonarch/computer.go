@@ -20,8 +20,11 @@ func (c *computer) updateActions(s state) {
 	// and it changs ownership. So the computer will "incorrectly" target an owned node before capturing all neutrals.
 	nonCapturedTargets := make(map[gridPosition]struct{}, 0)
 	for _, node := range s.nodes {
-		if node.player == c.player && node.target != nil && s.nodes[gridPosition{node.target.x, node.target.y}].player != c.player {
-			nonCapturedTargets[gridPosition{node.target.x, node.target.y}] = struct{}{}
+		if node.player == c.player && node.target != nil {
+			var targetGridPos, _ = splitPixelPosition(*node.target)
+			if s.nodes[targetGridPos].player != c.player {
+				nonCapturedTargets[targetGridPos] = struct{}{}
+			}
 		}
 	}
 
@@ -130,16 +133,18 @@ func (c *computer) updateActions(s state) {
 		}
 	}
 
+	var targetPixelPos = getPixelPosition(target, innerGridPosition{0, 0})
+
 	for nodeGridPos, node := range s.nodes {
 		if node.player == c.player {
-			node.target = &target
+			node.target = &targetPixelPos
 			s.nodes[nodeGridPos] = node
 		}
 	}
 
 	for unitGridPos, unit := range s.units {
 		if unit.player == c.player {
-			unit.target = &target
+			unit.target = &targetPixelPos
 			s.units[unitGridPos] = unit
 		}
 	}

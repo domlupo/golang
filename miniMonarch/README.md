@@ -11,6 +11,8 @@ Is there a mobile equivalent for war/4x games?
 
 ### next checkpoints
 
+- Node highlighting 
+  - Quicker testing
 - Computer with dynamic targeting:
   - Can create more node setups for testing
 - Update unit pathing algorithm to Bresenham:
@@ -74,6 +76,7 @@ Is there a mobile equivalent for war/4x games?
 
 ## game design questions
 
+- APM lock on nodes or units so you cannot spam actions? Think about sokpop game were you are limited by clicks
 - square, hexagonal or historial battle grounds?
 - Campaign mode. Specific battles, war or countries? Similar to cities in mini metro and mini motorway
 - hidden or fully visible grid?

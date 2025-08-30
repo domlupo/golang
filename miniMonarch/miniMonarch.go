@@ -145,7 +145,8 @@ func (g *game) Update() error {
 	var graphicalX, graphicalY = ebiten.CursorPosition()
 	var x = float32(graphicalX) / windowMultiplier
 	var y = float32(graphicalY) / windowMultiplier
-	var gridPos, _ = splitPixelPosition(pixelPosition{int(x), int(y)})
+	var pixelPos = pixelPosition{int(x), int(y)}
+	var gridPos, _ = splitPixelPosition(pixelPos)
 
 	priorLeftMouseClicked = leftMouseClicked
 	// TODO: Fix player selected. Reuse collision algorithm or is that overkill?
@@ -168,7 +169,7 @@ func (g *game) Update() error {
 		logger.Info("middle click")
 	}
 	if rightMouseClicked {
-		gameState.updateTargets(&gridPos)
+		gameState.updateTargets(&pixelPos)
 	}
 
 	// update game state after player actions

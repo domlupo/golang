@@ -12,17 +12,18 @@ type unit struct {
 	id                   uuid.UUID
 	player               player
 	radius               int
-	target               *gridPosition
+	target               *pixelPosition
 	vision               int
 	reach                int
 	alive                bool
 	attackedUnitThisTurn bool
-	// TODO: remove this nextToTargetNode HACK
-	nextToTargetNode bool
-	selected         bool
+	// TODO: determine behavior here. Right now this may actually be direct collision with target node
+	// and does not factor in reach. Reach should most likely be used here.
+	canReachTargetNode *node
+	selected           bool
 }
 
-func newUnit(p player, target *gridPosition) unit {
+func newUnit(p player, target *pixelPosition) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
 		logger.Error("newUnit", "failed to generate UUID", err)
@@ -36,7 +37,7 @@ func newUnit(p player, target *gridPosition) unit {
 		reach:                13,
 		alive:                true,
 		attackedUnitThisTurn: false,
-		nextToTargetNode:     false,
+		canReachTargetNode:   nil,
 		selected:             false,
 	}
 

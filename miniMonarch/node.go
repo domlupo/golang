@@ -18,21 +18,23 @@ const (
 
 type node struct {
 	player     player
-	target     *gridPosition
+	gridPos    gridPosition
+	radius     int
 	selected   bool
 	health     int
 	capturedBy *player
-	radius     int
+	target     *pixelPosition
 }
 
-func newNode(p player) node {
+func newNode(p player, gridPos gridPosition) node {
 	n := node{
 		player:     p,
-		target:     nil,
+		gridPos:    gridPos,
+		radius:     nodeRadius,
 		selected:   false,
 		health:     initialNodeHealth,
 		capturedBy: nil,
-		radius:     nodeRadius,
+		target:     nil,
 	}
 	return n
 }
@@ -100,13 +102,12 @@ func (n *node) drawTargets(screen *ebiten.Image, nodeGridPos gridPosition, selec
 
 	if n.target != nil && n.player == selectedPlayer {
 		var nodePixelPos = getPixelPosition(nodeGridPos, innerGridPosition{0, 0})
-		var targetPixelPos = getPixelPosition(*n.target, innerGridPosition{0, 0})
 		vector.StrokeLine(
 			screen,
 			float32(nodePixelPos.x)*windowMultiplier,
 			float32(nodePixelPos.y)*windowMultiplier,
-			float32(targetPixelPos.x)*windowMultiplier,
-			float32(targetPixelPos.y)*windowMultiplier,
+			float32(n.target.x)*windowMultiplier,
+			float32(n.target.y)*windowMultiplier,
 			float32(targetNodeLineWidth)*windowMultiplier,
 			nodeColor,
 			false,
