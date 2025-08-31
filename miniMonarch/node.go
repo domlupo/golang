@@ -67,10 +67,10 @@ func (n *node) drawNode(screen *ebiten.Image, nodeGridPos gridPosition) {
 		drawUnfilledBoxInt(
 			screen,
 			highlightColor,
-			nodePixelPos.x,
-			nodePixelPos.y,
-			nodePixelPos.x,
-			nodePixelPos.y)
+			nodePixelPos.x-n.radius,
+			nodePixelPos.y-n.radius,
+			nodePixelPos.x+n.radius,
+			nodePixelPos.y+n.radius)
 	}
 
 	if n.health != initialNodeHealth {

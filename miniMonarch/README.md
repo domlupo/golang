@@ -11,8 +11,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### next checkpoints
 
-- Node highlighting 
-  - Quicker testing
 - Computer with dynamic targeting:
   - Can create more node setups for testing
 - Update unit pathing algorithm to Bresenham:
