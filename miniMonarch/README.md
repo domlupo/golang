@@ -11,30 +11,31 @@ Is there a mobile equivalent for war/4x games?
 
 ### next checkpoints
 
-- Computer with dynamic targeting:
-  - Can create more node setups for testing
-- Update unit pathing algorithm to Bresenham:
+- Update unit pathing algorithm to a Theta*: (https://en.wikipedia.org/wiki/Theta*)
   - Unit pathing is fundamental and will need lots of iteration.
+  - More realistic long distance pathing rather than current angled
+  - Units will be able to go around obstacles
   - Very likely this is needed for final game
-- update pathing algorithm to fill in around obstacles:
-  - More realistic pathing
+- Once Theta* is utilized, research how to update pathing algorithm for short distances
+  - More realistic short distance pathing
+  - Proper surronding of a target
+  - Proper Units bunching into a single spot
   - Helps close attack behavior decision
-- update pathing algorithm to go around obstacles:
-  - More realistic pathing
-  - Helps close attack behavior decision
-- Determine behavior for multi hit melee combat 
+ Determine behavior for multi hit melee combat 
   - Expose issues with combat
   - Expose issues with timing
   - Expose issues with pathing
   - Will probably lead to bug fix for units not killing correctly
+- Range unit which can attack:
+  - First range unit will probably expose issues. 
+  - Multiple units will be in needed for final game.
+- Computer with dynamic targeting:
+  - Can create more node setups for testing
 
 ### future checkpoints
 
 - Tool / CLI which launches multiple windows at once to test multiple scenarios
   - Faster test loop
-- Range unit which can attack:
-  - First range unit will probably expose issues. 
-  - Multiple units will be in needed for final game.
 - Analyze and iterate on game design and game loop:
   - Check design feasability 
   - Improve game
