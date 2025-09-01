@@ -174,12 +174,15 @@ func (s *state) collidesWithNode(newPos pixelPosition, unit unit, nodes map[grid
 		var r2 = node.radius
 
 		if math.Pow(float64(x2-x1), 2)+math.Pow(float64(y2-y1), 2) <= math.Pow((float64(r1)+float64(r2)), 2) {
-			var x1 = unit.target.x
-			var y1 = unit.target.y
-			var r1 = 1
+			if unit.target != nil {
 
-			if math.Pow(float64(x2-x1), 2)+math.Pow(float64(y2-y1), 2) <= math.Pow(float64(r1)+float64(r2), 2) {
-				collidesWithTargetNode = true
+				var x1 = unit.target.x
+				var y1 = unit.target.y
+				var r1 = 1
+
+				if math.Pow(float64(x2-x1), 2)+math.Pow(float64(y2-y1), 2) <= math.Pow(float64(r1)+float64(r2), 2) {
+					collidesWithTargetNode = true
+				}
 			}
 			return &node, collidesWithTargetNode
 		}
