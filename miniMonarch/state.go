@@ -2,7 +2,6 @@ package main
 
 import (
 	"math"
-	"math/rand/v2"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -75,39 +74,18 @@ func (s *state) moveUnits() {
 		}
 
 		var xDelta = 0
-		var xMagnitude = 0.0
-		var yMagnitude = 0.0
 
 		if unitPos1.x < (xTargetPixelPos) {
 			xDelta = 1
-			xMagnitude = math.Abs(float64(xTargetPixelPos - unitPos1.x))
 		} else if unitPos1.x > (xTargetPixelPos) {
 			xDelta = -1
-			xMagnitude = math.Abs(float64(unitPos1.x - xTargetPixelPos))
 		}
 
 		var yDelta = 0
 		if unitPos1.y < (yTargetPixelPos) {
 			yDelta = 1
-			yMagnitude = math.Abs(float64(yTargetPixelPos - unitPos1.y))
 		} else if unitPos1.y > (yTargetPixelPos) {
 			yDelta = -1
-			yMagnitude = math.Abs(float64(unitPos1.y - yTargetPixelPos))
-		}
-
-		if xMagnitude > yMagnitude {
-			yDelta = 0
-		} else if yMagnitude > xMagnitude {
-			xDelta = 0
-		} else {
-			// TODO: This is indeterministic so may lead to issues
-			var coinFlip = rand.Int()
-			switch coinFlip {
-			case 0:
-				xDelta = 0
-			case 1:
-				yDelta = 0
-			}
 		}
 
 		if xDelta == 0 && yDelta == 0 {
