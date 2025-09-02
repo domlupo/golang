@@ -11,7 +11,7 @@ Is there a mobile equivalent for war/4x games?
 
 ### next checkpoints
 
-- Update unit pathing algorithm to a Theta*: (https://en.wikipedia.org/wiki/Theta*)
+- Update unit pathing algorithm to Theta* with same cost orthgonal and diagonal movement: (https://en.wikipedia.org/wiki/Theta*)
   - Unit pathing is fundamental and will need lots of iteration.
   - More realistic long distance pathing rather than current angled
   - Units will be able to go around obstacles
@@ -60,6 +60,8 @@ Is there a mobile equivalent for war/4x games?
 
 ### punted checkpoints
 
+- Research more pathfinding algorithms e.g. AP Theta*
+  - ?
 - initial map generation:
   - ?
 - different terrains: 
