@@ -11,6 +11,11 @@ Is there a mobile equivalent for war/4x games?
 
 ### next checkpoints
 
+- Update unit pathing algorithm to Bresenham's with same cost orthogonal and diagonal movement:
+  - https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+  - Builds towards theta* unit pathing since it can probably be used for theta* line of sight check.
+  - This line of sight check is a theta* optimization to skip nodes.
+  - Is equivalent to Theta* until obstacles are added
 - Update unit pathing algorithm to Theta* with same cost orthgonal and diagonal movement: (https://en.wikipedia.org/wiki/Theta*)
   - Unit pathing is fundamental and will need lots of iteration.
   - More realistic long distance pathing rather than current angled
@@ -65,11 +70,12 @@ Is there a mobile equivalent for war/4x games?
 - initial map generation:
   - ?
 - different terrains: 
-  - ?
+  - Careful, this may be hard to implement due to pathfinding algorithms assuming same cost movement
 
 ## Closed decisions
 
 - Save center rather than top left of unit, nodes, etc into state because it makes the engine and game easier to design, test, debug, etc
+- Orgthogonal and Cardinal movement are same cost because I assume it will simplify path finding, lower CPU cost and lower overall game time.
 
 ## issues
 
@@ -77,7 +83,7 @@ Is there a mobile equivalent for war/4x games?
 
 ## game design questions
 
-- APM lock on nodes or units so you cannot spam actions? Think about sokpop game were you are limited by clicks
+- APM lock on nodes or units so you cannot spam actions? Think about sokpop game clickyland where you are limited by clicks
 - square, hexagonal or historial battle grounds?
 - Campaign mode. Specific battles, war or countries? Similar to cities in mini metro and mini motorway
 - hidden or fully visible grid?
