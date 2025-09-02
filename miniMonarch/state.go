@@ -9,20 +9,20 @@ import (
 
 // not enforced but must be a singleton
 type state struct {
-	nodes map[gridPosition]node
-	units map[pixelPosition]unit
+	nodes map[gridPosition]*node
+	units map[pixelPosition]*unit
 }
 
 func newState() *state {
 	s := state{
-		nodes: make(map[gridPosition]node),
-		units: make(map[pixelPosition]unit),
+		nodes: make(map[gridPosition]*node),
+		units: make(map[pixelPosition]*unit),
 	}
 	return &s
 }
 
 func (s *state) addNode(n node) {
-	s.nodes[n.gridPos] = n
+	s.nodes[n.gridPos] = &n
 }
 
 func (s *state) refreshUnits() {
@@ -32,8 +32,8 @@ func (s *state) refreshUnits() {
 	}
 }
 
-// TODO: Need to implement a move algorithm similar to below.
-// https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+// TODO: refactor this function since it performs multiple tasks
+// Also, moving units will use a start algorithm
 func (s *state) moveUnits() {
 	var unitsMovedCount = 0
 	var unitsWithoutTarget = 0
@@ -41,7 +41,6 @@ func (s *state) moveUnits() {
 	var unitsAtNonTargetNode = 0
 	var unitsCollidedCount = 0
 
-	var newUnits = make(map[pixelPosition]unit)
 	for unitPos1, unit1 := range s.units {
 		unit1.canReachTargetNode = nil
 
@@ -49,7 +48,7 @@ func (s *state) moveUnits() {
 		var nearestVisibleUnitPos *pixelPosition
 		for unitPos2, unit2 := range s.units {
 			if unit1.player == unit2.player {
-				// unit cannot see comrades
+				// unit cannot see itself or comrades
 				continue
 			}
 
@@ -71,7 +70,6 @@ func (s *state) moveUnits() {
 			yTargetPixelPos = unit1.target.y
 		} else {
 			unitsWithoutTarget++
-			newUnits[pixelPosition{unitPos1.x, unitPos1.y}] = unit1
 			continue
 		}
 
@@ -113,32 +111,32 @@ func (s *state) moveUnits() {
 
 		var collidesWithUnit = s.collidesWithUnit(
 			pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta},
-			unit1,
+			*unit1,
 			s.units)
 
 		var collidesWithNode, isTargetNode = s.collidesWithNode(
 			pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta},
-			unit1,
+			*unit1,
 			s.nodes)
 
 		if collidesWithUnit {
 			unitsCollidedCount++
-			newUnits[pixelPosition{unitPos1.x, unitPos1.y}] = unit1
 		} else if collidesWithNode != nil {
 			if isTargetNode {
 				unitsAtTargetNode++
 				// TODO: HACK, unit can reach further than collide
 				unit1.canReachTargetNode = collidesWithNode
-				newUnits[pixelPosition{unitPos1.x, unitPos1.y}] = unit1
 			} else {
 				// TODO: determine behavior. Prob don't want units to pass thru enemy nodes
 				unitsAtNonTargetNode++
 				unitsMovedCount++
-				newUnits[pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta}] = unit1
+				s.units[pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta}] = s.units[pixelPosition{unitPos1.x, unitPos1.y}]
+				delete(s.units, pixelPosition{unitPos1.x, unitPos1.y})
 			}
 		} else {
 			unitsMovedCount++
-			newUnits[pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta}] = unit1
+			s.units[pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta}] = s.units[pixelPosition{unitPos1.x, unitPos1.y}]
+			delete(s.units, pixelPosition{unitPos1.x, unitPos1.y})
 		}
 	}
 
@@ -149,11 +147,9 @@ func (s *state) moveUnits() {
 		"units at non target node", unitsAtNonTargetNode,
 		"units collided", unitsCollidedCount,
 	)
-
-	s.units = newUnits
 }
 
-func (s *state) collidesWithNode(newPos pixelPosition, unit unit, nodes map[gridPosition]node) (*node, bool) {
+func (s *state) collidesWithNode(newPos pixelPosition, unit unit, nodes map[gridPosition]*node) (*node, bool) {
 	var collidesWithTargetNode = false
 	var x1 = newPos.x
 	var y1 = newPos.y
@@ -184,14 +180,14 @@ func (s *state) collidesWithNode(newPos pixelPosition, unit unit, nodes map[grid
 					collidesWithTargetNode = true
 				}
 			}
-			return &node, collidesWithTargetNode
+			return node, collidesWithTargetNode
 		}
 	}
 
 	return nil, collidesWithTargetNode
 }
 
-func (s *state) collidesWithUnit(newPos pixelPosition, unit unit, units map[pixelPosition]unit) bool {
+func (s *state) collidesWithUnit(newPos pixelPosition, unit unit, units map[pixelPosition]*unit) bool {
 	var x1 = newPos.x + unit.radius
 	var y1 = newPos.y + unit.radius
 	var r1 = unit.radius
@@ -239,7 +235,7 @@ func (s *state) attackUnits() {
 			// to use <. Need to determine right behavior in the future.
 			if distanceBetweenUnits < float64(unit1.vision) {
 				nearestVisibleUnitPos = &unitPos2
-				nearestVisibleUnit = unit2
+				nearestVisibleUnit = *unit2
 			}
 		}
 
@@ -265,7 +261,7 @@ func (s *state) attackUnits() {
 		var distanceToNearestVisibleUnit = math.Sqrt(math.Pow(xMagnitude, 2) + math.Pow(yMagnitude, 2))
 		if float64(unit1.reach) >= distanceToNearestVisibleUnit {
 			nearestVisibleUnit.alive = false
-			s.units[*nearestVisibleUnitPos] = nearestVisibleUnit
+			s.units[*nearestVisibleUnitPos] = &nearestVisibleUnit
 			unit1.attackedUnitThisTurn = true
 			unitAttackedOtherUnitCount++
 			s.units[unitPos1] = unit1
@@ -309,7 +305,7 @@ func (s *state) attackNodes() {
 			if targetNode.health == 0 {
 				targetNode.capturedBy = &unit.player
 			}
-			s.nodes[targetNode.gridPos] = *targetNode
+			s.nodes[targetNode.gridPos] = targetNode
 		} else {
 			cannotReachNodeCount++
 		}
@@ -327,7 +323,7 @@ func (s *state) updateNodeOwnership() {
 	for nodeGridPos, node := range s.nodes {
 		if node.health == 0 {
 			newNode := newNode(*node.capturedBy, node.gridPos)
-			s.nodes[nodeGridPos] = newNode
+			s.nodes[nodeGridPos] = &newNode
 		}
 	}
 }
@@ -407,7 +403,8 @@ func (s *state) produceUnits() {
 		// TODO: determine how to produce units during collision
 		var unitPos = getPixelPosition(nodePos, innerGridPosition{0, 0})
 		if !s.collidesWithUnit(unitPos, newUnit(n.player, n.target), s.units) {
-			s.units[unitPos] = newUnit(n.player, n.target)
+			var newUnit = newUnit(n.player, n.target)
+			s.units[unitPos] = &newUnit
 		}
 	}
 }

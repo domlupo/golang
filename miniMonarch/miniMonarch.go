@@ -150,7 +150,9 @@ func (g *game) Update() error {
 
 	priorLeftMouseClicked = leftMouseClicked
 	// TODO: Fix player selected. Reuse collision algorithm or is that overkill?
-	playerSelected = gameState.nodes[gridPos].player
+	if gameState.nodes[gridPos] != nil {
+		playerSelected = gameState.nodes[gridPos].player
+	}
 	leftMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
 	middleMouseScrollClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonMiddle)
 	rightMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight)
