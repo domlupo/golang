@@ -130,6 +130,7 @@ func (g *game) Update() error {
 
 	// update game state prior to player actions
 	gameState.refreshUnits()
+	gameState.setUnitLocalTargets()
 	gameState.moveUnits()
 	gameState.attackUnits()
 	gameState.attackNodes()

@@ -12,7 +12,8 @@ type unit struct {
 	id                   uuid.UUID
 	player               player
 	radius               int
-	target               *pixelPosition
+	globalTarget         *pixelPosition
+	localTarget          *pixelPosition
 	vision               int
 	reach                int
 	alive                bool
@@ -23,7 +24,7 @@ type unit struct {
 	selected           bool
 }
 
-func newUnit(p player, target *pixelPosition) unit {
+func newUnit(p player, globalTarget *pixelPosition) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
 		logger.Error("newUnit", "failed to generate UUID", err)
@@ -32,7 +33,8 @@ func newUnit(p player, target *pixelPosition) unit {
 		id:                   id,
 		player:               p,
 		radius:               unitRadius,
-		target:               target,
+		globalTarget:         globalTarget,
+		localTarget:          nil,
 		vision:               40,
 		reach:                13,
 		alive:                true,

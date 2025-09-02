@@ -28,24 +28,15 @@ func (s *state) addNode(n node) {
 func (s *state) refreshUnits() {
 	for unitPos, u := range s.units {
 		u.attackedUnitThisTurn = false
+		u.localTarget = nil
+		u.canReachTargetNode = nil
 		s.units[unitPos] = u
 	}
 }
 
-// TODO: refactor this function since it performs multiple tasks
-// Also, moving units will use a start algorithm
-func (s *state) moveUnits() {
-	var unitsMovedCount = 0
-	var unitsWithoutTarget = 0
-	var unitsAtTargetNode = 0
-	var unitsAtNonTargetNode = 0
-	var unitsCollidedCount = 0
-
+func (s *state) setUnitLocalTargets() {
 	for unitPos1, unit1 := range s.units {
-		unit1.canReachTargetNode = nil
-
 		// check if unit 1 can see unit 2
-		var nearestVisibleUnitPos *pixelPosition
 		for unitPos2, unit2 := range s.units {
 			if unit1.player == unit2.player {
 				// unit cannot see itself or comrades
@@ -56,18 +47,28 @@ func (s *state) moveUnits() {
 				math.Pow(float64(unitPos1.x-unitPos2.x), 2) +
 					math.Pow(float64(unitPos1.y-unitPos2.y), 2))
 			if distanceBetweenUnits <= float64(unit1.vision) {
-				nearestVisibleUnitPos = &unitPos2
+				s.units[unitPos1].localTarget = &unitPos2
 			}
 		}
+	}
+}
 
+func (s *state) moveUnits() {
+	var unitsMovedCount = 0
+	var unitsWithoutTarget = 0
+	var unitsAtTargetNode = 0
+	var unitsAtNonTargetNode = 0
+	var unitsCollidedCount = 0
+
+	for unitPos1, unit1 := range s.units {
 		var xTargetPixelPos = 0
 		var yTargetPixelPos = 0
-		if nearestVisibleUnitPos != nil {
-			xTargetPixelPos = nearestVisibleUnitPos.x
-			yTargetPixelPos = nearestVisibleUnitPos.y
-		} else if unit1.target != nil {
-			xTargetPixelPos = unit1.target.x
-			yTargetPixelPos = unit1.target.y
+		if unit1.localTarget != nil {
+			xTargetPixelPos = unit1.localTarget.x
+			yTargetPixelPos = unit1.localTarget.y
+		} else if unit1.globalTarget != nil {
+			xTargetPixelPos = unit1.globalTarget.x
+			yTargetPixelPos = unit1.globalTarget.y
 		} else {
 			unitsWithoutTarget++
 			continue
@@ -170,10 +171,10 @@ func (s *state) collidesWithNode(newPos pixelPosition, unit unit, nodes map[grid
 		var r2 = node.radius
 
 		if math.Pow(float64(x2-x1), 2)+math.Pow(float64(y2-y1), 2) <= math.Pow((float64(r1)+float64(r2)), 2) {
-			if unit.target != nil {
+			if unit.globalTarget != nil {
 
-				var x1 = unit.target.x
-				var y1 = unit.target.y
+				var x1 = unit.globalTarget.x
+				var y1 = unit.globalTarget.y
 				var r1 = 1
 
 				if math.Pow(float64(x2-x1), 2)+math.Pow(float64(y2-y1), 2) <= math.Pow(float64(r1)+float64(r2), 2) {
@@ -288,7 +289,7 @@ func (s *state) attackNodes() {
 	var cannotReachNodeCount = 0
 
 	for _, unit := range s.units {
-		if unit.target == nil {
+		if unit.globalTarget == nil {
 			noTargetNodeCount++
 			continue
 		}
@@ -388,7 +389,7 @@ func (s *state) updateTargets(target *pixelPosition) {
 	}
 	for unitPixelPos, unit := range s.units {
 		if unit.selected {
-			unit.target = target
+			unit.globalTarget = target
 		}
 		s.units[unitPixelPos] = unit
 	}

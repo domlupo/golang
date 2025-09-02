@@ -144,7 +144,7 @@ func (c *computer) updateActions(s state) {
 
 	for unitGridPos, unit := range s.units {
 		if unit.player == c.player {
-			unit.target = &targetPixelPos
+			unit.globalTarget = &targetPixelPos
 			s.units[unitGridPos] = unit
 		}
 	}
