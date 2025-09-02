@@ -110,6 +110,10 @@ func (s *state) moveUnits() {
 			}
 		}
 
+		if xDelta == 0 && yDelta == 0 {
+			continue
+		}
+
 		var collidesWithUnit = s.collidesWithUnit(
 			pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta},
 			*unit1,
