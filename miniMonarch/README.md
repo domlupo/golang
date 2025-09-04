@@ -11,6 +11,29 @@ Is there a mobile equivalent for war/4x games?
 
 ### next checkpoints
 
+ Determine behavior for multi hit melee combat 
+  - Expose issues with combat
+  - Expose issues with timing
+  - Expose issues with pathing
+  - Will probably lead to bug fix for units not killing correctly
+  - May help or hurt efforts towards local pathfinding. I suspect this will be coupled with local pathfinding.
+- Range unit which can attack:
+  - First range unit will probably expose issues. 
+  - Multiple units will be in needed for final game.
+ Computer with dynamic targeting:
+  - Can create more node setups for testing
+- save file: 
+  - Will expose constraints
+  - Will expose platform concerns
+  - May expose issues with work so far 
+- Analyze and iterate on game design and game loop:
+  - Check design feasability 
+  - Improve game
+- clean up bugs and hacks:
+  - There are enough to cause bugs while testing game design and game loop
+
+### future checkpoints
+
 - Update unit pathing algorithm to Theta* with same cost orthgonal and diagonal movement: (https://en.wikipedia.org/wiki/Theta*)
   - Unit pathing is fundamental and will need lots of iteration.
   - More realistic long distance pathing rather than current angled
@@ -21,46 +44,28 @@ Is there a mobile equivalent for war/4x games?
   - Proper surronding of a target
   - Proper Units bunching into a single spot
   - Helps close attack behavior decision
- Determine behavior for multi hit melee combat 
-  - Expose issues with combat
-  - Expose issues with timing
-  - Expose issues with pathing
-  - Will probably lead to bug fix for units not killing correctly
-- Range unit which can attack:
-  - First range unit will probably expose issues. 
-  - Multiple units will be in needed for final game.
-- Computer with dynamic targeting:
-  - Can create more node setups for testing
-
-### future checkpoints
-
 - Tool / CLI which launches multiple windows at once to test multiple scenarios
   - Faster test loop
-- Analyze and iterate on game design and game loop:
-  - Check design feasability 
-  - Improve game
-- clean up bugs and hacks:
-  - There are enough to cause bugs while testing game design and game loop
-- determine if FPS lock is needed:
+- Determine if FPS lock is needed:
   - fundmental issue that I have not considered
-- controls which work on computer, steam deck, phone, etc: 
+- Controls which work on computer, steam deck, phone, etc: 
   - multiple platform means more sales
   - customers can pick favorite device if multiple owned
-- release to web:
+- Release to web:
   - learn how to deploy
   - easier to share with friends
   - test web based issues rather than only mac
-- release to phone: 
+- Release to phone: 
   - check phone controls
   - check resolution
 - local multiplayer:
   - ?
-- save file: 
-  - ?
 
 ### punted checkpoints
 
-- Research more pathfinding algorithms e.g. AP Theta*
+- Research more global pathfinding algorithms e.g. AP Theta*
+  - ?
+- Research more local pathfinding algorithms
   - ?
 - initial map generation:
   - ?
