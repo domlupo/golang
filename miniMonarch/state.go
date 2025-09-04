@@ -59,47 +59,25 @@ func (s *state) moveUnits() {
 	var unitsAtNonTargetNode = 0
 	var unitsCollidedCount = 0
 
-	for unitPos1, unit1 := range s.units {
-		var xTargetPixelPos = 0
-		var yTargetPixelPos = 0
-		if unit1.localTarget != nil {
-			xTargetPixelPos = unit1.localTarget.x
-			yTargetPixelPos = unit1.localTarget.y
-		} else if unit1.globalTarget != nil {
-			xTargetPixelPos = unit1.globalTarget.x
-			yTargetPixelPos = unit1.globalTarget.y
-		} else {
+	for unitPos, unit := range s.units {
+		var newPos = unit.getNewPos(unitPos)
+
+		if unit.currentTarget == noTarget {
 			unitsWithoutTarget++
-			continue
 		}
 
-		var xDelta = 0
-
-		if unitPos1.x < (xTargetPixelPos) {
-			xDelta = 1
-		} else if unitPos1.x > (xTargetPixelPos) {
-			xDelta = -1
-		}
-
-		var yDelta = 0
-		if unitPos1.y < (yTargetPixelPos) {
-			yDelta = 1
-		} else if unitPos1.y > (yTargetPixelPos) {
-			yDelta = -1
-		}
-
-		if xDelta == 0 && yDelta == 0 {
+		if unitPos.x == newPos.x && unitPos.y == newPos.y {
 			continue
 		}
 
 		var collidesWithUnit = s.collidesWithUnit(
-			pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta},
-			*unit1,
+			newPos,
+			*unit,
 			s.units)
 
 		var collidesWithNode, isTargetNode = s.collidesWithNode(
-			pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta},
-			*unit1,
+			newPos,
+			*unit,
 			s.nodes)
 
 		if collidesWithUnit {
@@ -108,18 +86,20 @@ func (s *state) moveUnits() {
 			if isTargetNode {
 				unitsAtTargetNode++
 				// TODO: HACK, unit can reach further than collide
-				unit1.canReachTargetNode = collidesWithNode
+				unit.canReachTargetNode = collidesWithNode
 			} else {
 				// TODO: determine behavior. Prob don't want units to pass thru enemy nodes
 				unitsAtNonTargetNode++
 				unitsMovedCount++
-				s.units[pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta}] = s.units[pixelPosition{unitPos1.x, unitPos1.y}]
-				delete(s.units, pixelPosition{unitPos1.x, unitPos1.y})
+				s.units[newPos] = s.units[pixelPosition{unitPos.x, unitPos.y}]
+				s.units[newPos].completeMove()
+				delete(s.units, pixelPosition{unitPos.x, unitPos.y})
 			}
 		} else {
 			unitsMovedCount++
-			s.units[pixelPosition{unitPos1.x + xDelta, unitPos1.y + yDelta}] = s.units[pixelPosition{unitPos1.x, unitPos1.y}]
-			delete(s.units, pixelPosition{unitPos1.x, unitPos1.y})
+			s.units[newPos] = s.units[pixelPosition{unitPos.x, unitPos.y}]
+			s.units[newPos].completeMove()
+			delete(s.units, pixelPosition{unitPos.x, unitPos.y})
 		}
 	}
 

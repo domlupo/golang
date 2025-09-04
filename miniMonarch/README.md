@@ -11,11 +11,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### next checkpoints
 
-- Update unit pathing algorithm to Bresenham's with same cost orthogonal and diagonal movement:
-  - https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-  - Builds towards theta* unit pathing since it can probably be used for theta* line of sight check.
-  - This line of sight check is a theta* optimization to skip nodes.
-  - Is equivalent to Theta* until obstacles are added
 - Update unit pathing algorithm to Theta* with same cost orthgonal and diagonal movement: (https://en.wikipedia.org/wiki/Theta*)
   - Unit pathing is fundamental and will need lots of iteration.
   - More realistic long distance pathing rather than current angled
