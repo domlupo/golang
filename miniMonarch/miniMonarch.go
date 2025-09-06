@@ -26,6 +26,7 @@ const gridSize = 40
 // graphics setup
 var backgroundColor = color.RGBA{200, 200, 200, 255}
 var highlightColor = color.RGBA{70, 255, 0, 200}
+var unitHealthColor = highlightColor
 var selectectionBoxLineWidth = 1
 var targetNodeLineWidth = 1
 var healthLineWidth = 2
@@ -48,6 +49,7 @@ var neutralNodeColor = color.RGBA{100, 60, 100, 200}
 var unitRadius = 5
 var nodeRadius = gridSize / 2
 var initialNodeHealth = 100
+var initialUnitHealth = 5
 
 // The debug grid helps debugging display issues. Usually only altering
 // offset is needed, width can remain 1.

@@ -223,16 +223,16 @@ func (s *state) attackUnits() {
 		}
 		var distanceToNearestVisibleUnit = math.Sqrt(math.Pow(xMagnitude, 2) + math.Pow(yMagnitude, 2))
 		if float64(unit1.reach) >= distanceToNearestVisibleUnit {
-			nearestVisibleUnit.alive = false
-			s.units[*nearestVisibleUnitPos] = &nearestVisibleUnit
+			nearestVisibleUnit.health = nearestVisibleUnit.health - 1
 			unit1.attackedUnitThisTurn = true
 			unitAttackedOtherUnitCount++
+			s.units[*nearestVisibleUnitPos] = &nearestVisibleUnit
 			s.units[unitPos1] = unit1
 		}
 	}
 
 	for attackedUnitPos, attackedUnit := range s.units {
-		if !attackedUnit.alive {
+		if attackedUnit.health <= 0 {
 			unitsDeletedCount++
 			delete(s.units, attackedUnitPos)
 		}

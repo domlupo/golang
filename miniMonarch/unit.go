@@ -25,9 +25,9 @@ type unit struct {
 	localTarget          *pixelPosition
 	bresenhamError       *int
 	nextBresenhamError   *int
+	health               int
 	vision               int
 	reach                int
-	alive                bool
 	attackedUnitThisTurn bool
 	// TODO: determine behavior here. Right now this may actually be direct collision with target node
 	// and does not factor in reach. Reach should most likely be used here.
@@ -49,9 +49,9 @@ func newUnit(p player, globalTarget *pixelPosition) unit {
 		localTarget:          nil,
 		bresenhamError:       nil,
 		nextBresenhamError:   nil,
+		health:               initialUnitHealth,
 		vision:               40,
 		reach:                13,
-		alive:                true,
 		attackedUnitThisTurn: false,
 		canReachTargetNode:   nil,
 		selected:             false,
@@ -154,16 +154,28 @@ func (u *unit) draw(screen *ebiten.Image, unitPos pixelPosition, selected bool) 
 		false,
 	)
 
-	var outlineColor color.Color = color.Black
 	if selected {
-		outlineColor = highlightColor
+		drawUnfilledBoxInt(
+			screen,
+			highlightColor,
+			unitPos.x-unitRadius,
+			unitPos.y-unitRadius,
+			unitPos.x+unitRadius,
+			unitPos.y+unitRadius,
+		)
 	}
-	drawUnfilledBoxInt(
-		screen,
-		outlineColor,
-		unitPos.x-unitRadius,
-		unitPos.y-unitRadius,
-		unitPos.x+unitRadius,
-		unitPos.y+unitRadius,
-	)
+
+	if u.health != initialUnitHealth {
+		var healthLineLength = (float32(u.health) / float32(initialUnitHealth)) * float32(unitRadius*2)
+
+		vector.DrawFilledRect(
+			screen,
+			float32(unitPos.x-unitRadius)*windowMultiplier,
+			float32(unitPos.y-unitRadius)*windowMultiplier,
+			healthLineLength*windowMultiplier,
+			float32(unitRadius)*windowMultiplier,
+			unitHealthColor,
+			false,
+		)
+	}
 }
