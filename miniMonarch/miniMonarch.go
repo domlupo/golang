@@ -85,6 +85,7 @@ func restartGame() {
 	compOne = *newComputer(bluePlayer)
 	compTwo = *newComputer(redPlayer)
 	setupState(gameState, complex)
+	updateComputerTargetNodes(gameState)
 }
 
 func init() {
@@ -196,16 +197,13 @@ func (g *game) Update() error {
 			pixelPosition{int(initialSelectedX), int(initialSelectedY)},
 			pixelPosition{int(currentSelectedX), int(currentSelectedY)})
 	}
-	gameState.updateNodeOwnership()
+	var nodeOwnershipChanged = gameState.updateNodeOwnership()
 
 	// play computer moves. Computers currently affect game state directly rather
 	// than the same game state being sent to each one before a final update occurs.
 	// This is a hack, but will probably be fine for awhile.
-	if blueComputerActive {
-		compOne.updateActions(gameState)
-	}
-	if redComputerActive {
-		compTwo.updateActions(gameState)
+	if nodeOwnershipChanged {
+		updateComputerTargetNodes(gameState)
 	}
 
 	// debug output
@@ -245,6 +243,15 @@ func (g *game) Update() error {
 
 	priorTime = currentTime
 	return nil
+}
+
+func updateComputerTargetNodes(s state) {
+	if blueComputerActive {
+		compOne.updateTargetNodes(s)
+	}
+	if redComputerActive {
+		compTwo.updateTargetNodes(s)
+	}
 }
 
 func (g *game) Draw(screen *ebiten.Image) {

@@ -1,8 +1,6 @@
 package main
 
-import (
-	"slices"
-)
+import "math"
 
 type computer struct {
 	player player
@@ -15,137 +13,61 @@ func newComputer(p player) *computer {
 	return &c
 }
 
-func (c *computer) updateActions(s state) {
-	// TODO: Determine behavior here. This does not handle the edge case where multiple computers are targeting the same node
-	// and it changs ownership. So the computer will "incorrectly" target an owned node before capturing all neutrals.
-	nonCapturedTargets := make(map[gridPosition]struct{}, 0)
-	for _, node := range s.nodes {
-		if node.player == c.player && node.target != nil {
-			var targetGridPos, _ = splitPixelPosition(*node.target)
-			if s.nodes[targetGridPos].player != c.player {
-				nonCapturedTargets[targetGridPos] = struct{}{}
+func (c *computer) updateTargetNodes(s state) {
+	for nodePos, node := range s.nodes {
+		if node.player != c.player {
+			continue
+		}
+		var selfNodePos = nodePos
+		var selfNode = node
+		selfNode.target = nil
+		var nearestTargetDistanceSquared = math.MaxInt
+
+		for nodePos, node := range s.nodes {
+			if node.player == c.player {
+				continue
 			}
+			var otherNodePos = nodePos
+			var otherNode = node
+
+			var xDelta = (selfNodePos.x - otherNode.gridPos.x)
+			var yDelta = (selfNodePos.y - otherNode.gridPos.y)
+			var otherTargetDistanceSquared = xDelta*xDelta + yDelta*yDelta
+
+			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
+				nearestTargetDistanceSquared = otherTargetDistanceSquared
+				var targetPixelPos = getPixelPosition(otherNodePos, innerGridPosition{0, 0})
+				selfNode.target = &targetPixelPos
+			}
+
 		}
 	}
 
-	if len(nonCapturedTargets) > 0 {
-		return
-	}
+	for unitPos, unit := range s.units {
+		if unit.player != c.player {
+			continue
+		}
+		var selfUnitPos = unitPos
+		var selfUnit = unit
+		selfUnit.globalTarget = nil
+		var nearestTargetDistanceSquared = math.MaxInt
 
-	neutralNodes := make(map[gridPosition]struct{})
-	opponentNodes := make(map[gridPosition]struct{})
-	for nodeGridPos, node := range s.nodes {
-		if node.player == neutralPlayer {
-			neutralNodes[nodeGridPos] = struct{}{}
-		} else if node.player != c.player {
-			opponentNodes[nodeGridPos] = struct{}{}
-		}
-	}
+		for nodePos, node := range s.nodes {
+			if node.player == c.player {
+				continue
+			}
+			var otherNodePos = nodePos
+			var otherNodePixelPos = getPixelPosition(otherNodePos, innerGridPosition{0, 0})
 
-	// TODO: don't hard code target order
-	var targetOrder []gridPosition
-	switch c.player {
-	case bluePlayer:
-		targetOrder = []gridPosition{
-			// nearest 3
-			{5, 1},
-			{5, 5},
-			{1, 5},
-			// next nearest 5
-			{10, 1},
-			{10, 5},
-			{10, 10},
-			{5, 10},
-			{1, 10},
-			// next nearest 7
-			{15, 1},
-			{15, 5},
-			{15, 10},
-			{15, 15},
-			{10, 15},
-			{5, 15},
-			{1, 15},
-			// next right 4
-			{20, 1},
-			{20, 5},
-			{20, 10},
-			{20, 15},
-			// next right 4
-			{25, 1},
-			{25, 5},
-			{25, 10},
-			{25, 15},
-			// next right 4
-			{30, 1},
-			{30, 5},
-			{30, 10},
-			{30, 15},
-		}
-	case redPlayer:
-		targetOrder = []gridPosition{
-			// nearest 3
-			{25, 15},
-			{30, 10},
-			{25, 10},
-			// next nearest 5
-			{20, 15},
-			{20, 10},
-			{20, 5},
-			{25, 5},
-			{30, 5},
-			// next nearest 7
-			{15, 15},
-			{15, 10},
-			{15, 5},
-			{15, 1},
-			{20, 1},
-			{25, 1},
-			{30, 1},
-			// next 4 left
-			{10, 15},
-			{10, 10},
-			{10, 5},
-			{10, 1},
-			// next 4 left
-			{5, 15},
-			{5, 10},
-			{5, 5},
-			{5, 1},
-			// next 4 left
-			{1, 15},
-			{1, 10},
-			{1, 5},
-			{1, 1},
-		}
-	default:
-		panic("computer must be a non neutral player")
-	}
-	// TODO: optimize, very inefficient
-	var target gridPosition
-	for _, targetGridPos := range slices.Backward(targetOrder) {
-		if _, hasNode := opponentNodes[targetGridPos]; hasNode {
-			target = targetGridPos
-		}
-	}
-	for _, targetGridPos := range slices.Backward(targetOrder) {
-		if _, hasNode := neutralNodes[targetGridPos]; hasNode {
-			target = targetGridPos
-		}
-	}
+			var xDelta = (selfUnitPos.x - otherNodePixelPos.x)
+			var yDelta = (selfUnitPos.y - otherNodePixelPos.y)
+			var otherTargetDistanceSquared = xDelta*xDelta + yDelta*yDelta
 
-	var targetPixelPos = getPixelPosition(target, innerGridPosition{0, 0})
-
-	for nodeGridPos, node := range s.nodes {
-		if node.player == c.player {
-			node.target = &targetPixelPos
-			s.nodes[nodeGridPos] = node
-		}
-	}
-
-	for unitGridPos, unit := range s.units {
-		if unit.player == c.player {
-			unit.globalTarget = &targetPixelPos
-			s.units[unitGridPos] = unit
+			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
+				nearestTargetDistanceSquared = otherTargetDistanceSquared
+				var targetPixelPos = getPixelPosition(otherNodePos, innerGridPosition{0, 0})
+				selfUnit.globalTarget = &targetPixelPos
+			}
 		}
 	}
 }

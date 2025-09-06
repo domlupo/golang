@@ -13,10 +13,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Computer with dynamic targeting:
-  - Can create additional precise node setups for testing
-  - Can create randomly generated node setups for testing
-  - Pathfinding algorithm practice
 - Range unit which can attack:
   - First range unit will probably expose issues. 
   - Multiple units will be in needed for final game.
@@ -50,6 +46,9 @@ Is there a mobile equivalent for war/4x games?
   - Proper surronding of a target
   - Proper Units bunching into a single spot
   - Helps close attack behavior decision
+- Create more node setup test scenarios
+  - Able to easily reproduce and test precise setups ofr edge case issues
+  - Able to randomly generated setups to find hidden edge case issues
 - Tool / CLI which launches multiple windows at once to test multiple scenarios
   - Faster test loop
 - Determine if FPS lock is needed:

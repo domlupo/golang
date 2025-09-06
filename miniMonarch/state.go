@@ -285,13 +285,18 @@ func (s *state) attackNodes() {
 	)
 }
 
-func (s *state) updateNodeOwnership() {
+func (s *state) updateNodeOwnership() bool {
+	var nodeOwnershipChanged = false
+
 	for nodeGridPos, node := range s.nodes {
 		if node.health == 0 {
 			newNode := newNode(*node.capturedBy, node.gridPos)
 			s.nodes[nodeGridPos] = &newNode
+			nodeOwnershipChanged = true
 		}
 	}
+
+	return nodeOwnershipChanged
 }
 
 func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixelPosition) {
