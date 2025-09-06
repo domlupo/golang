@@ -113,3 +113,7 @@ Is there a mobile equivalent for war/4x games?
 ## archive
 
 - Don't do 3d globe visual for game. Too complex.
+
+## profiler
+
+```go tool pprof -http=:6060 cpu.prof```
