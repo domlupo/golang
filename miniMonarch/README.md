@@ -7,10 +7,19 @@ starcraft desert strike, totally accurate battle simulator, etc.
 Graphics may end up similar to the gnorp analogue.
 Is there a mobile equivalent for war/4x games?
 
-## Checkpoints : Purpose
+---
 
-### next checkpoints
+## Checkpoints : Purposes
 
+### Next Checkpoints
+
+- Computer with dynamic targeting:
+  - Can create additional precise node setups for testing
+  - Can create randomly generated node setups for testing
+  - Pathfinding algorithm practice
+- Range unit which can attack:
+  - First range unit will probably expose issues. 
+  - Multiple units will be in needed for final game.
 - Update unit pathing algorithm to Theta* with same cost orthgonal and diagonal movement: (https://en.wikipedia.org/wiki/Theta*)
   - Unit pathing is fundamental and will need lots of iteration.
   - More realistic long distance pathing rather than current angled
@@ -22,11 +31,6 @@ Is there a mobile equivalent for war/4x games?
   - Expose issues with pathing
   - Will probably lead to bug fix for units not killing correctly
   - May help or hurt efforts towards local pathfinding. I suspect this will be coupled with local pathfinding.
-- Range unit which can attack:
-  - First range unit will probably expose issues. 
-  - Multiple units will be in needed for final game.
- Computer with dynamic targeting:
-  - Can create more node setups for testing
 - save file: 
   - Will expose constraints
   - Will expose platform concerns
@@ -37,7 +41,9 @@ Is there a mobile equivalent for war/4x games?
 - clean up bugs and hacks:
   - There are enough to cause bugs while testing game design and game loop
 
-### future checkpoints
+---
+
+### Future Checkpoints
 
 - Once Theta* is utilized, research how to update pathing algorithm for short distances
   - More realistic short distance pathing
@@ -61,7 +67,9 @@ Is there a mobile equivalent for war/4x games?
 - local multiplayer:
   - ?
 
-### punted checkpoints
+---
+
+### Punted Checkpoints
 
 - Research more global pathfinding algorithms e.g. AP Theta*
   - ?
@@ -72,48 +80,125 @@ Is there a mobile equivalent for war/4x games?
 - different terrains: 
   - Careful, this may be hard to implement due to pathfinding algorithms assuming same cost movement
 
-## Closed decisions
+---
 
-- Save center rather than top left of unit, nodes, etc into state because it makes the engine and game easier to design, test, debug, etc
-- Orgthogonal and Cardinal movement are same cost because I assume it will simplify path finding, lower CPU cost and lower overall game time.
+## Commands
 
-## issues
+```find . -type f -name "*.go" -exec wc -l {} +```
+
+```go tool pprof -http=:6060 cpu.prof```
+
+---
+
+## Closed Decisions
+
+1. No worker unit or resource collection
+    - Adds complexity
+    - Nodes can produce cargo units which more aligned with multi use nodes
+    - No guaranteed benefit
+2. No civilization era progressions:
+    - Directly adds design and balancing complexity
+    - Indirectly adds complexity and scope throughout game e.g. more units
+    - No guaranteed benefit
+3. Save center rather than top left of unit, nodes, etc into state:
+   - Easier to design game/engine
+   - Easier to test game/engine
+   - Easier to debug game/engine
+4. Same cost Orgthogonal and Cardinal movement:
+   - Simplifies path finding
+   - Lowers CPU cost
+   - Lowers overall game time
+5. Don't do 3d globe visual for game:
+   - Very complex
+   - No guaranteed benefit
+   - Performance concerns
+
+---
+
+## Issues and Concerns
 
 - Nothing yet since early prototype stage 
 
-## game design questions
+---
 
-- APM lock on nodes or units so you cannot spam actions? Think about sokpop game clickyland where you are limited by clicks
-- square, hexagonal or historial battle grounds?
-- Campaign mode. Specific battles, war or countries? Similar to cities in mini metro and mini motorway
-- hidden or fully visible grid?
-- naval units?
-- air units?
-- tech tree
-- era progressions
-- buildings
-- other civ features
+## Game Design Questions
+
+- Grid is square or hexagonal?
+- top down graphics or iso or 3d?
+- Players get to pick starting positions?
+- Hidden or fully visible grid?
+- APM lock on nodes or units so you cannot spam actions? Think about sokpop game clickyland where you are limited by clicks.
+- Campaign mode. Specific battles, war or countries? Similar to cities in mini metro and mini motorway.
+- Tech tree?
+- Special nodes?
+- Node expansion overtime?
+- Grids expand over time to cities, cities can merge together, merged cities are more powerful?
+- Buildings?
 - Do I want to stand out from civ, or be a simpler civ e.g. factorio -> shapez. How does this affect marketing?
 - Should players be able to target thier own nodes?
 - Should a node be able to target itself?
-- grids expand over time to cities, cities can merge together, merged cities are more powerful?
-- cities have different units, different unit ratios, or different counts produced?
-- traders can go to a node which you own to change what you are producing
-- ammo limit for units
-- nodes with defense system
-- theme is the gnorp analogue?
-- game name
-- workers or resources that can be collected? This is starting to feel too RTS like.
+- Cities have different units, different unit ratios, or different counts produced? e.g. Catan
+- Traders or cargo can go to a node which you own to transfer production of city production
+- Ammo limit for units?
+- Nodes with defense system
+- How is node unit production handled?
+- Theme is the gnorp analogue?
+- Game name?
 
-## misc notes
+---
 
- - Look into polytopia game
- - Look into other mobile "civ" games like unciv
+## Misc Notes
 
-## archive
+- Research civ concepts and features e.g. culture victory, trade, etc
+- Research polytopia game
+- Research other mobile platform "civ" games like unciv
 
-- Don't do 3d globe visual for game. Too complex.
+---
 
-## profiler
+### Unit List Brainstorm
 
-```go tool pprof -http=:6060 cpu.prof```
+- Conclusions:
+  - Modern era is better than medieval era because:
+    - Variety
+    - Familiarity
+  - Naval units are unneeded and huge scope creep.
+
+- Questions:
+  - Which units will counter other units?
+  - Should units have upgrades?
+  - Should certain "civs" have better units?
+  - Should planes need to fly back to airport to refuel?
+  - Should planes need to fly back to airport to rearm?
+  - Should planes need to fly back to airport to repair?
+  - Should plane matience be much quicker than building a new plane?
+  - How can other units be unique and fit with node mechanic?
+  - Should I do purpose exercise with units like I do with checkpoints
+
+- Potential Units:
+  - Land:
+    - marine (cross water?)
+    - infantry
+    - sniper
+    - anti tank infantry
+    - tank
+    - artillery 
+    - mobile SAM
+    - troop transport
+    - cargo truck (can transfer production between nodes?)
+  - Air:
+    - cargo plane (can transfer production between nodes?)
+    - paratrooper
+    - bomber
+    - stealth bomber
+    - fighter
+    - stealth fighter
+    - helicopter / gun ship
+    - drone
+  - City aka Node:
+    - missle
+    - guided missle
+    - nuke
+    - anti air gun
+    - satelite
+
+---
