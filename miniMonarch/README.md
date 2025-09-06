@@ -13,9 +13,13 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Add target draw for units
+  - Will help with debugging
 - Range unit which can attack:
   - First range unit will probably expose issues. 
   - Multiple units will be in needed for final game.
+- Unit with different size and movement speed
+  - Helps iterate on pathfinding
 - Update unit pathing algorithm to Theta* with same cost orthgonal and diagonal movement: (https://en.wikipedia.org/wiki/Theta*)
   - Unit pathing is fundamental and will need lots of iteration.
   - More realistic long distance pathing rather than current angled
@@ -122,6 +126,12 @@ Is there a mobile equivalent for war/4x games?
 
 ## Game Design Questions
 
+- Should the focus of the game be positioning, logistics and decisions rather than micro?
+  - It seems interesting whens units get into long term fights
+  - Reminds me of the board game go RISK and Catan
+  - Reminds me of the military diagrams that show battles over time
+  - May be able to utilize the idea of target change units
+  - Early fight for position, long term fight for ?
 - Grid is square or hexagonal?
 - top down graphics or iso or 3d?
 - Players get to pick starting positions?
@@ -143,6 +153,7 @@ Is there a mobile equivalent for war/4x games?
 - How is node unit production handled?
 - Theme is the gnorp analogue?
 - Game name?
+- Replay feature where you can see a battle recap?
 
 ---
 
@@ -184,6 +195,7 @@ Is there a mobile equivalent for war/4x games?
     - mobile SAM
     - troop transport
     - cargo truck (can transfer production between nodes?)
+    - unit to change targets
   - Air:
     - cargo plane (can transfer production between nodes?)
     - paratrooper
@@ -193,11 +205,13 @@ Is there a mobile equivalent for war/4x games?
     - stealth fighter
     - helicopter / gun ship
     - drone
+    - unit to change targets?
   - City aka Node:
     - missle
     - guided missle
     - nuke
     - anti air gun
     - satelite
+    - unit to change targets?
 
 ---
