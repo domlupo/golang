@@ -82,7 +82,7 @@ func (n *node) drawNode(screen *ebiten.Image, nodeGridPos gridPosition) {
 			(float32(nodePixelPos.x-nodeRadius)+healthLineLength)*windowMultiplier,
 			float32(nodePixelPos.y)*windowMultiplier,
 			float32(healthLineWidth)*windowMultiplier,
-			highlightColor,
+			nodeHealthColor,
 			false)
 	}
 }

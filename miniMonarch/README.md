@@ -11,7 +11,12 @@ Is there a mobile equivalent for war/4x games?
 
 ### next checkpoints
 
- Determine behavior for multi hit melee combat 
+- Update unit pathing algorithm to Theta* with same cost orthgonal and diagonal movement: (https://en.wikipedia.org/wiki/Theta*)
+  - Unit pathing is fundamental and will need lots of iteration.
+  - More realistic long distance pathing rather than current angled
+  - Units will be able to go around obstacles
+  - Very likely this is needed for final game
+- Determine behavior for multi hit melee combat 
   - Expose issues with combat
   - Expose issues with timing
   - Expose issues with pathing
@@ -34,11 +39,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### future checkpoints
 
-- Update unit pathing algorithm to Theta* with same cost orthgonal and diagonal movement: (https://en.wikipedia.org/wiki/Theta*)
-  - Unit pathing is fundamental and will need lots of iteration.
-  - More realistic long distance pathing rather than current angled
-  - Units will be able to go around obstacles
-  - Very likely this is needed for final game
 - Once Theta* is utilized, research how to update pathing algorithm for short distances
   - More realistic short distance pathing
   - Proper surronding of a target

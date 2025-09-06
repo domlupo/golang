@@ -12,52 +12,52 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-var runProfiler = false
-
-// This must only be used for drawing images and windows.
-// Never use for game logic.
-const windowMultiplier = 2.5
-
-// 16:9 aspect ratio
-const windowWidth = 1280
-const windowHeight = 720
-const gridSize = 40
-
-// graphics setup
-var backgroundColor = color.RGBA{200, 200, 200, 255}
-var highlightColor = color.RGBA{70, 255, 0, 200}
-var unitHealthColor = highlightColor
-var selectectionBoxLineWidth = 1
-var targetNodeLineWidth = 1
-var healthLineWidth = 2
-
-// computer setup
+// computer config
 var blueComputerActive = true
 var redComputerActive = true
 var bluePlayerActive = !blueComputerActive
 var redPlayerActive = !redComputerActive
 
-// player setup
+// logging config
+const outputSummaryLogs = true
+const logLevel = slog.LevelInfo
+const filterTimeAndLevelFromLogs = true
+
+// This must only be used for drawing images and windows.
+// Never use for game logic.
+const windowMultiplier = 2.5
+
+// aspect ratio config (16:9 aspect ratio)
+const windowWidth = 1280
+const windowHeight = 720
+const gridSize = 40
+
+// game balance config
+// Note: unitRadius set to an odd number is better for testing due to division bugs
+var nodeRadius = gridSize / 2
+var unitRadius = 5
+var initialNodeHealth = 100
+var initialUnitHealth = 5
+
+// game graphic config
+var selectectionBoxLineWidth = 1
+var targetNodeLineWidth = 1
+var healthLineWidth = 2
+var backgroundColor = color.RGBA{200, 200, 200, 255}
+var highlightColor = color.RGBA{70, 255, 0, 200}
+var unitHealthColor = highlightColor
+var nodeHealthColor = highlightColor
 var bluePlayerNodeColor = color.RGBA{0, 0, 255, 100}
 var bluePlayerUnitColor = color.RGBA{0, 0, 255, 100}
 var redPlayerNodeColor = color.RGBA{255, 0, 0, 100}
 var redPlayerUnitColor = color.RGBA{255, 0, 0, 100}
 var neutralNodeColor = color.RGBA{100, 60, 100, 200}
 
-// unit and node setup
-// Note: unitRadius set to an odd number is better for testing due to division bugs
-var unitRadius = 5
-var nodeRadius = gridSize / 2
-var initialNodeHealth = 100
-var initialUnitHealth = 5
-
+// debug grid config
 // The debug grid helps debugging display issues. Usually only altering
 // offset is needed, width can remain 1.
 // Offset values should only be 0 - 20 (half of grid size without window multipler)
 // Some helpful values are: 0, 0.5, 1, 19, 19.5, 20
-const logLevel = slog.LevelInfo
-const filterTimeAndLevelFromLogs = true
-const debugOutput = true
 const debugGridOn = true
 const debugGridOffsetWithoutWindowMultipler = 0
 const debugGridOffset = debugGridOffsetWithoutWindowMultipler * windowMultiplier
@@ -66,12 +66,25 @@ const debugGridSize = 32
 
 var debugGridColor = color.Black
 
+// other configs
+var runProfiler = false
+
+const restart = true
+
 type game struct{}
 
 var logger *slog.Logger
 var gameState state
 var compOne computer
 var compTwo computer
+
+func restartGame() {
+	// TODO: Need to restart timers, etc
+	gameState = *newState()
+	compOne = *newComputer(bluePlayer)
+	compTwo = *newComputer(redPlayer)
+	setupState(gameState, complex)
+}
 
 func init() {
 	var monitors []*ebiten.MonitorType
@@ -95,10 +108,7 @@ func init() {
 	}
 
 	logger = slog.New(slog.NewJSONHandler(os.Stderr, logOptions))
-	gameState = *newState()
-	compOne = *newComputer(bluePlayer)
-	compTwo = *newComputer(redPlayer)
-	setupState(gameState, complex)
+	restartGame()
 }
 
 // globals
@@ -198,9 +208,7 @@ func (g *game) Update() error {
 	// debug output
 	if debugOutputWait < debugOutputDelay {
 		debugOutputWait = debugOutputWait + currentTime.Sub(priorTime)
-	} else if debugOutput == false {
-		// log nothing
-	} else {
+	} else if outputSummaryLogs {
 		logger.Info(
 			"game_state",
 			slog.Int("total_units",
@@ -224,7 +232,12 @@ func (g *game) Update() error {
 		if runProfiler {
 			pprof.StopCPUProfile()
 		}
-		return errors.New("regular termination")
+		if restart {
+			logger.Info("restartGame")
+			restartGame()
+		} else {
+			return errors.New("regular termination")
+		}
 	}
 
 	priorTime = currentTime
