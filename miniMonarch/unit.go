@@ -26,6 +26,7 @@ type unit struct {
 	bresenhamError       *int
 	nextBresenhamError   *int
 	health               int
+	attack               int
 	vision               int
 	reach                int
 	attackedUnitThisTurn bool
@@ -50,6 +51,7 @@ func newUnit(p player, globalTarget *pixelPosition) unit {
 		bresenhamError:       nil,
 		nextBresenhamError:   nil,
 		health:               initialUnitHealth,
+		attack:               initialUnitAttack,
 		vision:               40,
 		reach:                13,
 		attackedUnitThisTurn: false,

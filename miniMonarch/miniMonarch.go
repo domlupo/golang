@@ -38,6 +38,7 @@ var nodeRadius = gridSize / 2
 var unitRadius = 5
 var initialNodeHealth = 100
 var initialUnitHealth = 5
+var initialUnitAttack = 1
 
 // game graphic config
 var selectectionBoxLineWidth = 1

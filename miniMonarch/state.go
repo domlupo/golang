@@ -226,7 +226,7 @@ func (s *state) attackUnits() {
 			yDelta = unitPos1.y - yTargetPixelPos
 		}
 		if unit1.reach*unit1.reach >= xDelta*xDelta+yDelta*yDelta {
-			nearestVisibleUnit.health = nearestVisibleUnit.health - 1
+			nearestVisibleUnit.health = nearestVisibleUnit.health - unit1.attack
 			unit1.attackedUnitThisTurn = true
 			unitAttackedOtherUnitCount++
 			s.units[*nearestVisibleUnitPos] = &nearestVisibleUnit
