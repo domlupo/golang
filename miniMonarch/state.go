@@ -1,8 +1,6 @@
 package main
 
 import (
-	"math"
-
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -42,10 +40,9 @@ func (s *state) setUnitLocalTargets() {
 				continue
 			}
 
-			var distanceBetweenUnits = math.Sqrt(
-				math.Pow(float64(unitPos1.x-unitPos2.x), 2) +
-					math.Pow(float64(unitPos1.y-unitPos2.y), 2))
-			if distanceBetweenUnits <= float64(unit1.vision) {
+			var xDelta = unitPos1.x - unitPos2.x
+			var yDelta = unitPos1.y - unitPos2.y
+			if xDelta*xDelta+yDelta*yDelta <= unit1.vision*unit1.vision {
 				s.units[unitPos1].localTarget = &unitPos2
 			}
 		}
@@ -132,14 +129,20 @@ func (s *state) collidesWithNode(newPos pixelPosition, unit unit, nodes map[grid
 		var y2 = nodePixelPos.y
 		var r2 = node.radius
 
-		if math.Pow(float64(x2-x1), 2)+math.Pow(float64(y2-y1), 2) <= math.Pow((float64(r1)+float64(r2)), 2) {
-			if unit.globalTarget != nil {
+		var xDelta = x2 - x1
+		var yDelta = y2 - y1
+		var rSum = r1 + r2
 
+		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
+			if unit.globalTarget != nil {
 				var x1 = unit.globalTarget.x
 				var y1 = unit.globalTarget.y
 				var r1 = 1
 
-				if math.Pow(float64(x2-x1), 2)+math.Pow(float64(y2-y1), 2) <= math.Pow(float64(r1)+float64(r2), 2) {
+				var xDelta = x2 - x1
+				var yDelta = y2 - y1
+				var rSum = r1 + r2
+				if (xDelta*xDelta)+(yDelta*yDelta) <= (rSum * rSum) {
 					collidesWithTargetNode = true
 				}
 			}
@@ -164,7 +167,11 @@ func (s *state) collidesWithUnit(newPos pixelPosition, unit unit, units map[pixe
 		var x2 = otherPos.x + otherUnit.radius
 		var y2 = otherPos.y + otherUnit.radius
 		var r2 = otherUnit.radius
-		if math.Pow(float64(x2-x1), 2)+math.Pow(float64(y2-y1), 2) <= math.Pow((float64(r1)+float64(r2)), 2) {
+
+		var xDelta = x2 - x1
+		var yDelta = y2 - y1
+		var rSum = r1 + r2
+		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
 			return true
 		}
 	}
@@ -191,12 +198,9 @@ func (s *state) attackUnits() {
 				continue
 			}
 
-			var distanceBetweenUnits = math.Sqrt(
-				math.Pow(float64(unitPos1.x-unitPos2.x), 2) +
-					math.Pow(float64(unitPos1.y-unitPos2.y), 2))
-			// TODO: setting this <= rather than < caused obvious bugs but it seems more correct
-			// to use <. Need to determine right behavior in the future.
-			if distanceBetweenUnits < float64(unit1.vision) {
+			var xDelta = unitPos1.x - unitPos2.x
+			var yDelta = unitPos1.y - unitPos2.y
+			if xDelta*xDelta+yDelta*yDelta < unit1.vision*unit1.vision {
 				nearestVisibleUnitPos = &unitPos2
 				nearestVisibleUnit = *unit2
 			}
@@ -209,20 +213,19 @@ func (s *state) attackUnits() {
 		var xTargetPixelPos = nearestVisibleUnitPos.x
 		var yTargetPixelPos = nearestVisibleUnitPos.y
 
-		var xMagnitude = 0.0
-		var yMagnitude = 0.0
+		var xDelta = 0
+		var yDelta = 0
 		if unitPos1.x < (xTargetPixelPos) {
-			xMagnitude = math.Abs(float64(xTargetPixelPos - unitPos1.x))
+			xDelta = xTargetPixelPos - unitPos1.x
 		} else if unitPos1.x > (xTargetPixelPos) {
-			xMagnitude = math.Abs(float64(unitPos1.x - xTargetPixelPos))
+			xDelta = unitPos1.x - xTargetPixelPos
 		}
 		if unitPos1.y < (yTargetPixelPos) {
-			yMagnitude = math.Abs(float64(yTargetPixelPos - unitPos1.y))
+			yDelta = yTargetPixelPos - unitPos1.y
 		} else if unitPos1.y > (yTargetPixelPos) {
-			yMagnitude = math.Abs(float64(unitPos1.y - yTargetPixelPos))
+			yDelta = unitPos1.y - yTargetPixelPos
 		}
-		var distanceToNearestVisibleUnit = math.Sqrt(math.Pow(xMagnitude, 2) + math.Pow(yMagnitude, 2))
-		if float64(unit1.reach) >= distanceToNearestVisibleUnit {
+		if unit1.reach*unit1.reach >= xDelta*xDelta+yDelta*yDelta {
 			nearestVisibleUnit.health = nearestVisibleUnit.health - 1
 			unit1.attackedUnitThisTurn = true
 			unitAttackedOtherUnitCount++
