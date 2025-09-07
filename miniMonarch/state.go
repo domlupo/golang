@@ -6,15 +6,26 @@ import (
 
 // not enforced but must be a singleton
 type state struct {
-	nodes map[gridPosition]*node
-	units map[pixelPosition]*unit
+	nodes  map[gridPosition]*node
+	fluxes map[gridPosition]*flux
+	units  map[pixelPosition]*unit
 }
 
 func newState() *state {
 	s := state{
-		nodes: make(map[gridPosition]*node),
-		units: make(map[pixelPosition]*unit),
+		nodes:  make(map[gridPosition]*node),
+		fluxes: make(map[gridPosition]*flux),
+		units:  make(map[pixelPosition]*unit),
 	}
+
+	for i := range windowWidth / gridSize {
+		for j := range windowHeight / gridSize {
+			var gridPos = gridPosition{i, j}
+			var flux = newFlux(gridPos)
+			s.fluxes[gridPos] = &flux
+		}
+	}
+
 	return &s
 }
 
@@ -22,12 +33,24 @@ func (s *state) addNode(n node) {
 	s.nodes[n.gridPos] = &n
 }
 
-func (s *state) refreshUnits() {
-	for unitPos, u := range s.units {
-		u.attackedUnitThisTurn = false
-		u.localTarget = nil
-		u.canReachTargetNode = nil
-		s.units[unitPos] = u
+func (s *state) refresh() {
+	for _, flux := range s.fluxes {
+		flux.refresh()
+	}
+
+	for unitPos, unit := range s.units {
+		unit.refresh()
+
+		if !unit.movedLastTurn {
+			var gridPos, _ = splitPixelPosition(unitPos)
+			s.fluxes[gridPos].staticUnits++
+		}
+	}
+
+	for _, flux := range s.fluxes {
+		var xMax = (windowWidth / gridSize) - 1
+		var yMax = (windowHeight / gridSize) - 1
+		flux.setFluxVector(s, xMax, yMax)
 	}
 }
 
@@ -54,10 +77,19 @@ func (s *state) moveUnits() {
 	var unitsWithoutTarget = 0
 	var unitsAtTargetNode = 0
 	var unitsAtNonTargetNode = 0
-	var unitsCollidedCount = 0
+	var unitsCollideCount = 0
+	var unitsBorderCollideCount = 0
 
 	for unitPos, unit := range s.units {
-		var newPos = unit.getNewPos(unitPos)
+		var newPos pixelPosition
+		if unit.fluxTurnCount > unitFluxCountLimit {
+			var gridPos, _ = splitPixelPosition(unitPos)
+			var fluxDelta = s.fluxes[gridPos].getFluxDelta()
+			newPos = pixelPosition{unitPos.x + fluxDelta.x, unitPos.y + fluxDelta.y}
+			unit.fluxTurnCount = 0
+		} else {
+			newPos = unit.getNewPos(unitPos)
+		}
 
 		if unit.currentTarget == noTarget {
 			unitsWithoutTarget++
@@ -66,6 +98,8 @@ func (s *state) moveUnits() {
 		if unitPos.x == newPos.x && unitPos.y == newPos.y {
 			continue
 		}
+
+		var collidesWithBorder = collidesWithBorder(newPos, unit.radius)
 
 		var collidesWithUnit = s.collidesWithUnit(
 			newPos,
@@ -77,8 +111,13 @@ func (s *state) moveUnits() {
 			*unit,
 			s.nodes)
 
-		if collidesWithUnit {
-			unitsCollidedCount++
+		if collidesWithBorder && collidesWithUnit {
+			unitsBorderCollideCount++
+			unitsCollideCount++
+		} else if collidesWithBorder {
+			unitsBorderCollideCount++
+		} else if collidesWithUnit {
+			unitsCollideCount++
 		} else if collidesWithNode != nil {
 			if isTargetNode {
 				unitsAtTargetNode++
@@ -105,7 +144,7 @@ func (s *state) moveUnits() {
 		"units without target", unitsWithoutTarget,
 		"units at target node", unitsAtTargetNode,
 		"units at non target node", unitsAtNonTargetNode,
-		"units collided", unitsCollidedCount,
+		"units collided", unitsCollideCount,
 	)
 }
 
@@ -227,7 +266,7 @@ func (s *state) attackUnits() {
 		}
 		if unit1.reach*unit1.reach >= xDelta*xDelta+yDelta*yDelta {
 			nearestVisibleUnit.health = nearestVisibleUnit.health - unit1.attack
-			unit1.attackedUnitThisTurn = true
+			unit1.attackedThisTurn = true
 			unitAttackedOtherUnitCount++
 			s.units[*nearestVisibleUnitPos] = &nearestVisibleUnit
 			s.units[unitPos1] = unit1
@@ -259,7 +298,7 @@ func (s *state) attackNodes() {
 			continue
 		}
 
-		if unit.attackedUnitThisTurn {
+		if unit.attackedThisTurn {
 			attackedUnitThisTurnCount++
 			continue
 		}
@@ -267,7 +306,8 @@ func (s *state) attackNodes() {
 		if unit.canReachTargetNode != nil {
 			attackedNodeThisTurnCount++
 			var targetNode = unit.canReachTargetNode
-			targetNode.health = max(targetNode.health-1, 0)
+			targetNode.health = max(targetNode.health-unit.attack, 0)
+			unit.attackedThisTurn = true
 			if targetNode.health == 0 {
 				targetNode.capturedBy = &unit.player
 			}
@@ -380,7 +420,7 @@ func (s *state) produceUnits() {
 	}
 }
 
-func (s *state) draw(screen *ebiten.Image, selectedPlayer player) {
+func (s *state) draw(screen *ebiten.Image, selectedPlayer player, drawFluxes bool) {
 	for nodePos, node := range s.nodes {
 		node.drawNode(screen, nodePos)
 	}
@@ -389,5 +429,10 @@ func (s *state) draw(screen *ebiten.Image, selectedPlayer player) {
 	}
 	for unitPos, unit := range s.units {
 		unit.draw(screen, unitPos, unit.selected)
+	}
+	if drawFluxes {
+		for fluxPos, flux := range s.fluxes {
+			flux.draw(screen, fluxPos)
+		}
 	}
 }

@@ -34,20 +34,26 @@ const gridSize = 40
 
 // game balance config
 // Note: unitRadius set to an odd number is better for testing due to division bugs
-var nodeRadius = gridSize / 2
 var unitRadius = 5
+var unitFluxCountLimit = 10
+var nodeRadius = gridSize / 2
 var initialNodeHealth = 100
-var initialUnitHealth = 5
+var initialUnitHealth = 50
 var initialUnitAttack = 1
 
 // game graphic config
 var selectectionBoxLineWidth = 1
 var targetNodeLineWidth = 1
 var healthLineWidth = 2
+var fluxLineWidth = 2
+var fluxDirectionRadius = 5
+var drawFluxes = true
+var drawUnitHealth = true
 var backgroundColor = color.RGBA{200, 200, 200, 255}
 var highlightColor = color.RGBA{70, 255, 0, 200}
 var unitHealthColor = highlightColor
 var nodeHealthColor = highlightColor
+var fluxColor = highlightColor
 var bluePlayerNodeColor = color.RGBA{0, 0, 255, 100}
 var bluePlayerUnitColor = color.RGBA{0, 0, 255, 100}
 var redPlayerNodeColor = color.RGBA{255, 0, 0, 100}
@@ -143,7 +149,7 @@ func (g *game) Update() error {
 	leftMouseHeld = false
 
 	// update game state prior to player actions
-	gameState.refreshUnits()
+	gameState.refresh()
 	gameState.setUnitLocalTargets()
 	gameState.moveUnits()
 	gameState.attackUnits()
@@ -257,7 +263,7 @@ func updateComputerTargetNodes(s state) {
 func (g *game) Draw(screen *ebiten.Image) {
 	screen.Fill(backgroundColor)
 	drawDebugGrid(screen, debugGridOn)
-	gameState.draw(screen, playerSelected)
+	gameState.draw(screen, playerSelected, drawFluxes)
 
 	if leftMouseHeld {
 		drawUnfilledBoxFloat32(

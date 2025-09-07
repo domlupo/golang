@@ -13,28 +13,26 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Add target draw for units
-  - Will help with debugging
+- Add unit debugger where I can hover over unit to log information
+  - Better local pathfinding debugging
+  - Better flux debugging
+  - Can draw unit targets as well
+- Unit with different size and movement speed
+  - Helps iterate on pathfinding
 - Range unit which can attack:
   - First range unit will probably expose issues. 
   - Multiple units will be in needed for final game.
-- Unit with different size and movement speed
-  - Helps iterate on pathfinding
-- Update unit pathing algorithm to Theta* with same cost orthgonal and diagonal movement: (https://en.wikipedia.org/wiki/Theta*)
-  - Unit pathing is fundamental and will need lots of iteration.
-  - More realistic long distance pathing rather than current angled
-  - Units will be able to go around obstacles
-  - Very likely this is needed for final game
+-  Research and iterate local pathfinding algorithms/methods
+  - More realistic short distance pathing
+  - Proper surronding of a target
+  - Proper Units bunching into a single spot
+  - Helps close attack behavior decision
 - Determine behavior for multi hit melee combat 
   - Expose issues with combat
   - Expose issues with timing
   - Expose issues with pathing
   - Will probably lead to bug fix for units not killing correctly
   - May help or hurt efforts towards local pathfinding. I suspect this will be coupled with local pathfinding.
-- save file: 
-  - Will expose constraints
-  - Will expose platform concerns
-  - May expose issues with work so far 
 - Analyze and iterate on game design and game loop:
   - Check design feasability 
   - Improve game
@@ -45,16 +43,15 @@ Is there a mobile equivalent for war/4x games?
 
 ### Future Checkpoints
 
-- Once Theta* is utilized, research how to update pathing algorithm for short distances
-  - More realistic short distance pathing
-  - Proper surronding of a target
-  - Proper Units bunching into a single spot
-  - Helps close attack behavior decision
 - Create more node setup test scenarios
   - Able to easily reproduce and test precise setups ofr edge case issues
   - Able to randomly generated setups to find hidden edge case issues
 - Tool / CLI which launches multiple windows at once to test multiple scenarios
   - Faster test loop
+- save file: 
+  - Will expose constraints
+  - Will expose platform concerns
+  - May expose issues with work so far 
 - Determine if FPS lock is needed:
   - fundmental issue that I have not considered
 - Controls which work on computer, steam deck, phone, etc: 
@@ -74,6 +71,11 @@ Is there a mobile equivalent for war/4x games?
 
 ### Punted Checkpoints
 
+- Update unit pathing algorithm to Theta* with same cost orthgonal and diagonal movement: (https://en.wikipedia.org/wiki/Theta*)
+  - Unit pathing is fundamental and will need lots of iteration.
+  - More realistic long distance pathing rather than current angled
+  - Units will be able to go around obstacles
+  - Very likely this is needed for final game
 - Research more global pathfinding algorithms e.g. AP Theta*
   - ?
 - Research more local pathfinding algorithms

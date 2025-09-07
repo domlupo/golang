@@ -17,19 +17,23 @@ const (
 )
 
 type unit struct {
-	id                   uuid.UUID
-	player               player
-	radius               int
-	currentTarget        unitTarget
-	globalTarget         *pixelPosition
-	localTarget          *pixelPosition
-	bresenhamError       *int
-	nextBresenhamError   *int
-	health               int
-	attack               int
-	vision               int
-	reach                int
-	attackedUnitThisTurn bool
+	id                 uuid.UUID
+	player             player
+	radius             int
+	currentTarget      unitTarget
+	globalTarget       *pixelPosition
+	localTarget        *pixelPosition
+	bresenhamError     *int
+	nextBresenhamError *int
+	health             int
+	attack             int
+	vision             int
+	reach              int
+	movedLastTurn      bool
+	movedThisTurn      bool
+	attackedLastTurn   bool
+	attackedThisTurn   bool
+	fluxTurnCount      int
 	// TODO: determine behavior here. Right now this may actually be direct collision with target node
 	// and does not factor in reach. Reach should most likely be used here.
 	canReachTargetNode *node
@@ -42,24 +46,43 @@ func newUnit(p player, globalTarget *pixelPosition) unit {
 		logger.Error("newUnit", "failed to generate UUID", err)
 	}
 	u := unit{
-		id:                   id,
-		player:               p,
-		radius:               unitRadius,
-		currentTarget:        noTarget,
-		globalTarget:         globalTarget,
-		localTarget:          nil,
-		bresenhamError:       nil,
-		nextBresenhamError:   nil,
-		health:               initialUnitHealth,
-		attack:               initialUnitAttack,
-		vision:               40,
-		reach:                13,
-		attackedUnitThisTurn: false,
-		canReachTargetNode:   nil,
-		selected:             false,
+		id:                 id,
+		player:             p,
+		radius:             unitRadius,
+		currentTarget:      noTarget,
+		globalTarget:       globalTarget,
+		localTarget:        nil,
+		bresenhamError:     nil,
+		nextBresenhamError: nil,
+		health:             initialUnitHealth,
+		attack:             initialUnitAttack,
+		vision:             40,
+		reach:              13,
+		movedLastTurn:      false,
+		movedThisTurn:      false,
+		attackedLastTurn:   false,
+		attackedThisTurn:   false,
+		fluxTurnCount:      0,
+		canReachTargetNode: nil,
+		selected:           false,
 	}
 
 	return u
+}
+
+func (u *unit) refresh() {
+	if !u.attackedLastTurn && !u.movedLastTurn {
+		u.fluxTurnCount += 1
+	} else {
+		u.fluxTurnCount = 0
+	}
+
+	u.movedLastTurn = u.movedThisTurn
+	u.movedThisTurn = false
+	u.attackedLastTurn = u.attackedThisTurn
+	u.attackedThisTurn = false
+	u.localTarget = nil
+	u.canReachTargetNode = nil
 }
 
 func (u *unit) getNewPos(currentPos pixelPosition) pixelPosition {
@@ -132,6 +155,7 @@ func (u *unit) updateTarget(target unitTarget) bool {
 }
 
 func (u *unit) completeMove() {
+	u.movedThisTurn = true
 	var intCopy = &u.nextBresenhamError
 	u.bresenhamError = *intCopy
 }
@@ -167,7 +191,7 @@ func (u *unit) draw(screen *ebiten.Image, unitPos pixelPosition, selected bool) 
 		)
 	}
 
-	if u.health != initialUnitHealth {
+	if drawUnitHealth && u.health != initialUnitHealth {
 		var healthLineLength = (float32(u.health) / float32(initialUnitHealth)) * float32(unitRadius*2)
 
 		vector.DrawFilledRect(
