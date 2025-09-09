@@ -13,16 +13,21 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Add several units
-  - sniper
-  - tank
-  - missle
-- Unit with different size and movement speed
-  - Helps iterate on pathfinding
- Range unit which can attack:
-  - First range unit will probably expose issues. 
-  - Multiple units will be in needed for final game.
-- Add unit debugger where I can hover over unit to log information
+- Determine reach behavior:
+  - Current behavior seems strange. I am not sure why.
+  - I think reach behavers different for unit attacking node and unit attaking other unit
+  - Should units priortize nodes or other units?
+  - Determine if units should always attack closest unit
+  - Units don't currently attack closest unit. This may complete that TODO.
+  - vim search for "nearest"
+  - Also vim search "TODO" because this solve several
+- Add missle:
+  - first node unit
+  - splash damage?
+  - no health?
+  - flight?
+- Add unit debugger where I can hover over unit to log information:
+  - Probably should have a pause button
   - Better local pathfinding debugging
   - Better flux debugging
   - Can draw unit targets as well
@@ -34,7 +39,6 @@ Is there a mobile equivalent for war/4x games?
   - Improve game
 - clean up bugs and hacks:
   - There are enough to cause bugs while testing game design and game loop
-
 
 ---
 
@@ -161,6 +165,7 @@ Is there a mobile equivalent for war/4x games?
 - Theme is the gnorp analogue?
 - Game name?
 - Replay feature where you can see a battle recap?
+- Should unit behavior be toggable on a global scale? E.g. tanks have fire mode vs push mode
 
 ---
 

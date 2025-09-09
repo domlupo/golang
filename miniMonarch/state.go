@@ -54,8 +54,18 @@ func (s *state) refresh() {
 	}
 }
 
-func (s *state) setUnitLocalTargets() {
+func (s *state) analyzeTargets() {
 	for unitPos1, unit1 := range s.units {
+		var collidesWithNode, isTargetNode = s.collidesWithNode(
+			unitPos1,
+			*unit1,
+			unit1.reach,
+			s.nodes)
+		if isTargetNode {
+			// TODO: HACK, unit can reach further than collide
+			unit1.canReachTargetNode = collidesWithNode
+		}
+
 		// check if unit 1 can see unit 2
 		for unitPos2, unit2 := range s.units {
 			if unit1.player == unit2.player {
@@ -65,8 +75,10 @@ func (s *state) setUnitLocalTargets() {
 
 			var xDelta = unitPos1.x - unitPos2.x
 			var yDelta = unitPos1.y - unitPos2.y
+			// TODO: Does this need changed so local target is always what is nearest
 			if xDelta*xDelta+yDelta*yDelta <= unit1.vision*unit1.vision {
-				s.units[unitPos1].localTarget = &unitPos2
+				unit1.localTarget = &unitPos2
+				s.units[unitPos1] = unit1
 			}
 		}
 	}
@@ -74,6 +86,7 @@ func (s *state) setUnitLocalTargets() {
 
 func (s *state) moveUnits() {
 	var unitsMovedCount = 0
+	var unitsAlreadyAttacked = 0
 	var unitsWithoutTarget = 0
 	var unitsAtTargetNode = 0
 	var unitsAtNonTargetNode = 0
@@ -81,6 +94,11 @@ func (s *state) moveUnits() {
 	var unitsBorderCollideCount = 0
 
 	for unitPos, unit := range s.units {
+		if unit.attackedThisTurn {
+			unitsAlreadyAttacked++
+			continue
+		}
+
 		var newPos pixelPosition
 		if unit.fluxTurnCount > unitFluxCountLimit {
 			var gridPos, _ = splitPixelPosition(unitPos)
@@ -109,6 +127,7 @@ func (s *state) moveUnits() {
 		var collidesWithNode, isTargetNode = s.collidesWithNode(
 			newPos,
 			*unit,
+			unit.radius,
 			s.nodes)
 
 		if collidesWithBorder && collidesWithUnit {
@@ -121,8 +140,6 @@ func (s *state) moveUnits() {
 		} else if collidesWithNode != nil {
 			if isTargetNode {
 				unitsAtTargetNode++
-				// TODO: HACK, unit can reach further than collide
-				unit.canReachTargetNode = collidesWithNode
 			} else {
 				// TODO: determine behavior. Prob don't want units to pass thru enemy nodes
 				unitsAtNonTargetNode++
@@ -145,14 +162,16 @@ func (s *state) moveUnits() {
 		"units at target node", unitsAtTargetNode,
 		"units at non target node", unitsAtNonTargetNode,
 		"units collided", unitsCollideCount,
+		"units already attacked", unitsAlreadyAttacked,
 	)
 }
 
-func (s *state) collidesWithNode(newPos pixelPosition, unit unit, nodes map[gridPosition]*node) (*node, bool) {
+// TODO: This does not handle a unit colliding with multiple nodes which will probably occur in the future.
+func (s *state) collidesWithNode(newPos pixelPosition, unit unit, unitCollisionRadius int, nodes map[gridPosition]*node) (*node, bool) {
 	var collidesWithTargetNode = false
 	var x1 = newPos.x
 	var y1 = newPos.y
-	var r1 = unit.radius
+	var r1 = unitCollisionRadius
 
 	for nodePos, node := range nodes {
 		if unit.player == node.player {
@@ -239,6 +258,7 @@ func (s *state) attackUnits() {
 
 			var xDelta = unitPos1.x - unitPos2.x
 			var yDelta = unitPos1.y - unitPos2.y
+			// TODO: Does this need changed so local target is always what is nearest
 			if xDelta*xDelta+yDelta*yDelta < unit1.vision*unit1.vision {
 				nearestVisibleUnitPos = &unitPos2
 				nearestVisibleUnit = *unit2
@@ -330,7 +350,7 @@ func (s *state) updateNodeOwnership() bool {
 
 	for nodeGridPos, node := range s.nodes {
 		if node.health == 0 {
-			newNode := newNode(*node.capturedBy, node.gridPos)
+			newNode := newNode(*node.capturedBy, node.gridPos, node.unitConfig)
 			s.nodes[nodeGridPos] = &newNode
 			nodeOwnershipChanged = true
 		}
@@ -413,8 +433,8 @@ func (s *state) produceUnits() {
 
 		// TODO: determine how to produce units during collision
 		var unitPos = getPixelPosition(nodePos, innerGridPosition{0, 0})
-		if !s.collidesWithUnit(unitPos, newUnit(n.player, n.target), s.units) {
-			var newUnit = newUnit(n.player, n.target)
+		if !s.collidesWithUnit(unitPos, newUnit(n.player, n.target, n.unitConfig), s.units) {
+			var newUnit = newUnit(n.player, n.target, n.unitConfig)
 			s.units[unitPos] = &newUnit
 		}
 	}

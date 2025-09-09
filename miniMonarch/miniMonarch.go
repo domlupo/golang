@@ -33,14 +33,26 @@ const windowHeight = 720
 const gridSize = 40
 
 // game balance config
-// Note: unitRadius set to an odd number is better for testing due to division bugs
-var unitRadius = 5
 var fluxMagnitude = 5
 var unitFluxCountLimit = 10
 var nodeRadius = gridSize / 2
 var initialNodeHealth = 100
-var initialUnitHealth = 100
-var initialUnitAttack = 1
+
+// Note: unit radius set to an odd number is better for testing due to division bugs
+var infantryConfig = unitConfig{
+	radius:    5,
+	maxHealth: 500,
+	attack:    1,
+	vision:    40,
+	reach:     13,
+}
+var sniperConfig = unitConfig{
+	radius:    7,
+	maxHealth: 5,
+	attack:    1,
+	vision:    100,
+	reach:     100,
+}
 
 // game graphic config
 var selectectionBoxLineWidth = 1
@@ -91,7 +103,7 @@ func restartGame() {
 	gameState = *newState()
 	compOne = *newComputer(bluePlayer)
 	compTwo = *newComputer(redPlayer)
-	setupState(gameState, complex)
+	setupState(gameState, complexSniper)
 	updateComputerTargetNodes(gameState)
 }
 
@@ -151,10 +163,10 @@ func (g *game) Update() error {
 
 	// update game state prior to player actions
 	gameState.refresh()
-	gameState.setUnitLocalTargets()
-	gameState.moveUnits()
+	gameState.analyzeTargets()
 	gameState.attackUnits()
 	gameState.attackNodes()
+	gameState.moveUnits()
 
 	if produceWait < produceDelay {
 		produceWait = produceWait + currentTime.Sub(priorTime)

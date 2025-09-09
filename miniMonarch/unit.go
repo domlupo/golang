@@ -16,31 +16,36 @@ const (
 	globalTarget
 )
 
+type unitConfig struct {
+	radius    int
+	maxHealth int
+	attack    int
+	vision    int
+	reach     int
+}
+
 type unit struct {
 	id                 uuid.UUID
 	player             player
-	radius             int
 	currentTarget      unitTarget
 	globalTarget       *pixelPosition
 	localTarget        *pixelPosition
 	bresenhamError     *int
 	nextBresenhamError *int
-	health             int
-	attack             int
-	vision             int
-	reach              int
-	movedLastTurn      bool
-	movedThisTurn      bool
-	attackedLastTurn   bool
-	attackedThisTurn   bool
-	fluxTurnCount      int
+	unitConfig
+	health           int
+	movedLastTurn    bool
+	movedThisTurn    bool
+	attackedLastTurn bool
+	attackedThisTurn bool
+	fluxTurnCount    int
 	// TODO: determine behavior here. Right now this may actually be direct collision with target node
 	// and does not factor in reach. Reach should most likely be used here.
 	canReachTargetNode *node
 	selected           bool
 }
 
-func newUnit(p player, globalTarget *pixelPosition) unit {
+func newUnit(p player, globalTarget *pixelPosition, config unitConfig) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
 		logger.Error("newUnit", "failed to generate UUID", err)
@@ -48,16 +53,13 @@ func newUnit(p player, globalTarget *pixelPosition) unit {
 	u := unit{
 		id:                 id,
 		player:             p,
-		radius:             unitRadius,
 		currentTarget:      noTarget,
 		globalTarget:       globalTarget,
 		localTarget:        nil,
 		bresenhamError:     nil,
 		nextBresenhamError: nil,
-		health:             initialUnitHealth,
-		attack:             initialUnitAttack,
-		vision:             40,
-		reach:              13,
+		unitConfig:         config,
+		health:             config.maxHealth,
 		movedLastTurn:      false,
 		movedThisTurn:      false,
 		attackedLastTurn:   false,
@@ -175,7 +177,7 @@ func (u *unit) draw(screen *ebiten.Image, unitPos pixelPosition, selected bool) 
 		screen,
 		float32(unitPos.x)*windowMultiplier,
 		float32(unitPos.y)*windowMultiplier,
-		float32(unitRadius)*windowMultiplier,
+		float32(u.radius)*windowMultiplier,
 		unitColor,
 		false,
 	)
@@ -184,22 +186,22 @@ func (u *unit) draw(screen *ebiten.Image, unitPos pixelPosition, selected bool) 
 		drawUnfilledBoxInt(
 			screen,
 			highlightColor,
-			unitPos.x-unitRadius,
-			unitPos.y-unitRadius,
-			unitPos.x+unitRadius,
-			unitPos.y+unitRadius,
+			unitPos.x-u.radius,
+			unitPos.y-u.radius,
+			unitPos.x+u.radius,
+			unitPos.y+u.radius,
 		)
 	}
 
-	if drawUnitHealth && u.health != initialUnitHealth {
-		var healthLineLength = (float32(u.health) / float32(initialUnitHealth)) * float32(unitRadius*2)
+	if drawUnitHealth && u.health != u.maxHealth {
+		var healthLineLength = (float32(u.health) / float32(u.maxHealth)) * float32(u.radius*2)
 
 		vector.DrawFilledRect(
 			screen,
-			float32(unitPos.x-unitRadius)*windowMultiplier,
-			float32(unitPos.y-unitRadius)*windowMultiplier,
+			float32(unitPos.x-u.radius)*windowMultiplier,
+			float32(unitPos.y-u.radius)*windowMultiplier,
 			healthLineLength*windowMultiplier,
-			float32(unitRadius)*windowMultiplier,
+			float32(u.radius)*windowMultiplier,
 			unitHealthColor,
 			false,
 		)

@@ -24,9 +24,10 @@ type node struct {
 	health     int
 	capturedBy *player
 	target     *pixelPosition
+	unitConfig unitConfig
 }
 
-func newNode(p player, gridPos gridPosition) node {
+func newNode(p player, gridPos gridPosition, unit unitConfig) node {
 	n := node{
 		player:     p,
 		gridPos:    gridPos,
@@ -35,6 +36,7 @@ func newNode(p player, gridPos gridPosition) node {
 		health:     initialNodeHealth,
 		capturedBy: nil,
 		target:     nil,
+		unitConfig: unit,
 	}
 	return n
 }
