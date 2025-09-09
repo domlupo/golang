@@ -13,16 +13,34 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Add several units
+  - sniper
+  - tank
+  - missle
+- Unit with different size and movement speed
+  - Helps iterate on pathfinding
+ Range unit which can attack:
+  - First range unit will probably expose issues. 
+  - Multiple units will be in needed for final game.
 - Add unit debugger where I can hover over unit to log information
   - Better local pathfinding debugging
   - Better flux debugging
   - Can draw unit targets as well
-- Unit with different size and movement speed
-  - Helps iterate on pathfinding
-- Range unit which can attack:
-  - First range unit will probably expose issues. 
-  - Multiple units will be in needed for final game.
--  Research and iterate local pathfinding algorithms/methods
+- Create more node setup test scenarios
+  - Able to easily reproduce and test precise setups ofr edge case issues
+  - Able to randomly generated setups to find hidden edge case issues
+- Analyze and iterate on game design and game loop:
+  - Check design feasability 
+  - Improve game
+- clean up bugs and hacks:
+  - There are enough to cause bugs while testing game design and game loop
+
+
+---
+
+### Future Checkpoints
+
+- Research and iterate local pathfinding algorithms/methods
   - More realistic short distance pathing
   - Proper surronding of a target
   - Proper Units bunching into a single spot
@@ -33,19 +51,6 @@ Is there a mobile equivalent for war/4x games?
   - Expose issues with pathing
   - Will probably lead to bug fix for units not killing correctly
   - May help or hurt efforts towards local pathfinding. I suspect this will be coupled with local pathfinding.
-- Analyze and iterate on game design and game loop:
-  - Check design feasability 
-  - Improve game
-- clean up bugs and hacks:
-  - There are enough to cause bugs while testing game design and game loop
-
----
-
-### Future Checkpoints
-
-- Create more node setup test scenarios
-  - Able to easily reproduce and test precise setups ofr edge case issues
-  - Able to randomly generated setups to find hidden edge case issues
 - Tool / CLI which launches multiple windows at once to test multiple scenarios
   - Faster test loop
 - save file: 
@@ -198,6 +203,7 @@ Is there a mobile equivalent for war/4x games?
     - troop transport
     - cargo truck (can transfer production between nodes?)
     - unit to change targets
+    - a unit which pushes other units out of way
   - Air:
     - cargo plane (can transfer production between nodes?)
     - paratrooper

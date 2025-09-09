@@ -35,10 +35,11 @@ const gridSize = 40
 // game balance config
 // Note: unitRadius set to an odd number is better for testing due to division bugs
 var unitRadius = 5
+var fluxMagnitude = 5
 var unitFluxCountLimit = 10
 var nodeRadius = gridSize / 2
 var initialNodeHealth = 100
-var initialUnitHealth = 50
+var initialUnitHealth = 100
 var initialUnitAttack = 1
 
 // game graphic config
