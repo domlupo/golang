@@ -15,8 +15,6 @@ import (
 // computer config
 var blueComputerActive = true
 var redComputerActive = true
-var bluePlayerActive = !blueComputerActive
-var redPlayerActive = !redComputerActive
 
 // logging config
 const outputSummaryLogs = true

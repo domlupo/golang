@@ -367,14 +367,6 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 	var bottomRightGridPos, _ = splitPixelPosition(releasePosition)
 
 	for nodeGridPos, node := range s.nodes {
-		if node.player == bluePlayer && !bluePlayerActive {
-			continue
-		} else if node.player == redPlayer && !redPlayerActive {
-			continue
-		} else if node.player == neutralPlayer {
-			continue
-		}
-
 		if (topLeftGridPos.x < nodeGridPos.x) &&
 			(nodeGridPos.x < bottomRightGridPos.x) &&
 			(topLeftGridPos.y < nodeGridPos.y) &&
@@ -387,12 +379,6 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 	}
 
 	for unitPixelPos, unit := range s.units {
-		if unit.player == bluePlayer && !bluePlayerActive {
-			continue
-		} else if unit.player == redPlayer && !redPlayerActive {
-			continue
-		}
-
 		if (clickPosition.x < unitPixelPos.x) &&
 			(unitPixelPos.x < releasePosition.x) &&
 			(clickPosition.y < unitPixelPos.y) &&
@@ -410,6 +396,10 @@ func (s *state) updateTargets(target *pixelPosition) {
 	for nodeGridPos, node := range s.nodes {
 		if node.player == neutralPlayer {
 			continue
+		} else if node.player == bluePlayer && blueComputerActive {
+			continue
+		} else if node.player == redPlayer && redComputerActive {
+			continue
 		}
 
 		if node.selected {
@@ -418,6 +408,12 @@ func (s *state) updateTargets(target *pixelPosition) {
 		s.nodes[nodeGridPos] = node
 	}
 	for unitPixelPos, unit := range s.units {
+		if unit.player == bluePlayer && blueComputerActive {
+			continue
+		} else if unit.player == redPlayer && redComputerActive {
+			continue
+		}
+
 		if unit.selected {
 			unit.globalTarget = target
 		}
