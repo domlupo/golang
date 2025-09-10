@@ -440,12 +440,12 @@ func (s *state) produceUnits() {
 	}
 }
 
-func (s *state) draw(screen *ebiten.Image, selectedPlayer player, drawFluxes bool) {
+func (s *state) draw(screen *ebiten.Image, drawBlueTargets bool, drawRedTargets, drawFluxes bool) {
 	for nodePos, node := range s.nodes {
 		node.drawNode(screen, nodePos)
 	}
 	for nodePos, node := range s.nodes {
-		node.drawTargets(screen, nodePos, selectedPlayer)
+		node.drawTargets(screen, nodePos, drawBlueTargets, drawRedTargets)
 	}
 	for unitPos, unit := range s.units {
 		unit.draw(screen, unitPos, unit.selected)

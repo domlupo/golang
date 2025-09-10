@@ -89,7 +89,7 @@ func (n *node) drawNode(screen *ebiten.Image, nodeGridPos gridPosition) {
 	}
 }
 
-func (n *node) drawTargets(screen *ebiten.Image, nodeGridPos gridPosition, selectedPlayer player) {
+func (n *node) drawTargets(screen *ebiten.Image, nodeGridPos gridPosition, drawBlueTargets bool, drawRedTargets bool) {
 	var nodeColor color.Color
 	switch n.player {
 	case bluePlayer:
@@ -102,7 +102,7 @@ func (n *node) drawTargets(screen *ebiten.Image, nodeGridPos gridPosition, selec
 		panic("unknown player for drawTargets")
 	}
 
-	if n.target != nil && n.player == selectedPlayer {
+	if n.target != nil && ((n.player == bluePlayer && drawBlueTargets) || (n.player == redPlayer && drawRedTargets)) {
 		var nodePixelPos = getPixelPosition(nodeGridPos, innerGridPosition{0, 0})
 		vector.StrokeLine(
 			screen,

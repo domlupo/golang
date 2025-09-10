@@ -68,12 +68,12 @@ func drawUnfilledBoxInt(screen *ebiten.Image, color color.Color, initialX int, i
 	drawUnfilledBoxFloat32(screen, color, float32(initialX), float32(initialY), float32(finalX), float32(finalY))
 }
 
-func drawDebugGrid(screen *ebiten.Image, drawDebugGrid bool) {
+func drawDebug(screen *ebiten.Image, drawDebugGrid bool) {
 	if !drawDebugGrid {
 		return
 	}
 
-	for i := range debugGridSize {
+	for i := range debugGridSquareCount {
 		var x = float32(gridSize * windowMultiplier * i)
 		vector.StrokeLine(
 			screen,

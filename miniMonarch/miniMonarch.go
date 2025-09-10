@@ -56,35 +56,39 @@ var sniperConfig = unitConfig{
 
 // game graphic config
 var selectectionBoxLineWidth = 1
-var targetNodeLineWidth = 1
 var healthLineWidth = 2
-var fluxLineWidth = 2
-var fluxDirectionRadius = 5
-var drawFluxes = true
-var drawUnitHealth = true
 var backgroundColor = color.RGBA{200, 200, 200, 255}
 var highlightColor = color.RGBA{70, 255, 0, 200}
 var unitHealthColor = highlightColor
 var nodeHealthColor = highlightColor
-var fluxColor = highlightColor
 var bluePlayerNodeColor = color.RGBA{0, 0, 255, 100}
 var bluePlayerUnitColor = color.RGBA{0, 0, 255, 100}
 var redPlayerNodeColor = color.RGBA{255, 0, 0, 100}
 var redPlayerUnitColor = color.RGBA{255, 0, 0, 100}
 var neutralNodeColor = color.RGBA{100, 60, 100, 200}
 
+// debug only configs
+var drawFluxes = false
+var drawUnitHealth = false
+var drawBlueTargets = false
+var drawRedTargets = false
+var fluxLineWidth = 2
+var fluxDirectionRadius = 5
+var fluxColor = highlightColor
+var targetNodeLineWidth = 1
+
 // debug grid config
 // The debug grid helps debugging display issues. Usually only altering
 // offset is needed, width can remain 1.
 // Offset values should only be 0 - 20 (half of grid size without window multipler)
 // Some helpful values are: 0, 0.5, 1, 19, 19.5, 20
-const debugGridOn = true
+var drawDebugGrid = true
+var debugGridColor = color.Black
+
 const debugGridOffsetWithoutWindowMultipler = 0
 const debugGridOffset = debugGridOffsetWithoutWindowMultipler * windowMultiplier
 const debugGridWidth = 1 * windowMultiplier
-const debugGridSize = 32
-
-var debugGridColor = color.Black
+const debugGridSquareCount = 32
 
 // other configs
 var runProfiler = false
@@ -132,32 +136,86 @@ func init() {
 	restartGame()
 }
 
-// globals
+// general
 var currentTime time.Time
-var priorTime time.Time
-var playerSelected player = noPlayer
+var priorTime time.Time = time.Now()
+
+// general debugging
+var paused = false
+var pauseWait time.Duration = 0 * time.Second
+var pauseDelay time.Duration = 300 * time.Millisecond
+var debugOutputWait = 1_000_000 * time.Second
+var debugOutputDelay = 1 * time.Second
+
+// draw debugging
+var drawFluxWait time.Duration = 0 * time.Second
+var drawFluxDelay time.Duration = 300 * time.Millisecond
+var drawFluxKey ebiten.Key = ebiten.KeyF
+var drawUnitHealthWait time.Duration = 0 * time.Millisecond
+var drawUnitHealthDelay time.Duration = 300 * time.Millisecond
+var drawUnitHealthKey ebiten.Key = ebiten.KeyH
+var drawBlueTargetsWait time.Duration = 0 * time.Millisecond
+var drawBlueTargetsDelay time.Duration = 300 * time.Millisecond
+var drawBlueTargetsKey ebiten.Key = ebiten.KeyB
+var drawRedTargetsWait time.Duration = 0 * time.Millisecond
+var drawRedTargetsDelay time.Duration = 300 * time.Millisecond
+var drawRedTargetsKey ebiten.Key = ebiten.KeyR
+var drawDebugGridWait time.Duration = 0 * time.Millisecond
+var drawDebugGridDelay time.Duration = 300 * time.Millisecond
+var drawDebugGridKey ebiten.Key = ebiten.KeyG
+
+// globals
 var produceWait time.Duration = 1_000_000 * time.Second
 var produceDelay time.Duration = 3 * time.Second
-
 var leftMouseClicked = false
 var leftMouseHeld = false
 var priorLeftMouseClicked = false
 var leftMouseReleased = false
 var middleMouseScrollClicked = false
 var rightMouseClicked = false
-
 var initialSelectedX = float32(-1.0)
 var initialSelectedY = float32(-1.0)
 var currentSelectedX = float32(-1.0)
 var currentSelectedY = float32(-1.0)
 
-// debug constants
-var debugOutputWait = 1_000_000 * time.Second
-var debugOutputDelay = 1 * time.Second
-
 func (g *game) Update() error {
-	// set global update defaults
 	currentTime = time.Now()
+
+	pauseWait = pauseWait + currentTime.Sub(priorTime)
+	drawFluxWait = drawFluxWait + currentTime.Sub(priorTime)
+	drawUnitHealthWait = drawUnitHealthWait + currentTime.Sub(priorTime)
+	drawBlueTargetsWait = drawBlueTargetsWait + currentTime.Sub(priorTime)
+	drawRedTargetsWait = drawRedTargetsWait + currentTime.Sub(priorTime)
+	drawDebugGridWait = drawDebugGridWait + currentTime.Sub(priorTime)
+	if drawFluxWait > drawFluxDelay && ebiten.IsKeyPressed(drawFluxKey) {
+		drawFluxes = !drawFluxes
+		drawFluxWait = 0
+	}
+	if drawUnitHealthWait > drawUnitHealthDelay && ebiten.IsKeyPressed(drawUnitHealthKey) {
+		drawUnitHealth = !drawUnitHealth
+		drawUnitHealthWait = 0
+	}
+	if drawBlueTargetsWait > drawBlueTargetsDelay && ebiten.IsKeyPressed(drawBlueTargetsKey) {
+		drawBlueTargets = !drawBlueTargets
+		drawBlueTargetsWait = 0
+	}
+	if drawRedTargetsWait > drawRedTargetsDelay && ebiten.IsKeyPressed(drawRedTargetsKey) {
+		drawRedTargets = !drawRedTargets
+		drawRedTargetsWait = 0
+	}
+	if drawDebugGridWait > drawDebugGridDelay && ebiten.IsKeyPressed(drawDebugGridKey) {
+		drawDebugGrid = !drawDebugGrid
+		drawDebugGridWait = 0
+	}
+	if pauseWait > pauseDelay && ebiten.IsKeyPressed(ebiten.KeyP) {
+		paused = !paused
+		pauseWait = 0
+	} else if paused {
+		priorTime = currentTime
+		return nil
+	}
+
+	// set global update defaults
 	leftMouseReleased = false
 	leftMouseHeld = false
 
@@ -180,15 +238,8 @@ func (g *game) Update() error {
 	var x = float32(graphicalX) / windowMultiplier
 	var y = float32(graphicalY) / windowMultiplier
 	var pixelPos = pixelPosition{int(x), int(y)}
-	var gridPos, _ = splitPixelPosition(pixelPos)
 
 	priorLeftMouseClicked = leftMouseClicked
-	// TODO: Fix player selected. Reuse collision algorithm or is that overkill?
-	if gameState.nodes[gridPos] != nil {
-		playerSelected = gameState.nodes[gridPos].player
-	} else {
-		playerSelected = noPlayer
-	}
 	leftMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
 	middleMouseScrollClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonMiddle)
 	rightMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight)
@@ -275,8 +326,8 @@ func updateComputerTargetNodes(s state) {
 
 func (g *game) Draw(screen *ebiten.Image) {
 	screen.Fill(backgroundColor)
-	drawDebugGrid(screen, debugGridOn)
-	gameState.draw(screen, playerSelected, drawFluxes)
+	drawDebug(screen, drawDebugGrid)
+	gameState.draw(screen, drawBlueTargets, drawRedTargets, drawFluxes)
 
 	if leftMouseHeld {
 		drawUnfilledBoxFloat32(
