@@ -13,6 +13,16 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Determine cost + value of updating slog to be hierarchical vs only adding unit logging:
+  - Ability to enable different sections (unit, state, summary, global path, local path, attack, move, collision, flux, etc)
+  - Are different sample rates possible?
+  - Is it possible to make sections toggable at runtime?
+  - Is it possible to make sampling toggable at runtime?
+  - Hierachial is probably more complex?
+  - Updating unit during state.go execution allows unit debugging while paused?
+  - Can state can only be debugged while game is running? 
+  - unit debugger where I can select unit to log information?
+  - unit debugger can also draw unit target?
 - Determine reach behavior:
   - Current behavior seems strange. I am not sure why.
   - I think reach behavers different for unit attacking node and unit attaking other unit
@@ -26,11 +36,6 @@ Is there a mobile equivalent for war/4x games?
   - splash damage?
   - no health?
   - flight?
-- Add unit debugger where I can hover over unit to log information:
-  - Probably should have a pause button
-  - Better local pathfinding debugging
-  - Better flux debugging
-  - Can draw unit targets as well
 - Create more node setup test scenarios
   - Able to easily reproduce and test precise setups ofr edge case issues
   - Able to randomly generated setups to find hidden edge case issues
