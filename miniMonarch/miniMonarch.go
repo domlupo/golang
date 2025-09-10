@@ -146,6 +146,9 @@ var debugOutputWait = 1_000_000 * time.Second
 var debugOutputDelay = 1 * time.Second
 
 // draw debugging
+var drawAllDebugWait time.Duration = 0 * time.Millisecond
+var drawAllDebugDelay time.Duration = 300 * time.Millisecond
+var drawAllDebugKey ebiten.Key = ebiten.KeyA
 var drawFluxWait time.Duration = 0 * time.Second
 var drawFluxDelay time.Duration = 300 * time.Millisecond
 var drawFluxKey ebiten.Key = ebiten.KeyF
@@ -180,11 +183,25 @@ func (g *game) Update() error {
 	currentTime = time.Now()
 
 	pauseWait = pauseWait + currentTime.Sub(priorTime)
+	drawAllDebugWait = drawAllDebugWait + currentTime.Sub(priorTime)
 	drawFluxWait = drawFluxWait + currentTime.Sub(priorTime)
 	drawUnitHealthWait = drawUnitHealthWait + currentTime.Sub(priorTime)
 	drawBlueTargetsWait = drawBlueTargetsWait + currentTime.Sub(priorTime)
 	drawRedTargetsWait = drawRedTargetsWait + currentTime.Sub(priorTime)
 	drawDebugGridWait = drawDebugGridWait + currentTime.Sub(priorTime)
+	if pauseWait > pauseDelay && ebiten.IsKeyPressed(ebiten.KeyP) {
+		paused = !paused
+		pauseWait = 0
+	}
+	if drawAllDebugWait > drawAllDebugDelay && ebiten.IsKeyPressed(drawAllDebugKey) {
+		var toggle = !(drawFluxes && drawUnitHealth && drawBlueTargets && drawRedTargets && drawDebugGrid)
+		drawFluxes = toggle
+		drawUnitHealth = toggle
+		drawBlueTargets = toggle
+		drawRedTargets = toggle
+		drawDebugGrid = toggle
+		drawAllDebugWait = 0
+	}
 	if drawFluxWait > drawFluxDelay && ebiten.IsKeyPressed(drawFluxKey) {
 		drawFluxes = !drawFluxes
 		drawFluxWait = 0
@@ -204,10 +221,6 @@ func (g *game) Update() error {
 	if drawDebugGridWait > drawDebugGridDelay && ebiten.IsKeyPressed(drawDebugGridKey) {
 		drawDebugGrid = !drawDebugGrid
 		drawDebugGridWait = 0
-	}
-	if pauseWait > pauseDelay && ebiten.IsKeyPressed(ebiten.KeyP) {
-		paused = !paused
-		pauseWait = 0
 	}
 
 	// set global update defaults
