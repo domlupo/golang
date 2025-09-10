@@ -208,9 +208,6 @@ func (g *game) Update() error {
 	if pauseWait > pauseDelay && ebiten.IsKeyPressed(ebiten.KeyP) {
 		paused = !paused
 		pauseWait = 0
-	} else if paused {
-		priorTime = currentTime
-		return nil
 	}
 
 	// set global update defaults
@@ -218,17 +215,19 @@ func (g *game) Update() error {
 	leftMouseHeld = false
 
 	// update game state prior to player actions
-	gameState.refresh()
-	gameState.analyzeTargets()
-	gameState.attackUnits()
-	gameState.attackNodes()
-	gameState.moveUnits()
+	if !paused {
+		gameState.refresh()
+		gameState.analyzeTargets()
+		gameState.attackUnits()
+		gameState.attackNodes()
+		gameState.moveUnits()
 
-	if produceWait < produceDelay {
-		produceWait = produceWait + currentTime.Sub(priorTime)
-	} else {
-		produceWait = 0
-		gameState.produceUnits()
+		if produceWait < produceDelay {
+			produceWait = produceWait + currentTime.Sub(priorTime)
+		} else {
+			produceWait = 0
+			gameState.produceUnits()
+		}
 	}
 
 	// player actions
