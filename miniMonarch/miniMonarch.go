@@ -73,7 +73,7 @@ var drawUnitHealth = false
 var drawBlueTargets = false
 var drawRedTargets = false
 var fluxLineWidth = 2
-var fluxDirectionRadius = 5
+var fluxDirectionRadius = 3
 var fluxColor = highlightColor
 var targetNodeLineWidth = 1
 

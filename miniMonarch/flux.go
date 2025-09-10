@@ -169,7 +169,7 @@ func (f *flux) draw(screen *ebiten.Image, fluxPos gridPosition) {
 		screen,
 		float32(xEnd)*windowMultiplier,
 		float32(yEnd)*windowMultiplier,
-		float32(fluxDirectionRadius),
+		float32(fluxDirectionRadius)*windowMultiplier,
 		fluxColor,
 		false,
 	)
