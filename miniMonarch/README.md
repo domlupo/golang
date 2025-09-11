@@ -15,12 +15,11 @@ Is there a mobile equivalent for war/4x games?
 
 - Polish log type logger
   - Add logs throughout (unit, global path, local path, attack, move, collision, flux, etc)
-  - Are different sample rates possible?
-  - Is it possible to make sampling toggable at runtime?
   - Updating unit during state.go execution allows unit debugging while paused?
   - Can state can only be debugged while game is running? 
   - unit debugger where I can select unit to log information?
   - unit debugger can also draw unit target?
+  - flux debugger where I can selecte a flux square?
 - Determine reach behavior:
   - Current behavior seems strange. I am not sure why.
   - I think reach behavers different for unit attacking node and unit attaking other unit
@@ -77,7 +76,12 @@ Is there a mobile equivalent for war/4x games?
   - check phone controls
   - check resolution
 - local multiplayer:
-  - ?
+  - Initial research shows webRTC is probably better but more complex than websockets
+- Add runtime dynamic log sampling rates
+  - Is this even possible?
+  - Are the benefits worth it?
+- Investigate if logging impacts game performance
+  - Might be able to fix via build tags to compile different code for release build
 
 ---
 
@@ -146,7 +150,7 @@ Is there a mobile equivalent for war/4x games?
   - Reminds me of the military diagrams that show battles over time
   - May be able to utilize the idea of target change units
   - Early fight for position, long term fight for ?
-- Grid is square or hexagonal?
+- Grid is square or hexagonal? A potential issue with hexagonal is more CPU for certain algorithms.
 - top down graphics or iso or 3d?
 - Players get to pick starting positions?
 - Hidden or fully visible grid?
@@ -154,6 +158,7 @@ Is there a mobile equivalent for war/4x games?
 - Campaign mode. Specific battles, war or countries? Similar to cities in mini metro and mini motorway.
 - Tech tree?
 - Special nodes?
+- Should nodes only have a single grid offset (offset = 0 is acceptable) or should offset differ? 
 - Node expansion overtime?
 - Grids expand over time to cities, cities can merge together, merged cities are more powerful?
 - Buildings?
