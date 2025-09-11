@@ -5,12 +5,28 @@ import (
 	"os"
 )
 
+type level int
+type logType int
+
+const (
+	debugLevel = iota
+	infoLevel
+	warnLevel
+	errorLevel
+)
+
+const (
+	noLogType = iota
+	mainLogType
+)
+
 const initialLogLevel = slog.LevelInfo
 const filterTimeAndLevelFromLogs = true
 
 type l struct {
 	*slog.Logger
 	*slog.LevelVar
+	enabledLogTypes map[logType]bool
 }
 
 func newLogger() l {
@@ -29,8 +45,9 @@ func newLogger() l {
 
 	var logger = slog.New(slog.NewJSONHandler(os.Stderr, logOptions))
 	l := l{
-		Logger:   logger,
-		LevelVar: levelVar,
+		Logger:          logger,
+		LevelVar:        levelVar,
+		enabledLogTypes: map[logType]bool{mainLogType: true},
 	}
 
 	return l
@@ -45,5 +62,26 @@ func (logger l) toggleLevel() {
 		logger.Set(slog.LevelDebug)
 	} else if logger.LevelVar.Level() == slog.LevelDebug {
 		logger.Set(slog.LevelError)
+	}
+}
+
+func (logger l) toggleType(logType logType) {
+	logger.enabledLogTypes[logType] = !logger.enabledLogTypes[logType]
+}
+
+func (logger l) log(logType logType, level level, msg string, args ...any) {
+	if !logger.enabledLogTypes[logType] {
+		return
+	}
+
+	switch level {
+	case debugLevel:
+		logger.Debug(msg, args...)
+	case infoLevel:
+		logger.Info(msg, args...)
+	case warnLevel:
+		logger.Warn(msg, args...)
+	case errorLevel:
+		logger.Error(msg, args...)
 	}
 }

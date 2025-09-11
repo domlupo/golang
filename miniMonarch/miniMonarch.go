@@ -130,32 +130,36 @@ var paused = false
 var pauseKey = ebiten.KeyP
 var pauseWait time.Duration = 0 * time.Second
 var pauseDelay time.Duration = 300 * time.Millisecond
+
+// logger debugging
+var loggerLevelToggleKey ebiten.Key = ebiten.KeyL
 var loggerLevelToggleWait time.Duration = 0 * time.Second
 var loggerLevelToggleDelay time.Duration = 300 * time.Millisecond
-var loggerLevelToggleKey ebiten.Key = ebiten.KeyL
-
+var loggerToggleMainLogTypeKey ebiten.Key = ebiten.KeyM
+var loggerToggleMainLogTypeWait time.Duration = 0 * time.Second
+var loggerToggleMainLogTypeDelay time.Duration = 300 * time.Millisecond
 var debugOutputWait = 1_000_000 * time.Second
 var debugOutputDelay = 1 * time.Second
 
 // draw debugging
+var drawAllDebugKey ebiten.Key = ebiten.KeyA
 var drawAllDebugWait time.Duration = 0 * time.Millisecond
 var drawAllDebugDelay time.Duration = 300 * time.Millisecond
-var drawAllDebugKey ebiten.Key = ebiten.KeyA
+var drawFluxKey ebiten.Key = ebiten.KeyF
 var drawFluxWait time.Duration = 0 * time.Second
 var drawFluxDelay time.Duration = 300 * time.Millisecond
-var drawFluxKey ebiten.Key = ebiten.KeyF
+var drawUnitHealthKey ebiten.Key = ebiten.KeyH
 var drawUnitHealthWait time.Duration = 0 * time.Millisecond
 var drawUnitHealthDelay time.Duration = 300 * time.Millisecond
-var drawUnitHealthKey ebiten.Key = ebiten.KeyH
+var drawBlueTargetsKey ebiten.Key = ebiten.KeyB
 var drawBlueTargetsWait time.Duration = 0 * time.Millisecond
 var drawBlueTargetsDelay time.Duration = 300 * time.Millisecond
-var drawBlueTargetsKey ebiten.Key = ebiten.KeyB
+var drawRedTargetsKey ebiten.Key = ebiten.KeyR
 var drawRedTargetsWait time.Duration = 0 * time.Millisecond
 var drawRedTargetsDelay time.Duration = 300 * time.Millisecond
-var drawRedTargetsKey ebiten.Key = ebiten.KeyR
+var drawDebugGridKey ebiten.Key = ebiten.KeyG
 var drawDebugGridWait time.Duration = 0 * time.Millisecond
 var drawDebugGridDelay time.Duration = 300 * time.Millisecond
-var drawDebugGridKey ebiten.Key = ebiten.KeyG
 
 // globals
 var produceWait time.Duration = 1_000_000 * time.Second
@@ -175,21 +179,27 @@ func (g *game) Update() error {
 	currentTime = time.Now()
 
 	pauseWait = pauseWait + currentTime.Sub(priorTime)
+	if pauseWait > pauseDelay && ebiten.IsKeyPressed(pauseKey) {
+		paused = !paused
+		pauseWait = 0
+	}
+	// logger debugging
 	loggerLevelToggleWait = loggerLevelToggleWait + currentTime.Sub(priorTime)
+	loggerToggleMainLogTypeWait = loggerToggleMainLogTypeWait + currentTime.Sub(priorTime)
+	if loggerLevelToggleWait > loggerLevelToggleDelay && ebiten.IsKeyPressed(loggerLevelToggleKey) {
+		logger.toggleLevel()
+		loggerLevelToggleWait = 0
+	}
+	if loggerToggleMainLogTypeWait > loggerToggleMainLogTypeDelay && ebiten.IsKeyPressed(loggerToggleMainLogTypeKey) {
+		logger.toggleType(mainLogType)
+		loggerToggleMainLogTypeWait = 0
+	}
+	// draw debugging
 	drawAllDebugWait = drawAllDebugWait + currentTime.Sub(priorTime)
 	drawFluxWait = drawFluxWait + currentTime.Sub(priorTime)
 	drawUnitHealthWait = drawUnitHealthWait + currentTime.Sub(priorTime)
 	drawBlueTargetsWait = drawBlueTargetsWait + currentTime.Sub(priorTime)
 	drawRedTargetsWait = drawRedTargetsWait + currentTime.Sub(priorTime)
-	drawDebugGridWait = drawDebugGridWait + currentTime.Sub(priorTime)
-	if pauseWait > pauseDelay && ebiten.IsKeyPressed(pauseKey) {
-		paused = !paused
-		pauseWait = 0
-	}
-	if loggerLevelToggleWait > loggerLevelToggleDelay && ebiten.IsKeyPressed(loggerLevelToggleKey) {
-		logger.toggleLevel()
-		loggerLevelToggleWait = 0
-	}
 	if drawAllDebugWait > drawAllDebugDelay && ebiten.IsKeyPressed(drawAllDebugKey) {
 		var toggle = !(drawFluxes && drawUnitHealth && drawBlueTargets && drawRedTargets && drawDebugGrid)
 		drawFluxes = toggle
@@ -262,7 +272,7 @@ func (g *game) Update() error {
 		leftMouseHeld = true
 	}
 	if middleMouseScrollClicked {
-		logger.Info("middle click")
+		logger.log(infoLevel, mainLogType, "middle click")
 	}
 	if rightMouseClicked {
 		gameState.updateTargets(&pixelPos)
@@ -287,7 +297,9 @@ func (g *game) Update() error {
 	if debugOutputWait < debugOutputDelay {
 		debugOutputWait = debugOutputWait + currentTime.Sub(priorTime)
 	} else if outputSummaryLogs {
-		logger.Info(
+		logger.log(
+			infoLevel,
+			mainLogType,
 			"game_state",
 			slog.Int("total_units",
 				len(gameState.units)))
@@ -311,7 +323,8 @@ func (g *game) Update() error {
 			pprof.StopCPUProfile()
 		}
 		if restart {
-			logger.Info("restartGame")
+			logger.log(infoLevel, mainLogType, "restartGame")
+
 			restartGame()
 		} else {
 			return errors.New("regular termination")
@@ -356,12 +369,12 @@ func main() {
 	if runProfiler {
 		f, err := os.Create("cpu.prof")
 		if err != nil {
-			logger.Error("could not create CPU profile")
+			logger.log(errorLevel, mainLogType, "could not create CPU profile")
 		}
 		defer f.Close()
 
 		if err := pprof.StartCPUProfile(f); err != nil {
-			logger.Error("could not start CPU profile")
+			logger.log(errorLevel, mainLogType, "could not start CPU profile")
 		}
 		defer pprof.StopCPUProfile()
 	}

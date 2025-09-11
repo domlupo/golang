@@ -13,12 +13,12 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Determine cost + value of updating slog to be hierarchical vs only adding unit logging:
+- Polish log type logger
+  - Ctrl + f old log functions (Info, Debug, etc) and replace them
+  - Add logs throughout
   - Ability to enable different sections (unit, state, summary, global path, local path, attack, move, collision, flux, etc)
   - Are different sample rates possible?
-  - Is it possible to make sections toggable at runtime?
   - Is it possible to make sampling toggable at runtime?
-  - Hierachial is probably more complex?
   - Updating unit during state.go execution allows unit debugging while paused?
   - Can state can only be debugged while game is running? 
   - unit debugger where I can select unit to log information?
