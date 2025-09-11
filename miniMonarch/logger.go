@@ -17,11 +17,17 @@ const (
 
 const (
 	noLogType = iota
+	loggerLogType
 	mainLogType
+	stateLogType
 )
 
-const initialLogLevel = slog.LevelInfo
+// config
+const initialLogLevel = slog.LevelDebug
 const filterTimeAndLevelFromLogs = true
+const logLoggerLogs = true
+const logMainLogs = true
+const logStateLogs = false
 
 type l struct {
 	*slog.Logger
@@ -47,7 +53,7 @@ func newLogger() l {
 	l := l{
 		Logger:          logger,
 		LevelVar:        levelVar,
-		enabledLogTypes: map[logType]bool{mainLogType: true},
+		enabledLogTypes: map[logType]bool{loggerLogType: logLoggerLogs, mainLogType: logMainLogs, stateLogType: logStateLogs},
 	}
 
 	return l
@@ -56,20 +62,26 @@ func newLogger() l {
 func (logger l) toggleLevel() {
 	if logger.LevelVar.Level() == slog.LevelError {
 		logger.Set(slog.LevelWarn)
+		logger.log(errorLevel, loggerLogType, "logger set to log WARN logs")
 	} else if logger.LevelVar.Level() == slog.LevelWarn {
 		logger.Set(slog.LevelInfo)
+		logger.log(errorLevel, loggerLogType, "logger set to log INFO logs")
 	} else if logger.LevelVar.Level() == slog.LevelInfo {
 		logger.Set(slog.LevelDebug)
+		logger.log(errorLevel, loggerLogType, "logger set to log DEBUG logs")
 	} else if logger.LevelVar.Level() == slog.LevelDebug {
 		logger.Set(slog.LevelError)
+		logger.log(errorLevel, loggerLogType, "logger set to log ERROR logs")
 	}
 }
 
 func (logger l) toggleType(logType logType) {
-	logger.enabledLogTypes[logType] = !logger.enabledLogTypes[logType]
+	enabled := logger.enabledLogTypes[logType]
+	// TODO: Should I WARN log what log type is enabled and disabled?
+	logger.enabledLogTypes[logType] = !enabled
 }
 
-func (logger l) log(logType logType, level level, msg string, args ...any) {
+func (logger l) log(level level, logType logType, msg string, args ...any) {
 	if !logger.enabledLogTypes[logType] {
 		return
 	}

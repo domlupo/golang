@@ -156,7 +156,10 @@ func (s *state) moveUnits() {
 		}
 	}
 
-	logger.Debug("moveUnits",
+	logger.log(
+		debugLevel,
+		stateLogType,
+		"moveUnits",
 		"units moved", unitsMovedCount,
 		"units without target", unitsWithoutTarget,
 		"units at target node", unitsAtTargetNode,
@@ -300,7 +303,10 @@ func (s *state) attackUnits() {
 		}
 	}
 
-	logger.Debug("attackUnits",
+	logger.log(
+		debugLevel,
+		stateLogType,
+		"attackUnits",
 		"units attacked", unitAttackedOtherUnitCount,
 		"units deleted", unitsDeletedCount,
 	)
@@ -337,7 +343,10 @@ func (s *state) attackNodes() {
 		}
 	}
 
-	logger.Debug("attackNodes",
+	logger.log(
+		debugLevel,
+		stateLogType,
+		"attackNodes",
 		"no target node", noTargetNodeCount,
 		"attacked unit this turn", attackedUnitThisTurnCount,
 		"attacked node this turn", attackedNodeThisTurnCount,

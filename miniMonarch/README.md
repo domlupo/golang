@@ -14,9 +14,7 @@ Is there a mobile equivalent for war/4x games?
 ### Next Checkpoints
 
 - Polish log type logger
-  - Ctrl + f old log functions (Info, Debug, etc) and replace them
-  - Add logs throughout
-  - Ability to enable different sections (unit, state, summary, global path, local path, attack, move, collision, flux, etc)
+  - Add logs throughout (unit, global path, local path, attack, move, collision, flux, etc)
   - Are different sample rates possible?
   - Is it possible to make sampling toggable at runtime?
   - Updating unit during state.go execution allows unit debugging while paused?
