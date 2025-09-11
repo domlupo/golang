@@ -18,8 +18,6 @@ var redComputerActive = true
 
 // logging config
 const outputSummaryLogs = true
-const logLevel = slog.LevelInfo
-const filterTimeAndLevelFromLogs = true
 
 // This must only be used for drawing images and windows.
 // Never use for game logic.
@@ -80,7 +78,7 @@ var targetNodeLineWidth = 1
 // offset is needed, width can remain 1.
 // Offset values should only be 0 - 20 (half of grid size without window multipler)
 // Some helpful values are: 0, 0.5, 1, 19, 19.5, 20
-var drawDebugGrid = true
+var drawDebugGrid = false
 var debugGridColor = color.Black
 
 const debugGridOffsetWithoutWindowMultipler = 0
@@ -95,7 +93,7 @@ const restart = true
 
 type game struct{}
 
-var logger *slog.Logger
+var logger l
 var gameState state
 var compOne computer
 var compTwo computer
@@ -119,18 +117,7 @@ func init() {
 		}
 	}
 
-	logOptions := &slog.HandlerOptions{
-		Level: logLevel,
-		ReplaceAttr: func(groups []string, attribute slog.Attr) slog.Attr {
-			if filterTimeAndLevelFromLogs && (attribute.Key == "time" || attribute.Key == "level") {
-				return slog.Attr{}
-			} else {
-				return attribute
-			}
-		},
-	}
-
-	logger = slog.New(slog.NewJSONHandler(os.Stderr, logOptions))
+	logger = newLogger()
 	restartGame()
 }
 
@@ -140,8 +127,13 @@ var priorTime time.Time = time.Now()
 
 // general debugging
 var paused = false
+var pauseKey = ebiten.KeyP
 var pauseWait time.Duration = 0 * time.Second
 var pauseDelay time.Duration = 300 * time.Millisecond
+var loggerLevelToggleWait time.Duration = 0 * time.Second
+var loggerLevelToggleDelay time.Duration = 300 * time.Millisecond
+var loggerLevelToggleKey ebiten.Key = ebiten.KeyL
+
 var debugOutputWait = 1_000_000 * time.Second
 var debugOutputDelay = 1 * time.Second
 
@@ -183,15 +175,20 @@ func (g *game) Update() error {
 	currentTime = time.Now()
 
 	pauseWait = pauseWait + currentTime.Sub(priorTime)
+	loggerLevelToggleWait = loggerLevelToggleWait + currentTime.Sub(priorTime)
 	drawAllDebugWait = drawAllDebugWait + currentTime.Sub(priorTime)
 	drawFluxWait = drawFluxWait + currentTime.Sub(priorTime)
 	drawUnitHealthWait = drawUnitHealthWait + currentTime.Sub(priorTime)
 	drawBlueTargetsWait = drawBlueTargetsWait + currentTime.Sub(priorTime)
 	drawRedTargetsWait = drawRedTargetsWait + currentTime.Sub(priorTime)
 	drawDebugGridWait = drawDebugGridWait + currentTime.Sub(priorTime)
-	if pauseWait > pauseDelay && ebiten.IsKeyPressed(ebiten.KeyP) {
+	if pauseWait > pauseDelay && ebiten.IsKeyPressed(pauseKey) {
 		paused = !paused
 		pauseWait = 0
+	}
+	if loggerLevelToggleWait > loggerLevelToggleDelay && ebiten.IsKeyPressed(loggerLevelToggleKey) {
+		logger.toggleLevel()
+		loggerLevelToggleWait = 0
 	}
 	if drawAllDebugWait > drawAllDebugDelay && ebiten.IsKeyPressed(drawAllDebugKey) {
 		var toggle = !(drawFluxes && drawUnitHealth && drawBlueTargets && drawRedTargets && drawDebugGrid)
