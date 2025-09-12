@@ -209,6 +209,32 @@ func (u *unit) draw(screen *ebiten.Image, unitPos pixelPosition, selected bool) 
 		)
 	}
 
+	if selected && u.currentTarget != noTarget {
+		var xTarget int
+		var yTarget int
+		switch u.currentTarget {
+		case localTarget:
+			xTarget = u.localTarget.x
+			yTarget = u.localTarget.y
+		case globalTarget:
+			xTarget = u.globalTarget.x
+			yTarget = u.globalTarget.y
+		default:
+			panic(fmt.Sprintf("cannot draw unit target: %d", u.currentTarget))
+		}
+
+		vector.StrokeLine(
+			screen,
+			float32(unitPos.x)*windowMultiplier,
+			float32(unitPos.y)*windowMultiplier,
+			float32(xTarget)*windowMultiplier,
+			float32(yTarget)*windowMultiplier,
+			float32(targetNodeLineWidth)*windowMultiplier,
+			highlightColor,
+			false,
+		)
+	}
+
 	if drawUnitHealth && u.health != u.maxHealth {
 		var healthLineLength = (float32(u.health) / float32(u.maxHealth)) * float32(u.radius*2)
 

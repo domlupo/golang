@@ -13,8 +13,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Draw unit target when unit is selected and unit debugging enabled
-  - Better unit debugging
 - Research how to preatty print structs in go in a scaleable manner
   - Keep running into this issue.
   - Will improve logging and debugging iteration
