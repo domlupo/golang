@@ -149,6 +149,10 @@ Is there a mobile equivalent for war/4x games?
 
 ## Game Design Questions
 
+- Should there be a game camera:
+  - No camera can easily be the best option
+  - One option is starcraft / civ where it panes around a larger area
+  - One option is mini metro and mini motorways style that slowly zooms out to the full area?
 - Should the focus of the game be positioning, logistics and decisions rather than micro?
   - It seems interesting whens units get into long term fights
   - Reminds me of the board game go RISK and Catan
