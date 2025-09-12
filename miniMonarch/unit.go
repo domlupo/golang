@@ -209,26 +209,26 @@ func (u *unit) draw(screen *ebiten.Image, unitPos pixelPosition, selected bool) 
 		)
 	}
 
+	//
+	var xTarget *int
+	var yTarget *int
 	if selected && u.currentTarget != noTarget {
-		var xTarget int
-		var yTarget int
-		switch u.currentTarget {
-		case localTarget:
-			xTarget = u.localTarget.x
-			yTarget = u.localTarget.y
-		case globalTarget:
-			xTarget = u.globalTarget.x
-			yTarget = u.globalTarget.y
-		default:
-			panic(fmt.Sprintf("cannot draw unit target: %d", u.currentTarget))
+		if u.currentTarget == localTarget && u.localTarget != nil {
+			xTarget = &u.localTarget.x
+			yTarget = &u.localTarget.y
+		} else if u.currentTarget == globalTarget && u.globalTarget != nil {
+			xTarget = &u.globalTarget.x
+			yTarget = &u.globalTarget.y
 		}
+	}
 
+	if xTarget != nil && yTarget != nil {
 		vector.StrokeLine(
 			screen,
 			float32(unitPos.x)*windowMultiplier,
 			float32(unitPos.y)*windowMultiplier,
-			float32(xTarget)*windowMultiplier,
-			float32(yTarget)*windowMultiplier,
+			float32(*xTarget)*windowMultiplier,
+			float32(*yTarget)*windowMultiplier,
 			float32(targetNodeLineWidth)*windowMultiplier,
 			highlightColor,
 			false,
