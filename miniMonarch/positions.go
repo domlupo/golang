@@ -1,6 +1,5 @@
-package main
-
 // file contains general position utility functions
+package main
 
 type direction int
 

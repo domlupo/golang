@@ -91,12 +91,38 @@ var runProfiler = false
 
 const restart = true
 
+// general
+var currentTime time.Time
+var priorTime time.Time = time.Now()
+
+// general debugging
+var paused = false
+
+// logger debugging
+var debugOutputWait = 1_000_000 * time.Second
+var debugOutputDelay = 1 * time.Second
+
+// globals
+var produceWait time.Duration = 1_000_000 * time.Second
+var produceDelay time.Duration = 3 * time.Second
+var leftMouseClicked = false
+var leftMouseHeld = false
+var priorLeftMouseClicked = false
+var leftMouseReleased = false
+var middleMouseScrollClicked = false
+var rightMouseClicked = false
+var initialSelectedX = float32(-1.0)
+var initialSelectedY = float32(-1.0)
+var currentSelectedX = float32(-1.0)
+var currentSelectedY = float32(-1.0)
+
 type game struct{}
 
 var logger l
 var gameState state
 var compOne computer
 var compTwo computer
+var toggles map[string]*toggle = make(map[string]*toggle)
 
 func restartGame() {
 	// TODO: Need to restart timers, etc
@@ -118,132 +144,34 @@ func init() {
 	}
 
 	logger = newLogger()
-	restartGame()
-}
 
-// general
-var currentTime time.Time
-var priorTime time.Time = time.Now()
-
-// general debugging
-var paused = false
-var pauseKey = ebiten.KeyP
-var pauseWait time.Duration = 0 * time.Second
-var pauseDelay time.Duration = 300 * time.Millisecond
-
-// logger debugging
-var loggerLevelToggleKey ebiten.Key = ebiten.KeyL
-var loggerLevelToggleWait time.Duration = 0 * time.Second
-var loggerLevelToggleDelay time.Duration = 300 * time.Millisecond
-var loggerToggleMainLogTypeKey ebiten.Key = ebiten.KeyM
-var loggerToggleMainLogTypeWait time.Duration = 0 * time.Second
-var loggerToggleMainLogTypeDelay time.Duration = 300 * time.Millisecond
-var loggerToggleStateLogTypeKey ebiten.Key = ebiten.KeyS
-var loggerToggleStateLogTypeWait time.Duration = 0 * time.Second
-var loggerToggleStateLogTypeDelay time.Duration = 300 * time.Millisecond
-var loggerToggleSelectedUnitLogTypeKey ebiten.Key = ebiten.KeyU
-var loggerToggleSelectedUnitLogTypeWait time.Duration = 0 * time.Second
-var loggerToggleSelectedUnitLogTypeDelay time.Duration = 300 * time.Millisecond
-var debugOutputWait = 1_000_000 * time.Second
-var debugOutputDelay = 1 * time.Second
-
-// draw debugging
-var drawAllDebugKey ebiten.Key = ebiten.KeyA
-var drawAllDebugWait time.Duration = 0 * time.Millisecond
-var drawAllDebugDelay time.Duration = 300 * time.Millisecond
-var drawFluxKey ebiten.Key = ebiten.KeyF
-var drawFluxWait time.Duration = 0 * time.Second
-var drawFluxDelay time.Duration = 300 * time.Millisecond
-var drawUnitHealthKey ebiten.Key = ebiten.KeyH
-var drawUnitHealthWait time.Duration = 0 * time.Millisecond
-var drawUnitHealthDelay time.Duration = 300 * time.Millisecond
-var drawBlueTargetsKey ebiten.Key = ebiten.KeyB
-var drawBlueTargetsWait time.Duration = 0 * time.Millisecond
-var drawBlueTargetsDelay time.Duration = 300 * time.Millisecond
-var drawRedTargetsKey ebiten.Key = ebiten.KeyR
-var drawRedTargetsWait time.Duration = 0 * time.Millisecond
-var drawRedTargetsDelay time.Duration = 300 * time.Millisecond
-var drawDebugGridKey ebiten.Key = ebiten.KeyG
-var drawDebugGridWait time.Duration = 0 * time.Millisecond
-var drawDebugGridDelay time.Duration = 300 * time.Millisecond
-
-// globals
-var produceWait time.Duration = 1_000_000 * time.Second
-var produceDelay time.Duration = 3 * time.Second
-var leftMouseClicked = false
-var leftMouseHeld = false
-var priorLeftMouseClicked = false
-var leftMouseReleased = false
-var middleMouseScrollClicked = false
-var rightMouseClicked = false
-var initialSelectedX = float32(-1.0)
-var initialSelectedY = float32(-1.0)
-var currentSelectedX = float32(-1.0)
-var currentSelectedY = float32(-1.0)
-
-func (g *game) Update() error {
-	currentTime = time.Now()
-
-	pauseWait = pauseWait + currentTime.Sub(priorTime)
-	if pauseWait > pauseDelay && ebiten.IsKeyPressed(pauseKey) {
-		paused = !paused
-		pauseWait = 0
-	}
-	// logger debugging
-	loggerLevelToggleWait = loggerLevelToggleWait + currentTime.Sub(priorTime)
-	loggerToggleMainLogTypeWait = loggerToggleMainLogTypeWait + currentTime.Sub(priorTime)
-	loggerToggleStateLogTypeWait = loggerToggleStateLogTypeWait + currentTime.Sub(priorTime)
-	loggerToggleSelectedUnitLogTypeWait = loggerToggleSelectedUnitLogTypeWait + currentTime.Sub(priorTime)
-	if loggerLevelToggleWait > loggerLevelToggleDelay && ebiten.IsKeyPressed(loggerLevelToggleKey) {
-		logger.toggleLevel()
-		loggerLevelToggleWait = 0
-	}
-	if loggerToggleMainLogTypeWait > loggerToggleMainLogTypeDelay && ebiten.IsKeyPressed(loggerToggleMainLogTypeKey) {
-		logger.toggleType(mainLogType)
-		loggerToggleMainLogTypeWait = 0
-	}
-	if loggerToggleStateLogTypeWait > loggerToggleStateLogTypeDelay && ebiten.IsKeyPressed(loggerToggleStateLogTypeKey) {
-		logger.toggleType(stateLogType)
-		loggerToggleStateLogTypeWait = 0
-	}
-	if loggerToggleSelectedUnitLogTypeWait > loggerToggleSelectedUnitLogTypeDelay && ebiten.IsKeyPressed(loggerToggleSelectedUnitLogTypeKey) {
-		logger.toggleType(selectedUnitLogType)
-		loggerToggleSelectedUnitLogTypeWait = 0
-	}
-	// draw debugging
-	drawAllDebugWait = drawAllDebugWait + currentTime.Sub(priorTime)
-	drawFluxWait = drawFluxWait + currentTime.Sub(priorTime)
-	drawUnitHealthWait = drawUnitHealthWait + currentTime.Sub(priorTime)
-	drawBlueTargetsWait = drawBlueTargetsWait + currentTime.Sub(priorTime)
-	drawRedTargetsWait = drawRedTargetsWait + currentTime.Sub(priorTime)
-	if drawAllDebugWait > drawAllDebugDelay && ebiten.IsKeyPressed(drawAllDebugKey) {
+	toggles["pause"] = newToggle(ebiten.KeyP, func() { paused = !paused })
+	toggles["logLevel"] = newToggle(ebiten.KeyL, func() { logger.toggleLevel() })
+	toggles["mainLogType"] = newToggle(ebiten.KeyM, func() { logger.toggleType(mainLogType) })
+	toggles["stateLogType"] = newToggle(ebiten.KeyS, func() { logger.toggleType(stateLogType) })
+	toggles["selectedUnitLogType"] = newToggle(ebiten.KeyU, func() { logger.toggleType(selectedUnitLogType) })
+	toggles["drawAll"] = newToggle(ebiten.KeyA, func() {
 		var toggle = !(drawFluxes && drawUnitHealth && drawBlueTargets && drawRedTargets && drawDebugGrid)
 		drawFluxes = toggle
 		drawUnitHealth = toggle
 		drawBlueTargets = toggle
 		drawRedTargets = toggle
 		drawDebugGrid = toggle
-		drawAllDebugWait = 0
-	}
-	if drawFluxWait > drawFluxDelay && ebiten.IsKeyPressed(drawFluxKey) {
-		drawFluxes = !drawFluxes
-		drawFluxWait = 0
-	}
-	if drawUnitHealthWait > drawUnitHealthDelay && ebiten.IsKeyPressed(drawUnitHealthKey) {
-		drawUnitHealth = !drawUnitHealth
-		drawUnitHealthWait = 0
-	}
-	if drawBlueTargetsWait > drawBlueTargetsDelay && ebiten.IsKeyPressed(drawBlueTargetsKey) {
-		drawBlueTargets = !drawBlueTargets
-		drawBlueTargetsWait = 0
-	}
-	if drawRedTargetsWait > drawRedTargetsDelay && ebiten.IsKeyPressed(drawRedTargetsKey) {
-		drawRedTargets = !drawRedTargets
-		drawRedTargetsWait = 0
-	}
-	if drawDebugGridWait > drawDebugGridDelay && ebiten.IsKeyPressed(drawDebugGridKey) {
-		drawDebugGrid = !drawDebugGrid
-		drawDebugGridWait = 0
+	})
+	toggles["drawFlux"] = newToggle(ebiten.KeyF, func() { drawFluxes = !drawFluxes })
+	toggles["drawUnitHealth"] = newToggle(ebiten.KeyH, func() { drawUnitHealth = !drawUnitHealth })
+	toggles["drawBlueTargets"] = newToggle(ebiten.KeyB, func() { drawBlueTargets = !drawBlueTargets })
+	toggles["drawRedTargets"] = newToggle(ebiten.KeyR, func() { drawRedTargets = !drawRedTargets })
+	toggles["drawDebugGrid"] = newToggle(ebiten.KeyG, func() { drawDebugGrid = !drawDebugGrid })
+
+	restartGame()
+}
+
+func (g *game) Update() error {
+	currentTime = time.Now()
+
+	for _, toggle := range toggles {
+		toggle.checkToggle(currentTime)
 	}
 
 	// set global update defaults
