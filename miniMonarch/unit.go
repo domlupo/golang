@@ -119,7 +119,7 @@ func (u *unit) getNewPos(currentPos pixelPosition) pixelPosition {
 		logger.logSelected(u.selected, infoLevel, selectedUnitLogType, fmt.Sprintf("unit:getNewPos:desiredPos: %+v", desiredPos))
 		return desiredPos
 	}
-	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, fmt.Sprintf("unit:getNewPos:targetPos: {%d, %d}", x1, y1))
+	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, fmt.Sprintf("unit:getNewPos:targetPos: {x:%d y:%d}", x1, y1))
 
 	var sx int
 	var sy int
@@ -209,7 +209,6 @@ func (u *unit) draw(screen *ebiten.Image, unitPos pixelPosition, selected bool) 
 		)
 	}
 
-	//
 	var xTarget *int
 	var yTarget *int
 	if selected && u.currentTarget != noTarget {
