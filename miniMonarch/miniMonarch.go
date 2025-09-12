@@ -1,3 +1,4 @@
+// main entry for high level game logic
 package main
 
 import (

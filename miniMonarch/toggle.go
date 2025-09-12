@@ -1,4 +1,4 @@
-// file contains a struct which performs a respective action for a key press
+// A struct which performs a respective action for a key press
 package main
 
 import (

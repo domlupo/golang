@@ -1,3 +1,4 @@
+// A project specific concept for forces which contriubute to local pathfinding
 package main
 
 import (

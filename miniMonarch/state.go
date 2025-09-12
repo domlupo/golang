@@ -1,3 +1,4 @@
+// Currently contains most game state and game logic. May need to split in future.
 package main
 
 import (

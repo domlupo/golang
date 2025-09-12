@@ -1,3 +1,4 @@
+// A game component which spawns units and captured by opposing units
 package main
 
 import (

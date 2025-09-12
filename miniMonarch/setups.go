@@ -1,6 +1,5 @@
+// hard coded test setups which help manual testing
 package main
-
-// file contains different setups
 
 type setup int
 

@@ -1,3 +1,4 @@
+// A game component which moves and attacks other game components
 package main
 
 import (

@@ -1,3 +1,4 @@
+// basic drawing utility functions
 package main
 
 import (
@@ -6,8 +7,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
-
-// file contains general drawing utiliy functions
 
 func drawUnfilledBoxFloat32(screen *ebiten.Image, color color.Color, initialX float32, initialY float32, finalX float32, finalY float32) {
 	var initialXGraphical = float32(initialX) * windowMultiplier

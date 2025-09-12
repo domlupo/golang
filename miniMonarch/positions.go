@@ -1,4 +1,4 @@
-// file contains general position utility functions
+// general position utility functions
 package main
 
 type direction int

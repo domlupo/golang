@@ -1,3 +1,4 @@
+// logger wrapper which adds runtime dynamic log level and log types (specific game logic e.g. state)
 package main
 
 import (
