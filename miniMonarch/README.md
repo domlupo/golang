@@ -13,13 +13,14 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Polish log type logger
-  - Add logs throughout (unit, global path, local path, attack, move, collision, flux, etc)
-  - Updating unit during state.go execution allows unit debugging while paused?
-  - Can state can only be debugged while game is running? 
-  - unit debugger where I can select unit to log information?
-  - unit debugger can also draw unit target?
-  - flux debugger where I can selecte a flux square?
+- Draw unit target when unit is selected and unit debugging enabled
+  - Better unit debugging
+- Refactor toggle controls
+  - It is messy and verbose
+- Research how to preatty print structs in go in a scaleable manner
+  - Keep running into this issue.
+  - Will improve logging and debugging iteration
+  - Preatty print selected unit logs
 - Determine reach behavior:
   - Current behavior seems strange. I am not sure why.
   - I think reach behavers different for unit attacking node and unit attaking other unit
@@ -33,6 +34,9 @@ Is there a mobile equivalent for war/4x games?
   - splash damage?
   - no health?
   - flight?
+- Improve flux debugging
+  - Add flux square selection
+  - Add selected flux logging for detailed tracing
 - Create more node setup test scenarios
   - Able to easily reproduce and test precise setups ofr edge case issues
   - Able to randomly generated setups to find hidden edge case issues
@@ -77,9 +81,10 @@ Is there a mobile equivalent for war/4x games?
   - check resolution
 - local multiplayer:
   - Initial research shows webRTC is probably better but more complex than websockets
-- Add runtime dynamic log sampling rates
-  - Is this even possible?
-  - Are the benefits worth it?
+- Polish logger
+  - Add logs throughout (global path, local path, attack, move, collision, etc)
+  - Add runtime dynamic log sampling rates. Is this even possible? Are the benefits worth it?
+  - Paused debugging? e.g. Updating unit during state.go execution can log state at game level.
 - Investigate if logging impacts game performance
   - Might be able to fix via build tags to compile different code for release build
 

@@ -20,6 +20,7 @@ const (
 	loggerLogType
 	mainLogType
 	stateLogType
+	selectedUnitLogType
 )
 
 // config
@@ -28,6 +29,7 @@ const filterTimeAndLevelFromLogs = true
 const logLoggerLogs = true
 const logMainLogs = true
 const logStateLogs = false
+const logSelectedUnitLogs = true
 
 type l struct {
 	*slog.Logger
@@ -51,9 +53,13 @@ func newLogger() l {
 
 	var logger = slog.New(slog.NewJSONHandler(os.Stderr, logOptions))
 	l := l{
-		Logger:          logger,
-		LevelVar:        levelVar,
-		enabledLogTypes: map[logType]bool{loggerLogType: logLoggerLogs, mainLogType: logMainLogs, stateLogType: logStateLogs},
+		Logger:   logger,
+		LevelVar: levelVar,
+		enabledLogTypes: map[logType]bool{
+			loggerLogType:       logLoggerLogs,
+			mainLogType:         logMainLogs,
+			stateLogType:        logStateLogs,
+			selectedUnitLogType: logSelectedUnitLogs},
 	}
 
 	return l
@@ -79,6 +85,12 @@ func (logger l) toggleType(logType logType) {
 	enabled := logger.enabledLogTypes[logType]
 	// TODO: Should I WARN log what log type is enabled and disabled?
 	logger.enabledLogTypes[logType] = !enabled
+}
+
+func (logger l) logSelected(selected bool, level level, logType logType, msg string, args ...any) {
+	if selected {
+		logger.log(level, logType, msg, args...)
+	}
 }
 
 func (logger l) log(level level, logType logType, msg string, args ...any) {

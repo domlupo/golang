@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 
 	"github.com/gofrs/uuid/v5"
@@ -73,6 +74,8 @@ func newUnit(p player, globalTarget *pixelPosition, config unitConfig) unit {
 }
 
 func (u *unit) refresh() {
+	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, fmt.Sprintf("unit:refresh:before: %+v\n", u))
+
 	if !u.attackedLastTurn && !u.movedLastTurn {
 		u.fluxTurnCount += 1
 	} else {
@@ -85,9 +88,13 @@ func (u *unit) refresh() {
 	u.attackedThisTurn = false
 	u.localTarget = nil
 	u.canReachTargetNode = nil
+
+	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, fmt.Sprintf("unit:refresh:after: %+v", u))
 }
 
 func (u *unit) getNewPos(currentPos pixelPosition) pixelPosition {
+	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, fmt.Sprintf("unit:getNewPos:currentPos %+v", u))
+
 	// Bresenham's line algorithm https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 	// Specifically, the integer incremental error form where error is stored over mulitple moves
 	var x0 = currentPos.x
@@ -98,14 +105,20 @@ func (u *unit) getNewPos(currentPos pixelPosition) pixelPosition {
 		u.updateTarget(localTarget)
 		x1 = u.localTarget.x
 		y1 = u.localTarget.y
+		logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "unit:getNewPos:localTarget")
 	} else if u.globalTarget != nil {
 		u.updateTarget(globalTarget)
 		x1 = u.globalTarget.x
 		y1 = u.globalTarget.y
+		logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "unit:getNewPos:globalTarget")
 	} else {
 		u.updateTarget(noTarget)
-		return currentPos
+		logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "unit:getNewPos:noTarget")
+		var desiredPos = currentPos
+		logger.logSelected(u.selected, infoLevel, selectedUnitLogType, fmt.Sprintf("unit:getNewPos:desiredPos: %+v", desiredPos))
+		return desiredPos
 	}
+	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, fmt.Sprintf("unit:getNewPos:targetPos: {%d, %d}", x1, y1))
 
 	var sx int
 	var sy int
@@ -143,7 +156,9 @@ func (u *unit) getNewPos(currentPos pixelPosition) pixelPosition {
 		y0 += sy
 	}
 
-	return pixelPosition{x0, y0}
+	var desiredPos = pixelPosition{x0, y0}
+	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, fmt.Sprintf("unit:getNewPos:desiredPos %+v", desiredPos))
+	return desiredPos
 }
 
 func (u *unit) updateTarget(target unitTarget) bool {

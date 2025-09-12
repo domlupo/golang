@@ -141,6 +141,9 @@ var loggerToggleMainLogTypeDelay time.Duration = 300 * time.Millisecond
 var loggerToggleStateLogTypeKey ebiten.Key = ebiten.KeyS
 var loggerToggleStateLogTypeWait time.Duration = 0 * time.Second
 var loggerToggleStateLogTypeDelay time.Duration = 300 * time.Millisecond
+var loggerToggleSelectedUnitLogTypeKey ebiten.Key = ebiten.KeyU
+var loggerToggleSelectedUnitLogTypeWait time.Duration = 0 * time.Second
+var loggerToggleSelectedUnitLogTypeDelay time.Duration = 300 * time.Millisecond
 var debugOutputWait = 1_000_000 * time.Second
 var debugOutputDelay = 1 * time.Second
 
@@ -190,6 +193,7 @@ func (g *game) Update() error {
 	loggerLevelToggleWait = loggerLevelToggleWait + currentTime.Sub(priorTime)
 	loggerToggleMainLogTypeWait = loggerToggleMainLogTypeWait + currentTime.Sub(priorTime)
 	loggerToggleStateLogTypeWait = loggerToggleStateLogTypeWait + currentTime.Sub(priorTime)
+	loggerToggleSelectedUnitLogTypeWait = loggerToggleSelectedUnitLogTypeWait + currentTime.Sub(priorTime)
 	if loggerLevelToggleWait > loggerLevelToggleDelay && ebiten.IsKeyPressed(loggerLevelToggleKey) {
 		logger.toggleLevel()
 		loggerLevelToggleWait = 0
@@ -201,6 +205,10 @@ func (g *game) Update() error {
 	if loggerToggleStateLogTypeWait > loggerToggleStateLogTypeDelay && ebiten.IsKeyPressed(loggerToggleStateLogTypeKey) {
 		logger.toggleType(stateLogType)
 		loggerToggleStateLogTypeWait = 0
+	}
+	if loggerToggleSelectedUnitLogTypeWait > loggerToggleSelectedUnitLogTypeDelay && ebiten.IsKeyPressed(loggerToggleSelectedUnitLogTypeKey) {
+		logger.toggleType(selectedUnitLogType)
+		loggerToggleSelectedUnitLogTypeWait = 0
 	}
 	// draw debugging
 	drawAllDebugWait = drawAllDebugWait + currentTime.Sub(priorTime)
