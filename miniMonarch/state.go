@@ -11,14 +11,14 @@ import (
 type state struct {
 	nodes  map[gridPosition]*node
 	fluxes map[gridPosition]*flux
-	units  map[pixelPosition]*unit
+	units  map[position]*unit
 }
 
 func newState() *state {
 	s := state{
 		nodes:  make(map[gridPosition]*node),
 		fluxes: make(map[gridPosition]*flux),
-		units:  make(map[pixelPosition]*unit),
+		units:  make(map[position]*unit),
 	}
 
 	for i := range windowWidth / gridSize {
@@ -45,7 +45,7 @@ func (s *state) refresh() {
 		unit.refresh()
 
 		if !unit.movedLastTurn {
-			var gridPos, _ = splitPixelPosition(unitPos)
+			var gridPos, _ = splitPixelPosition(unitPos.pixelPosition)
 			s.fluxes[gridPos].staticUnits++
 		}
 	}
@@ -59,6 +59,10 @@ func (s *state) refresh() {
 
 func (s *state) analyzeTargets() {
 	for unitPos1, unit1 := range s.units {
+		if unit1.staticTarget {
+			continue
+		}
+
 		var reachesNode, isTargetNode = s.collidesWithNode(
 			unitPos1,
 			*unit1,
@@ -68,12 +72,17 @@ func (s *state) analyzeTargets() {
 			unit1.canReachTargetNode = reachesNode
 		}
 
-		// check if unit 1 can see unit 2
 		var shortestDistance = math.MaxInt16
-		var closestUnitPos *pixelPosition
+		var closestUnitPos *position
 		for unitPos2, unit2 := range s.units {
 			if unit1.player == unit2.player {
 				// unit cannot see itself or comrades
+				continue
+			}
+
+			if !unit1.attacksGround && unitPos2.layer == ground ||
+				!unit1.attacksLowAltitude && unitPos2.layer == lowAltitude ||
+				!unit1.attacksHighAltitude && unitPos2.layer == highAltitude {
 				continue
 			}
 
@@ -106,11 +115,13 @@ func (s *state) moveUnits() {
 			continue
 		}
 
-		var newPos pixelPosition
-		if unit.fluxTurnCount > unitFluxCountLimit {
-			var gridPos, _ = splitPixelPosition(unitPos)
+		var newPos position
+		if unitPos.layer == lowAltitude || unitPos.layer == highAltitude {
+			newPos = unit.getNewPos(unitPos)
+		} else if unit.fluxTurnCount > unitFluxCountLimit {
+			var gridPos, _ = splitPixelPosition(unitPos.pixelPosition)
 			var fluxDelta = s.fluxes[gridPos].getFluxDelta()
-			newPos = pixelPosition{unitPos.x + fluxDelta.x, unitPos.y + fluxDelta.y}
+			newPos = position{unitPos.layer, pixelPosition{unitPos.x + fluxDelta.x, unitPos.y + fluxDelta.y}}
 			unit.fluxTurnCount = 0
 		} else {
 			newPos = unit.getNewPos(unitPos)
@@ -144,6 +155,10 @@ func (s *state) moveUnits() {
 			unitsBorderCollideCount++
 		} else if collidesWithUnit {
 			unitsCollideCount++
+			if unitPos.layer == lowAltitude || unitPos.layer == highAltitude {
+				unit.health = 0
+				s.units[unitPos] = s.units[position{unitPos.layer, pixelPosition{unitPos.x, unitPos.y}}]
+			}
 		} else if collidesWithNode != nil {
 			if isTargetNode {
 				unitsAtTargetNode++
@@ -151,15 +166,15 @@ func (s *state) moveUnits() {
 				// TODO: determine behavior. Prob don't want units to pass thru enemy nodes
 				unitsAtNonTargetNode++
 				unitsMovedCount++
-				s.units[newPos] = s.units[pixelPosition{unitPos.x, unitPos.y}]
+				s.units[newPos] = s.units[position{unitPos.layer, pixelPosition{unitPos.x, unitPos.y}}]
 				s.units[newPos].completeMove()
-				delete(s.units, pixelPosition{unitPos.x, unitPos.y})
+				delete(s.units, position{unitPos.layer, pixelPosition{unitPos.x, unitPos.y}})
 			}
 		} else {
 			unitsMovedCount++
-			s.units[newPos] = s.units[pixelPosition{unitPos.x, unitPos.y}]
+			s.units[newPos] = s.units[position{unitPos.layer, pixelPosition{unitPos.x, unitPos.y}}]
 			s.units[newPos].completeMove()
-			delete(s.units, pixelPosition{unitPos.x, unitPos.y})
+			delete(s.units, position{unitPos.layer, pixelPosition{unitPos.x, unitPos.y}})
 		}
 	}
 
@@ -177,7 +192,11 @@ func (s *state) moveUnits() {
 }
 
 // TODO: This does not handle a unit colliding with multiple nodes which will probably occur in the future.
-func (s *state) collidesWithNode(newPos pixelPosition, unit unit, unitCollisionRadius int, nodes map[gridPosition]*node) (*node, bool) {
+func (s *state) collidesWithNode(newPos position, unit unit, unitCollisionRadius int, nodes map[gridPosition]*node) (*node, bool) {
+	if newPos.layer == lowAltitude || newPos.layer == highAltitude {
+		return nil, false
+	}
+
 	var collidesWithTargetNode = false
 	var x1 = newPos.x
 	var y1 = newPos.y
@@ -221,14 +240,42 @@ func (s *state) collidesWithNode(newPos pixelPosition, unit unit, unitCollisionR
 	return nil, collidesWithTargetNode
 }
 
-func (s *state) collidesWithUnit(newPos pixelPosition, unit unit, units map[pixelPosition]*unit) bool {
-	var x1 = newPos.x + unit.radius
-	var y1 = newPos.y + unit.radius
+func (s *state) detonateMissile(pos position, blastRadius int, units map[position]*unit) {
+	var x1 = pos.x
+	var y1 = pos.y
+	var r1 = blastRadius
+
+	for otherPos, otherUnit := range units {
+		if otherPos.layer != ground {
+			continue
+		}
+
+		var x2 = otherPos.x + otherUnit.radius
+		var y2 = otherPos.y + otherUnit.radius
+		var r2 = otherUnit.radius
+
+		var xDelta = x2 - x1
+		var yDelta = y2 - y1
+		var rSum = r1 + r2
+		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
+			otherUnit.health = 0
+			s.units[otherPos] = otherUnit
+		}
+	}
+}
+
+func (s *state) collidesWithUnit(pos position, unit unit, units map[position]*unit) bool {
+	var x1 = pos.x + unit.radius
+	var y1 = pos.y + unit.radius
 	var r1 = unit.radius
 
 	for otherPos, otherUnit := range units {
 		if unit.id == otherUnit.id {
 			// unit cannot collide with itself
+			continue
+		}
+
+		if pos.layer != otherPos.layer {
 			continue
 		}
 
@@ -247,12 +294,27 @@ func (s *state) collidesWithUnit(newPos pixelPosition, unit unit, units map[pixe
 	return false
 }
 
+func (s *state) attackPositions() {
+	for unitPos, unit := range s.units {
+		if !unit.attacksPosition {
+			continue
+		}
+
+		if unit.attacksPosition && unit.atTerminalPosition {
+			unit.health = 0
+			s.units[unitPos] = unit
+			s.detonateMissile(unitPos, missileBlastRadius, s.units)
+		}
+
+	}
+}
+
 func (s *state) attackUnits() {
 	var unitsDeletedCount = 0
 	var unitAttackedOtherUnitCount = 0
 
 	for unitPos1, unit1 := range s.units {
-		// TODO: This may be wrong behavior but I am not sure if the issue is occurrin
+		// TODO: This may be wrong behavior but I am not sure if the issue is occurring
 		// e.g. the target was killed by another unit this unit should probably find a potential new target.
 		// Then attack that rather than not attack for a turn
 		if unit1.localTarget == nil {
@@ -286,10 +348,10 @@ func (s *state) attackUnits() {
 		}
 	}
 
-	for attackedUnitPos, attackedUnit := range s.units {
-		if attackedUnit.health <= 0 {
+	for unitPos, unit := range s.units {
+		if unit.health <= 0 {
 			unitsDeletedCount++
-			delete(s.units, attackedUnitPos)
+			delete(s.units, unitPos)
 		}
 	}
 
@@ -391,7 +453,7 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 
 }
 
-func (s *state) updateTargets(target *pixelPosition) {
+func (s *state) updateTargets(target *position) {
 	for nodeGridPos, node := range s.nodes {
 		if node.player == neutralPlayer {
 			continue
@@ -427,7 +489,7 @@ func (s *state) produceUnits() {
 		}
 
 		// TODO: determine how to produce units during collision
-		var unitPos = getPixelPosition(nodePos, innerGridPosition{0, 0})
+		var unitPos = position{n.unitConfig.produceLayer, getPixelPosition(nodePos, innerGridPosition{0, 0})}
 		if !s.collidesWithUnit(unitPos, newUnit(n.player, n.target, n.unitConfig), s.units) {
 			var newUnit = newUnit(n.player, n.target, n.unitConfig)
 			s.units[unitPos] = &newUnit
@@ -443,7 +505,19 @@ func (s *state) draw(screen *ebiten.Image, drawBlueTargets bool, drawRedTargets,
 		node.drawTargets(screen, nodePos, drawBlueTargets, drawRedTargets)
 	}
 	for unitPos, unit := range s.units {
-		unit.draw(screen, unitPos, unit.selected)
+		if unitPos.layer == highAltitude {
+			unit.draw(screen, unitPos, unit.selected)
+		}
+	}
+	for unitPos, unit := range s.units {
+		if unitPos.layer == lowAltitude {
+			unit.draw(screen, unitPos, unit.selected)
+		}
+	}
+	for unitPos, unit := range s.units {
+		if unitPos.layer == ground {
+			unit.draw(screen, unitPos, unit.selected)
+		}
 	}
 	if drawFluxes {
 		for fluxPos, flux := range s.fluxes {

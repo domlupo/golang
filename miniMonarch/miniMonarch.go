@@ -35,21 +35,50 @@ var fluxMagnitude = 5
 var unitFluxCountLimit = 10
 var nodeRadius = gridSize / 2
 var initialNodeHealth = 100
+var missileBlastRadius = 100
 
 // Note: unit radius set to an odd number is better for testing due to division bugs
 var infantryConfig = unitConfig{
-	radius:    5,
-	maxHealth: 100,
-	attack:    1,
-	vision:    30,
-	reach:     6,
+	name:                infantry,
+	radius:              5,
+	maxHealth:           1000,
+	attack:              1,
+	vision:              30,
+	reach:               6,
+	produceLayer:        ground,
+	staticTarget:        false,
+	attacksGround:       true,
+	attacksLowAltitude:  false,
+	attacksHighAltitude: false,
+	attacksPosition:     false,
 }
 var sniperConfig = unitConfig{
-	radius:    7,
-	maxHealth: 5,
-	attack:    1,
-	vision:    100,
-	reach:     100,
+	name:                sniper,
+	radius:              7,
+	maxHealth:           5,
+	attack:              1,
+	vision:              100,
+	reach:               100,
+	produceLayer:        ground,
+	staticTarget:        false,
+	attacksGround:       true,
+	attacksLowAltitude:  false,
+	attacksHighAltitude: false,
+	attacksPosition:     false,
+}
+var missileConfig = unitConfig{
+	name:                missile,
+	radius:              10,
+	maxHealth:           100,
+	attack:              1,
+	vision:              100,
+	reach:               1,
+	produceLayer:        lowAltitude,
+	staticTarget:        true,
+	attacksGround:       false,
+	attacksLowAltitude:  true,
+	attacksHighAltitude: true,
+	attacksPosition:     true,
 }
 
 // game graphic config
@@ -128,7 +157,7 @@ func restartGame() {
 	gameState = *newState()
 	compOne = *newComputer(bluePlayer)
 	compTwo = *newComputer(redPlayer)
-	setupState(gameState, complex)
+	setupState(gameState, complexMissile)
 	updateComputerTargetNodes(gameState)
 }
 
@@ -187,6 +216,7 @@ func (g *game) Update() error {
 
 		gameState.refresh()
 		gameState.analyzeTargets()
+		gameState.attackPositions()
 		gameState.attackUnits()
 		gameState.attackNodes()
 		gameState.moveUnits()
@@ -224,7 +254,8 @@ func (g *game) Update() error {
 		logger.log(infoLevel, mainLogType, "middle click")
 	}
 	if rightMouseClicked {
-		gameState.updateTargets(&pixelPos)
+		// TODO: Determine behavior. Should player choose which layer they target or handle it via game logic?
+		gameState.updateTargets(&position{ground, pixelPos})
 	}
 
 	// update game state after player actions
@@ -242,7 +273,28 @@ func (g *game) Update() error {
 		updateComputerTargetNodes(gameState)
 	}
 
+	var infantryCount = 0
+	var sniperCount = 0
+	var missileCount = 0
+	var unknownCount = 0
+	for _, u := range gameState.units {
+		switch u.name {
+		case infantry:
+			infantryCount++
+		case sniper:
+			sniperCount++
+		case missile:
+			missileCount++
+		default:
+			unknownCount++
+		}
+
+	}
 	logger.log(infoLevel, mainLogType, "game_state", slog.Int("total_units", len(gameState.units)))
+	logger.log(infoLevel, mainLogType, "game_state", slog.Int("infantryCount", infantryCount))
+	logger.log(infoLevel, mainLogType, "game_state", slog.Int("sniperCount", sniperCount))
+	logger.log(infoLevel, mainLogType, "game_state", slog.Int("missileCount", missileCount))
+	logger.log(infoLevel, mainLogType, "game_state", slog.Int("unknownCount", unknownCount))
 
 	var blueNodeCount = 0
 	var redNodeCount = 0

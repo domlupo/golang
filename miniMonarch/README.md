@@ -13,11 +13,12 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Add missle:
-  - first node unit
-  - splash damage?
-  - no health?
-  - flight?
+- Polish UI
+  - Currently it is very hard to fight computer due to clunky UI
+  - Better missile UI so blast radius is visible 
+  - Easier way to select all nodes of same type with double click
+  - Better automated targetting from units. e.g. units don't auto target nodes when they should.
+  - 4 way selection rather than only top left to bottom right
 - Improve flux debugging
   - Add flux square selection
   - Add selected flux logging for detailed tracing
@@ -27,6 +28,8 @@ Is there a mobile equivalent for war/4x games?
 - Improve computer
   - Update computer to be beatable by humans
   - Should computer units prioritize nodes or units?
+  - Investigate, there may be a bug where when a node is captured by a computer player, unit targets incorrectly become node
+    when a local target is already acquired.
 - Analyze and iterate on game design and game loop:
   - Check design feasability 
   - Improve game
@@ -36,7 +39,20 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Future Checkpoints
-
+- Determine if a node should be a type of unit rather than a separate struct
+  - I am leaning towards overall it would be better to just make a node a unit
+  - Other units will probably produce units e.g. plane create flare, plane create paratrooper, etc
+  - if node count stays static there is probably some benefits to stay separate 
+  - if nodes do not move there is probably some benefit 
+- Fix bugs for Bresenham's algorithm 
+  - Currently there are times when the delta x or delta y is large and adjustments are not occuring.
+- Determine if unit collision not occuring for static units is correct behavior.
+  - This behavior probably redcues CPU usage
+  - This behavior probably leads to more bugs where dynamic unit colliding into static unit has no effect occur on static unit.
+- Determine behavior for overkill
+  - what order should main game actions occur e.g. target acquisition, attack units, attack nodes, attack positions, move units?
+  - How is overkill handled?
+  - Should units retarget if they lose their initial target?
 - Should attack units occur deterministicly?
   - maps in go by default are not deterministic. Currently, a unit can oscillate attacks. Probably wrong behavior
 - Determine group unit pathing behavior
@@ -59,11 +75,8 @@ Is there a mobile equivalent for war/4x games?
   - Will expose constraints
   - Will expose platform concerns
   - May expose issues with work so far 
-- Determine if FPS lock is needed:
+- Determine if frames per second lock is needed:
   - fundmental issue that I have not considered
-- Controls which work on computer, steam deck, phone, etc: 
-  - multiple platform means more sales
-  - customers can pick favorite device if multiple owned
 - Release to web:
   - learn how to deploy
   - easier to share with friends
@@ -73,17 +86,24 @@ Is there a mobile equivalent for war/4x games?
   - check resolution
 - local multiplayer:
   - Initial research shows webRTC is probably better but more complex than websockets
-- Polish logger
-  - Add logs throughout (global path, local path, attack, move, collision, etc)
-  - Add runtime dynamic log sampling rates. Is this even possible? Are the benefits worth it?
-  - Paused debugging? e.g. Updating unit during state.go execution can log state at game level.
-- Investigate if logging impacts game performance
-  - Might be able to fix via build tags to compile different code for release build
 
 ---
 
 ### Punted Checkpoints
 
+- Investigate if logging impacts game performance
+  - Might be able to fix via build tags to compile different code for release build
+- Polish logger
+  - Add logs throughout (global path, local path, attack, move, collision, etc)
+  - Add runtime dynamic log sampling rates. Is this even possible? Are the benefits worth it?
+  - Paused debugging? e.g. Updating unit during state.go execution can log state at game level.
+- Controls which work on computer, steam deck, phone, etc: 
+  - multiple platform means more sales
+  - customers can pick favorite device if multiple owned
+- Polish missile:
+  - Damage rather than instant kill?
+  - Fall off damage?
+  - Add unit that counters missile and expands game logic?
 - Update unit pathing algorithm to Theta* with same cost orthgonal and diagonal movement: (https://en.wikipedia.org/wiki/Theta*)
   - Unit pathing is fundamental and will need lots of iteration.
   - More realistic long distance pathing rather than current angled
@@ -94,7 +114,8 @@ Is there a mobile equivalent for war/4x games?
 - Research more local pathfinding algorithms
   - ?
 - initial map generation:
-  - ?
+  - Omitting certain counters or land features from maps might give ticket to ride vibes where
+    a different map significantly changes gameplay.
 - different terrains: 
   - Careful, this may be hard to implement due to pathfinding algorithms assuming same cost movement
 
@@ -130,6 +151,10 @@ Is there a mobile equivalent for war/4x games?
    - Very complex
    - No guaranteed benefit
    - Performance concerns
+6. Theme will be modern land and air units
+   - Naval units are unneeded for main mechanic and game loop. Also huge scope creep.
+   - There is a large enough variety with only land and air units.
+   - Medieval theme would not allow air units
 
 ---
 
@@ -141,6 +166,20 @@ Is there a mobile equivalent for war/4x games?
 
 ## Game Design Questions
 
+- Are both low altitude and high altitude needed or would a single air layer be sufficient?
+- Chemical gas can push enemies back unless they have gas masks
+- Should nodes have a max unit capacity e.g. This node stops producing since 10 units it produced are still alive
+- Should there be low altitude and high altitude flux? I suspect it is better to have separate maps rather
+  than a combined map as for units because there will be less interactions between flux layers but units
+  do interact somewhat between layers.
+- Should bombs dropped from planes have health and can die?
+- Should paratroopers be able to be shot at first?
+- Plane collisions would be awesome?
+- air units can produce other units e.g. missiles, paratroops, etc?
+- Should units besides explosives detonate?
+  - e.g. A tank being hit should explode damaging nearby units
+  - A missile detonating should detonate other missiles in air
+  - This could create interesting explosion chains
 - Should there be a game camera:
   - No camera can easily be the best option
   - One option is starcraft / civ where it panes around a larger area
@@ -188,12 +227,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Unit List Brainstorm
 
-- Conclusions:
-  - Modern era is better than medieval era because:
-    - Variety
-    - Familiarity
-  - Naval units are unneeded and huge scope creep.
-
 - Questions:
   - Which units will counter other units?
   - Should units have upgrades?
@@ -204,20 +237,23 @@ Is there a mobile equivalent for war/4x games?
   - Should plane matience be much quicker than building a new plane?
   - How can other units be unique and fit with node mechanic?
   - Should I do purpose exercise with units like I do with checkpoints
+  - Is there a good way to counter artillery?
+  - Heat seeking missile (it can be an upgrade but does not have to be)
+  - Jet heat flare (it can be an upgrade but does not have to be)
 
 - Potential Units:
   - Land:
-    - marine (cross water?)
+    - marine (cross water)
     - infantry
     - sniper
     - anti tank infantry
     - tank
-    - artillery 
-    - mobile SAM
+    - artillery
+    - mobile SAM (shoots missile in low altitude or high altitude)
     - troop transport
     - cargo truck (can transfer production between nodes?)
     - unit to change targets
-    - a unit which pushes other units out of way
+    - a unit which pushes other units out of way (tank?)
   - Air:
     - cargo plane (can transfer production between nodes?)
     - paratrooper
@@ -229,11 +265,19 @@ Is there a mobile equivalent for war/4x games?
     - drone
     - unit to change targets?
   - City aka Node:
-    - missle
-    - guided missle
-    - nuke
-    - anti air gun
+    - missle (low altitude)
+    - guided missle (low altitude)
+    - nuke 
+    - anti missile system 
+    - anti artillery system
     - satelite
     - unit to change targets?
+  - Other
+    - air missile (low altitude, high altitude)
+    - ground missile (low altitude, high altitude)
+    - bomb (low altitude)
+    - artillery shell (low altitude)
+    - chemical gas
+    - jet flare
 
 ---

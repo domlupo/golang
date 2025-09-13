@@ -10,6 +10,15 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+type name int
+
+const (
+	noName = iota
+	infantry
+	sniper
+	missile
+)
+
 type unitTarget int
 
 const (
@@ -19,20 +28,56 @@ const (
 )
 
 type unitConfig struct {
-	radius    int
-	maxHealth int
-	attack    int
-	vision    int
-	reach     int
+	name                name
+	radius              int
+	maxHealth           int
+	attack              int
+	vision              int
+	reach               int
+	produceLayer        layer
+	staticTarget        bool
+	attacksGround       bool
+	attacksLowAltitude  bool
+	attacksHighAltitude bool
+	attacksPosition     bool
 }
 
 func (config unitConfig) log() []slog.Attr {
 	var a = []slog.Attr{}
+	var name string
+	switch config.name {
+	case noName:
+		name = "no name"
+	case infantry:
+		name = "infantry"
+	case sniper:
+		name = "sniper"
+	case missile:
+		name = "missile"
+	}
+	a = append(a, slog.String("name", name))
 	a = append(a, slog.Int("radius", config.radius))
 	a = append(a, slog.Int("maxHealth", config.maxHealth))
 	a = append(a, slog.Int("attack", config.attack))
 	a = append(a, slog.Int("vision", config.vision))
 	a = append(a, slog.Int("reach", config.reach))
+	var layer string
+	switch config.produceLayer {
+	case noLayer:
+		layer = "noLayer"
+	case ground:
+		layer = "ground"
+	case lowAltitude:
+		layer = "lowAltitude"
+	case highAltitude:
+		layer = "highAltitude"
+	}
+	a = append(a, slog.String("produceLayer", layer))
+	a = append(a, slog.Bool("staticTarget", config.staticTarget))
+	a = append(a, slog.Bool("attacksGround", config.attacksGround))
+	a = append(a, slog.Bool("attacksLowAltitude", config.attacksLowAltitude))
+	a = append(a, slog.Bool("attacksHighAltitude", config.attacksHighAltitude))
+	a = append(a, slog.Bool("attacksPosition", config.attacksPosition))
 	return a
 }
 
@@ -40,8 +85,9 @@ type unit struct {
 	id                 uuid.UUID
 	player             player
 	currentTarget      unitTarget
-	globalTarget       *pixelPosition
-	localTarget        *pixelPosition
+	globalTarget       *position
+	localTarget        *position
+	atTerminalPosition bool
 	bresenhamError     *int
 	nextBresenhamError *int
 	unitConfig
@@ -55,7 +101,7 @@ type unit struct {
 	selected           bool
 }
 
-func newUnit(p player, globalTarget *pixelPosition, config unitConfig) unit {
+func newUnit(p player, globalTarget *position, config unitConfig) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
 		logger.log(errorLevel, selectedUnitLogType, "newUnit", "failed to generate UUID", err)
@@ -66,6 +112,7 @@ func newUnit(p player, globalTarget *pixelPosition, config unitConfig) unit {
 		currentTarget:      noTarget,
 		globalTarget:       globalTarget,
 		localTarget:        nil,
+		atTerminalPosition: false,
 		bresenhamError:     nil,
 		nextBresenhamError: nil,
 		unitConfig:         config,
@@ -101,11 +148,12 @@ func (u *unit) refresh() {
 	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "afterRefresh", "unit", u.log())
 }
 
-func (u *unit) getNewPos(currentPos pixelPosition) pixelPosition {
+func (u *unit) getNewPos(currentPos position) position {
 	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "getNewPos", "currentPos", currentPos.log())
 
 	// Bresenham's line algorithm https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 	// Specifically, the integer incremental error form where error is stored over mulitple moves
+	// This algorithm prioritizes straight line movement. It is not guaranteed the final position is reached.
 	var x0 = currentPos.x
 	var y0 = currentPos.y
 	var x1 = 0
@@ -151,18 +199,20 @@ func (u *unit) getNewPos(currentPos pixelPosition) pixelPosition {
 		u.nextBresenhamError = &errorCopy
 	}
 	var doubleError = *u.bresenhamError * 2
+	u.atTerminalPosition = true
 	if doubleError >= dy && x0 != x1 {
+		u.atTerminalPosition = false
 		*u.nextBresenhamError += dy
 		x0 += sx
 	}
 	if doubleError <= dx && y0 != y1 {
+		u.atTerminalPosition = false
 		*u.nextBresenhamError += dx
 		y0 += sy
 	}
 
-	var desiredPos = pixelPosition{x0, y0}
-	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "getNewPos", "desiredPos", desiredPos.log())
-	return desiredPos
+	var newPos = position{currentPos.layer, pixelPosition{x0, y0}}
+	return newPos
 }
 
 func (u *unit) updateTarget(target unitTarget) bool {
@@ -218,27 +268,40 @@ func (u unit) log() []slog.Attr {
 		player = "neutralPlayer"
 	}
 	a = append(a, slog.String("currentTarget", target))
-	a = append(a, slog.Any("globalTarget", u.globalTarget))
-	a = append(a, slog.Any("localTarget", u.localTarget))
+	if u.globalTarget != nil {
+		a = append(a, slog.Any("globalTarget", u.globalTarget.log()))
+	} else {
+		a = append(a, slog.String("globalTarget", "nil"))
+	}
+	if u.localTarget != nil {
+		a = append(a, slog.Any("localTarget", u.localTarget.log()))
+	} else {
+		a = append(a, slog.String("localTarget", "nil"))
+	}
+	a = append(a, slog.Bool("atTerminalPosition", u.atTerminalPosition))
 	if u.bresenhamError != nil {
 		a = append(a, slog.Int("bresenhamError", *u.bresenhamError))
+	} else {
+		a = append(a, slog.String("bresenhamError", "nil"))
 	}
 	if u.nextBresenhamError != nil {
 		a = append(a, slog.Int("nextBresenhamError", *u.nextBresenhamError))
+	} else {
+		a = append(a, slog.String("nextBresenhamError", "nil"))
 	}
-	a = append(a, slog.Any("unitConfig", u.unitConfig.log()))
+	a = append(a, u.unitConfig.log()...)
 	a = append(a, slog.Int("health", u.health))
 	a = append(a, slog.Bool("movedLastTurn", u.movedLastTurn))
 	a = append(a, slog.Bool("movedLastTurn", u.movedLastTurn))
 	a = append(a, slog.Bool("attackedLastTurn", u.attackedLastTurn))
 	a = append(a, slog.Bool("attackedThisTurn", u.attackedThisTurn))
 	a = append(a, slog.Int("fluxTurnCount", u.fluxTurnCount))
-	a = append(a, slog.Any("canReachTargtNode", u.canReachTargetNode))
+	a = append(a, slog.Any("canReachTargetNode", u.canReachTargetNode))
 	a = append(a, slog.Bool("selected", u.selected))
 	return a
 }
 
-func (u *unit) draw(screen *ebiten.Image, unitPos pixelPosition, selected bool) {
+func (u *unit) draw(screen *ebiten.Image, unitPos position, selected bool) {
 	var unitColor color.Color
 	switch u.player {
 	case bluePlayer:

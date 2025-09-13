@@ -88,6 +88,38 @@ type innerGridPosition struct {
 	y int
 }
 
+type layer int
+
+const (
+	noLayer = iota
+	ground
+	lowAltitude
+	highAltitude
+)
+
+type position struct {
+	layer
+	pixelPosition
+}
+
+func (pos position) log() []slog.Attr {
+	var a = []slog.Attr{}
+	var layer string
+	switch pos.layer {
+	case noLayer:
+		layer = "noLayer"
+	case ground:
+		layer = "ground"
+	case lowAltitude:
+		layer = "lowAltitude"
+	case highAltitude:
+		layer = "highAltitude"
+	}
+	a = append(a, slog.String("layer", layer))
+	a = append(a, pos.pixelPosition.log()...)
+	return a
+}
+
 // unreadable high resolution position
 type pixelPosition struct {
 	x int
@@ -116,14 +148,14 @@ func splitPixelPosition(pixelPos pixelPosition) (gridPosition, innerGridPosition
 	return gridPosition{gridPosX, gridPosY}, innerGridPosition{innerGridPosX, innerGridPosY}
 }
 
-func collidesWithBorder(pixelPos pixelPosition, offset int) bool {
-	if pixelPos.x+offset > windowWidth {
+func collidesWithBorder(pos position, offset int) bool {
+	if pos.pixelPosition.x+offset > windowWidth {
 		return true
-	} else if pixelPos.x-offset < 0 {
+	} else if pos.pixelPosition.x-offset < 0 {
 		return true
-	} else if pixelPos.y+offset > windowHeight {
+	} else if pos.pixelPosition.y+offset > windowHeight {
 		return true
-	} else if pixelPos.y-offset < 0 {
+	} else if pos.pixelPosition.y-offset < 0 {
 		return true
 	}
 

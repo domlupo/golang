@@ -38,13 +38,17 @@ func (c *computer) updateTargetNodes(s state) {
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
 				var targetPixelPos = getPixelPosition(otherNodePos, innerGridPosition{0, 0})
-				selfNode.target = &targetPixelPos
+				selfNode.target = &position{ground, targetPixelPos}
 			}
 
 		}
 	}
 
 	for unitPos, unit := range s.units {
+		if unit.staticTarget {
+			continue
+		}
+
 		if unit.player != c.player {
 			continue
 		}
@@ -67,7 +71,7 @@ func (c *computer) updateTargetNodes(s state) {
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
 				var targetPixelPos = getPixelPosition(otherNodePos, innerGridPosition{0, 0})
-				selfUnit.globalTarget = &targetPixelPos
+				selfUnit.globalTarget = &position{ground, targetPixelPos}
 			}
 		}
 	}

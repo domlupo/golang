@@ -9,6 +9,7 @@ const (
 	diagonal
 	complex
 	complexSniper
+	complexMissile
 )
 
 func setupState(gameState state, s setup) {
@@ -86,5 +87,37 @@ func setupState(gameState state, s setup) {
 		gameState.addNode(newNode(redPlayer, gridPosition{20, 15}, infantryConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{25, 15}, infantryConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{30, 15}, sniperConfig))
+	case complexMissile:
+		gameState.addNode(newNode(bluePlayer, gridPosition{1, 1}, missileConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{5, 1}, infantryConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{10, 1}, infantryConfig))
+		gameState.addNode(newNode(neutralPlayer, gridPosition{15, 1}, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{20, 1}, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{25, 1}, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{30, 1}, infantryConfig))
+
+		gameState.addNode(newNode(bluePlayer, gridPosition{1, 5}, infantryConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{5, 5}, infantryConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{10, 5}, infantryConfig))
+		gameState.addNode(newNode(neutralPlayer, gridPosition{15, 5}, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{20, 5}, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{25, 5}, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{30, 5}, infantryConfig))
+
+		gameState.addNode(newNode(bluePlayer, gridPosition{1, 10}, infantryConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{5, 10}, infantryConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{10, 10}, infantryConfig))
+		gameState.addNode(newNode(neutralPlayer, gridPosition{15, 10}, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{20, 10}, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{25, 10}, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{30, 10}, infantryConfig))
+
+		gameState.addNode(newNode(bluePlayer, gridPosition{1, 15}, infantryConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{5, 15}, infantryConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{10, 15}, infantryConfig))
+		gameState.addNode(newNode(neutralPlayer, gridPosition{15, 15}, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{20, 15}, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{25, 15}, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{30, 15}, infantryConfig))
 	}
 }

@@ -24,7 +24,7 @@ type node struct {
 	selected   bool
 	health     int
 	capturedBy *player
-	target     *pixelPosition
+	target     *position
 	unitConfig unitConfig
 }
 
