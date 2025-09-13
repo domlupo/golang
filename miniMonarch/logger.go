@@ -18,7 +18,7 @@ const (
 
 const (
 	noLogType = iota
-	loggerLogType
+	alwaysLogType
 	mainLogType
 	stateLogType
 	selectedUnitLogType
@@ -57,7 +57,7 @@ func newLogger() l {
 		Logger:   logger,
 		LevelVar: levelVar,
 		enabledLogTypes: map[logType]bool{
-			loggerLogType:       logLoggerLogs,
+			alwaysLogType:       logLoggerLogs,
 			mainLogType:         logMainLogs,
 			stateLogType:        logStateLogs,
 			selectedUnitLogType: logSelectedUnitLogs},
@@ -69,16 +69,16 @@ func newLogger() l {
 func (logger l) toggleLevel() {
 	if logger.LevelVar.Level() == slog.LevelError {
 		logger.Set(slog.LevelWarn)
-		logger.log(errorLevel, loggerLogType, "logger set to log WARN logs")
+		logger.log(errorLevel, alwaysLogType, "logger set to log WARN logs")
 	} else if logger.LevelVar.Level() == slog.LevelWarn {
 		logger.Set(slog.LevelInfo)
-		logger.log(errorLevel, loggerLogType, "logger set to log INFO logs")
+		logger.log(errorLevel, alwaysLogType, "logger set to log INFO logs")
 	} else if logger.LevelVar.Level() == slog.LevelInfo {
 		logger.Set(slog.LevelDebug)
-		logger.log(errorLevel, loggerLogType, "logger set to log DEBUG logs")
+		logger.log(errorLevel, alwaysLogType, "logger set to log DEBUG logs")
 	} else if logger.LevelVar.Level() == slog.LevelDebug {
 		logger.Set(slog.LevelError)
-		logger.log(errorLevel, loggerLogType, "logger set to log ERROR logs")
+		logger.log(errorLevel, alwaysLogType, "logger set to log ERROR logs")
 	}
 }
 

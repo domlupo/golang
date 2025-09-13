@@ -28,7 +28,7 @@ const gridSize = 40
 
 var slowTick = false
 
-const slowTickDuration = 1 * time.Second
+const slowTickDuration = 10 * time.Second
 
 // game balance config
 var fluxMagnitude = 5
@@ -180,6 +180,9 @@ func (g *game) Update() error {
 
 	// update game state prior to player actions
 	if !paused && !(slowTick && (currentTime.Sub(slowTickTime) < slowTickDuration)) {
+		if slowTick {
+			logger.log(infoLevel, alwaysLogType, "slowTick")
+		}
 		slowTickTime = time.Now()
 
 		gameState.refresh()

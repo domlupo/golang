@@ -13,7 +13,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Debug why unit targets appear to change rapidly
 - Add missle:
   - first node unit
   - splash damage?

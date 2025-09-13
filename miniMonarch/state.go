@@ -81,6 +81,7 @@ func (s *state) analyzeTargets() {
 			var yDelta = unitPos1.y - unitPos2.y
 			var distance = xDelta*xDelta + yDelta*yDelta
 			if distance < shortestDistance && distance < unit1.vision*unit1.vision {
+				shortestDistance = distance
 				closestUnitPos = &unitPos2
 			}
 		}
