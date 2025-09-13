@@ -38,10 +38,10 @@ var initialNodeHealth = 100
 // Note: unit radius set to an odd number is better for testing due to division bugs
 var infantryConfig = unitConfig{
 	radius:    5,
-	maxHealth: 500,
+	maxHealth: 100,
 	attack:    1,
-	vision:    40,
-	reach:     13,
+	vision:    30,
+	reach:     6,
 }
 var sniperConfig = unitConfig{
 	radius:    7,
@@ -130,7 +130,7 @@ func restartGame() {
 	gameState = *newState()
 	compOne = *newComputer(bluePlayer)
 	compTwo = *newComputer(redPlayer)
-	setupState(gameState, complexSniper)
+	setupState(gameState, complex)
 	updateComputerTargetNodes(gameState)
 }
 

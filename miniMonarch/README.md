@@ -13,14 +13,7 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Determine reach behavior:
-  - Current behavior seems strange. I am not sure why.
-  - I think reach behavers different for unit attacking node and unit attaking other unit
-  - Should units priortize nodes or other units?
-  - Determine if units should always attack closest unit
-  - Units don't currently attack closest unit. This may complete that TODO.
-  - vim search for "nearest"
-  - Also vim search "TODO" because this solve several
+- Debug why unit targets appear to change rapidly
 - Add missle:
   - first node unit
   - splash damage?
@@ -32,6 +25,9 @@ Is there a mobile equivalent for war/4x games?
 - Create more node setup test scenarios
   - Able to easily reproduce and test precise setups ofr edge case issues
   - Able to randomly generated setups to find hidden edge case issues
+- Improve computer
+  - Update computer to be beatable by humans
+  - Should computer units prioritize nodes or units?
 - Analyze and iterate on game design and game loop:
   - Check design feasability 
   - Improve game
@@ -42,6 +38,11 @@ Is there a mobile equivalent for war/4x games?
 
 ### Future Checkpoints
 
+- Should attack units occur deterministicly?
+  - maps in go by default are not deterministic. Currently, a unit can oscillate attacks. Probably wrong behavior
+- Determine group unit pathing behavior
+  - Current pathing is very jittery and random but it does seem kind of cool
+  - May want to decide jitter vs predictable movement
 - Research and iterate local pathfinding algorithms/methods
   - More realistic short distance pathing
   - Proper surronding of a target

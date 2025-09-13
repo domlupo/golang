@@ -2,6 +2,8 @@
 package main
 
 import (
+	"math"
+
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -57,17 +59,18 @@ func (s *state) refresh() {
 
 func (s *state) analyzeTargets() {
 	for unitPos1, unit1 := range s.units {
-		var collidesWithNode, isTargetNode = s.collidesWithNode(
+		var reachesNode, isTargetNode = s.collidesWithNode(
 			unitPos1,
 			*unit1,
 			unit1.reach,
 			s.nodes)
 		if isTargetNode {
-			// TODO: HACK, unit can reach further than collide
-			unit1.canReachTargetNode = collidesWithNode
+			unit1.canReachTargetNode = reachesNode
 		}
 
 		// check if unit 1 can see unit 2
+		var shortestDistance = math.MaxInt16
+		var closestUnitPos *pixelPosition
 		for unitPos2, unit2 := range s.units {
 			if unit1.player == unit2.player {
 				// unit cannot see itself or comrades
@@ -76,12 +79,14 @@ func (s *state) analyzeTargets() {
 
 			var xDelta = unitPos1.x - unitPos2.x
 			var yDelta = unitPos1.y - unitPos2.y
-			// TODO: Does this need changed so local target is always what is nearest
-			if xDelta*xDelta+yDelta*yDelta <= unit1.vision*unit1.vision {
-				unit1.localTarget = &unitPos2
-				s.units[unitPos1] = unit1
+			var distance = xDelta*xDelta + yDelta*yDelta
+			if distance < shortestDistance && distance < unit1.vision*unit1.vision {
+				closestUnitPos = &unitPos2
 			}
 		}
+
+		unit1.localTarget = closestUnitPos
+		s.units[unitPos1] = unit1
 	}
 }
 
@@ -246,35 +251,15 @@ func (s *state) attackUnits() {
 	var unitAttackedOtherUnitCount = 0
 
 	for unitPos1, unit1 := range s.units {
-		// check if unit 1 can attack unit 2
-		var nearestVisibleUnitPos *pixelPosition = nil
-		var nearestVisibleUnit unit
-		for unitPos2, unit2 := range s.units {
-			if unit1.id == unit2.id {
-				// unit cannot attack itself
-				continue
-			}
-
-			if unit1.player == unit2.player {
-				// unit cannot attack comarades
-				continue
-			}
-
-			var xDelta = unitPos1.x - unitPos2.x
-			var yDelta = unitPos1.y - unitPos2.y
-			// TODO: Does this need changed so local target is always what is nearest
-			if xDelta*xDelta+yDelta*yDelta < unit1.vision*unit1.vision {
-				nearestVisibleUnitPos = &unitPos2
-				nearestVisibleUnit = *unit2
-			}
-		}
-
-		if nearestVisibleUnitPos == nil {
+		// TODO: This may be wrong behavior but I am not sure if the issue is occurrin
+		// e.g. the target was killed by another unit this unit should probably find a potential new target.
+		// Then attack that rather than not attack for a turn
+		if unit1.localTarget == nil {
 			continue
 		}
 
-		var xTargetPixelPos = nearestVisibleUnitPos.x
-		var yTargetPixelPos = nearestVisibleUnitPos.y
+		var xTargetPixelPos = unit1.localTarget.x
+		var yTargetPixelPos = unit1.localTarget.y
 
 		var xDelta = 0
 		var yDelta = 0
@@ -288,11 +273,14 @@ func (s *state) attackUnits() {
 		} else if unitPos1.y > (yTargetPixelPos) {
 			yDelta = unitPos1.y - yTargetPixelPos
 		}
-		if unit1.reach*unit1.reach >= xDelta*xDelta+yDelta*yDelta {
+
+		var nearestVisibleUnit = s.units[*unit1.localTarget]
+		var rSum = unit1.reach + nearestVisibleUnit.radius
+		if rSum*rSum >= xDelta*xDelta+yDelta*yDelta {
 			nearestVisibleUnit.health = nearestVisibleUnit.health - unit1.attack
 			unit1.attackedThisTurn = true
 			unitAttackedOtherUnitCount++
-			s.units[*nearestVisibleUnitPos] = &nearestVisibleUnit
+			s.units[*unit1.localTarget] = nearestVisibleUnit
 			s.units[unitPos1] = unit1
 		}
 	}

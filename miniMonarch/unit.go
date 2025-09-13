@@ -45,14 +45,12 @@ type unit struct {
 	bresenhamError     *int
 	nextBresenhamError *int
 	unitConfig
-	health           int
-	movedLastTurn    bool
-	movedThisTurn    bool
-	attackedLastTurn bool
-	attackedThisTurn bool
-	fluxTurnCount    int
-	// TODO: determine behavior here. Right now this may actually be direct collision with target node
-	// and does not factor in reach. Reach should most likely be used here.
+	health             int
+	movedLastTurn      bool
+	movedThisTurn      bool
+	attackedLastTurn   bool
+	attackedThisTurn   bool
+	fluxTurnCount      int
 	canReachTargetNode *node
 	selected           bool
 }
