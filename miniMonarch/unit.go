@@ -2,8 +2,8 @@
 package main
 
 import (
-	"fmt"
 	"image/color"
+	"log/slog"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -24,6 +24,16 @@ type unitConfig struct {
 	attack    int
 	vision    int
 	reach     int
+}
+
+func (config unitConfig) log() []slog.Attr {
+	var a = []slog.Attr{}
+	a = append(a, slog.Int("radius", config.radius))
+	a = append(a, slog.Int("maxHealth", config.maxHealth))
+	a = append(a, slog.Int("attack", config.attack))
+	a = append(a, slog.Int("vision", config.vision))
+	a = append(a, slog.Int("reach", config.reach))
+	return a
 }
 
 type unit struct {
@@ -50,7 +60,7 @@ type unit struct {
 func newUnit(p player, globalTarget *pixelPosition, config unitConfig) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
-		logger.Error("newUnit", "failed to generate UUID", err)
+		logger.log(errorLevel, selectedUnitLogType, "newUnit", "failed to generate UUID", err)
 	}
 	u := unit{
 		id:                 id,
@@ -75,7 +85,7 @@ func newUnit(p player, globalTarget *pixelPosition, config unitConfig) unit {
 }
 
 func (u *unit) refresh() {
-	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, fmt.Sprintf("unit:refresh:before: %+v\n", u))
+	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "beforeRefresh", "unit", u.log())
 
 	if !u.attackedLastTurn && !u.movedLastTurn {
 		u.fluxTurnCount += 1
@@ -90,11 +100,11 @@ func (u *unit) refresh() {
 	u.localTarget = nil
 	u.canReachTargetNode = nil
 
-	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, fmt.Sprintf("unit:refresh:after: %+v", u))
+	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "afterRefresh", "unit", u.log())
 }
 
 func (u *unit) getNewPos(currentPos pixelPosition) pixelPosition {
-	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, fmt.Sprintf("unit:getNewPos:currentPos %+v", u))
+	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "getNewPos", "currentPos", currentPos.log())
 
 	// Bresenham's line algorithm https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 	// Specifically, the integer incremental error form where error is stored over mulitple moves
@@ -106,20 +116,15 @@ func (u *unit) getNewPos(currentPos pixelPosition) pixelPosition {
 		u.updateTarget(localTarget)
 		x1 = u.localTarget.x
 		y1 = u.localTarget.y
-		logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "unit:getNewPos:localTarget")
 	} else if u.globalTarget != nil {
 		u.updateTarget(globalTarget)
 		x1 = u.globalTarget.x
 		y1 = u.globalTarget.y
-		logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "unit:getNewPos:globalTarget")
 	} else {
 		u.updateTarget(noTarget)
-		logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "unit:getNewPos:noTarget")
 		var desiredPos = currentPos
-		logger.logSelected(u.selected, infoLevel, selectedUnitLogType, fmt.Sprintf("unit:getNewPos:desiredPos: %+v", desiredPos))
 		return desiredPos
 	}
-	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, fmt.Sprintf("unit:getNewPos:targetPos: {x:%d y:%d}", x1, y1))
 
 	var sx int
 	var sy int
@@ -158,11 +163,21 @@ func (u *unit) getNewPos(currentPos pixelPosition) pixelPosition {
 	}
 
 	var desiredPos = pixelPosition{x0, y0}
-	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, fmt.Sprintf("unit:getNewPos:desiredPos %+v", desiredPos))
+	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "getNewPos", "desiredPos", desiredPos.log())
 	return desiredPos
 }
 
 func (u *unit) updateTarget(target unitTarget) bool {
+	var t string
+	switch target {
+	case noTarget:
+		t = "noTarget"
+	case localTarget:
+		t = "localTarget"
+	case globalTarget:
+		t = "globalTarget"
+	}
+	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "updateTarget", "target", t)
 	if target != u.currentTarget {
 		u.currentTarget = target
 		u.bresenhamError = nil
@@ -176,6 +191,53 @@ func (u *unit) completeMove() {
 	u.movedThisTurn = true
 	var intCopy = &u.nextBresenhamError
 	u.bresenhamError = *intCopy
+}
+
+func (u unit) log() []slog.Attr {
+	var a = []slog.Attr{}
+	a = append(a, slog.Any("id", u.id))
+	var player string
+	switch u.player {
+	case noPlayer:
+		player = "noPlayer"
+	case bluePlayer:
+		player = "bluePlayer"
+	case redPlayer:
+		player = "redPlayer"
+	case neutralPlayer:
+		player = "neutralPlayer"
+	}
+	a = append(a, slog.String("player", player))
+	var target string
+	switch u.currentTarget {
+	case localTarget:
+		target = "localTarget"
+	case globalTarget:
+		target = "globalTarget"
+	case noTarget:
+		target = "noTarget"
+	case neutralPlayer:
+		player = "neutralPlayer"
+	}
+	a = append(a, slog.String("currentTarget", target))
+	a = append(a, slog.Any("globalTarget", u.globalTarget))
+	a = append(a, slog.Any("localTarget", u.localTarget))
+	if u.bresenhamError != nil {
+		a = append(a, slog.Int("bresenhamError", *u.bresenhamError))
+	}
+	if u.nextBresenhamError != nil {
+		a = append(a, slog.Int("nextBresenhamError", *u.nextBresenhamError))
+	}
+	a = append(a, slog.Any("unitConfig", u.unitConfig.log()))
+	a = append(a, slog.Int("health", u.health))
+	a = append(a, slog.Bool("movedLastTurn", u.movedLastTurn))
+	a = append(a, slog.Bool("movedLastTurn", u.movedLastTurn))
+	a = append(a, slog.Bool("attackedLastTurn", u.attackedLastTurn))
+	a = append(a, slog.Bool("attackedThisTurn", u.attackedThisTurn))
+	a = append(a, slog.Int("fluxTurnCount", u.fluxTurnCount))
+	a = append(a, slog.Any("canReachTargtNode", u.canReachTargetNode))
+	a = append(a, slog.Bool("selected", u.selected))
+	return a
 }
 
 func (u *unit) draw(screen *ebiten.Image, unitPos pixelPosition, selected bool) {

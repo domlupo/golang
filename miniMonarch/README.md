@@ -13,12 +13,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Research how to pretty log structs in go in a scaleable manner
-  - This can be a huge time sink. Be mindful here and a hacky solution may be best.
-  - Should I configure logger to have two modes? Human readable and Machine readable?
-  - Fix unit logging where I do "unit:refresh:before:". I probably should be using key values pairs instead.
-  - Use logger key values to pretty print unit
-  - Will improve logging and debugging iteration
 - Determine reach behavior:
   - Current behavior seems strange. I am not sure why.
   - I think reach behavers different for unit attacking node and unit attaking other unit

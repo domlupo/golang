@@ -1,6 +1,8 @@
 // general position utility functions
 package main
 
+import "log/slog"
+
 type direction int
 
 // typically, iterate CW north to northWest throughout codebase
@@ -90,6 +92,13 @@ type innerGridPosition struct {
 type pixelPosition struct {
 	x int
 	y int
+}
+
+func (pixelPos pixelPosition) log() []slog.Attr {
+	var a = []slog.Attr{}
+	a = append(a, slog.Int("x", pixelPos.x))
+	a = append(a, slog.Int("y", pixelPos.y))
+	return a
 }
 
 func getPixelPosition(gridPos gridPosition, innerGridPos innerGridPosition) pixelPosition {
