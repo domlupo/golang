@@ -17,9 +17,6 @@ import (
 var blueComputerActive = true
 var redComputerActive = true
 
-// logging config
-const outputSummaryLogs = true
-
 // This must only be used for drawing images and windows.
 // Never use for game logic.
 const windowMultiplier = 2.5
@@ -28,6 +25,10 @@ const windowMultiplier = 2.5
 const windowWidth = 1280
 const windowHeight = 720
 const gridSize = 40
+
+var slowTick = false
+
+const slowTickDuration = 1 * time.Second
 
 // game balance config
 var fluxMagnitude = 5
@@ -93,15 +94,12 @@ var runProfiler = false
 const restart = true
 
 // general
-var currentTime time.Time
+var slowTickTime time.Time = time.Now()
 var priorTime time.Time = time.Now()
+var currentTime time.Time = time.Now()
 
 // general debugging
 var paused = false
-
-// logger debugging
-var debugOutputWait = 1_000_000 * time.Second
-var debugOutputDelay = 1 * time.Second
 
 // globals
 var produceWait time.Duration = 1_000_000 * time.Second
@@ -147,6 +145,7 @@ func init() {
 	logger = newLogger()
 
 	toggles["pause"] = newToggle(ebiten.KeyP, func() { paused = !paused })
+	toggles["slowTick"] = newToggle(ebiten.KeyT, func() { slowTick = !slowTick })
 	toggles["logLevel"] = newToggle(ebiten.KeyL, func() { logger.toggleLevel() })
 	toggles["mainLogType"] = newToggle(ebiten.KeyM, func() { logger.toggleType(mainLogType) })
 	toggles["stateLogType"] = newToggle(ebiten.KeyS, func() { logger.toggleType(stateLogType) })
@@ -180,7 +179,9 @@ func (g *game) Update() error {
 	leftMouseHeld = false
 
 	// update game state prior to player actions
-	if !paused {
+	if !paused && !(slowTick && (currentTime.Sub(slowTickTime) < slowTickDuration)) {
+		slowTickTime = time.Now()
+
 		gameState.refresh()
 		gameState.analyzeTargets()
 		gameState.attackUnits()
@@ -238,18 +239,7 @@ func (g *game) Update() error {
 		updateComputerTargetNodes(gameState)
 	}
 
-	// debug output
-	if debugOutputWait < debugOutputDelay {
-		debugOutputWait = debugOutputWait + currentTime.Sub(priorTime)
-	} else if outputSummaryLogs {
-		logger.log(
-			infoLevel,
-			mainLogType,
-			"game_state",
-			slog.Int("total_units",
-				len(gameState.units)))
-		debugOutputWait = 0
-	}
+	logger.log(infoLevel, mainLogType, "game_state", slog.Int("total_units", len(gameState.units)))
 
 	var blueNodeCount = 0
 	var redNodeCount = 0

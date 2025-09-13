@@ -28,7 +28,7 @@ const (
 const initialLogLevel = slog.LevelDebug
 const filterTimeAndLevelFromLogs = true
 const logLoggerLogs = true
-const logMainLogs = true
+const logMainLogs = false
 const logStateLogs = false
 const logSelectedUnitLogs = true
 
