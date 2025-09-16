@@ -116,7 +116,10 @@ Is there a mobile equivalent for war/4x games?
 - initial map generation:
   - Omitting certain counters or land features from maps might give ticket to ride vibes where
     a different map significantly changes gameplay.
-- different terrains: 
+  - Omitting certain tech tree options is another way to randomize games.
+- Tech Tree:
+  - 
+- Different terrains: 
   - Careful, this may be hard to implement due to pathfinding algorithms assuming same cost movement
 
 ---
@@ -139,6 +142,7 @@ Is there a mobile equivalent for war/4x games?
     - Directly adds design and balancing complexity
     - Indirectly adds complexity and scope throughout game e.g. more units
     - No guaranteed benefit
+    - Tech tree is a simpler feature I can implement that has a lot of overlap with era progression.
 3. Save center rather than top left of unit, nodes, etc into state:
    - Easier to design game/engine
    - Easier to test game/engine
