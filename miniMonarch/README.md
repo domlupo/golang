@@ -35,6 +35,11 @@ Is there a mobile equivalent for war/4x games?
   - Improve game
 - clean up bugs and hacks:
   - There are enough to cause bugs while testing game design and game loop
+- Set a deadline and plan for a polished MVP
+  - This should be multiplayer playable by friends via browser.
+  - A vertical slice of MVP features. 
+  - If feedback is good, then I can work on adding more features.
+  - If feedback is good, then I can work on polishing existing features.
 
 ---
 
