@@ -13,23 +13,38 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Fix bugs for Bresenham's algorithm 
+  - Currently there are times when the delta x or delta y is large and adjustments are not occuring. Check if I reset error correctly. 
+- Research more local pathfinding algorithms
+  - ?
+- Add more ground units for local path finding iteration
+  - tank (counters infantry, secondary mode to push unit?)
+  - mobile SAM (counters missiles)
+- Improve flux debugging
+  - Add flux square selection
+  - Add selected flux logging for detailed tracing
+- Research and iterate local pathfinding algorithms/methods
+  - More realistic short distance pathing
+  - Proper surronding of a target
+  - Proper Units bunching into a single spot
+  - Helps close attack behavior decision
+- Determine group unit pathing behavior
+  - Current pathing is very jittery and random but it does seem kind of cool
+  - May want to decide jitter vs predictable movement
+- Improve computer
+  - Update computer to be beatable by humans
+  - Should computer units prioritize nodes or units?
+  - Investigate, there may be a bug where when a node is captured by a computer player, unit targets incorrectly become node
+    when a local target is already acquired.
+- Create more node setup test scenarios
+  - Able to easily reproduce and test precise setups ofr edge case issues
+  - Able to randomly generated setups to find hidden edge case issues
 - Polish UI
   - Currently it is very hard to fight computer due to clunky UI
   - Better missile UI so blast radius is visible 
   - Easier way to select all nodes of same type with double click
   - Better automated targetting from units. e.g. units don't auto target nodes when they should.
   - 4 way selection rather than only top left to bottom right
-- Improve flux debugging
-  - Add flux square selection
-  - Add selected flux logging for detailed tracing
-- Create more node setup test scenarios
-  - Able to easily reproduce and test precise setups ofr edge case issues
-  - Able to randomly generated setups to find hidden edge case issues
-- Improve computer
-  - Update computer to be beatable by humans
-  - Should computer units prioritize nodes or units?
-  - Investigate, there may be a bug where when a node is captured by a computer player, unit targets incorrectly become node
-    when a local target is already acquired.
 - Analyze and iterate on game design and game loop:
   - Check design feasability 
   - Improve game
@@ -50,9 +65,7 @@ Is there a mobile equivalent for war/4x games?
   - I am leaning towards overall it would be better to just make a node a unit
   - Other units will probably produce units e.g. plane create flare, plane create paratrooper, etc
   - if node count stays static there is probably some benefits to stay separate 
-  - if nodes do not move there is probably some benefit 
-- Fix bugs for Bresenham's algorithm 
-  - Currently there are times when the delta x or delta y is large and adjustments are not occuring.
+  - if nodes do not move there is probably some benefit to stay separate
 - Determine if unit collision not occuring for static units is correct behavior.
   - This behavior probably redcues CPU usage
   - This behavior probably leads to more bugs where dynamic unit colliding into static unit has no effect occur on static unit.
@@ -62,14 +75,6 @@ Is there a mobile equivalent for war/4x games?
   - Should units retarget if they lose their initial target?
 - Should attack units occur deterministicly?
   - maps in go by default are not deterministic. Currently, a unit can oscillate attacks. Probably wrong behavior
-- Determine group unit pathing behavior
-  - Current pathing is very jittery and random but it does seem kind of cool
-  - May want to decide jitter vs predictable movement
-- Research and iterate local pathfinding algorithms/methods
-  - More realistic short distance pathing
-  - Proper surronding of a target
-  - Proper Units bunching into a single spot
-  - Helps close attack behavior decision
 - Determine behavior for multi hit melee combat 
   - Expose issues with combat
   - Expose issues with timing
@@ -118,14 +123,12 @@ Is there a mobile equivalent for war/4x games?
   - Very likely this is needed for final game
 - Research more global pathfinding algorithms e.g. AP Theta*
   - ?
-- Research more local pathfinding algorithms
-  - ?
 - initial map generation:
   - Omitting certain counters or land features from maps might give ticket to ride vibes where
     a different map significantly changes gameplay.
   - Omitting certain tech tree options is another way to randomize games.
 - Tech Tree:
-  - 
+  - ?
 - Different terrains: 
   - Careful, this may be hard to implement due to pathfinding algorithms assuming same cost movement
 
@@ -251,38 +254,50 @@ Is there a mobile equivalent for war/4x games?
   - Is there a good way to counter artillery?
   - Heat seeking missile (it can be an upgrade but does not have to be)
   - Jet heat flare (it can be an upgrade but does not have to be)
+  - Should ground units like tank, artillery, etc need to refuel and resupply?
 
-- Potential Units:
+- Units:
   - Land:
-    - marine (cross water)
-    - infantry
-    - sniper
-    - anti tank infantry
-    - tank
-    - artillery
-    - mobile SAM (shoots missile in low altitude or high altitude)
-    - troop transport
-    - cargo truck (can transfer production between nodes?)
-    - unit to change targets
-    - a unit which pushes other units out of way (tank?)
+    - Done:
+      - infantry
+      - sniper
+    - High Priority:
+      - tank
+      - mobile SAM (shoots missile in low altitude or high altitude)
+    - Low Priority:
+      - mobile artillery / rocket artillery
+      - marine (cross water)
+      - anti tank infantry
+      - troop transport
+      - cargo truck (can transfer production between nodes?)
+      - unit to change targets
+      - a unit which pushes other units out of way (tank?)
+      - train track builder?
   - Air:
-    - cargo plane (can transfer production between nodes?)
-    - paratrooper
-    - bomber
-    - stealth bomber
-    - fighter
-    - stealth fighter
-    - helicopter / gun ship
-    - drone
-    - unit to change targets?
+    - Done:
+      -
+    - High Priority:
+      - bomber
+      - stealth bomber
+      - fighter 
+      - stealth fighter
+    - Low Priority:
+      - helicopter / gun ship
+      - paratrooper
+      - cargo plane (can transfer production between nodes?)
+      - drone
+      - unit to change targets?
   - City aka Node:
-    - missle (low altitude)
-    - guided missle (low altitude)
-    - nuke 
-    - anti missile system 
-    - anti artillery system
-    - satelite
-    - unit to change targets?
+    - Done
+      - missle (low altitude)
+    - High Priority
+      - guided missle (low altitude)
+      - anti missile system
+      - anti artillery system
+    - Low Priority
+      - nuke
+      - satelite
+      - a unit to change targets
   - Other
     - air missile (low altitude, high altitude)
     - ground missile (low altitude, high altitude)
