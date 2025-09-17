@@ -39,46 +39,67 @@ var missileBlastRadius = 100
 
 // Note: unit radius set to an odd number is better for testing due to division bugs
 var infantryConfig = unitConfig{
-	name:                infantry,
-	radius:              5,
-	maxHealth:           1000,
-	attack:              1,
-	vision:              30,
-	reach:               6,
-	produceLayer:        ground,
-	staticTarget:        false,
-	attacksGround:       true,
-	attacksLowAltitude:  false,
-	attacksHighAltitude: false,
-	attacksPosition:     false,
+	name:                  infantry,
+	radius:                5,
+	maxHealth:             1000,
+	attack:                1,
+	vision:                30,
+	reach:                 6,
+	produceLayer:          ground,
+	staticTarget:          false,
+	attacksGround:         true,
+	attacksLowAltitude:    false,
+	attacksHighAltitude:   false,
+	attacksPosition:       false,
+	detonateAtTerminalPos: false,
 }
 var sniperConfig = unitConfig{
-	name:                sniper,
-	radius:              7,
-	maxHealth:           5,
-	attack:              1,
-	vision:              100,
-	reach:               100,
-	produceLayer:        ground,
-	staticTarget:        false,
-	attacksGround:       true,
-	attacksLowAltitude:  false,
-	attacksHighAltitude: false,
-	attacksPosition:     false,
+	name:                  sniper,
+	radius:                7,
+	maxHealth:             5,
+	attack:                1,
+	vision:                100,
+	reach:                 100,
+	produceLayer:          ground,
+	staticTarget:          false,
+	attacksGround:         true,
+	attacksLowAltitude:    false,
+	attacksHighAltitude:   false,
+	attacksPosition:       false,
+	detonateAtTerminalPos: false,
 }
-var missileConfig = unitConfig{
-	name:                missile,
-	radius:              10,
-	maxHealth:           100,
-	attack:              1,
-	vision:              100,
-	reach:               1,
-	produceLayer:        lowAltitude,
-	staticTarget:        true,
-	attacksGround:       false,
-	attacksLowAltitude:  true,
-	attacksHighAltitude: true,
-	attacksPosition:     true,
+
+// TODO: Figure out better naming for various missiles
+// TODO: Figure out better attack conventions e.g. direct, vs explosion, etc
+var unguidedGroundMissileConfig = unitConfig{
+	name:                  unguidedGroundMissile,
+	radius:                3,
+	maxHealth:             100,
+	attack:                1,
+	vision:                100,
+	reach:                 0,
+	produceLayer:          lowAltitude,
+	staticTarget:          true,
+	attacksGround:         false,
+	attacksLowAltitude:    false,
+	attacksHighAltitude:   false,
+	attacksPosition:       true,
+	detonateAtTerminalPos: true,
+}
+var guidedAirMissileConfig = unitConfig{
+	name:                  guidedAirMissile,
+	radius:                3,
+	maxHealth:             100,
+	attack:                1000,
+	vision:                3000,
+	reach:                 0,
+	produceLayer:          lowAltitude,
+	staticTarget:          false,
+	attacksGround:         false,
+	attacksLowAltitude:    true,
+	attacksHighAltitude:   true,
+	attacksPosition:       false,
+	detonateAtTerminalPos: true,
 }
 
 // game graphic config
@@ -216,7 +237,7 @@ func (g *game) Update() error {
 
 		gameState.refresh()
 		gameState.analyzeTargets()
-		gameState.attackPositions()
+		gameState.processTerminalPositions()
 		gameState.attackUnits()
 		gameState.attackNodes()
 		gameState.moveUnits()
@@ -275,7 +296,8 @@ func (g *game) Update() error {
 
 	var infantryCount = 0
 	var sniperCount = 0
-	var missileCount = 0
+	var unguidedGroundMissileCount = 0
+	var guidedAirMissileCount = 0
 	var unknownCount = 0
 	for _, u := range gameState.units {
 		switch u.name {
@@ -283,8 +305,10 @@ func (g *game) Update() error {
 			infantryCount++
 		case sniper:
 			sniperCount++
-		case missile:
-			missileCount++
+		case unguidedGroundMissile:
+			unguidedGroundMissileCount++
+		case guidedAirMissile:
+			guidedAirMissileCount++
 		default:
 			unknownCount++
 		}
@@ -293,7 +317,8 @@ func (g *game) Update() error {
 	logger.log(infoLevel, mainLogType, "game_state", slog.Int("total_units", len(gameState.units)))
 	logger.log(infoLevel, mainLogType, "game_state", slog.Int("infantryCount", infantryCount))
 	logger.log(infoLevel, mainLogType, "game_state", slog.Int("sniperCount", sniperCount))
-	logger.log(infoLevel, mainLogType, "game_state", slog.Int("missileCount", missileCount))
+	logger.log(infoLevel, mainLogType, "game_state", slog.Int("unguidedGroundMissile", unguidedGroundMissileCount))
+	logger.log(infoLevel, mainLogType, "game_state", slog.Int("guidedAirMissile", guidedAirMissileCount))
 	logger.log(infoLevel, mainLogType, "game_state", slog.Int("unknownCount", unknownCount))
 
 	var blueNodeCount = 0

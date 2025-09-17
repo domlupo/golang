@@ -5,6 +5,7 @@ type setup int
 
 const (
 	horizontal = iota
+	horizontalMissile
 	vertical
 	diagonal
 	complex
@@ -17,6 +18,9 @@ func setupState(gameState state, s setup) {
 	case horizontal:
 		gameState.addNode(newNode(bluePlayer, gridPosition{1, 1}, infantryConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{5, 1}, infantryConfig))
+	case horizontalMissile:
+		gameState.addNode(newNode(bluePlayer, gridPosition{1, 1}, unguidedGroundMissileConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{5, 1}, guidedAirMissileConfig))
 	case vertical:
 		gameState.addNode(newNode(bluePlayer, gridPosition{1, 1}, infantryConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{1, 5}, infantryConfig))
@@ -88,12 +92,12 @@ func setupState(gameState state, s setup) {
 		gameState.addNode(newNode(redPlayer, gridPosition{25, 15}, infantryConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{30, 15}, sniperConfig))
 	case complexMissile:
-		gameState.addNode(newNode(bluePlayer, gridPosition{1, 1}, missileConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{1, 1}, unguidedGroundMissileConfig))
 		gameState.addNode(newNode(bluePlayer, gridPosition{5, 1}, infantryConfig))
 		gameState.addNode(newNode(bluePlayer, gridPosition{10, 1}, infantryConfig))
 		gameState.addNode(newNode(neutralPlayer, gridPosition{15, 1}, infantryConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{20, 1}, infantryConfig))
-		gameState.addNode(newNode(redPlayer, gridPosition{25, 1}, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{25, 1}, guidedAirMissileConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{30, 1}, infantryConfig))
 
 		gameState.addNode(newNode(bluePlayer, gridPosition{1, 5}, infantryConfig))

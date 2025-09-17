@@ -154,14 +154,19 @@ func (s *state) moveUnits() {
 			unit.radius,
 			s.nodes)
 
-		if collidesWithBorder && collidesWithUnit {
+		if collidesWithBorder && collidesWithUnit != nil {
+			// TODO: Low priority but eventually need to handle air collision here.
+			// Most likely can refactor to avoid updating this code directly.
 			unitsBorderCollideCount++
 			unitsCollideCount++
 		} else if collidesWithBorder {
 			unitsBorderCollideCount++
-		} else if collidesWithUnit {
+		} else if collidesWithUnit != nil {
 			unitsCollideCount++
 			if unitPos.layer == lowAltitude || unitPos.layer == highAltitude {
+				var otherUnit = s.units[*collidesWithUnit]
+				otherUnit.health = 0
+				s.units[*collidesWithUnit] = s.units[position{collidesWithUnit.layer, pixelPosition{collidesWithUnit.x, collidesWithUnit.y}}]
 				unit.health = 0
 				s.units[unitPos] = s.units[position{unitPos.layer, pixelPosition{unitPos.x, unitPos.y}}]
 			}
@@ -270,7 +275,7 @@ func (s *state) detonateMissile(pos position, blastRadius int, units map[positio
 	}
 }
 
-func (s *state) collidesWithUnit(pos position, unit unit, units map[position]*unit) bool {
+func (s *state) collidesWithUnit(pos position, unit unit, units map[position]*unit) *position {
 	var x1 = pos.x + unit.radius
 	var y1 = pos.y + unit.radius
 	var r1 = unit.radius
@@ -293,16 +298,16 @@ func (s *state) collidesWithUnit(pos position, unit unit, units map[position]*un
 		var yDelta = y2 - y1
 		var rSum = r1 + r2
 		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
-			return true
+			return &otherPos
 		}
 	}
 
-	return false
+	return nil
 }
 
-func (s *state) attackPositions() {
+func (s *state) processTerminalPositions() {
 	for unitPos, unit := range s.units {
-		if !unit.attacksPosition {
+		if !unit.detonateAtTerminalPos {
 			continue
 		}
 
@@ -310,6 +315,9 @@ func (s *state) attackPositions() {
 			unit.health = 0
 			s.units[unitPos] = unit
 			s.detonateMissile(unitPos, missileBlastRadius, s.units)
+		} else if unit.atTerminalPosition {
+			unit.health = 0
+			s.units[unitPos] = unit
 		}
 
 	}
@@ -496,7 +504,7 @@ func (s *state) produceUnits() {
 
 		// TODO: determine how to produce units during collision
 		var unitPos = position{n.unitConfig.produceLayer, getPixelPosition(nodePos, innerGridPosition{0, 0})}
-		if !s.collidesWithUnit(unitPos, newUnit(n.player, n.target, n.unitConfig), s.units) {
+		if s.collidesWithUnit(unitPos, newUnit(n.player, n.target, n.unitConfig), s.units) == nil {
 			var newUnit = newUnit(n.player, n.target, n.unitConfig)
 			s.units[unitPos] = &newUnit
 		}

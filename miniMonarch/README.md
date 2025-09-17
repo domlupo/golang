@@ -13,13 +13,28 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Fix bugs for Bresenham's algorithm 
-  - Currently there are times when the delta x or delta y is large and adjustments are not occuring. Check if I reset error correctly. 
+- Verify bug for Bresenham's algorithm is still occurring:
+  - Confirm this is still an issue before investigating.
+  - There was times where the delta x or delta y was large and adjustments were not occuring.
+    I did fix a move unit bug earlier which may have been causing this.
 - Research more local pathfinding algorithms
   - ?
 - Add more ground units for local path finding iteration
   - tank (counters infantry, secondary mode to push unit?)
   - mobile SAM (counters missiles)
+    - Ground missile exploding in air does no damage?
+    - Should air missile exploding in air do damage?
+    - Should air missile only get one retarget on missle? An upgrade could allow multiple retargets besides the first?
+    - Units may need different pathing algorithm or reactions to flux? 
+      - How to avoid this?
+      - How to simplify this?
+      - How to make this CPU performant?
+    - Targets different layer than it moves
+    - How will AI handle placement? 
+      - An easy implementation might be to be near node.
+      - An easy implementation might be to stay away from infantry
+      - Counter missile will either need to travel faster than tracked missile or anticipate movement?
+    - Added guided missile variant will probably help but might be low priority?
 - Improve flux debugging
   - Add flux square selection
   - Add selected flux logging for detailed tracing
@@ -103,6 +118,7 @@ Is there a mobile equivalent for war/4x games?
 
 ### Punted Checkpoints
 
+- Should I add a config file?
 - Investigate if logging impacts game performance
   - Might be able to fix via build tags to compile different code for release build
 - Polish logger
@@ -180,6 +196,8 @@ Is there a mobile equivalent for war/4x games?
 
 ## Game Design Questions
 
+- Stopping node unit production in order to advance tech tree, improve node is probably a good form of risk -> reward.
+- Should nodes support unit cycling e.g. produce missile, then produce infantry, then produce tank, etc
 - Are both low altitude and high altitude needed or would a single air layer be sufficient?
 - Chemical gas can push enemies back unless they have gas masks
 - Should nodes have a max unit capacity e.g. This node stops producing since 10 units it produced are still alive
@@ -255,6 +273,12 @@ Is there a mobile equivalent for war/4x games?
   - Heat seeking missile (it can be an upgrade but does not have to be)
   - Jet heat flare (it can be an upgrade but does not have to be)
   - Should ground units like tank, artillery, etc need to refuel and resupply?
+  - Missile upgrade makes it smaller?
+  - SAM upgrade or configurable number of rockets sent?
+  - Prior to the game and during game allow players to tune unit configs? 
+    e.g. 1 SAM in army send 1 rocket, 2 SAM in army send 1 rocket from all in range or 
+    send 2 rockets from closest? Army could have seensible defaults but then players
+    can customize?
 
 - Units:
   - Land:
@@ -265,7 +289,7 @@ Is there a mobile equivalent for war/4x games?
       - tank
       - mobile SAM (shoots missile in low altitude or high altitude)
     - Low Priority:
-      - mobile artillery / rocket artillery
+      - mobile artillery / rocket artillery (thought is low priority because SAM pathing more complex. Could be wrong)
       - marine (cross water)
       - anti tank infantry
       - troop transport
@@ -294,6 +318,7 @@ Is there a mobile equivalent for war/4x games?
       - guided missle (low altitude)
       - anti missile system
       - anti artillery system
+      - anti air gun
     - Low Priority
       - nuke
       - satelite

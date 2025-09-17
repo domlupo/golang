@@ -16,7 +16,9 @@ const (
 	noName = iota
 	infantry
 	sniper
-	missile
+	unguidedGroundMissile
+	guidedAirMissile
+	mobileSAM
 )
 
 type unitTarget int
@@ -28,18 +30,19 @@ const (
 )
 
 type unitConfig struct {
-	name                name
-	radius              int
-	maxHealth           int
-	attack              int
-	vision              int
-	reach               int
-	produceLayer        layer
-	staticTarget        bool
-	attacksGround       bool
-	attacksLowAltitude  bool
-	attacksHighAltitude bool
-	attacksPosition     bool
+	name                  name
+	radius                int
+	maxHealth             int
+	attack                int
+	vision                int
+	reach                 int
+	produceLayer          layer
+	staticTarget          bool
+	attacksGround         bool
+	attacksLowAltitude    bool
+	attacksHighAltitude   bool
+	attacksPosition       bool
+	detonateAtTerminalPos bool
 }
 
 func (config unitConfig) log() []slog.Attr {
@@ -52,8 +55,12 @@ func (config unitConfig) log() []slog.Attr {
 		name = "infantry"
 	case sniper:
 		name = "sniper"
-	case missile:
-		name = "missile"
+	case unguidedGroundMissile:
+		name = "unguidedGroundMissile"
+	case guidedAirMissile:
+		name = "guidedAirMissile"
+	default:
+		name = "unknown"
 	}
 	a = append(a, slog.String("name", name))
 	a = append(a, slog.Int("radius", config.radius))
