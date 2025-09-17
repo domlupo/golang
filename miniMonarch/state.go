@@ -101,6 +101,8 @@ func (s *state) analyzeTargets() {
 }
 
 func (s *state) moveUnits() {
+	logger.log(infoLevel, stateLogType, "moveUnits", "unitCount", len(s.units))
+
 	var unitsMovedCount = 0
 	var unitsAlreadyAttacked = 0
 	var unitsWithoutTarget = 0
@@ -110,6 +112,10 @@ func (s *state) moveUnits() {
 	var unitsBorderCollideCount = 0
 
 	for unitPos, unit := range s.units {
+		if unit.movedThisTurn {
+			continue
+		}
+
 		if unit.attackedThisTurn {
 			unitsAlreadyAttacked++
 			continue
