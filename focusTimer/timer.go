@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image/color"
 	"log"
+	"os"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -13,7 +14,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-const windowMultiplier = 2.5
+const windowMultiplier = 2
 
 // aspect ratio config (16:9 aspect ratio)
 const windowWidth = 1280
@@ -47,12 +48,23 @@ var currentTime time.Time
 var startTime time.Time
 var duration time.Duration
 var progressPercent float64
+var progressPercentLogged int = 0
 var timerStarted = false
+var file *os.File
+var err error
 
 func (g *Game) Update() error {
+
 	currentTime = time.Now()
 	if timerStarted {
 		progressPercent = float64(currentTime.Sub(startTime)/time.Millisecond) / float64(duration/time.Millisecond) * 100
+		if progressPercentLogged < 100 && progressPercentLogged != int(progressPercent) {
+			progressPercentLogged = int(progressPercent)
+			_, err = file.WriteString(fmt.Sprintf("%d%% %s\n", progressPercentLogged, currentTime.Format(time.RFC3339)))
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
 	} else {
 		_, dy := ebiten.Wheel()
 		durationInt = max(durationInt+int(dy), 0)
@@ -63,6 +75,10 @@ func (g *Game) Update() error {
 			timerStarted = true
 			startTime = time.Now()
 			duration = time.Duration(durationInt) * time.Minute
+			_, err = file.WriteString(fmt.Sprintf("Timer set for %d minutes. startTime: %s\n", durationInt, startTime.Format(time.RFC3339)))
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 	}
 	return nil
@@ -96,6 +112,12 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func main() {
+	file, err = os.Create("logFocusTimer.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
 	ebiten.SetWindowSize(windowWidth*windowMultiplier, windowHeight*windowMultiplier)
 	if err := ebiten.RunGame(&Game{}); err != nil {
 		log.Fatal(err)
