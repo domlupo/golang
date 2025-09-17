@@ -44,6 +44,8 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Future Checkpoints
+- Deterministic seeds:
+  - I can easily run simulations to analyze game balance
 - Determine if a node should be a type of unit rather than a separate struct
   - I am leaning towards overall it would be better to just make a node a unit
   - Other units will probably produce units e.g. plane create flare, plane create paratrooper, etc
