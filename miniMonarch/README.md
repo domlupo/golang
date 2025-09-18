@@ -13,12 +13,24 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Verify bug for Bresenham's algorithm is still occurring:
-  - Confirm this is still an issue before investigating.
-  - There was times where the delta x or delta y was large and adjustments were not occuring.
-    I did fix a move unit bug earlier which may have been causing this.
+- Determine if I should invest in a visual logger:
+  - It can can ping the pixel pos where the bug is occurring.
+  - It can ping differently based on layer.
+  - It can also do something like log unit and pause game so I can read logs?
+
+- Fix Bresenham's algorithm edge cases:
+  - Bresenham error needs to reset itself for several reasons. I still need to handle:
+    - Determine if the target moving is handled. There may be an elegant solution here.
+    - If it is not handled determine how to fix. Structure may need updated.
+  - A potentially good contract:
+    - Multiple sources (state, computer, etc) update units various targets (flux, local, global, etc)
+    - Unit must keep itself in sync
+  - Determine if a different structure is better for Bresenham
+
 - Research more local pathfinding algorithms
-  - ?
+  - Flux can be iterated and tuned a lot. I only implemented a basic solution.
+  - Look into other approaches, methods and algorithms.
+
 - Add more ground units for local path finding iteration
   - tank (counters infantry, secondary mode to push unit?)
   - mobile SAM (counters missiles)
@@ -35,36 +47,44 @@ Is there a mobile equivalent for war/4x games?
       - An easy implementation might be to stay away from infantry
       - Counter missile will either need to travel faster than tracked missile or anticipate movement?
     - Added guided missile variant will probably help but might be low priority?
+
 - Improve flux debugging
   - Add flux square selection
   - Add selected flux logging for detailed tracing
+
 - Research and iterate local pathfinding algorithms/methods
   - More realistic short distance pathing
   - Proper surronding of a target
   - Proper Units bunching into a single spot
   - Helps close attack behavior decision
+
 - Determine group unit pathing behavior
-  - Current pathing is very jittery and random but it does seem kind of cool
   - May want to decide jitter vs predictable movement
+
 - Improve computer
   - Update computer to be beatable by humans
   - Should computer units prioritize nodes or units?
   - Investigate, there may be a bug where when a node is captured by a computer player, unit targets incorrectly become node
     when a local target is already acquired.
+
 - Create more node setup test scenarios
-  - Able to easily reproduce and test precise setups ofr edge case issues
+  - Able to easily reproduce and test precise setups for edge case issues
   - Able to randomly generated setups to find hidden edge case issues
+
 - Polish UI
   - Currently it is very hard to fight computer due to clunky UI
   - Better missile UI so blast radius is visible 
   - Easier way to select all nodes of same type with double click
   - Better automated targetting from units. e.g. units don't auto target nodes when they should.
   - 4 way selection rather than only top left to bottom right
+
 - Analyze and iterate on game design and game loop:
   - Check design feasability 
   - Improve game
+
 - clean up bugs and hacks:
   - There are enough to cause bugs while testing game design and game loop
+
 - Set a deadline and plan for a polished MVP
   - This should be multiplayer playable by friends via browser.
   - A vertical slice of MVP features. 
@@ -74,6 +94,7 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Future Checkpoints
+- Refactor for more idiomatic go code e.g. less globals, setting vars, etc
 - Deterministic seeds:
   - I can easily run simulations to analyze game balance
 - Determine if a node should be a type of unit rather than a separate struct
@@ -122,6 +143,8 @@ Is there a mobile equivalent for war/4x games?
 - Investigate if logging impacts game performance
   - Might be able to fix via build tags to compile different code for release build
 - Polish logger
+  - Improve always log logic. Right now it is a bit confusing if always log surpasses logging level. I should
+    make this more clear probably through simplifying rather than adding more complexity.
   - Add logs throughout (global path, local path, attack, move, collision, etc)
   - Add runtime dynamic log sampling rates. Is this even possible? Are the benefits worth it?
   - Paused debugging? e.g. Updating unit during state.go execution can log state at game level.

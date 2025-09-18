@@ -54,7 +54,6 @@ func (c *computer) updateTargetNodes(s state) {
 		}
 		var selfUnitPos = unitPos
 		var selfUnit = unit
-		selfUnit.globalTarget = nil
 		var nearestTargetDistanceSquared = math.MaxInt
 
 		for nodePos, node := range s.nodes {
@@ -71,7 +70,7 @@ func (c *computer) updateTargetNodes(s state) {
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
 				var targetPixelPos = getPixelPosition(otherNodePos, innerGridPosition{0, 0})
-				selfUnit.globalTarget = &position{ground, targetPixelPos}
+				selfUnit.updateTarget(globalTarget, &position{ground, targetPixelPos})
 			}
 		}
 	}

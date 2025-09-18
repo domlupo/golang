@@ -63,6 +63,13 @@ func (s *state) analyzeTargets() {
 			continue
 		}
 
+		if unit1.fluxTurnCount > unitFluxCountLimit {
+			var gridPos, _ = splitPixelPosition(unitPos1.pixelPosition)
+			var fluxDelta = s.fluxes[gridPos].getFluxDelta()
+			unit1.updateTarget(fluxTarget, &position{ground, pixelPosition{unitPos1.x + fluxDelta.x, unitPos1.y + fluxDelta.y}})
+			unit1.fluxTurnCount = 0
+		}
+
 		var reachesNode, isTargetNode = s.collidesWithNode(
 			unitPos1,
 			*unit1,
@@ -95,8 +102,8 @@ func (s *state) analyzeTargets() {
 			}
 		}
 
-		unit1.localTarget = closestUnitPos
-		s.units[unitPos1] = unit1
+		unit1.updateTarget(localTarget, closestUnitPos)
+
 	}
 }
 
@@ -121,19 +128,12 @@ func (s *state) moveUnits() {
 			continue
 		}
 
-		var newPos position
-		if unitPos.layer == lowAltitude || unitPos.layer == highAltitude {
-			newPos = unit.getNewPos(unitPos)
-		} else if unit.fluxTurnCount > unitFluxCountLimit {
-			var gridPos, _ = splitPixelPosition(unitPos.pixelPosition)
-			var fluxDelta = s.fluxes[gridPos].getFluxDelta()
-			newPos = position{unitPos.layer, pixelPosition{unitPos.x + fluxDelta.x, unitPos.y + fluxDelta.y}}
-			unit.fluxTurnCount = 0
-		} else {
-			newPos = unit.getNewPos(unitPos)
-		}
+		// TODO: This updating target seems a bit wrong. Check if there is a better way to handle this.
+		// My initial thoughts are to update unit targets only in analyze targets then in move units
+		// I simply get the move. May need to split some logic up.
+		newPos := unit.getNewPos(unitPos)
 
-		if unit.currentTarget == noTarget {
+		if unit.currentTarget == nil {
 			unitsWithoutTarget++
 		}
 
@@ -482,7 +482,7 @@ func (s *state) updateTargets(target *position) {
 		}
 		s.nodes[nodeGridPos] = node
 	}
-	for unitPixelPos, unit := range s.units {
+	for _, unit := range s.units {
 		if unit.player == bluePlayer && blueComputerActive {
 			continue
 		} else if unit.player == redPlayer && redComputerActive {
@@ -490,9 +490,8 @@ func (s *state) updateTargets(target *position) {
 		}
 
 		if unit.selected {
-			unit.globalTarget = target
+			unit.updateTarget(globalTarget, target)
 		}
-		s.units[unitPixelPos] = unit
 	}
 }
 

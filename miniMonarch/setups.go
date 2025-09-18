@@ -123,5 +123,7 @@ func setupState(gameState state, s setup) {
 		gameState.addNode(newNode(redPlayer, gridPosition{20, 15}, infantryConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{25, 15}, infantryConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{30, 15}, infantryConfig))
+	default:
+		panic("setup does not exist")
 	}
 }

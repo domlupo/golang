@@ -25,6 +25,8 @@ type unitTarget int
 
 const (
 	noTarget = iota
+	currentTarget
+	fluxTarget
 	localTarget
 	globalTarget
 )
@@ -91,9 +93,12 @@ func (config unitConfig) log() []slog.Attr {
 type unit struct {
 	id                 uuid.UUID
 	player             player
-	currentTarget      unitTarget
-	globalTarget       *position
+	currentTarget      *position
+	fluxTarget         *position
 	localTarget        *position
+	globalTarget       *position
+	fluxExpire         int
+	fluxTurnCount      int
 	atTerminalPosition bool
 	bresenhamError     *int
 	nextBresenhamError *int
@@ -103,7 +108,6 @@ type unit struct {
 	movedThisTurn      bool
 	attackedLastTurn   bool
 	attackedThisTurn   bool
-	fluxTurnCount      int
 	canReachTargetNode *node
 	selected           bool
 }
@@ -114,11 +118,17 @@ func newUnit(p player, globalTarget *position, config unitConfig) unit {
 		logger.log(errorLevel, selectedUnitLogType, "newUnit", "failed to generate UUID", err)
 	}
 	u := unit{
-		id:                 id,
-		player:             p,
-		currentTarget:      noTarget,
-		globalTarget:       globalTarget,
-		localTarget:        nil,
+		id:            id,
+		player:        p,
+		currentTarget: nil,
+		fluxTarget:    nil,
+		localTarget:   nil,
+		globalTarget:  globalTarget,
+		// TODO: Figure out better naming for these two flux variables
+		// They are a bit confusing but not sure what else to call them at the moment.
+		// Most likely they will change significantly.
+		fluxExpire:         0,
+		fluxTurnCount:      0,
 		atTerminalPosition: false,
 		bresenhamError:     nil,
 		nextBresenhamError: nil,
@@ -128,7 +138,6 @@ func newUnit(p player, globalTarget *position, config unitConfig) unit {
 		movedThisTurn:      false,
 		attackedLastTurn:   false,
 		attackedThisTurn:   false,
-		fluxTurnCount:      0,
 		canReachTargetNode: nil,
 		selected:           false,
 	}
@@ -149,7 +158,6 @@ func (u *unit) refresh() {
 	u.movedThisTurn = false
 	u.attackedLastTurn = u.attackedThisTurn
 	u.attackedThisTurn = false
-	u.localTarget = nil
 	u.canReachTargetNode = nil
 
 	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "afterRefresh", "unit", u.log())
@@ -165,16 +173,25 @@ func (u *unit) getNewPos(currentPos position) position {
 	var y0 = currentPos.y
 	var x1 = 0
 	var y1 = 0
-	if u.localTarget != nil {
-		u.updateTarget(localTarget)
+
+	if u.fluxTarget != nil {
+		u.fluxExpire = max(u.fluxExpire-1, 0)
+		u.updateTarget(currentTarget, u.fluxTarget)
+		x1 = u.fluxTarget.x
+		y1 = u.fluxTarget.y
+		if u.fluxExpire == 0 {
+			u.fluxTarget = nil
+		}
+	} else if u.localTarget != nil {
+		u.updateTarget(currentTarget, u.localTarget)
 		x1 = u.localTarget.x
 		y1 = u.localTarget.y
 	} else if u.globalTarget != nil {
-		u.updateTarget(globalTarget)
+		u.updateTarget(currentTarget, u.globalTarget)
 		x1 = u.globalTarget.x
 		y1 = u.globalTarget.y
 	} else {
-		u.updateTarget(noTarget)
+		u.updateTarget(currentTarget, nil)
 		var desiredPos = currentPos
 		return desiredPos
 	}
@@ -222,24 +239,37 @@ func (u *unit) getNewPos(currentPos position) position {
 	return newPos
 }
 
-func (u *unit) updateTarget(target unitTarget) bool {
-	var t string
-	switch target {
-	case noTarget:
-		t = "noTarget"
-	case localTarget:
-		t = "localTarget"
-	case globalTarget:
-		t = "globalTarget"
-	}
-	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "updateTarget", "target", t)
-	if target != u.currentTarget {
+func (u *unit) updateTarget(ut unitTarget, target *position) {
+	var unitTarget string
+	switch ut {
+	case currentTarget:
+		// TODO: Look into if there is a better way to handle nil equality
+		if target == nil || u.currentTarget == nil || u.currentTarget != target {
+			u.bresenhamError = nil
+			u.nextBresenhamError = nil
+		}
 		u.currentTarget = target
-		u.bresenhamError = nil
-		u.nextBresenhamError = nil
-		return true
+		unitTarget = "currentTarget"
+	case fluxTarget:
+		u.fluxTarget = target
+		unitTarget = "fluxTarget"
+	case localTarget:
+		u.localTarget = target
+		unitTarget = "localTarget"
+	case globalTarget:
+		u.globalTarget = target
+		unitTarget = "globalTarget"
+	default:
+		panic("Need to set a unit target")
 	}
-	return false
+
+	var targetLog []slog.Attr
+	if target == nil {
+		targetLog = nil
+	} else {
+		targetLog = target.log()
+	}
+	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "updateTarget", "unitTarget", unitTarget, "target", targetLog)
 }
 
 func (u *unit) completeMove() {
@@ -263,27 +293,25 @@ func (u unit) log() []slog.Attr {
 		player = "neutralPlayer"
 	}
 	a = append(a, slog.String("player", player))
-	var target string
-	switch u.currentTarget {
-	case localTarget:
-		target = "localTarget"
-	case globalTarget:
-		target = "globalTarget"
-	case noTarget:
-		target = "noTarget"
-	case neutralPlayer:
-		player = "neutralPlayer"
-	}
-	a = append(a, slog.String("currentTarget", target))
-	if u.globalTarget != nil {
-		a = append(a, slog.Any("globalTarget", u.globalTarget.log()))
+	if u.currentTarget != nil {
+		a = append(a, slog.Any("currentTarget", u.currentTarget.log()))
 	} else {
-		a = append(a, slog.String("globalTarget", "nil"))
+		a = append(a, slog.String("currentTarget", "nil"))
+	}
+	if u.fluxTarget != nil {
+		a = append(a, slog.Any("fluxTarget", u.fluxTarget.log()))
+	} else {
+		a = append(a, slog.String("fluxTarget", "nil"))
 	}
 	if u.localTarget != nil {
 		a = append(a, slog.Any("localTarget", u.localTarget.log()))
 	} else {
 		a = append(a, slog.String("localTarget", "nil"))
+	}
+	if u.globalTarget != nil {
+		a = append(a, slog.Any("globalTarget", u.globalTarget.log()))
+	} else {
+		a = append(a, slog.String("globalTarget", "nil"))
 	}
 	a = append(a, slog.Bool("atTerminalPosition", u.atTerminalPosition))
 	if u.bresenhamError != nil {
@@ -339,25 +367,13 @@ func (u *unit) draw(screen *ebiten.Image, unitPos position, selected bool) {
 		)
 	}
 
-	var xTarget *int
-	var yTarget *int
-	if selected && u.currentTarget != noTarget {
-		if u.currentTarget == localTarget && u.localTarget != nil {
-			xTarget = &u.localTarget.x
-			yTarget = &u.localTarget.y
-		} else if u.currentTarget == globalTarget && u.globalTarget != nil {
-			xTarget = &u.globalTarget.x
-			yTarget = &u.globalTarget.y
-		}
-	}
-
-	if xTarget != nil && yTarget != nil {
+	if selected && u.currentTarget != nil {
 		vector.StrokeLine(
 			screen,
 			float32(unitPos.x)*windowMultiplier,
 			float32(unitPos.y)*windowMultiplier,
-			float32(*xTarget)*windowMultiplier,
-			float32(*yTarget)*windowMultiplier,
+			float32(u.currentTarget.x)*windowMultiplier,
+			float32(u.currentTarget.y)*windowMultiplier,
 			float32(targetNodeLineWidth)*windowMultiplier,
 			highlightColor,
 			false,

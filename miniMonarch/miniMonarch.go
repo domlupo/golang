@@ -31,7 +31,7 @@ var slowTick = false
 const slowTickDuration = 10 * time.Second
 
 // game balance config
-var fluxMagnitude = 5
+var fluxMagnitude = 10
 var unitFluxCountLimit = 10
 var nodeRadius = gridSize / 2
 var initialNodeHealth = 100
@@ -178,7 +178,7 @@ func restartGame() {
 	gameState = *newState()
 	compOne = *newComputer(bluePlayer)
 	compTwo = *newComputer(redPlayer)
-	setupState(gameState, complexMissile)
+	setupState(gameState, complex)
 	updateComputerTargetNodes(gameState)
 }
 
@@ -291,6 +291,7 @@ func (g *game) Update() error {
 	// than the same game state being sent to each one before a final update occurs.
 	// This is a hack, but will probably be fine for awhile.
 	if nodeOwnershipChanged {
+		logger.log(infoLevel, mainLogType, "nodeOwnershipChanged")
 		updateComputerTargetNodes(gameState)
 	}
 
