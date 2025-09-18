@@ -14,20 +14,39 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-const windowMultiplier = 2
+type Game struct {
+	windowMultiplier      int
+	windowWidth           int
+	windowHeight          int
+	backgroundColor       color.RGBA
+	timerColor            color.RGBA
+	doneColor             color.RGBA
+	logFileName           string
+	timerStarted          bool
+	iDuration             int
+	duration              time.Duration
+	currentTime           time.Time
+	startTime             time.Time
+	progressPercent       float64
+	progressPercentLogged int
+	file                  *os.File
+	err                   error
+	mplusFaceSource       *text.GoTextFaceSource
+}
 
-// aspect ratio config (16:9 aspect ratio)
-const windowWidth = 1280
-const windowHeight = 720
-
-var backgroundColor = color.RGBA{50, 50, 50, 255}
-var timerColor = color.RGBA{75, 75, 75, 255}
-var doneColor = color.RGBA{0, 150, 100, 255}
-var initialTimerMinutes = 60
-
-var mplusFaceSource *text.GoTextFaceSource
-
-type Game struct{}
+func newGame() Game {
+	g := Game{
+		windowMultiplier: 2,
+		windowWidth:      1280,
+		windowHeight:     720,
+		iDuration:        60,
+		backgroundColor:  color.RGBA{50, 50, 50, 255},
+		timerColor:       color.RGBA{75, 75, 75, 255},
+		doneColor:        color.RGBA{0, 150, 100, 255},
+		logFileName:      "logFocusTimer.txt",
+	}
+	return g
+}
 
 func init() {
 	var monitors []*ebiten.MonitorType
@@ -38,46 +57,33 @@ func init() {
 			ebiten.SetMonitor(m)
 		}
 	}
-
-	s, _ := text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
-	mplusFaceSource = s
 }
 
-var durationInt = initialTimerMinutes
-var currentTime time.Time
-var startTime time.Time
-var duration time.Duration
-var progressPercent float64
-var progressPercentLogged int = 0
-var timerStarted = false
-var file *os.File
-var err error
-
 func (g *Game) Update() error {
+	g.currentTime = time.Now()
 
-	currentTime = time.Now()
-	if timerStarted {
-		progressPercent = float64(currentTime.Sub(startTime)/time.Millisecond) / float64(duration/time.Millisecond) * 100
-		if progressPercentLogged < 100 && progressPercentLogged != int(progressPercent) {
-			progressPercentLogged = int(progressPercent)
-			_, err = file.WriteString(fmt.Sprintf("%d%% %s\n", progressPercentLogged, currentTime.Format(time.RFC3339)))
-			if err != nil {
-				log.Fatal(err)
+	if g.timerStarted {
+		g.progressPercent = float64(g.currentTime.Sub(g.startTime)/time.Millisecond) / float64(g.duration/time.Millisecond) * 100
+		if g.progressPercentLogged < 100 && g.progressPercentLogged != int(g.progressPercent) {
+			g.progressPercentLogged = int(g.progressPercent)
+			_, g.err = g.file.WriteString(fmt.Sprintf("%d%% %s\n", g.progressPercentLogged, g.currentTime.Format(time.RFC3339)))
+			if g.err != nil {
+				log.Fatal(g.err)
 			}
 		}
 	} else {
 		_, dy := ebiten.Wheel()
-		durationInt = max(durationInt+int(dy), 0)
+		g.iDuration = max(g.iDuration+int(dy), 0)
 
 		if (ebiten.IsMouseButtonPressed(ebiten.MouseButton0) ||
 			ebiten.IsMouseButtonPressed(ebiten.MouseButton1) ||
-			ebiten.IsMouseButtonPressed(ebiten.MouseButton2)) && durationInt > 0 {
-			timerStarted = true
-			startTime = time.Now()
-			duration = time.Duration(durationInt) * time.Minute
-			_, err = file.WriteString(fmt.Sprintf("Timer set for %d minutes. startTime: %s\n", durationInt, startTime.Format(time.RFC3339)))
-			if err != nil {
-				log.Fatal(err)
+			ebiten.IsMouseButtonPressed(ebiten.MouseButton2)) && g.iDuration > 0 {
+			g.timerStarted = true
+			g.startTime = time.Now()
+			g.duration = time.Duration(g.iDuration) * time.Minute
+			_, g.err = g.file.WriteString(fmt.Sprintf("Timer set for %d minutes. startTime: %s\n", g.iDuration, g.startTime.Format(time.RFC3339)))
+			if g.err != nil {
+				log.Fatal(g.err)
 			}
 		}
 	}
@@ -85,41 +91,45 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	if !timerStarted || currentTime.Sub(startTime) > duration {
-		screen.Fill(doneColor)
+	if !g.timerStarted || g.currentTime.Sub(g.startTime) > g.duration {
+		screen.Fill(g.doneColor)
 	} else {
-		screen.Fill(backgroundColor)
+		screen.Fill(g.backgroundColor)
 		vector.DrawFilledRect(
 			screen,
 			0,
 			0,
-			float32(windowWidth*progressPercent/100)*windowMultiplier,
-			windowHeight*windowMultiplier,
-			timerColor,
+			float32(float64(g.windowWidth*g.windowMultiplier)*g.progressPercent/float64(100)),
+			float32(g.windowHeight*g.windowMultiplier),
+			g.timerColor,
 			false)
 	}
-	if !timerStarted {
-		var op = &text.DrawOptions{}
-		text.Draw(screen, fmt.Sprintf("%d minutes. Change minutes with mouse wheel. Press any mouse button to start timer", durationInt), &text.GoTextFace{
-			Source: mplusFaceSource,
-			Size:   24 * windowMultiplier,
+	if !g.timerStarted {
+		op := &text.DrawOptions{}
+		text.Draw(screen, fmt.Sprintf("%d minutes. Change minutes with mouse wheel. Press any mouse button to start timer", g.iDuration), &text.GoTextFace{
+			Source: g.mplusFaceSource,
+			Size:   float64(24 * g.windowMultiplier),
 		}, op)
 	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return windowWidth * windowMultiplier, windowHeight * windowMultiplier
+	return g.windowWidth * g.windowMultiplier, g.windowHeight * g.windowMultiplier
 }
 
 func main() {
-	file, err = os.Create("logFocusTimer.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
+	g := newGame()
 
-	ebiten.SetWindowSize(windowWidth*windowMultiplier, windowHeight*windowMultiplier)
-	if err := ebiten.RunGame(&Game{}); err != nil {
+	g.file, g.err = os.Create(g.logFileName)
+	if g.err != nil {
+		log.Fatal(g.err)
+	}
+	defer g.file.Close()
+
+	g.mplusFaceSource, _ = text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
+
+	ebiten.SetWindowSize(g.windowWidth*g.windowMultiplier, g.windowHeight*g.windowMultiplier)
+	if err := ebiten.RunGame(&g); err != nil {
 		log.Fatal(err)
 	}
 }
