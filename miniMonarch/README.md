@@ -95,43 +95,55 @@ Is there a mobile equivalent for war/4x games?
 
 ### Future Checkpoints
 - Refactor for more idiomatic go code e.g. less globals, setting vars, etc
+
 - Deterministic seeds:
   - I can easily run simulations to analyze game balance
+
 - Determine if a node should be a type of unit rather than a separate struct
   - I am leaning towards overall it would be better to just make a node a unit
   - Other units will probably produce units e.g. plane create flare, plane create paratrooper, etc
   - if node count stays static there is probably some benefits to stay separate 
   - if nodes do not move there is probably some benefit to stay separate
+
 - Determine if unit collision not occuring for static units is correct behavior.
   - This behavior probably redcues CPU usage
   - This behavior probably leads to more bugs where dynamic unit colliding into static unit has no effect occur on static unit.
+
 - Determine behavior for overkill
   - what order should main game actions occur e.g. target acquisition, attack units, attack nodes, attack positions, move units?
   - How is overkill handled?
   - Should units retarget if they lose their initial target?
+
 - Should attack units occur deterministicly?
   - maps in go by default are not deterministic. Currently, a unit can oscillate attacks. Probably wrong behavior
+
 - Determine behavior for multi hit melee combat 
   - Expose issues with combat
   - Expose issues with timing
   - Expose issues with pathing
   - Will probably lead to bug fix for units not killing correctly
   - May help or hurt efforts towards local pathfinding. I suspect this will be coupled with local pathfinding.
+
 - Tool / CLI which launches multiple windows at once to test multiple scenarios
   - Faster test loop
+
 - save file: 
   - Will expose constraints
   - Will expose platform concerns
   - May expose issues with work so far 
+
 - Determine if frames per second lock is needed:
   - fundmental issue that I have not considered
+
 - Release to web:
   - learn how to deploy
   - easier to share with friends
   - test web based issues rather than only mac
+
 - Release to phone: 
   - check phone controls
   - check resolution
+
 - local multiplayer:
   - Initial research shows webRTC is probably better but more complex than websockets
 
@@ -140,34 +152,43 @@ Is there a mobile equivalent for war/4x games?
 ### Punted Checkpoints
 
 - Should I add a config file?
+
 - Investigate if logging impacts game performance
   - Might be able to fix via build tags to compile different code for release build
+
 - Polish logger
   - Improve always log logic. Right now it is a bit confusing if always log surpasses logging level. I should
     make this more clear probably through simplifying rather than adding more complexity.
   - Add logs throughout (global path, local path, attack, move, collision, etc)
   - Add runtime dynamic log sampling rates. Is this even possible? Are the benefits worth it?
   - Paused debugging? e.g. Updating unit during state.go execution can log state at game level.
+
 - Controls which work on computer, steam deck, phone, etc: 
   - multiple platform means more sales
   - customers can pick favorite device if multiple owned
+
 - Polish missile:
   - Damage rather than instant kill?
   - Fall off damage?
   - Add unit that counters missile and expands game logic?
+
 - Update unit pathing algorithm to Theta* with same cost orthgonal and diagonal movement: (https://en.wikipedia.org/wiki/Theta*)
   - Unit pathing is fundamental and will need lots of iteration.
   - More realistic long distance pathing rather than current angled
   - Units will be able to go around obstacles
   - Very likely this is needed for final game
+
 - Research more global pathfinding algorithms e.g. AP Theta*
   - ?
+
 - initial map generation:
   - Omitting certain counters or land features from maps might give ticket to ride vibes where
     a different map significantly changes gameplay.
   - Omitting certain tech tree options is another way to randomize games.
+
 - Tech Tree:
   - ?
+
 - Different terrains: 
   - Careful, this may be hard to implement due to pathfinding algorithms assuming same cost movement
 
