@@ -93,20 +93,6 @@ var guidedAirMissileConfig = unitConfig{
 	detonateAtTerminalPos: true,
 }
 
-// game graphic config
-var selectectionBoxLineWidth = 1
-var missileBlastRadiusLineWidth = 1
-var healthLineWidth = 2
-var backgroundColor = color.RGBA{200, 200, 200, 255}
-var highlightColor = color.RGBA{70, 255, 0, 200}
-var unitHealthColor = highlightColor
-var nodeHealthColor = highlightColor
-var bluePlayerNodeColor = color.RGBA{0, 0, 255, 100}
-var bluePlayerUnitColor = color.RGBA{0, 0, 255, 100}
-var redPlayerNodeColor = color.RGBA{255, 0, 0, 100}
-var redPlayerUnitColor = color.RGBA{255, 0, 0, 100}
-var neutralNodeColor = color.RGBA{100, 60, 100, 200}
-
 // debug only configs
 var drawFluxes = false
 var drawUnitHealth = false
@@ -114,7 +100,6 @@ var drawBlueTargets = false
 var drawRedTargets = false
 var fluxLineWidth = 2
 var fluxDirectionRadius = 3
-var fluxColor = highlightColor
 var targetNodeLineWidth = 1
 
 // debug grid config
@@ -332,14 +317,14 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.drawContext.screen = screen
 	}
 
-	screen.Fill(backgroundColor)
+	screen.Fill(g.drawContext.backgroundColor)
 	drawDebug(*g.drawContext, drawDebugGrid)
 	gameState.draw(*g.drawContext, drawBlueTargets, drawRedTargets, drawFluxes)
 
 	if leftMouseHeld {
 		drawUnfilledBoxFloat32(
 			*g.drawContext,
-			highlightColor,
+			g.drawContext.highlightColor,
 			initialSelectedX,
 			initialSelectedY,
 			currentSelectedX,

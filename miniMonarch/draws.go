@@ -13,36 +13,61 @@ type drawContext struct {
 	// windowMultipler must only be used for drawing images and windows.
 	// Never use for game logic. float32 rather than float64 because
 	// alot of Ebiten draw APIs use float32
-	windowMultiplier float32
-	windowWidth      int
-	windowHeight     int
-	gridSize         int
-	debugGridOffset  int
-	debugGridWidth   int
+	windowMultiplier            float32
+	windowWidth                 int
+	windowHeight                int
+	gridSize                    int
+	debugGridOffset             int
+	debugGridWidth              int
+	selectectionBoxLineWidth    int
+	missileBlastRadiusLineWidth int
+	healthLineWidth             int
+	backgroundColor             color.RGBA
+	highlightColor              color.RGBA
+	unitHealthColor             color.RGBA
+	nodeHealthColor             color.RGBA
+	fluxColor                   color.RGBA
+	bluePlayerNodeColor         color.RGBA
+	bluePlayerUnitColor         color.RGBA
+	redPlayerNodeColor          color.RGBA
+	redPlayerUnitColor          color.RGBA
+	neutralNodeColor            color.RGBA
 }
 
 func newDrawContext() *drawContext {
+	highlightColor := color.RGBA{70, 255, 0, 200}
 	dc := drawContext{
 		screen:           nil,
 		windowMultiplier: 2.5,
 		// aspect ratio config (16:9 aspect ratio)
-		windowWidth:     1280,
-		windowHeight:    720,
-		gridSize:        40,
-		debugGridOffset: 0,
-		debugGridWidth:  1,
+		windowWidth:                 1280,
+		windowHeight:                720,
+		gridSize:                    40,
+		debugGridOffset:             0,
+		debugGridWidth:              1,
+		selectectionBoxLineWidth:    1,
+		missileBlastRadiusLineWidth: 1,
+		healthLineWidth:             2,
+		backgroundColor:             color.RGBA{200, 200, 200, 255},
+		highlightColor:              highlightColor,
+		unitHealthColor:             highlightColor,
+		nodeHealthColor:             highlightColor,
+		fluxColor:                   highlightColor,
+		bluePlayerNodeColor:         color.RGBA{0, 0, 255, 100},
+		bluePlayerUnitColor:         color.RGBA{0, 0, 255, 100},
+		redPlayerNodeColor:          color.RGBA{255, 0, 0, 100},
+		redPlayerUnitColor:          color.RGBA{255, 0, 0, 100},
+		neutralNodeColor:            color.RGBA{100, 60, 100, 200},
 	}
 	return &dc
 }
 
 func drawUnfilledBoxFloat32(dc drawContext, color color.Color, initialX float32, initialY float32, finalX float32, finalY float32) {
-	var initialXGraphical = float32(initialX) * dc.windowMultiplier
-	var initialYGraphical = float32(initialY) * dc.windowMultiplier
-	var finalXGraphical = float32(finalX) * dc.windowMultiplier
-	var finalYGraphical = float32(finalY) * dc.windowMultiplier
-
-	// TODO: fix this to not be global
-	var selectectionBoxLineWidth = float32(selectectionBoxLineWidth) * dc.windowMultiplier
+	initialXGraphical := float32(initialX) * dc.windowMultiplier
+	initialYGraphical := float32(initialY) * dc.windowMultiplier
+	finalXGraphical := float32(finalX) * dc.windowMultiplier
+	finalYGraphical := float32(finalY) * dc.windowMultiplier
+	selectectionBoxLineWidth := float32(dc.selectectionBoxLineWidth) * dc.windowMultiplier
 
 	// draw top line
 	vector.StrokeLine(

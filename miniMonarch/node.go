@@ -45,11 +45,11 @@ func (n *node) drawNode(dc drawContext, nodeGridPos gridPosition) {
 	var nodeColor color.Color
 	switch n.player {
 	case bluePlayer:
-		nodeColor = bluePlayerNodeColor
+		nodeColor = dc.bluePlayerNodeColor
 	case redPlayer:
-		nodeColor = redPlayerNodeColor
+		nodeColor = dc.redPlayerNodeColor
 	case neutralPlayer:
-		nodeColor = neutralNodeColor
+		nodeColor = dc.neutralNodeColor
 	default:
 		panic("unknown player cannot drawNode")
 	}
@@ -68,7 +68,7 @@ func (n *node) drawNode(dc drawContext, nodeGridPos gridPosition) {
 	if n.selected {
 		drawUnfilledBoxInt(
 			dc,
-			highlightColor,
+			dc.highlightColor,
 			nodePixelPos.x-n.radius,
 			nodePixelPos.y-n.radius,
 			nodePixelPos.x+n.radius,
@@ -83,8 +83,8 @@ func (n *node) drawNode(dc drawContext, nodeGridPos gridPosition) {
 			float32(nodePixelPos.y)*dc.windowMultiplier,
 			(float32(nodePixelPos.x-nodeRadius)+healthLineLength)*dc.windowMultiplier,
 			float32(nodePixelPos.y)*dc.windowMultiplier,
-			float32(healthLineWidth)*dc.windowMultiplier,
-			nodeHealthColor,
+			float32(dc.healthLineWidth)*dc.windowMultiplier,
+			dc.nodeHealthColor,
 			false)
 	}
 }
@@ -93,11 +93,11 @@ func (n *node) drawTargets(dc drawContext, nodeGridPos gridPosition, drawBlueTar
 	var nodeColor color.Color
 	switch n.player {
 	case bluePlayer:
-		nodeColor = bluePlayerNodeColor
+		nodeColor = dc.bluePlayerNodeColor
 	case redPlayer:
-		nodeColor = redPlayerNodeColor
+		nodeColor = dc.redPlayerNodeColor
 	case neutralPlayer:
-		nodeColor = neutralNodeColor
+		nodeColor = dc.neutralNodeColor
 	default:
 		panic("unknown player for drawTargets")
 	}

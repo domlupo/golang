@@ -339,9 +339,9 @@ func (u *unit) draw(dc drawContext, unitPos position, selected bool) {
 	var unitColor color.Color
 	switch u.player {
 	case bluePlayer:
-		unitColor = bluePlayerUnitColor
+		unitColor = dc.bluePlayerUnitColor
 	case redPlayer:
-		unitColor = redPlayerUnitColor
+		unitColor = dc.redPlayerUnitColor
 	default:
 		panic("unit needs a color")
 	}
@@ -358,7 +358,7 @@ func (u *unit) draw(dc drawContext, unitPos position, selected bool) {
 	if selected {
 		drawUnfilledBoxInt(
 			dc,
-			highlightColor,
+			dc.highlightColor,
 			unitPos.x-u.radius,
 			unitPos.y-u.radius,
 			unitPos.x+u.radius,
@@ -374,7 +374,7 @@ func (u *unit) draw(dc drawContext, unitPos position, selected bool) {
 			float32(u.currentTarget.x)*dc.windowMultiplier,
 			float32(u.currentTarget.y)*dc.windowMultiplier,
 			float32(targetNodeLineWidth)*dc.windowMultiplier,
-			highlightColor,
+			dc.highlightColor,
 			false,
 		)
 
@@ -384,8 +384,8 @@ func (u *unit) draw(dc drawContext, unitPos position, selected bool) {
 				float32(u.currentTarget.x)*dc.windowMultiplier,
 				float32(u.currentTarget.y)*dc.windowMultiplier,
 				float32(missileBlastRadius)*dc.windowMultiplier,
-				float32(missileBlastRadiusLineWidth)*dc.windowMultiplier,
-				highlightColor,
+				float32(dc.missileBlastRadiusLineWidth)*dc.windowMultiplier,
+				dc.highlightColor,
 				false,
 			)
 		}
@@ -400,7 +400,7 @@ func (u *unit) draw(dc drawContext, unitPos position, selected bool) {
 			float32(unitPos.y-u.radius)*dc.windowMultiplier,
 			healthLineLength*dc.windowMultiplier,
 			float32(u.radius)*dc.windowMultiplier,
-			unitHealthColor,
+			dc.unitHealthColor,
 			false,
 		)
 	}

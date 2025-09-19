@@ -161,7 +161,7 @@ func (f *flux) draw(dc drawContext, fluxPos gridPosition) {
 		float32(xEnd)*dc.windowMultiplier,
 		float32(yEnd)*dc.windowMultiplier,
 		float32(fluxLineWidth)*dc.windowMultiplier,
-		fluxColor,
+		dc.fluxColor,
 		false,
 	)
 
@@ -170,7 +170,7 @@ func (f *flux) draw(dc drawContext, fluxPos gridPosition) {
 		float32(xEnd)*dc.windowMultiplier,
 		float32(yEnd)*dc.windowMultiplier,
 		float32(fluxDirectionRadius)*dc.windowMultiplier,
-		fluxColor,
+		dc.fluxColor,
 		false,
 	)
 }
