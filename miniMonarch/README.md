@@ -13,6 +13,10 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Improve guided air missile
+  - auto despawns for non computer players. This is probably wrong behavior.
+  - Improve UI for targetting. Reach is very large so need to make it noticeable at all distances.
+
 - Determine if I should invest in a visual logger:
   - It can can ping the pixel pos where the bug is occurring.
   - It can ping differently based on layer.
