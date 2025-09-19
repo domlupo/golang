@@ -17,26 +17,20 @@ type drawContext struct {
 	windowWidth      int
 	windowHeight     int
 	gridSize         int
-	// TODO: Determine if debugGridOffset can be simplified into one var
-	debugGridOffsetWithoutWindowMultipler int
-	debugGridOffset                       float32
-	debugGridWidth                        float32
+	debugGridOffset  int
+	debugGridWidth   int
 }
 
 func newDrawContext() *drawContext {
-	var windowMultiplier float32 = 2.5
-	debugGridOffsetWithoutWindowMultipler := 0
 	dc := drawContext{
 		screen:           nil,
-		windowMultiplier: windowMultiplier,
+		windowMultiplier: 2.5,
 		// aspect ratio config (16:9 aspect ratio)
-		windowWidth:                           1280,
-		windowHeight:                          720,
-		gridSize:                              40,
-		debugGridOffsetWithoutWindowMultipler: 0,
-		// TODO: determine if windowMultipler should be removed from here. I think yes
-		debugGridOffset: float32(debugGridOffsetWithoutWindowMultipler) * windowMultiplier,
-		debugGridWidth:  1 * windowMultiplier,
+		windowWidth:     1280,
+		windowHeight:    720,
+		gridSize:        40,
+		debugGridOffset: 0,
+		debugGridWidth:  1,
 	}
 	return &dc
 }
@@ -106,39 +100,39 @@ func drawDebug(dc drawContext, drawDebugGrid bool) {
 	}
 
 	for i := range debugGridSquareCount {
-		var x = float32(dc.gridSize*i) * dc.windowMultiplier
+		var x = dc.gridSize * i
 		vector.StrokeLine(
 			dc.screen,
-			x-dc.debugGridOffset,
-			0, x-dc.debugGridOffset,
+			float32(x-dc.debugGridOffset)*dc.windowMultiplier,
+			0, float32(x-dc.debugGridOffset)*dc.windowMultiplier,
 			float32(dc.windowHeight)*dc.windowMultiplier,
-			dc.debugGridWidth,
+			float32(dc.debugGridWidth)*dc.windowMultiplier,
 			debugGridColor,
 			false)
 		vector.StrokeLine(
 			dc.screen,
-			x+dc.debugGridOffset,
-			0, x+dc.debugGridOffset,
+			float32(x+dc.debugGridOffset)*dc.windowMultiplier,
+			0, float32(x+dc.debugGridOffset)*dc.windowMultiplier,
 			float32(dc.windowHeight)*dc.windowMultiplier,
-			dc.debugGridWidth,
+			float32(dc.debugGridWidth)*dc.windowMultiplier,
 			debugGridColor,
 			false)
-		var y = float32(dc.gridSize*i) * dc.windowMultiplier
+		var y = dc.gridSize * i
 		vector.StrokeLine(
 			dc.screen,
-			0, y-dc.debugGridOffset,
+			0, float32(y-dc.debugGridOffset)*dc.windowMultiplier,
 			float32(dc.windowWidth)*dc.windowMultiplier,
-			y-dc.debugGridOffset,
-			dc.debugGridWidth,
+			float32(y-dc.debugGridOffset)*dc.windowMultiplier,
+			float32(dc.debugGridWidth)*dc.windowMultiplier,
 			debugGridColor,
 			false)
 		vector.StrokeLine(
 			dc.screen,
 			0,
-			y+dc.debugGridOffset,
+			float32(y+dc.debugGridOffset)*dc.windowMultiplier,
 			float32(dc.windowWidth)*dc.windowMultiplier,
-			y+dc.debugGridOffset,
-			dc.debugGridWidth,
+			float32(y+dc.debugGridOffset)*dc.windowMultiplier,
+			float32(dc.debugGridWidth)*dc.windowMultiplier,
 			debugGridColor,
 			false)
 	}
