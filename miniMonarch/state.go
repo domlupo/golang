@@ -3,26 +3,29 @@ package main
 
 import (
 	"math"
-
-	"github.com/hajimehoshi/ebiten/v2"
 )
 
 // not enforced but must be a singleton
 type state struct {
-	nodes  map[gridPosition]*node
-	fluxes map[gridPosition]*flux
-	units  map[position]*unit
+	xIndexCount int
+	yIndexCount int
+	nodes       map[gridPosition]*node
+	fluxes      map[gridPosition]*flux
+	units       map[position]*unit
 }
 
-func newState() *state {
+func newState(xIndexCount int, yIndexCount int) *state {
 	s := state{
-		nodes:  make(map[gridPosition]*node),
-		fluxes: make(map[gridPosition]*flux),
-		units:  make(map[position]*unit),
+		// TODO: Determine if there is a better way to handle xIndexCount and yIndexCount
+		xIndexCount: xIndexCount,
+		yIndexCount: yIndexCount,
+		nodes:       make(map[gridPosition]*node),
+		fluxes:      make(map[gridPosition]*flux),
+		units:       make(map[position]*unit),
 	}
 
-	for i := range windowWidth / gridSize {
-		for j := range windowHeight / gridSize {
+	for i := range xIndexCount {
+		for j := range yIndexCount {
 			var gridPos = gridPosition{i, j}
 			var flux = newFlux(gridPos)
 			s.fluxes[gridPos] = &flux
@@ -51,8 +54,8 @@ func (s *state) refresh() {
 	}
 
 	for _, flux := range s.fluxes {
-		var xMax = (windowWidth / gridSize) - 1
-		var yMax = (windowHeight / gridSize) - 1
+		var xMax = s.xIndexCount - 1
+		var yMax = s.yIndexCount - 1
 		flux.setFluxVector(s, xMax, yMax)
 	}
 }
@@ -524,31 +527,31 @@ func (s *state) produceUnits() {
 	}
 }
 
-func (s *state) draw(screen *ebiten.Image, drawBlueTargets bool, drawRedTargets, drawFluxes bool) {
+func (s *state) draw(dc drawContext, drawBlueTargets bool, drawRedTargets, drawFluxes bool) {
 	for nodePos, node := range s.nodes {
-		node.drawNode(screen, nodePos)
+		node.drawNode(dc, nodePos)
 	}
 	for nodePos, node := range s.nodes {
-		node.drawTargets(screen, nodePos, drawBlueTargets, drawRedTargets)
+		node.drawTargets(dc, nodePos, drawBlueTargets, drawRedTargets)
 	}
 	for unitPos, unit := range s.units {
 		if unitPos.layer == highAltitude {
-			unit.draw(screen, unitPos, unit.selected)
+			unit.draw(dc, unitPos, unit.selected)
 		}
 	}
 	for unitPos, unit := range s.units {
 		if unitPos.layer == lowAltitude {
-			unit.draw(screen, unitPos, unit.selected)
+			unit.draw(dc, unitPos, unit.selected)
 		}
 	}
 	for unitPos, unit := range s.units {
 		if unitPos.layer == ground {
-			unit.draw(screen, unitPos, unit.selected)
+			unit.draw(dc, unitPos, unit.selected)
 		}
 	}
 	if drawFluxes {
 		for fluxPos, flux := range s.fluxes {
-			flux.draw(screen, fluxPos)
+			flux.draw(dc, fluxPos)
 		}
 	}
 }

@@ -2,7 +2,6 @@
 package main
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -121,7 +120,7 @@ func (f *flux) refresh() {
 	f.direction = noDirection
 }
 
-func (f *flux) draw(screen *ebiten.Image, fluxPos gridPosition) {
+func (f *flux) draw(dc drawContext, fluxPos gridPosition) {
 	if f.magnitude == 0 {
 		return
 	}
@@ -134,43 +133,43 @@ func (f *flux) draw(screen *ebiten.Image, fluxPos gridPosition) {
 	case noDirection:
 		panic("need a direction to draw flux")
 	case north:
-		yEnd -= (gridSize / 2)
+		yEnd -= (dc.gridSize / 2)
 	case northEast:
-		xEnd += (gridSize / 2)
-		yEnd -= (gridSize / 2)
+		xEnd += (dc.gridSize / 2)
+		yEnd -= (dc.gridSize / 2)
 	case east:
-		xEnd += (gridSize / 2)
+		xEnd += (dc.gridSize / 2)
 	case southEast:
-		xEnd += (gridSize / 2)
-		yEnd += (gridSize / 2)
+		xEnd += (dc.gridSize / 2)
+		yEnd += (dc.gridSize / 2)
 	case south:
-		yEnd += (gridSize / 2)
+		yEnd += (dc.gridSize / 2)
 	case southWest:
-		xEnd -= (gridSize / 2)
-		yEnd += (gridSize / 2)
+		xEnd -= (dc.gridSize / 2)
+		yEnd += (dc.gridSize / 2)
 	case west:
-		xEnd -= (gridSize / 2)
+		xEnd -= (dc.gridSize / 2)
 	case northWest:
-		xEnd -= (gridSize / 2)
-		yEnd -= (gridSize / 2)
+		xEnd -= (dc.gridSize / 2)
+		yEnd -= (dc.gridSize / 2)
 	}
 
 	vector.StrokeLine(
-		screen,
-		float32(center.x)*windowMultiplier,
-		float32(center.y)*windowMultiplier,
-		float32(xEnd)*windowMultiplier,
-		float32(yEnd)*windowMultiplier,
-		float32(fluxLineWidth)*windowMultiplier,
+		dc.screen,
+		float32(center.x)*dc.windowMultiplier,
+		float32(center.y)*dc.windowMultiplier,
+		float32(xEnd)*dc.windowMultiplier,
+		float32(yEnd)*dc.windowMultiplier,
+		float32(fluxLineWidth)*dc.windowMultiplier,
 		fluxColor,
 		false,
 	)
 
 	vector.DrawFilledCircle(
-		screen,
-		float32(xEnd)*windowMultiplier,
-		float32(yEnd)*windowMultiplier,
-		float32(fluxDirectionRadius)*windowMultiplier,
+		dc.screen,
+		float32(xEnd)*dc.windowMultiplier,
+		float32(yEnd)*dc.windowMultiplier,
+		float32(fluxDirectionRadius)*dc.windowMultiplier,
 		fluxColor,
 		false,
 	)

@@ -6,7 +6,6 @@ import (
 	"log/slog"
 
 	"github.com/gofrs/uuid/v5"
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -336,7 +335,7 @@ func (u unit) log() []slog.Attr {
 	return a
 }
 
-func (u *unit) draw(screen *ebiten.Image, unitPos position, selected bool) {
+func (u *unit) draw(dc drawContext, unitPos position, selected bool) {
 	var unitColor color.Color
 	switch u.player {
 	case bluePlayer:
@@ -348,17 +347,17 @@ func (u *unit) draw(screen *ebiten.Image, unitPos position, selected bool) {
 	}
 
 	vector.DrawFilledCircle(
-		screen,
-		float32(unitPos.x)*windowMultiplier,
-		float32(unitPos.y)*windowMultiplier,
-		float32(u.radius)*windowMultiplier,
+		dc.screen,
+		float32(unitPos.x)*dc.windowMultiplier,
+		float32(unitPos.y)*dc.windowMultiplier,
+		float32(u.radius)*dc.windowMultiplier,
 		unitColor,
 		false,
 	)
 
 	if selected {
 		drawUnfilledBoxInt(
-			screen,
+			dc,
 			highlightColor,
 			unitPos.x-u.radius,
 			unitPos.y-u.radius,
@@ -369,23 +368,23 @@ func (u *unit) draw(screen *ebiten.Image, unitPos position, selected bool) {
 
 	if selected && u.currentTarget != nil {
 		vector.StrokeLine(
-			screen,
-			float32(unitPos.x)*windowMultiplier,
-			float32(unitPos.y)*windowMultiplier,
-			float32(u.currentTarget.x)*windowMultiplier,
-			float32(u.currentTarget.y)*windowMultiplier,
-			float32(targetNodeLineWidth)*windowMultiplier,
+			dc.screen,
+			float32(unitPos.x)*dc.windowMultiplier,
+			float32(unitPos.y)*dc.windowMultiplier,
+			float32(u.currentTarget.x)*dc.windowMultiplier,
+			float32(u.currentTarget.y)*dc.windowMultiplier,
+			float32(targetNodeLineWidth)*dc.windowMultiplier,
 			highlightColor,
 			false,
 		)
 
 		if u.unitConfig.name == unguidedGroundMissile {
 			vector.StrokeCircle(
-				screen,
-				float32(u.currentTarget.x)*windowMultiplier,
-				float32(u.currentTarget.y)*windowMultiplier,
-				float32(missileBlastRadius)*windowMultiplier,
-				float32(missileBlastRadiusLineWidth)*windowMultiplier,
+				dc.screen,
+				float32(u.currentTarget.x)*dc.windowMultiplier,
+				float32(u.currentTarget.y)*dc.windowMultiplier,
+				float32(missileBlastRadius)*dc.windowMultiplier,
+				float32(missileBlastRadiusLineWidth)*dc.windowMultiplier,
 				highlightColor,
 				false,
 			)
@@ -396,11 +395,11 @@ func (u *unit) draw(screen *ebiten.Image, unitPos position, selected bool) {
 		var healthLineLength = (float32(u.health) / float32(u.maxHealth)) * float32(u.radius*2)
 
 		vector.DrawFilledRect(
-			screen,
-			float32(unitPos.x-u.radius)*windowMultiplier,
-			float32(unitPos.y-u.radius)*windowMultiplier,
-			healthLineLength*windowMultiplier,
-			float32(u.radius)*windowMultiplier,
+			dc.screen,
+			float32(unitPos.x-u.radius)*dc.windowMultiplier,
+			float32(unitPos.y-u.radius)*dc.windowMultiplier,
+			healthLineLength*dc.windowMultiplier,
+			float32(u.radius)*dc.windowMultiplier,
 			unitHealthColor,
 			false,
 		)

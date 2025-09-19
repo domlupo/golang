@@ -134,26 +134,28 @@ func (pixelPos pixelPosition) log() []slog.Attr {
 }
 
 func getPixelPosition(gridPos gridPosition, innerGridPos innerGridPosition) pixelPosition {
-	var x = (gridPos.x * gridSize) + innerGridPos.x
-	var y = (gridPos.y * gridSize) + innerGridPos.y
+	// TODO: fix hardcoding
+	var x = (gridPos.x * 40) + innerGridPos.x
+	var y = (gridPos.y * 40) + innerGridPos.y
 
 	return pixelPosition{x, y}
 }
 
 func splitPixelPosition(pixelPos pixelPosition) (gridPosition, innerGridPosition) {
-	var gridPosX = pixelPos.x / gridSize
-	var gridPosY = pixelPos.y / gridSize
-	var innerGridPosX = pixelPos.x % gridSize
-	var innerGridPosY = pixelPos.y % gridSize
+	// TODO: fix hardcoding
+	var gridPosX = pixelPos.x / 40
+	var gridPosY = pixelPos.y / 40
+	var innerGridPosX = pixelPos.x % 40
+	var innerGridPosY = pixelPos.y % 40
 	return gridPosition{gridPosX, gridPosY}, innerGridPosition{innerGridPosX, innerGridPosY}
 }
 
 func collidesWithBorder(pos position, offset int) bool {
-	if pos.pixelPosition.x+offset > windowWidth {
+	if pos.pixelPosition.x+offset > 1280 { // TODO: Fix hardcoding
 		return true
 	} else if pos.pixelPosition.x-offset < 0 {
 		return true
-	} else if pos.pixelPosition.y+offset > windowHeight {
+	} else if pos.pixelPosition.y+offset > 720 { // TODO: Fix hardcoding
 		return true
 	} else if pos.pixelPosition.y-offset < 0 {
 		return true

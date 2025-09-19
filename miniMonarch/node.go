@@ -4,7 +4,6 @@ package main
 import (
 	"image/color"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -42,7 +41,7 @@ func newNode(p player, gridPos gridPosition, unit unitConfig) node {
 	return n
 }
 
-func (n *node) drawNode(screen *ebiten.Image, nodeGridPos gridPosition) {
+func (n *node) drawNode(dc drawContext, nodeGridPos gridPosition) {
 	var nodeColor color.Color
 	switch n.player {
 	case bluePlayer:
@@ -58,17 +57,17 @@ func (n *node) drawNode(screen *ebiten.Image, nodeGridPos gridPosition) {
 	var nodePixelPos = getPixelPosition(nodeGridPos, innerGridPosition{0, 0})
 
 	vector.DrawFilledCircle(
-		screen,
-		float32(nodePixelPos.x)*windowMultiplier,
-		float32(nodePixelPos.y)*windowMultiplier,
-		float32(nodeRadius)*windowMultiplier,
+		dc.screen,
+		float32(nodePixelPos.x)*dc.windowMultiplier,
+		float32(nodePixelPos.y)*dc.windowMultiplier,
+		float32(nodeRadius)*dc.windowMultiplier,
 		nodeColor,
 		false,
 	)
 
 	if n.selected {
 		drawUnfilledBoxInt(
-			screen,
+			dc,
 			highlightColor,
 			nodePixelPos.x-n.radius,
 			nodePixelPos.y-n.radius,
@@ -79,18 +78,18 @@ func (n *node) drawNode(screen *ebiten.Image, nodeGridPos gridPosition) {
 	if n.health != initialNodeHealth {
 		var healthLineLength = (float32(n.health) / float32(initialNodeHealth)) * float32(nodeRadius*2)
 		vector.StrokeLine(
-			screen,
-			float32(nodePixelPos.x-nodeRadius)*windowMultiplier,
-			float32(nodePixelPos.y)*windowMultiplier,
-			(float32(nodePixelPos.x-nodeRadius)+healthLineLength)*windowMultiplier,
-			float32(nodePixelPos.y)*windowMultiplier,
-			float32(healthLineWidth)*windowMultiplier,
+			dc.screen,
+			float32(nodePixelPos.x-nodeRadius)*dc.windowMultiplier,
+			float32(nodePixelPos.y)*dc.windowMultiplier,
+			(float32(nodePixelPos.x-nodeRadius)+healthLineLength)*dc.windowMultiplier,
+			float32(nodePixelPos.y)*dc.windowMultiplier,
+			float32(healthLineWidth)*dc.windowMultiplier,
 			nodeHealthColor,
 			false)
 	}
 }
 
-func (n *node) drawTargets(screen *ebiten.Image, nodeGridPos gridPosition, drawBlueTargets bool, drawRedTargets bool) {
+func (n *node) drawTargets(dc drawContext, nodeGridPos gridPosition, drawBlueTargets bool, drawRedTargets bool) {
 	var nodeColor color.Color
 	switch n.player {
 	case bluePlayer:
@@ -106,12 +105,12 @@ func (n *node) drawTargets(screen *ebiten.Image, nodeGridPos gridPosition, drawB
 	if n.target != nil && ((n.player == bluePlayer && drawBlueTargets) || (n.player == redPlayer && drawRedTargets)) {
 		var nodePixelPos = getPixelPosition(nodeGridPos, innerGridPosition{0, 0})
 		vector.StrokeLine(
-			screen,
-			float32(nodePixelPos.x)*windowMultiplier,
-			float32(nodePixelPos.y)*windowMultiplier,
-			float32(n.target.x)*windowMultiplier,
-			float32(n.target.y)*windowMultiplier,
-			float32(targetNodeLineWidth)*windowMultiplier,
+			dc.screen,
+			float32(nodePixelPos.x)*dc.windowMultiplier,
+			float32(nodePixelPos.y)*dc.windowMultiplier,
+			float32(n.target.x)*dc.windowMultiplier,
+			float32(n.target.y)*dc.windowMultiplier,
+			float32(targetNodeLineWidth)*dc.windowMultiplier,
 			nodeColor,
 			false,
 		)

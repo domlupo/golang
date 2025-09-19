@@ -17,15 +17,6 @@ import (
 var blueComputerActive = true
 var redComputerActive = true
 
-// This must only be used for drawing images and windows.
-// Never use for game logic.
-const windowMultiplier = 2.5
-
-// aspect ratio config (16:9 aspect ratio)
-const windowWidth = 1280
-const windowHeight = 720
-const gridSize = 40
-
 var slowTick = false
 
 const slowTickDuration = 10 * time.Second
@@ -33,7 +24,7 @@ const slowTickDuration = 10 * time.Second
 // game balance config
 var fluxMagnitude = 10
 var unitFluxCountLimit = 10
-var nodeRadius = gridSize / 2
+var nodeRadius = 40 / 2 // TODO: Fix hardcoding
 var initialNodeHealth = 100
 var missileBlastRadius = 100
 
@@ -134,9 +125,6 @@ var targetNodeLineWidth = 1
 var drawDebugGrid = false
 var debugGridColor = color.Black
 
-const debugGridOffsetWithoutWindowMultipler = 0
-const debugGridOffset = debugGridOffsetWithoutWindowMultipler * windowMultiplier
-const debugGridWidth = 1 * windowMultiplier
 const debugGridSquareCount = 32
 
 // other configs
@@ -166,7 +154,19 @@ var initialSelectedY = float32(-1.0)
 var currentSelectedX = float32(-1.0)
 var currentSelectedY = float32(-1.0)
 
-type game struct{}
+type Game struct {
+	// float32 rather than float64 since alot of Ebiten draw APIs use float32
+	*drawContext
+	backgroundColor color.RGBA
+}
+
+func newGame() Game {
+	g := Game{
+		drawContext:     newDrawContext(),
+		backgroundColor: color.RGBA{200, 200, 200, 255},
+	}
+	return g
+}
 
 var logger l
 var gameState state
@@ -174,51 +174,17 @@ var compOne computer
 var compTwo computer
 var toggles map[string]*toggle = make(map[string]*toggle)
 
-func restartGame() {
+// TODO: Should this be a method rather than a function?
+func restartGame(g *Game) {
 	// TODO: Need to restart timers, etc
-	gameState = *newState()
+	gameState = *newState(g.windowWidth/g.gridSize, g.windowHeight/g.gridSize)
 	compOne = *newComputer(bluePlayer)
 	compTwo = *newComputer(redPlayer)
 	setupState(gameState, complexMissile)
 	updateComputerTargetNodes(gameState)
 }
 
-func init() {
-	var monitors []*ebiten.MonitorType
-	monitors = ebiten.AppendMonitors(monitors)
-	// TODO: Remove before release in order to avoid bugs for customers which own this monitor
-	for _, m := range monitors {
-		if m.Name() == "DELL U2720Q" {
-			ebiten.SetMonitor(m)
-		}
-	}
-
-	logger = newLogger()
-
-	toggles["pause"] = newToggle(ebiten.KeyP, func() { paused = !paused })
-	toggles["slowTick"] = newToggle(ebiten.KeyT, func() { slowTick = !slowTick })
-	toggles["logLevel"] = newToggle(ebiten.KeyL, func() { logger.toggleLevel() })
-	toggles["mainLogType"] = newToggle(ebiten.KeyM, func() { logger.toggleType(mainLogType) })
-	toggles["stateLogType"] = newToggle(ebiten.KeyS, func() { logger.toggleType(stateLogType) })
-	toggles["selectedUnitLogType"] = newToggle(ebiten.KeyU, func() { logger.toggleType(selectedUnitLogType) })
-	toggles["drawAll"] = newToggle(ebiten.KeyA, func() {
-		var toggle = !(drawFluxes && drawUnitHealth && drawBlueTargets && drawRedTargets && drawDebugGrid)
-		drawFluxes = toggle
-		drawUnitHealth = toggle
-		drawBlueTargets = toggle
-		drawRedTargets = toggle
-		drawDebugGrid = toggle
-	})
-	toggles["drawFlux"] = newToggle(ebiten.KeyF, func() { drawFluxes = !drawFluxes })
-	toggles["drawUnitHealth"] = newToggle(ebiten.KeyH, func() { drawUnitHealth = !drawUnitHealth })
-	toggles["drawBlueTargets"] = newToggle(ebiten.KeyB, func() { drawBlueTargets = !drawBlueTargets })
-	toggles["drawRedTargets"] = newToggle(ebiten.KeyR, func() { drawRedTargets = !drawRedTargets })
-	toggles["drawDebugGrid"] = newToggle(ebiten.KeyG, func() { drawDebugGrid = !drawDebugGrid })
-
-	restartGame()
-}
-
-func (g *game) Update() error {
+func (g *Game) Update() error {
 	currentTime = time.Now()
 
 	for _, toggle := range toggles {
@@ -253,8 +219,8 @@ func (g *game) Update() error {
 
 	// player actions
 	var graphicalX, graphicalY = ebiten.CursorPosition()
-	var x = float32(graphicalX) / windowMultiplier
-	var y = float32(graphicalY) / windowMultiplier
+	var x = float32(graphicalX) / g.windowMultiplier
+	var y = float32(graphicalY) / g.windowMultiplier
 	var pixelPos = pixelPosition{int(x), int(y)}
 
 	priorLeftMouseClicked = leftMouseClicked
@@ -342,7 +308,7 @@ func (g *game) Update() error {
 		if restart {
 			logger.log(infoLevel, mainLogType, "restartGame")
 
-			restartGame()
+			restartGame(g)
 		} else {
 			return errors.New("regular termination")
 		}
@@ -361,14 +327,18 @@ func updateComputerTargetNodes(s state) {
 	}
 }
 
-func (g *game) Draw(screen *ebiten.Image) {
+func (g *Game) Draw(screen *ebiten.Image) {
+	if g.drawContext.screen == nil {
+		g.drawContext.screen = screen
+	}
+
 	screen.Fill(backgroundColor)
-	drawDebug(screen, drawDebugGrid)
-	gameState.draw(screen, drawBlueTargets, drawRedTargets, drawFluxes)
+	drawDebug(*g.drawContext, drawDebugGrid)
+	gameState.draw(*g.drawContext, drawBlueTargets, drawRedTargets, drawFluxes)
 
 	if leftMouseHeld {
 		drawUnfilledBoxFloat32(
-			screen,
+			*g.drawContext,
 			highlightColor,
 			initialSelectedX,
 			initialSelectedY,
@@ -378,11 +348,13 @@ func (g *game) Draw(screen *ebiten.Image) {
 	}
 }
 
-func (g *game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return windowWidth * windowMultiplier, windowHeight * windowMultiplier
+func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+	return int(float32(g.windowWidth) * g.windowMultiplier), int(float32(g.windowHeight) * g.windowMultiplier)
 }
 
 func main() {
+	g := newGame()
+
 	if runProfiler {
 		f, err := os.Create("cpu.prof")
 		if err != nil {
@@ -396,8 +368,41 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	ebiten.SetWindowSize(windowWidth*windowMultiplier, windowHeight*windowMultiplier)
-	if err := ebiten.RunGame(&game{}); err != nil {
+	var monitors []*ebiten.MonitorType
+	monitors = ebiten.AppendMonitors(monitors)
+	// TODO: Remove before release in order to avoid bugs for customers which own this monitor
+	for _, m := range monitors {
+		if m.Name() == "DELL U2720Q" {
+			ebiten.SetMonitor(m)
+		}
+	}
+
+	ebiten.SetWindowSize(int(float32(g.windowWidth)*g.windowMultiplier), int(float32(g.windowHeight)*g.windowMultiplier))
+
+	logger = newLogger()
+
+	toggles["pause"] = newToggle(ebiten.KeyP, func() { paused = !paused })
+	toggles["slowTick"] = newToggle(ebiten.KeyT, func() { slowTick = !slowTick })
+	toggles["logLevel"] = newToggle(ebiten.KeyL, func() { logger.toggleLevel() })
+	toggles["mainLogType"] = newToggle(ebiten.KeyM, func() { logger.toggleType(mainLogType) })
+	toggles["stateLogType"] = newToggle(ebiten.KeyS, func() { logger.toggleType(stateLogType) })
+	toggles["selectedUnitLogType"] = newToggle(ebiten.KeyU, func() { logger.toggleType(selectedUnitLogType) })
+	toggles["drawAll"] = newToggle(ebiten.KeyA, func() {
+		var toggle = !(drawFluxes && drawUnitHealth && drawBlueTargets && drawRedTargets && drawDebugGrid)
+		drawFluxes = toggle
+		drawUnitHealth = toggle
+		drawBlueTargets = toggle
+		drawRedTargets = toggle
+		drawDebugGrid = toggle
+	})
+	toggles["drawFlux"] = newToggle(ebiten.KeyF, func() { drawFluxes = !drawFluxes })
+	toggles["drawUnitHealth"] = newToggle(ebiten.KeyH, func() { drawUnitHealth = !drawUnitHealth })
+	toggles["drawBlueTargets"] = newToggle(ebiten.KeyB, func() { drawBlueTargets = !drawBlueTargets })
+	toggles["drawRedTargets"] = newToggle(ebiten.KeyR, func() { drawRedTargets = !drawRedTargets })
+	toggles["drawDebugGrid"] = newToggle(ebiten.KeyG, func() { drawDebugGrid = !drawDebugGrid })
+
+	restartGame(&g)
+	if err := ebiten.RunGame(&g); err != nil {
 		log.Fatal(err)
 	}
 }
