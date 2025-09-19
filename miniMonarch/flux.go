@@ -25,8 +25,7 @@ func newFlux(gridPos gridPosition) flux {
 	return f
 }
 
-func (f *flux) getFluxDelta() *gridPosition {
-	var magnitude = fluxMagnitude
+func (f *flux) getFluxDelta(magnitude int) *gridPosition {
 	switch f.direction {
 	case noDirection:
 		return &gridPosition{0, 0}

@@ -66,9 +66,9 @@ func (s *state) analyzeTargets() {
 			continue
 		}
 
-		if unit1.fluxTurnCount > unitFluxCountLimit {
+		if unit1.fluxTurnCount > unit1.fluxTurnCountDelay {
 			var gridPos, _ = splitPixelPosition(unitPos1.pixelPosition)
-			var fluxDelta = s.fluxes[gridPos].getFluxDelta()
+			var fluxDelta = s.fluxes[gridPos].getFluxDelta(unit1.fluxMagnitude)
 			unit1.updateTarget(fluxTarget, &position{ground, pixelPosition{unitPos1.x + fluxDelta.x, unitPos1.y + fluxDelta.y}})
 			unit1.fluxTurnCount = 0
 		}

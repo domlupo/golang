@@ -33,6 +33,10 @@ Is there a mobile equivalent for war/4x games?
 
 - Research more local pathfinding algorithms
   - Flux can be iterated and tuned a lot. I only implemented a basic solution.
+  - Determine better flux structure and contracts.
+    - Does flux depend on unit type? Probably harder to maintain, but  more tuneable.
+    - Do units contribute a different amount of flux based on other factos like radius?
+    - Does flux affect units different? Flux magnitude can be different for all units or the same with an efficiency factor.
   - Look into other approaches, methods and algorithms.
 
 - Add more ground units for local path finding iteration

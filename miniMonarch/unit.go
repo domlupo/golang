@@ -24,6 +24,8 @@ var infantryConfig = unitConfig{
 	attacksHighAltitude:   false,
 	attacksPosition:       false,
 	detonateAtTerminalPos: false,
+	fluxTurnCountDelay:    10,
+	fluxMagnitude:         10,
 }
 var sniperConfig = unitConfig{
 	name:                  sniper,
@@ -39,6 +41,8 @@ var sniperConfig = unitConfig{
 	attacksHighAltitude:   false,
 	attacksPosition:       false,
 	detonateAtTerminalPos: false,
+	fluxTurnCountDelay:    10,
+	fluxMagnitude:         10,
 }
 
 // TODO: Figure out better naming for various missiles
@@ -57,6 +61,8 @@ var unguidedGroundMissileConfig = unitConfig{
 	attacksHighAltitude:   false,
 	attacksPosition:       true,
 	detonateAtTerminalPos: true,
+	fluxTurnCountDelay:    10,
+	fluxMagnitude:         10,
 }
 var guidedAirMissileConfig = unitConfig{
 	name:                  guidedAirMissile,
@@ -72,6 +78,8 @@ var guidedAirMissileConfig = unitConfig{
 	attacksHighAltitude:   true,
 	attacksPosition:       false,
 	detonateAtTerminalPos: true,
+	fluxTurnCountDelay:    10,
+	fluxMagnitude:         10,
 }
 
 type name int
@@ -109,6 +117,8 @@ type unitConfig struct {
 	attacksHighAltitude   bool
 	attacksPosition       bool
 	detonateAtTerminalPos bool
+	fluxTurnCountDelay    int
+	fluxMagnitude         int
 }
 
 func (config unitConfig) log() []slog.Attr {

@@ -14,8 +14,6 @@ import (
 )
 
 var logger l
-var fluxMagnitude = 10
-var unitFluxCountLimit = 10
 var missileBlastRadius = 100
 
 type Game struct {
