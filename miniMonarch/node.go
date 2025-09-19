@@ -28,7 +28,7 @@ type node struct {
 	unitConfig    unitConfig
 }
 
-func newNode(p player, gridPos gridPosition, initialNodeHealth int, unit unitConfig) node {
+func newNode(p player, gridPos gridPosition, initialNodeHealth int, nodeRadius int, unit unitConfig) node {
 	n := node{
 		player:        p,
 		gridPos:       gridPos,
@@ -62,7 +62,7 @@ func (n *node) drawNode(dc drawContext, nodeGridPos gridPosition) {
 		dc.screen,
 		float32(nodePixelPos.x)*dc.windowMultiplier,
 		float32(nodePixelPos.y)*dc.windowMultiplier,
-		float32(nodeRadius)*dc.windowMultiplier,
+		float32(n.radius)*dc.windowMultiplier,
 		nodeColor,
 		false,
 	)
@@ -78,12 +78,12 @@ func (n *node) drawNode(dc drawContext, nodeGridPos gridPosition) {
 	}
 
 	if n.currentHealth != n.maxHealth {
-		var healthLineLength = (float32(n.currentHealth) / float32(n.maxHealth)) * float32(nodeRadius*2)
+		var healthLineLength = (float32(n.currentHealth) / float32(n.maxHealth)) * float32(n.radius*2)
 		vector.StrokeLine(
 			dc.screen,
-			float32(nodePixelPos.x-nodeRadius)*dc.windowMultiplier,
+			float32(nodePixelPos.x-n.radius)*dc.windowMultiplier,
 			float32(nodePixelPos.y)*dc.windowMultiplier,
-			(float32(nodePixelPos.x-nodeRadius)+healthLineLength)*dc.windowMultiplier,
+			(float32(nodePixelPos.x-n.radius)+healthLineLength)*dc.windowMultiplier,
 			float32(nodePixelPos.y)*dc.windowMultiplier,
 			float32(dc.healthLineWidth)*dc.windowMultiplier,
 			dc.nodeHealthColor,

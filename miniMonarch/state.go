@@ -428,7 +428,7 @@ func (s *state) updateNodeOwnership() bool {
 
 	for nodeGridPos, node := range s.nodes {
 		if node.currentHealth == 0 {
-			newNode := newNode(*node.capturedBy, node.gridPos, node.maxHealth, node.unitConfig)
+			newNode := newNode(*node.capturedBy, node.gridPos, node.maxHealth, node.radius, node.unitConfig)
 			s.nodes[nodeGridPos] = &newNode
 			nodeOwnershipChanged = true
 		}
