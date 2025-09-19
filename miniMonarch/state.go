@@ -401,9 +401,9 @@ func (s *state) attackNodes() {
 		if unit.canReachTargetNode != nil {
 			attackedNodeThisTurnCount++
 			var targetNode = unit.canReachTargetNode
-			targetNode.health = max(targetNode.health-unit.attack, 0)
+			targetNode.currentHealth = max(targetNode.currentHealth-unit.attack, 0)
 			unit.attackedThisTurn = true
-			if targetNode.health == 0 {
+			if targetNode.currentHealth == 0 {
 				targetNode.capturedBy = &unit.player
 			}
 			s.nodes[targetNode.gridPos] = targetNode
@@ -427,8 +427,8 @@ func (s *state) updateNodeOwnership() bool {
 	var nodeOwnershipChanged = false
 
 	for nodeGridPos, node := range s.nodes {
-		if node.health == 0 {
-			newNode := newNode(*node.capturedBy, node.gridPos, node.unitConfig)
+		if node.currentHealth == 0 {
+			newNode := newNode(*node.capturedBy, node.gridPos, node.maxHealth, node.unitConfig)
 			s.nodes[nodeGridPos] = &newNode
 			nodeOwnershipChanged = true
 		}

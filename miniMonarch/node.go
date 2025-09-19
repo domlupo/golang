@@ -17,26 +17,28 @@ const (
 )
 
 type node struct {
-	player     player
-	gridPos    gridPosition
-	radius     int
-	selected   bool
-	health     int
-	capturedBy *player
-	target     *position
-	unitConfig unitConfig
+	player        player
+	gridPos       gridPosition
+	radius        int
+	selected      bool
+	maxHealth     int
+	currentHealth int
+	capturedBy    *player
+	target        *position
+	unitConfig    unitConfig
 }
 
-func newNode(p player, gridPos gridPosition, unit unitConfig) node {
+func newNode(p player, gridPos gridPosition, initialNodeHealth int, unit unitConfig) node {
 	n := node{
-		player:     p,
-		gridPos:    gridPos,
-		radius:     nodeRadius,
-		selected:   false,
-		health:     initialNodeHealth,
-		capturedBy: nil,
-		target:     nil,
-		unitConfig: unit,
+		player:        p,
+		gridPos:       gridPos,
+		radius:        nodeRadius,
+		selected:      false,
+		maxHealth:     initialNodeHealth,
+		currentHealth: initialNodeHealth,
+		capturedBy:    nil,
+		target:        nil,
+		unitConfig:    unit,
 	}
 	return n
 }
@@ -75,8 +77,8 @@ func (n *node) drawNode(dc drawContext, nodeGridPos gridPosition) {
 			nodePixelPos.y+n.radius)
 	}
 
-	if n.health != initialNodeHealth {
-		var healthLineLength = (float32(n.health) / float32(initialNodeHealth)) * float32(nodeRadius*2)
+	if n.currentHealth != n.maxHealth {
+		var healthLineLength = (float32(n.currentHealth) / float32(n.maxHealth)) * float32(nodeRadius*2)
 		vector.StrokeLine(
 			dc.screen,
 			float32(nodePixelPos.x-nodeRadius)*dc.windowMultiplier,

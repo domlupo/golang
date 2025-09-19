@@ -17,7 +17,6 @@ var logger l
 var fluxMagnitude = 10
 var unitFluxCountLimit = 10
 var nodeRadius = 40 / 2 // TODO: Fix hardcoding of 40 aka gridSize
-var initialNodeHealth = 100
 var missileBlastRadius = 100
 
 type Game struct {
@@ -53,6 +52,7 @@ type Game struct {
 	compTwo                  computer
 	gameState                state
 	developerToggles         map[string]*toggle
+	initialNodeHealth        int
 }
 
 func newGame() Game {
@@ -74,6 +74,7 @@ func newGame() Game {
 		hotRestart:         true,
 		runProfiler:        false,
 		developerToggles:   make(map[string]*toggle),
+		initialNodeHealth:  100,
 	}
 	return g
 }
@@ -83,7 +84,7 @@ func (g *Game) restart() {
 	g.gameState = *newState(g.windowWidth/g.gridSize, g.windowHeight/g.gridSize)
 	g.compOne = *newComputer(bluePlayer)
 	g.compTwo = *newComputer(redPlayer)
-	setupState(g.gameState, complexMissile)
+	setupState(g.gameState, complexMissile, g.initialNodeHealth)
 	g.updateComputerTargetNodes()
 }
 
