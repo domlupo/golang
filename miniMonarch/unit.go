@@ -9,6 +9,71 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+// Note: unit radius set to an odd number is better for testing due to division bugs
+var infantryConfig = unitConfig{
+	name:                  infantry,
+	radius:                5,
+	maxHealth:             1000,
+	attack:                1,
+	vision:                30,
+	reach:                 6,
+	produceLayer:          ground,
+	staticTarget:          false,
+	attacksGround:         true,
+	attacksLowAltitude:    false,
+	attacksHighAltitude:   false,
+	attacksPosition:       false,
+	detonateAtTerminalPos: false,
+}
+var sniperConfig = unitConfig{
+	name:                  sniper,
+	radius:                7,
+	maxHealth:             5,
+	attack:                1,
+	vision:                100,
+	reach:                 100,
+	produceLayer:          ground,
+	staticTarget:          false,
+	attacksGround:         true,
+	attacksLowAltitude:    false,
+	attacksHighAltitude:   false,
+	attacksPosition:       false,
+	detonateAtTerminalPos: false,
+}
+
+// TODO: Figure out better naming for various missiles
+// TODO: Figure out better attack conventions e.g. direct, vs explosion, etc
+var unguidedGroundMissileConfig = unitConfig{
+	name:                  unguidedGroundMissile,
+	radius:                3,
+	maxHealth:             100,
+	attack:                1,
+	vision:                100,
+	reach:                 0,
+	produceLayer:          lowAltitude,
+	staticTarget:          true,
+	attacksGround:         false,
+	attacksLowAltitude:    false,
+	attacksHighAltitude:   false,
+	attacksPosition:       true,
+	detonateAtTerminalPos: true,
+}
+var guidedAirMissileConfig = unitConfig{
+	name:                  guidedAirMissile,
+	radius:                3,
+	maxHealth:             100,
+	attack:                1000,
+	vision:                3000,
+	reach:                 0,
+	produceLayer:          lowAltitude,
+	staticTarget:          false,
+	attacksGround:         false,
+	attacksLowAltitude:    true,
+	attacksHighAltitude:   true,
+	attacksPosition:       false,
+	detonateAtTerminalPos: true,
+}
+
 type name int
 
 const (
@@ -373,7 +438,7 @@ func (u *unit) draw(dc drawContext, unitPos position, selected bool) {
 			float32(unitPos.y)*dc.windowMultiplier,
 			float32(u.currentTarget.x)*dc.windowMultiplier,
 			float32(u.currentTarget.y)*dc.windowMultiplier,
-			float32(targetNodeLineWidth)*dc.windowMultiplier,
+			float32(dc.targetNodeLineWidth)*dc.windowMultiplier,
 			dc.highlightColor,
 			false,
 		)

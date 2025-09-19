@@ -110,7 +110,7 @@ func (n *node) drawTargets(dc drawContext, nodeGridPos gridPosition, drawBlueTar
 			float32(nodePixelPos.y)*dc.windowMultiplier,
 			float32(n.target.x)*dc.windowMultiplier,
 			float32(n.target.y)*dc.windowMultiplier,
-			float32(targetNodeLineWidth)*dc.windowMultiplier,
+			float32(dc.targetNodeLineWidth)*dc.windowMultiplier,
 			nodeColor,
 			false,
 		)

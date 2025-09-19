@@ -11,17 +11,26 @@ import (
 type drawContext struct {
 	screen *ebiten.Image
 	// windowMultipler must only be used for drawing images and windows.
-	// Never use for game logic. float32 rather than float64 because
-	// alot of Ebiten draw APIs use float32
-	windowMultiplier            float32
-	windowWidth                 int
-	windowHeight                int
-	gridSize                    int
+	// Never use for game logic. float32 rather than idiomatic float64
+	// because alot of Ebiten draw APIs use float32
+	windowMultiplier float32
+	windowWidth      int
+	windowHeight     int
+	gridSize         int
+	// The debug grid helps debugging display issues. Usually only altering
+	// offset is needed, width can remain 1.
+	// Offset values should only be 0 - 20 (half of grid size without window multipler)
+	// Some helpful values are: 0, 0.5, 1, 19, 19.5, 20
 	debugGridOffset             int
 	debugGridWidth              int
+	debugGridIndexCount         int
+	debugGridColor              color.Color
 	selectectionBoxLineWidth    int
 	missileBlastRadiusLineWidth int
 	healthLineWidth             int
+	fluxLineWidth               int
+	fluxDirectionRadius         int
+	targetNodeLineWidth         int
 	backgroundColor             color.RGBA
 	highlightColor              color.RGBA
 	unitHealthColor             color.RGBA
@@ -45,9 +54,14 @@ func newDrawContext() *drawContext {
 		gridSize:                    40,
 		debugGridOffset:             0,
 		debugGridWidth:              1,
+		debugGridIndexCount:         32,
+		debugGridColor:              color.Black,
 		selectectionBoxLineWidth:    1,
 		missileBlastRadiusLineWidth: 1,
 		healthLineWidth:             2,
+		fluxLineWidth:               2,
+		fluxDirectionRadius:         3,
+		targetNodeLineWidth:         1,
 		backgroundColor:             color.RGBA{200, 200, 200, 255},
 		highlightColor:              highlightColor,
 		unitHealthColor:             highlightColor,
@@ -124,7 +138,7 @@ func drawDebug(dc drawContext, drawDebugGrid bool) {
 		return
 	}
 
-	for i := range debugGridSquareCount {
+	for i := range dc.debugGridIndexCount {
 		var x = dc.gridSize * i
 		vector.StrokeLine(
 			dc.screen,
@@ -132,7 +146,7 @@ func drawDebug(dc drawContext, drawDebugGrid bool) {
 			0, float32(x-dc.debugGridOffset)*dc.windowMultiplier,
 			float32(dc.windowHeight)*dc.windowMultiplier,
 			float32(dc.debugGridWidth)*dc.windowMultiplier,
-			debugGridColor,
+			dc.debugGridColor,
 			false)
 		vector.StrokeLine(
 			dc.screen,
@@ -140,7 +154,7 @@ func drawDebug(dc drawContext, drawDebugGrid bool) {
 			0, float32(x+dc.debugGridOffset)*dc.windowMultiplier,
 			float32(dc.windowHeight)*dc.windowMultiplier,
 			float32(dc.debugGridWidth)*dc.windowMultiplier,
-			debugGridColor,
+			dc.debugGridColor,
 			false)
 		var y = dc.gridSize * i
 		vector.StrokeLine(
@@ -149,7 +163,7 @@ func drawDebug(dc drawContext, drawDebugGrid bool) {
 			float32(dc.windowWidth)*dc.windowMultiplier,
 			float32(y-dc.debugGridOffset)*dc.windowMultiplier,
 			float32(dc.debugGridWidth)*dc.windowMultiplier,
-			debugGridColor,
+			dc.debugGridColor,
 			false)
 		vector.StrokeLine(
 			dc.screen,
@@ -158,7 +172,7 @@ func drawDebug(dc drawContext, drawDebugGrid bool) {
 			float32(dc.windowWidth)*dc.windowMultiplier,
 			float32(y+dc.debugGridOffset)*dc.windowMultiplier,
 			float32(dc.debugGridWidth)*dc.windowMultiplier,
-			debugGridColor,
+			dc.debugGridColor,
 			false)
 	}
 }
