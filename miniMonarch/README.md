@@ -76,7 +76,6 @@ Is there a mobile equivalent for war/4x games?
   - Better missile UI so blast radius is visible 
   - Easier way to select all nodes of same type with double click
   - Better automated targetting from units. e.g. units don't auto target nodes when they should.
-  - 4 way selection rather than only top left to bottom right
 
 - Analyze and iterate on game design and game loop:
   - Check design feasability 

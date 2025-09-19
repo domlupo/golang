@@ -435,11 +435,25 @@ func (s *state) updateNodeOwnership() bool {
 }
 
 func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixelPosition) {
-	// TODO: generalize implementation, for prototype this assumes bottom right release position.
-	// The future implementation needs to handle all four cases for release position.
+	var topLeftPixelPos pixelPosition
+	var bottomRightPixelPos pixelPosition
 
-	var topLeftGridPos, _ = splitPixelPosition(clickPosition)
-	var bottomRightGridPos, _ = splitPixelPosition(releasePosition)
+	if clickPosition.x < releasePosition.x && clickPosition.y < releasePosition.y {
+		topLeftPixelPos = clickPosition
+		bottomRightPixelPos = releasePosition
+	} else if clickPosition.x > releasePosition.x && clickPosition.y > releasePosition.y {
+		topLeftPixelPos = releasePosition
+		bottomRightPixelPos = clickPosition
+	} else if clickPosition.x > releasePosition.x && clickPosition.y < releasePosition.y {
+		topLeftPixelPos = pixelPosition{releasePosition.x, clickPosition.y}
+		bottomRightPixelPos = pixelPosition{clickPosition.x, releasePosition.y}
+	} else if clickPosition.x < releasePosition.x && clickPosition.y > releasePosition.y {
+		topLeftPixelPos = pixelPosition{clickPosition.x, releasePosition.y}
+		bottomRightPixelPos = pixelPosition{releasePosition.x, clickPosition.y}
+	}
+
+	var topLeftGridPos, _ = splitPixelPosition(topLeftPixelPos)
+	var bottomRightGridPos, _ = splitPixelPosition(bottomRightPixelPos)
 
 	for nodeGridPos, node := range s.nodes {
 		if (topLeftGridPos.x < nodeGridPos.x) &&
@@ -454,10 +468,10 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 	}
 
 	for unitPixelPos, unit := range s.units {
-		if (clickPosition.x < unitPixelPos.x) &&
-			(unitPixelPos.x < releasePosition.x) &&
-			(clickPosition.y < unitPixelPos.y) &&
-			(unitPixelPos.y < releasePosition.y) {
+		if (topLeftPixelPos.x < unitPixelPos.x) &&
+			(unitPixelPos.x < bottomRightPixelPos.x) &&
+			(topLeftPixelPos.y < unitPixelPos.y) &&
+			(unitPixelPos.y < bottomRightPixelPos.y) {
 			unit.selected = true
 		} else {
 			unit.selected = false
