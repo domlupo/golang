@@ -104,6 +104,7 @@ var guidedAirMissileConfig = unitConfig{
 
 // game graphic config
 var selectectionBoxLineWidth = 1
+var missileBlastRadiusLineWidth = 1
 var healthLineWidth = 2
 var backgroundColor = color.RGBA{200, 200, 200, 255}
 var highlightColor = color.RGBA{70, 255, 0, 200}
@@ -178,7 +179,7 @@ func restartGame() {
 	gameState = *newState()
 	compOne = *newComputer(bluePlayer)
 	compTwo = *newComputer(redPlayer)
-	setupState(gameState, complex)
+	setupState(gameState, complexMissile)
 	updateComputerTargetNodes(gameState)
 }
 

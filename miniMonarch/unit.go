@@ -378,6 +378,18 @@ func (u *unit) draw(screen *ebiten.Image, unitPos position, selected bool) {
 			highlightColor,
 			false,
 		)
+
+		if u.unitConfig.name == unguidedGroundMissile {
+			vector.StrokeCircle(
+				screen,
+				float32(u.currentTarget.x)*windowMultiplier,
+				float32(u.currentTarget.y)*windowMultiplier,
+				float32(missileBlastRadius)*windowMultiplier,
+				float32(missileBlastRadiusLineWidth)*windowMultiplier,
+				highlightColor,
+				false,
+			)
+		}
 	}
 
 	if drawUnitHealth && u.health != u.maxHealth {

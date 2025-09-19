@@ -73,7 +73,6 @@ Is there a mobile equivalent for war/4x games?
 
 - Polish UI
   - Currently it is very hard to fight computer due to clunky UI
-  - Better missile UI so blast radius is visible 
   - Easier way to select all nodes of same type with double click
   - Better automated targetting from units. e.g. units don't auto target nodes when they should.
 
