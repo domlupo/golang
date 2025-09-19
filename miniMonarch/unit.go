@@ -391,7 +391,7 @@ func (u *unit) draw(dc drawContext, unitPos position, selected bool) {
 		}
 	}
 
-	if drawUnitHealth && u.health != u.maxHealth {
+	if u.health != u.maxHealth {
 		var healthLineLength = (float32(u.health) / float32(u.maxHealth)) * float32(u.radius*2)
 
 		vector.DrawFilledRect(

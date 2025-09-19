@@ -13,10 +13,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-// computer config
-var blueComputerActive = true
-var redComputerActive = true
-
 var slowTick = false
 
 const slowTickDuration = 10 * time.Second
@@ -93,11 +89,6 @@ var guidedAirMissileConfig = unitConfig{
 	detonateAtTerminalPos: true,
 }
 
-// debug only configs
-var drawFluxes = false
-var drawUnitHealth = false
-var drawBlueTargets = false
-var drawRedTargets = false
 var fluxLineWidth = 2
 var fluxDirectionRadius = 3
 var targetNodeLineWidth = 1
@@ -107,7 +98,6 @@ var targetNodeLineWidth = 1
 // offset is needed, width can remain 1.
 // Offset values should only be 0 - 20 (half of grid size without window multipler)
 // Some helpful values are: 0, 0.5, 1, 19, 19.5, 20
-var drawDebugGrid = false
 var debugGridColor = color.Black
 
 const debugGridSquareCount = 32
@@ -115,40 +105,51 @@ const debugGridSquareCount = 32
 // other configs
 var runProfiler = false
 
-const restart = true
-
-// general
-var slowTickTime time.Time = time.Now()
-var priorTime time.Time = time.Now()
-var currentTime time.Time = time.Now()
-
-// general debugging
-var paused = false
-
-// globals
-var produceWait time.Duration = 1_000_000 * time.Second
-var produceDelay time.Duration = 3 * time.Second
-var leftMouseClicked = false
-var leftMouseHeld = false
-var priorLeftMouseClicked = false
-var leftMouseReleased = false
-var middleMouseScrollClicked = false
-var rightMouseClicked = false
-var initialSelectedX = float32(-1.0)
-var initialSelectedY = float32(-1.0)
-var currentSelectedX = float32(-1.0)
-var currentSelectedY = float32(-1.0)
-
 type Game struct {
 	// float32 rather than float64 since alot of Ebiten draw APIs use float32
 	*drawContext
-	backgroundColor color.RGBA
+	backgroundColor          color.RGBA
+	produceWait              time.Duration
+	produceDelay             time.Duration
+	slowTickTime             time.Time
+	priorTime                time.Time
+	currentTime              time.Time
+	leftMouseClicked         bool
+	leftMouseHeld            bool
+	priorLeftMouseClicked    bool
+	leftMouseReleased        bool
+	middleMouseScrollClicked bool
+	rightMouseClicked        bool
+	paused                   bool
+	blueComputerActive       bool
+	redComputerActive        bool
+	hotRestart               bool
+	drawFluxes               bool
+	drawBlueTargets          bool
+	drawRedTargets           bool
+	drawDebugGrid            bool
+	initialSelectedX         float32
+	initialSelectedY         float32
+	currentSelectedX         float32
+	currentSelectedY         float32
 }
 
 func newGame() Game {
 	g := Game{
-		drawContext:     newDrawContext(),
-		backgroundColor: color.RGBA{200, 200, 200, 255},
+		drawContext:        newDrawContext(),
+		backgroundColor:    color.RGBA{200, 200, 200, 255},
+		produceWait:        1_000_000 * time.Second,
+		produceDelay:       3 * time.Second,
+		slowTickTime:       time.Now(),
+		priorTime:          time.Now(),
+		currentTime:        time.Now(),
+		initialSelectedX:   float32(-1.0),
+		initialSelectedY:   float32(-1.0),
+		currentSelectedX:   float32(-1.0),
+		currentSelectedY:   float32(-1.0),
+		blueComputerActive: true,
+		redComputerActive:  true,
+		hotRestart:         true,
 	}
 	return g
 }
@@ -160,32 +161,32 @@ var compTwo computer
 var toggles map[string]*toggle = make(map[string]*toggle)
 
 // TODO: Should this be a method rather than a function?
-func restartGame(g *Game) {
+func (g *Game) restart() {
 	// TODO: Need to restart timers, etc
 	gameState = *newState(g.windowWidth/g.gridSize, g.windowHeight/g.gridSize)
 	compOne = *newComputer(bluePlayer)
 	compTwo = *newComputer(redPlayer)
 	setupState(gameState, complexMissile)
-	updateComputerTargetNodes(gameState)
+	g.updateComputerTargetNodes(gameState)
 }
 
 func (g *Game) Update() error {
-	currentTime = time.Now()
+	g.currentTime = time.Now()
 
 	for _, toggle := range toggles {
-		toggle.checkToggle(currentTime)
+		toggle.checkToggle(g.currentTime)
 	}
 
-	// set global update defaults
-	leftMouseReleased = false
-	leftMouseHeld = false
+	// refresh
+	g.leftMouseReleased = false
+	g.leftMouseHeld = false
 
 	// update game state prior to player actions
-	if !paused && !(slowTick && (currentTime.Sub(slowTickTime) < slowTickDuration)) {
+	if !g.paused && !(slowTick && (g.currentTime.Sub(g.slowTickTime) < slowTickDuration)) {
 		if slowTick {
 			logger.log(infoLevel, alwaysLogType, "slowTick")
 		}
-		slowTickTime = time.Now()
+		g.slowTickTime = time.Now()
 
 		gameState.refresh()
 		gameState.analyzeTargets()
@@ -194,10 +195,10 @@ func (g *Game) Update() error {
 		gameState.attackNodes()
 		gameState.moveUnits()
 
-		if produceWait < produceDelay {
-			produceWait = produceWait + currentTime.Sub(priorTime)
+		if g.produceWait < g.produceDelay {
+			g.produceWait = g.produceWait + g.currentTime.Sub(g.priorTime)
 		} else {
-			produceWait = 0
+			g.produceWait = 0
 			gameState.produceUnits()
 		}
 	}
@@ -208,34 +209,35 @@ func (g *Game) Update() error {
 	var y = float32(graphicalY) / g.windowMultiplier
 	var pixelPos = pixelPosition{int(x), int(y)}
 
-	priorLeftMouseClicked = leftMouseClicked
-	leftMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
-	middleMouseScrollClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonMiddle)
-	rightMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight)
+	g.priorLeftMouseClicked = g.leftMouseClicked
+	g.leftMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
+	g.middleMouseScrollClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonMiddle)
+	g.rightMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight)
 
-	currentSelectedX = x
-	currentSelectedY = y
-	if priorLeftMouseClicked && !leftMouseClicked {
-		leftMouseReleased = true
-	} else if !priorLeftMouseClicked && leftMouseClicked {
-		initialSelectedX = x
-		initialSelectedY = y
-	} else if leftMouseClicked {
-		leftMouseHeld = true
+	g.currentSelectedX = x
+	g.currentSelectedY = y
+	if g.priorLeftMouseClicked && !g.leftMouseClicked {
+		g.leftMouseReleased = true
+	} else if !g.priorLeftMouseClicked && g.leftMouseClicked {
+		g.initialSelectedX = x
+		g.initialSelectedY = y
+	} else if g.leftMouseClicked {
+		g.leftMouseHeld = true
 	}
-	if middleMouseScrollClicked {
+	if g.middleMouseScrollClicked {
 		logger.log(infoLevel, mainLogType, "middle click")
 	}
-	if rightMouseClicked {
+	if g.rightMouseClicked {
 		// TODO: Determine behavior. Should player choose which layer they target or handle it via game logic?
-		gameState.updateTargets(&position{ground, pixelPos})
+		// TODO: It seems a bit hacky that I need to pass computer active here. Determine if this is right behavior.
+		gameState.updateTargets(&position{ground, pixelPos}, g.blueComputerActive, g.redComputerActive)
 	}
 
 	// update game state after player actions
-	if leftMouseReleased {
+	if g.leftMouseReleased {
 		gameState.updateSelected(
-			pixelPosition{int(initialSelectedX), int(initialSelectedY)},
-			pixelPosition{int(currentSelectedX), int(currentSelectedY)})
+			pixelPosition{int(g.initialSelectedX), int(g.initialSelectedY)},
+			pixelPosition{int(g.currentSelectedX), int(g.currentSelectedY)})
 	}
 	var nodeOwnershipChanged = gameState.updateNodeOwnership()
 
@@ -244,7 +246,7 @@ func (g *Game) Update() error {
 	// This is a hack, but will probably be fine for awhile.
 	if nodeOwnershipChanged {
 		logger.log(infoLevel, mainLogType, "nodeOwnershipChanged")
-		updateComputerTargetNodes(gameState)
+		g.updateComputerTargetNodes(gameState)
 	}
 
 	var infantryCount = 0
@@ -290,24 +292,24 @@ func (g *Game) Update() error {
 		if runProfiler {
 			pprof.StopCPUProfile()
 		}
-		if restart {
+		if g.hotRestart {
 			logger.log(infoLevel, mainLogType, "restartGame")
 
-			restartGame(g)
+			g.restart()
 		} else {
 			return errors.New("regular termination")
 		}
 	}
 
-	priorTime = currentTime
+	g.priorTime = g.currentTime
 	return nil
 }
 
-func updateComputerTargetNodes(s state) {
-	if blueComputerActive {
+func (g *Game) updateComputerTargetNodes(s state) {
+	if g.blueComputerActive {
 		compOne.updateTargetNodes(s)
 	}
-	if redComputerActive {
+	if g.redComputerActive {
 		compTwo.updateTargetNodes(s)
 	}
 }
@@ -318,17 +320,17 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	screen.Fill(g.drawContext.backgroundColor)
-	drawDebug(*g.drawContext, drawDebugGrid)
-	gameState.draw(*g.drawContext, drawBlueTargets, drawRedTargets, drawFluxes)
+	drawDebug(*g.drawContext, g.drawDebugGrid)
+	gameState.draw(*g.drawContext, g.drawBlueTargets, g.drawRedTargets, g.drawFluxes)
 
-	if leftMouseHeld {
+	if g.leftMouseHeld {
 		drawUnfilledBoxFloat32(
 			*g.drawContext,
 			g.drawContext.highlightColor,
-			initialSelectedX,
-			initialSelectedY,
-			currentSelectedX,
-			currentSelectedY,
+			g.initialSelectedX,
+			g.initialSelectedY,
+			g.currentSelectedX,
+			g.currentSelectedY,
 		)
 	}
 }
@@ -366,27 +368,25 @@ func main() {
 
 	logger = newLogger()
 
-	toggles["pause"] = newToggle(ebiten.KeyP, func() { paused = !paused })
+	toggles["pause"] = newToggle(ebiten.KeyP, func() { g.paused = !g.paused })
 	toggles["slowTick"] = newToggle(ebiten.KeyT, func() { slowTick = !slowTick })
 	toggles["logLevel"] = newToggle(ebiten.KeyL, func() { logger.toggleLevel() })
 	toggles["mainLogType"] = newToggle(ebiten.KeyM, func() { logger.toggleType(mainLogType) })
 	toggles["stateLogType"] = newToggle(ebiten.KeyS, func() { logger.toggleType(stateLogType) })
 	toggles["selectedUnitLogType"] = newToggle(ebiten.KeyU, func() { logger.toggleType(selectedUnitLogType) })
 	toggles["drawAll"] = newToggle(ebiten.KeyA, func() {
-		var toggle = !(drawFluxes && drawUnitHealth && drawBlueTargets && drawRedTargets && drawDebugGrid)
-		drawFluxes = toggle
-		drawUnitHealth = toggle
-		drawBlueTargets = toggle
-		drawRedTargets = toggle
-		drawDebugGrid = toggle
+		var toggle = !(g.drawFluxes && g.drawBlueTargets && g.drawRedTargets && g.drawDebugGrid)
+		g.drawFluxes = toggle
+		g.drawBlueTargets = toggle
+		g.drawRedTargets = toggle
+		g.drawDebugGrid = toggle
 	})
-	toggles["drawFlux"] = newToggle(ebiten.KeyF, func() { drawFluxes = !drawFluxes })
-	toggles["drawUnitHealth"] = newToggle(ebiten.KeyH, func() { drawUnitHealth = !drawUnitHealth })
-	toggles["drawBlueTargets"] = newToggle(ebiten.KeyB, func() { drawBlueTargets = !drawBlueTargets })
-	toggles["drawRedTargets"] = newToggle(ebiten.KeyR, func() { drawRedTargets = !drawRedTargets })
-	toggles["drawDebugGrid"] = newToggle(ebiten.KeyG, func() { drawDebugGrid = !drawDebugGrid })
+	toggles["drawFlux"] = newToggle(ebiten.KeyF, func() { g.drawFluxes = !g.drawFluxes })
+	toggles["drawBlueTargets"] = newToggle(ebiten.KeyB, func() { g.drawBlueTargets = !g.drawBlueTargets })
+	toggles["drawRedTargets"] = newToggle(ebiten.KeyR, func() { g.drawRedTargets = !g.drawRedTargets })
+	toggles["drawDebugGrid"] = newToggle(ebiten.KeyG, func() { g.drawDebugGrid = !g.drawDebugGrid })
 
-	restartGame(&g)
+	g.restart()
 	if err := ebiten.RunGame(&g); err != nil {
 		log.Fatal(err)
 	}

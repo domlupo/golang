@@ -484,7 +484,7 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 
 }
 
-func (s *state) updateTargets(target *position) {
+func (s *state) updateTargets(target *position, blueComputerActive bool, redComputerActive bool) {
 	for nodeGridPos, node := range s.nodes {
 		if node.player == neutralPlayer {
 			continue
