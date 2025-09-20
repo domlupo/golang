@@ -294,6 +294,10 @@ Is there a mobile equivalent for war/4x games?
 - How is node unit production handled?
 - Theme is the gnorp analogue?
 - Game name?
+  - gridlock
+  - gridlocked
+  - miniMilitary
+  - miniMilitia
 - Replay feature where you can see a battle recap?
 - Should unit behavior be toggable on a global scale? E.g. tanks have fire mode vs push mode
 
