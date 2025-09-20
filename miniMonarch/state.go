@@ -83,7 +83,7 @@ func (s *state) analyzeTargets() {
 			u1.canReachTargetNode = reachesNode
 		}
 
-		shortestDistance := math.MaxInt16
+		shortestDistance := math.MaxInt64
 		var closestUnitPos *position
 		for uPos2, u2 := range s.units {
 			if u1.player == u2.player {

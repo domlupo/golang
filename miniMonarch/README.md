@@ -15,12 +15,14 @@ Is there a mobile equivalent for war/4x games?
 
 - Improve guided air missile
   - auto despawns for non computer players. This is probably wrong behavior.
-  - Improve UI for targetting. Reach is very large so need to make it noticeable at all distances.
+  - Determine locking behavior for human player and computer player.
 
-- Determine if I should invest in a visual logger:
-  - It can can ping the pixel pos where the bug is occurring.
-  - It can ping differently based on layer.
-  - It can also do something like log unit and pause game so I can read logs?
+- Invest in a visual debugger:
+  - First invest in: It can auto select/highlight a specific unit when it spawns
+  - Other much lower priority improvements that can be added when needed:
+    - It can can ping the pixel pos where the bug is occurring.
+    - It can ping differently based on layer.
+    - It can also do something like log unit and pause game so I can read logs?
 
 - Fix Bresenham's algorithm edge cases:
   - Bresenham error needs to reset itself for several reasons. I still need to handle:

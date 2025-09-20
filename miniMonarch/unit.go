@@ -72,7 +72,7 @@ var guidedAirMissileConfig = unitConfig{
 	radius:               3,
 	maxHealth:            100,
 	attack:               1000,
-	vision:               3000,
+	vision:               250,
 	reach:                0,
 	produceLayer:         lowAltitude,
 	staticTarget:         false,
@@ -462,6 +462,18 @@ func (u *unit) draw(dc drawContext, pos position, selected bool) {
 				float32(u.currentTarget.x)*dc.windowMultiplier,
 				float32(u.currentTarget.y)*dc.windowMultiplier,
 				float32(u.explodeRadius)*dc.windowMultiplier,
+				float32(dc.missileExplodeRadiusLineWidth)*dc.windowMultiplier,
+				dc.highlightColor,
+				false,
+			)
+		}
+
+		if u.unitConfig.name == guidedAirMissile {
+			vector.StrokeCircle(
+				dc.screen,
+				float32(pos.x)*dc.windowMultiplier,
+				float32(pos.y)*dc.windowMultiplier,
+				float32(u.vision)*dc.windowMultiplier,
 				float32(dc.missileExplodeRadiusLineWidth)*dc.windowMultiplier,
 				dc.highlightColor,
 				false,
