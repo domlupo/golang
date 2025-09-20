@@ -19,21 +19,22 @@ func (c *computer) updateTargetNodes(s state) {
 		if node.player != c.player {
 			continue
 		}
-		var selfNodePos = nodePos
-		var selfNode = node
+
+		selfNodePos := nodePos
+		selfNode := node
 		selfNode.target = nil
-		var nearestTargetDistanceSquared = math.MaxInt
+		nearestTargetDistanceSquared := math.MaxInt
 
 		for nodePos, node := range s.nodes {
 			if node.player == c.player {
 				continue
 			}
-			var otherNodePos = nodePos
-			var otherNode = node
 
-			var xDelta = (selfNodePos.x - otherNode.gridPos.x)
-			var yDelta = (selfNodePos.y - otherNode.gridPos.y)
-			var otherTargetDistanceSquared = xDelta*xDelta + yDelta*yDelta
+			otherNodePos := nodePos
+			otherNode := node
+			xDelta := (selfNodePos.x - otherNode.gridPos.x)
+			yDelta := (selfNodePos.y - otherNode.gridPos.y)
+			otherTargetDistanceSquared := xDelta*xDelta + yDelta*yDelta
 
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
@@ -52,20 +53,21 @@ func (c *computer) updateTargetNodes(s state) {
 		if unit.player != c.player {
 			continue
 		}
-		var selfUnitPos = unitPos
-		var selfUnit = unit
-		var nearestTargetDistanceSquared = math.MaxInt
+
+		selfUnitPos := unitPos
+		selfUnit := unit
+		nearestTargetDistanceSquared := math.MaxInt
 
 		for nodePos, node := range s.nodes {
 			if node.player == c.player {
 				continue
 			}
-			var otherNodePos = nodePos
-			var otherNodePixelPos = getPixelPosition(otherNodePos, innerGridPosition{0, 0})
 
-			var xDelta = (selfUnitPos.x - otherNodePixelPos.x)
-			var yDelta = (selfUnitPos.y - otherNodePixelPos.y)
-			var otherTargetDistanceSquared = xDelta*xDelta + yDelta*yDelta
+			otherNodePos := nodePos
+			otherNodePixelPos := getPixelPosition(otherNodePos, innerGridPosition{0, 0})
+			xDelta := (selfUnitPos.x - otherNodePixelPos.x)
+			yDelta := (selfUnitPos.y - otherNodePixelPos.y)
+			otherTargetDistanceSquared := xDelta*xDelta + yDelta*yDelta
 
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
