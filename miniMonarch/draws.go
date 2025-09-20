@@ -21,26 +21,26 @@ type drawContext struct {
 	// offset is needed, width can remain 1.
 	// Offset values should only be 0 - 20 (half of grid size without window multipler)
 	// Some helpful values are: 0, 0.5, 1, 19, 19.5, 20
-	debugGridOffset             int
-	debugGridWidth              int
-	debugGridIndexCount         int
-	debugGridColor              color.Color
-	selectectionBoxLineWidth    int
-	missileBlastRadiusLineWidth int
-	healthLineWidth             int
-	fluxLineWidth               int
-	fluxDirectionRadius         int
-	targetNodeLineWidth         int
-	backgroundColor             color.RGBA
-	highlightColor              color.RGBA
-	unitHealthColor             color.RGBA
-	nodeHealthColor             color.RGBA
-	fluxColor                   color.RGBA
-	bluePlayerNodeColor         color.RGBA
-	bluePlayerUnitColor         color.RGBA
-	redPlayerNodeColor          color.RGBA
-	redPlayerUnitColor          color.RGBA
-	neutralNodeColor            color.RGBA
+	debugGridOffset               int
+	debugGridWidth                int
+	debugGridIndexCount           int
+	debugGridColor                color.Color
+	selectectionBoxLineWidth      int
+	missileExplodeRadiusLineWidth int
+	healthLineWidth               int
+	fluxLineWidth                 int
+	fluxDirectionRadius           int
+	targetNodeLineWidth           int
+	backgroundColor               color.RGBA
+	highlightColor                color.RGBA
+	unitHealthColor               color.RGBA
+	nodeHealthColor               color.RGBA
+	fluxColor                     color.RGBA
+	bluePlayerNodeColor           color.RGBA
+	bluePlayerUnitColor           color.RGBA
+	redPlayerNodeColor            color.RGBA
+	redPlayerUnitColor            color.RGBA
+	neutralNodeColor              color.RGBA
 }
 
 func newDrawContext() *drawContext {
@@ -49,29 +49,29 @@ func newDrawContext() *drawContext {
 		screen:           nil,
 		windowMultiplier: 2.5,
 		// aspect ratio config (16:9 aspect ratio)
-		windowWidth:                 1280,
-		windowHeight:                720,
-		gridSize:                    40,
-		debugGridOffset:             0,
-		debugGridWidth:              1,
-		debugGridIndexCount:         32,
-		debugGridColor:              color.Black,
-		selectectionBoxLineWidth:    1,
-		missileBlastRadiusLineWidth: 1,
-		healthLineWidth:             2,
-		fluxLineWidth:               2,
-		fluxDirectionRadius:         3,
-		targetNodeLineWidth:         1,
-		backgroundColor:             color.RGBA{200, 200, 200, 255},
-		highlightColor:              highlightColor,
-		unitHealthColor:             highlightColor,
-		nodeHealthColor:             highlightColor,
-		fluxColor:                   highlightColor,
-		bluePlayerNodeColor:         color.RGBA{0, 0, 255, 100},
-		bluePlayerUnitColor:         color.RGBA{0, 0, 255, 100},
-		redPlayerNodeColor:          color.RGBA{255, 0, 0, 100},
-		redPlayerUnitColor:          color.RGBA{255, 0, 0, 100},
-		neutralNodeColor:            color.RGBA{100, 60, 100, 200},
+		windowWidth:                   1280,
+		windowHeight:                  720,
+		gridSize:                      40,
+		debugGridOffset:               0,
+		debugGridWidth:                1,
+		debugGridIndexCount:           32,
+		debugGridColor:                color.Black,
+		selectectionBoxLineWidth:      1,
+		missileExplodeRadiusLineWidth: 1,
+		healthLineWidth:               2,
+		fluxLineWidth:                 2,
+		fluxDirectionRadius:           3,
+		targetNodeLineWidth:           1,
+		backgroundColor:               color.RGBA{200, 200, 200, 255},
+		highlightColor:                highlightColor,
+		unitHealthColor:               highlightColor,
+		nodeHealthColor:               highlightColor,
+		fluxColor:                     highlightColor,
+		bluePlayerNodeColor:           color.RGBA{0, 0, 255, 100},
+		bluePlayerUnitColor:           color.RGBA{0, 0, 255, 100},
+		redPlayerNodeColor:            color.RGBA{255, 0, 0, 100},
+		redPlayerUnitColor:            color.RGBA{255, 0, 0, 100},
+		neutralNodeColor:              color.RGBA{100, 60, 100, 200},
 	}
 	return &dc
 }
@@ -139,7 +139,7 @@ func drawDebug(dc drawContext, drawDebugGrid bool) {
 	}
 
 	for i := range dc.debugGridIndexCount {
-		var x = dc.gridSize * i
+		x := dc.gridSize * i
 		vector.StrokeLine(
 			dc.screen,
 			float32(x-dc.debugGridOffset)*dc.windowMultiplier,

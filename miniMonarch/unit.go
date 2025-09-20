@@ -464,7 +464,7 @@ func (u *unit) draw(dc drawContext, unitPos position, selected bool) {
 				float32(u.currentTarget.x)*dc.windowMultiplier,
 				float32(u.currentTarget.y)*dc.windowMultiplier,
 				float32(u.explodeRadius)*dc.windowMultiplier,
-				float32(dc.missileBlastRadiusLineWidth)*dc.windowMultiplier,
+				float32(dc.missileExplodeRadiusLineWidth)*dc.windowMultiplier,
 				dc.highlightColor,
 				false,
 			)
