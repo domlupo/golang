@@ -1,8 +1,11 @@
 # Focus Timer
 
-A timer with minimal distractions
+A simple timer with minimal distractions
+
+Pause functionality is not implemented. Completed time is logged in a 
+file. If a break is needed, read the file, subtract completed minutes,
+launch a new timer once break is complete.
 
 ## TODO
 
-- Add pause button to timer. Needs to not be activated by mistake.
 - Add optional terminal input to set time rather than force mouse wheel.
