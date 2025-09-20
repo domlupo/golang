@@ -7,25 +7,26 @@ import (
 
 // not enforced but must be a singleton
 type state struct {
-	xIndexCount int
-	yIndexCount int
-	nodes       map[gridPosition]*node
-	fluxes      map[gridPosition]*flux
-	units       map[position]*unit
+	windowWidth  int
+	windowHeight int
+	gridSize     int
+	nodes        map[gridPosition]*node
+	fluxes       map[gridPosition]*flux
+	units        map[position]*unit
 }
 
-func newState(xIndexCount int, yIndexCount int) *state {
+func newState(windowWidth int, windowHeight int, gridSize int) *state {
 	s := state{
-		// TODO: Determine if there is a better way to handle xIndexCount and yIndexCount
-		xIndexCount: xIndexCount,
-		yIndexCount: yIndexCount,
-		nodes:       make(map[gridPosition]*node),
-		fluxes:      make(map[gridPosition]*flux),
-		units:       make(map[position]*unit),
+		windowWidth:  windowWidth,
+		windowHeight: windowHeight,
+		gridSize:     gridSize,
+		nodes:        make(map[gridPosition]*node),
+		fluxes:       make(map[gridPosition]*flux),
+		units:        make(map[position]*unit),
 	}
 
-	for i := range xIndexCount {
-		for j := range yIndexCount {
+	for i := range s.windowWidth / s.gridSize {
+		for j := range s.windowHeight / s.gridSize {
 			gridPos := gridPosition{i, j}
 			flux := newFlux(gridPos)
 			s.fluxes[gridPos] = &flux
@@ -48,14 +49,14 @@ func (s *state) refresh() {
 		u.refresh()
 
 		if !u.movedLastTurn {
-			gridPos, _ := splitPixelPosition(uPos.pixelPosition)
+			gridPos, _ := splitPixelPosition(uPos.pixelPosition, s.gridSize)
 			s.fluxes[gridPos].staticUnits++
 		}
 	}
 
 	for _, flux := range s.fluxes {
-		xMax := s.xIndexCount - 1
-		yMax := s.yIndexCount - 1
+		xMax := s.windowWidth/s.gridSize - 1
+		yMax := s.windowHeight/s.gridSize - 1
 		flux.setFluxVector(s, xMax, yMax)
 	}
 }
@@ -67,7 +68,7 @@ func (s *state) analyzeTargets() {
 		}
 
 		if u1.fluxTurnCount > u1.fluxTurnCountDelay {
-			gridPos, _ := splitPixelPosition(uPos1.pixelPosition)
+			gridPos, _ := splitPixelPosition(uPos1.pixelPosition, s.gridSize)
 			fluxDelta := s.fluxes[gridPos].getFluxDelta(u1.fluxMagnitude)
 			u1.updateTarget(fluxTarget, &position{ground, pixelPosition{uPos1.x + fluxDelta.x, uPos1.y + fluxDelta.y}})
 			u1.fluxTurnCount = 0
@@ -144,7 +145,7 @@ func (s *state) moveUnits() {
 			continue
 		}
 
-		collidesWithBorder := collidesWithBorder(newPos, u.radius)
+		collidesWithBorder := s.collidesWithBorder(newPos, u.radius)
 
 		var collidesWithUnit = s.collidesWithUnit(
 			newPos,
@@ -224,7 +225,7 @@ func (s *state) collidesWithNode(pos position, unit unit, unitCollisionRadius in
 			continue
 		}
 
-		nPixelPos := getPixelPosition(nPos, innerGridPosition{0, 0})
+		nPixelPos := getPixelPosition(nPos, topLeft, s.gridSize)
 
 		x2 := nPixelPos.x
 		y2 := nPixelPos.y
@@ -456,8 +457,8 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 		bottomRightPixelPos = pixelPosition{releasePosition.x, clickPosition.y}
 	}
 
-	topLeftGridPos, _ := splitPixelPosition(topLeftPixelPos)
-	bottomRightGridPos, _ := splitPixelPosition(bottomRightPixelPos)
+	topLeftGridPos, _ := splitPixelPosition(topLeftPixelPos, s.gridSize)
+	bottomRightGridPos, _ := splitPixelPosition(bottomRightPixelPos, s.gridSize)
 
 	for nGridPos, n := range s.nodes {
 		if (topLeftGridPos.x < nGridPos.x) &&
@@ -521,11 +522,22 @@ func (s *state) produceUnits() {
 		}
 
 		// TODO: determine how to produce units during collision
-		uPos := position{n.unitConfig.produceLayer, getPixelPosition(nPos, innerGridPosition{0, 0})}
+		uPos := position{n.unitConfig.produceLayer, getPixelPosition(nPos, topLeft, s.gridSize)}
 		if s.collidesWithUnit(uPos, newUnit(n.player, n.target, n.unitConfig), s.units) == nil {
 			newUnit := newUnit(n.player, n.target, n.unitConfig)
 			s.units[uPos] = &newUnit
 		}
+	}
+}
+
+func (s *state) collidesWithBorder(pos position, offset int) bool {
+	if pos.pixelPosition.x+offset > s.windowWidth ||
+		pos.pixelPosition.x-offset < 0 ||
+		pos.pixelPosition.y+offset > s.windowHeight ||
+		pos.pixelPosition.y-offset < 0 {
+		return true
+	} else {
+		return false
 	}
 }
 

@@ -56,7 +56,7 @@ func (n *node) drawNode(dc drawContext, gridPos gridPosition) {
 		panic("unknown player cannot drawNode")
 	}
 
-	var nodePixelPos = getPixelPosition(gridPos, innerGridPosition{0, 0})
+	var nodePixelPos = getPixelPosition(gridPos, topLeft, dc.gridSize)
 
 	vector.DrawFilledCircle(
 		dc.screen,
@@ -105,7 +105,7 @@ func (n *node) drawTargets(dc drawContext, gridPos gridPosition, drawBlueTargets
 	}
 
 	if n.target != nil && ((n.player == bluePlayer && drawBlueTargets) || (n.player == redPlayer && drawRedTargets)) {
-		var nodePixelPos = getPixelPosition(gridPos, innerGridPosition{0, 0})
+		var nodePixelPos = getPixelPosition(gridPos, topLeft, dc.gridSize)
 		vector.StrokeLine(
 			dc.screen,
 			float32(nodePixelPos.x)*dc.windowMultiplier,

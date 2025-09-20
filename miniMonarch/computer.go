@@ -38,7 +38,7 @@ func (c *computer) updateTargetNodes(s state) {
 
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
-				var targetPixelPos = getPixelPosition(otherNodePos, innerGridPosition{0, 0})
+				var targetPixelPos = getPixelPosition(otherNodePos, topLeft, s.gridSize)
 				selfNode.target = &position{ground, targetPixelPos}
 			}
 
@@ -64,14 +64,14 @@ func (c *computer) updateTargetNodes(s state) {
 			}
 
 			otherNodePos := nodePos
-			otherNodePixelPos := getPixelPosition(otherNodePos, innerGridPosition{0, 0})
+			otherNodePixelPos := getPixelPosition(otherNodePos, topLeft, s.gridSize)
 			xDelta := (selfUnitPos.x - otherNodePixelPos.x)
 			yDelta := (selfUnitPos.y - otherNodePixelPos.y)
 			otherTargetDistanceSquared := xDelta*xDelta + yDelta*yDelta
 
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
-				var targetPixelPos = getPixelPosition(otherNodePos, innerGridPosition{0, 0})
+				var targetPixelPos = getPixelPosition(otherNodePos, topLeft, s.gridSize)
 				selfUnit.updateTarget(globalTarget, &position{ground, targetPixelPos})
 			}
 		}

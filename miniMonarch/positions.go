@@ -20,8 +20,8 @@ const (
 
 // readable low resolution position used for grid items e.g. nodes
 type gridPosition struct {
-	x int // 0 - 32
-	y int // 0 - 18
+	x int
+	y int
 }
 
 func (pos gridPosition) adjacent(d direction, maxX int, maxY int) *gridPosition {
@@ -133,33 +133,31 @@ func (pixelPos pixelPosition) log() []slog.Attr {
 	return a
 }
 
-func getPixelPosition(gridPos gridPosition, innerGridPos innerGridPosition) pixelPosition {
-	// TODO: fix hardcoding
-	var x = (gridPos.x * 40) + innerGridPos.x
-	var y = (gridPos.y * 40) + innerGridPos.y
+type offset int
 
+const (
+	topLeft = iota
+	center
+)
+
+func getPixelPosition(gridPos gridPosition, offset offset, gridSize int) pixelPosition {
+	var innerGridPos innerGridPosition
+	switch offset {
+	case topLeft:
+		innerGridPos = innerGridPosition{0, 0}
+	case center:
+		innerGridPos = innerGridPosition{gridSize / 2, gridSize / 2}
+	}
+
+	x := (gridPos.x * gridSize) + innerGridPos.x
+	y := (gridPos.y * gridSize) + innerGridPos.y
 	return pixelPosition{x, y}
 }
 
-func splitPixelPosition(pixelPos pixelPosition) (gridPosition, innerGridPosition) {
-	// TODO: fix hardcoding
-	var gridPosX = pixelPos.x / 40
-	var gridPosY = pixelPos.y / 40
-	var innerGridPosX = pixelPos.x % 40
-	var innerGridPosY = pixelPos.y % 40
+func splitPixelPosition(pixelPos pixelPosition, gridSize int) (gridPosition, innerGridPosition) {
+	gridPosX := pixelPos.x / gridSize
+	gridPosY := pixelPos.y / gridSize
+	innerGridPosX := pixelPos.x % gridSize
+	innerGridPosY := pixelPos.y % gridSize
 	return gridPosition{gridPosX, gridPosY}, innerGridPosition{innerGridPosX, innerGridPosY}
-}
-
-func collidesWithBorder(pos position, offset int) bool {
-	if pos.pixelPosition.x+offset > 1280 { // TODO: Fix hardcoding
-		return true
-	} else if pos.pixelPosition.x-offset < 0 {
-		return true
-	} else if pos.pixelPosition.y+offset > 720 { // TODO: Fix hardcoding
-		return true
-	} else if pos.pixelPosition.y-offset < 0 {
-		return true
-	}
-
-	return false
 }
