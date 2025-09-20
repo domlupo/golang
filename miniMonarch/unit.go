@@ -126,10 +126,10 @@ type unitConfig struct {
 	explodeRadius        int
 }
 
-func (config unitConfig) log() []slog.Attr {
+func (uc unitConfig) log() []slog.Attr {
 	var a = []slog.Attr{}
 	var name string
-	switch config.name {
+	switch uc.name {
 	case noName:
 		name = "no name"
 	case infantry:
@@ -144,13 +144,13 @@ func (config unitConfig) log() []slog.Attr {
 		name = "unknown"
 	}
 	a = append(a, slog.String("name", name))
-	a = append(a, slog.Int("radius", config.radius))
-	a = append(a, slog.Int("maxHealth", config.maxHealth))
-	a = append(a, slog.Int("attack", config.attack))
-	a = append(a, slog.Int("vision", config.vision))
-	a = append(a, slog.Int("reach", config.reach))
+	a = append(a, slog.Int("radius", uc.radius))
+	a = append(a, slog.Int("maxHealth", uc.maxHealth))
+	a = append(a, slog.Int("attack", uc.attack))
+	a = append(a, slog.Int("vision", uc.vision))
+	a = append(a, slog.Int("reach", uc.reach))
 	var layer string
-	switch config.produceLayer {
+	switch uc.produceLayer {
 	case noLayer:
 		layer = "noLayer"
 	case ground:
@@ -161,11 +161,11 @@ func (config unitConfig) log() []slog.Attr {
 		layer = "highAltitude"
 	}
 	a = append(a, slog.String("produceLayer", layer))
-	a = append(a, slog.Bool("staticTarget", config.staticTarget))
-	a = append(a, slog.Bool("attacksGround", config.attacksGround))
-	a = append(a, slog.Bool("attacksLowAltitude", config.attacksLowAltitude))
-	a = append(a, slog.Bool("attacksHighAltitude", config.attacksHighAltitude))
-	a = append(a, slog.Bool("attacksPosition", config.attacksPosition))
+	a = append(a, slog.Bool("staticTarget", uc.staticTarget))
+	a = append(a, slog.Bool("attacksGround", uc.attacksGround))
+	a = append(a, slog.Bool("attacksLowAltitude", uc.attacksLowAltitude))
+	a = append(a, slog.Bool("attacksHighAltitude", uc.attacksHighAltitude))
+	a = append(a, slog.Bool("attacksPosition", uc.attacksPosition))
 	return a
 }
 
@@ -191,7 +191,7 @@ type unit struct {
 	selected           bool
 }
 
-func newUnit(p player, globalTarget *position, config unitConfig) unit {
+func newUnit(p player, globalTarget *position, uc unitConfig) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
 		logger.log(errorLevel, selectedUnitLogType, "newUnit", "failed to generate UUID", err)
@@ -211,8 +211,8 @@ func newUnit(p player, globalTarget *position, config unitConfig) unit {
 		atTerminalPosition: false,
 		bresenhamError:     nil,
 		nextBresenhamError: nil,
-		unitConfig:         config,
-		health:             config.maxHealth,
+		unitConfig:         uc,
+		health:             uc.maxHealth,
 		movedLastTurn:      false,
 		movedThisTurn:      false,
 		attackedLastTurn:   false,
@@ -242,16 +242,16 @@ func (u *unit) refresh() {
 	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "afterRefresh", "unit", u.log())
 }
 
+// Uses Bresenham's line algorithm https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+// Specifically, the integer incremental error form where error is stored over mulitple moves
+// This algorithm prioritizes straight line movement. It is not guaranteed the final position is reached.
 func (u *unit) getNewPos(currentPos position) position {
 	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "getNewPos", "currentPos", currentPos.log())
 
-	// Bresenham's line algorithm https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-	// Specifically, the integer incremental error form where error is stored over mulitple moves
-	// This algorithm prioritizes straight line movement. It is not guaranteed the final position is reached.
-	var x0 = currentPos.x
-	var y0 = currentPos.y
-	var x1 = 0
-	var y1 = 0
+	x0 := currentPos.x
+	y0 := currentPos.y
+	x1 := 0
+	y1 := 0
 
 	if u.fluxTarget != nil {
 		u.fluxExpire = max(u.fluxExpire-1, 0)
@@ -271,14 +271,13 @@ func (u *unit) getNewPos(currentPos position) position {
 		y1 = u.globalTarget.y
 	} else {
 		u.updateTarget(currentTarget, nil)
-		var desiredPos = currentPos
-		return desiredPos
+		return currentPos
 	}
 
 	var sx int
 	var sy int
-	var dx = x1 - x0
-	var dy = y1 - y0
+	dx := x1 - x0
+	dy := y1 - y0
 	if dx < 0 {
 		dx = dx * -1
 	}
@@ -296,12 +295,12 @@ func (u *unit) getNewPos(currentPos position) position {
 		sy = -1
 	}
 	if u.bresenhamError == nil {
-		var error = dx + dy
-		var errorCopy = dx + dy
-		u.bresenhamError = &error
-		u.nextBresenhamError = &errorCopy
+		bError := dx + dy
+		bErrorCopy := dx + dy
+		u.bresenhamError = &bError
+		u.nextBresenhamError = &bErrorCopy
 	}
-	var doubleError = *u.bresenhamError * 2
+	doubleError := *u.bresenhamError * 2
 	u.atTerminalPosition = true
 	if doubleError >= dy && x0 != x1 {
 		u.atTerminalPosition = false
@@ -314,8 +313,7 @@ func (u *unit) getNewPos(currentPos position) position {
 		y0 += sy
 	}
 
-	var newPos = position{currentPos.layer, pixelPosition{x0, y0}}
-	return newPos
+	return position{currentPos.layer, pixelPosition{x0, y0}}
 }
 
 func (u *unit) updateTarget(ut unitTarget, target *position) {
@@ -353,7 +351,7 @@ func (u *unit) updateTarget(ut unitTarget, target *position) {
 
 func (u *unit) completeMove() {
 	u.movedThisTurn = true
-	var intCopy = &u.nextBresenhamError
+	intCopy := &u.nextBresenhamError
 	u.bresenhamError = *intCopy
 }
 
@@ -415,7 +413,7 @@ func (u unit) log() []slog.Attr {
 	return a
 }
 
-func (u *unit) draw(dc drawContext, unitPos position, selected bool) {
+func (u *unit) draw(dc drawContext, pos position, selected bool) {
 	var unitColor color.Color
 	switch u.player {
 	case bluePlayer:
@@ -428,8 +426,8 @@ func (u *unit) draw(dc drawContext, unitPos position, selected bool) {
 
 	vector.DrawFilledCircle(
 		dc.screen,
-		float32(unitPos.x)*dc.windowMultiplier,
-		float32(unitPos.y)*dc.windowMultiplier,
+		float32(pos.x)*dc.windowMultiplier,
+		float32(pos.y)*dc.windowMultiplier,
 		float32(u.radius)*dc.windowMultiplier,
 		unitColor,
 		false,
@@ -439,18 +437,18 @@ func (u *unit) draw(dc drawContext, unitPos position, selected bool) {
 		drawUnfilledBoxInt(
 			dc,
 			dc.highlightColor,
-			unitPos.x-u.radius,
-			unitPos.y-u.radius,
-			unitPos.x+u.radius,
-			unitPos.y+u.radius,
+			pos.x-u.radius,
+			pos.y-u.radius,
+			pos.x+u.radius,
+			pos.y+u.radius,
 		)
 	}
 
 	if selected && u.currentTarget != nil {
 		vector.StrokeLine(
 			dc.screen,
-			float32(unitPos.x)*dc.windowMultiplier,
-			float32(unitPos.y)*dc.windowMultiplier,
+			float32(pos.x)*dc.windowMultiplier,
+			float32(pos.y)*dc.windowMultiplier,
 			float32(u.currentTarget.x)*dc.windowMultiplier,
 			float32(u.currentTarget.y)*dc.windowMultiplier,
 			float32(dc.targetNodeLineWidth)*dc.windowMultiplier,
@@ -476,8 +474,8 @@ func (u *unit) draw(dc drawContext, unitPos position, selected bool) {
 
 		vector.DrawFilledRect(
 			dc.screen,
-			float32(unitPos.x-u.radius)*dc.windowMultiplier,
-			float32(unitPos.y-u.radius)*dc.windowMultiplier,
+			float32(pos.x-u.radius)*dc.windowMultiplier,
+			float32(pos.y-u.radius)*dc.windowMultiplier,
 			healthLineLength*dc.windowMultiplier,
 			float32(u.radius)*dc.windowMultiplier,
 			dc.unitHealthColor,
