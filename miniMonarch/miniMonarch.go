@@ -51,29 +51,31 @@ type Game struct {
 	compTwo                  computer
 	gameState                state
 	developerToggles         map[string]*toggle
+	developerToggleCooldown  time.Duration
 	initialNodeHealth        int
 }
 
 func newGame() Game {
 	g := Game{
-		drawContext:        newDrawContext(),
-		backgroundColor:    color.RGBA{200, 200, 200, 255},
-		produceWait:        1_000_000 * time.Second,
-		produceInterval:    3 * time.Second,
-		slowTickInterval:   5 * time.Second,
-		slowTickTime:       time.Now(),
-		priorTime:          time.Now(),
-		currentTime:        time.Now(),
-		initialSelectedX:   float32(-1.0),
-		initialSelectedY:   float32(-1.0),
-		currentSelectedX:   float32(-1.0),
-		currentSelectedY:   float32(-1.0),
-		blueComputerActive: true,
-		redComputerActive:  true,
-		hotRestart:         true,
-		runProfiler:        false,
-		developerToggles:   make(map[string]*toggle),
-		initialNodeHealth:  100,
+		drawContext:             newDrawContext(),
+		backgroundColor:         color.RGBA{200, 200, 200, 255},
+		produceWait:             1_000_000 * time.Second,
+		produceInterval:         3 * time.Second,
+		slowTickInterval:        5 * time.Second,
+		slowTickTime:            time.Now(),
+		priorTime:               time.Now(),
+		currentTime:             time.Now(),
+		initialSelectedX:        float32(-1.0),
+		initialSelectedY:        float32(-1.0),
+		currentSelectedX:        float32(-1.0),
+		currentSelectedY:        float32(-1.0),
+		blueComputerActive:      true,
+		redComputerActive:       true,
+		hotRestart:              true,
+		runProfiler:             false,
+		developerToggles:        make(map[string]*toggle),
+		developerToggleCooldown: 300 * time.Millisecond,
+		initialNodeHealth:       100,
 	}
 	return g
 }
@@ -285,23 +287,56 @@ func main() {
 
 	logger = newLogger()
 
-	g.developerToggles["pause"] = newToggle(ebiten.KeyP, func() { g.paused = !g.paused })
-	g.developerToggles["slowTick"] = newToggle(ebiten.KeyT, func() { g.slowTick = !g.slowTick })
-	g.developerToggles["logLevel"] = newToggle(ebiten.KeyL, func() { logger.toggleLevel() })
-	g.developerToggles["mainLogType"] = newToggle(ebiten.KeyM, func() { logger.toggleType(mainLogType) })
-	g.developerToggles["stateLogType"] = newToggle(ebiten.KeyS, func() { logger.toggleType(stateLogType) })
-	g.developerToggles["selectedUnitLogType"] = newToggle(ebiten.KeyU, func() { logger.toggleType(selectedUnitLogType) })
-	g.developerToggles["drawAll"] = newToggle(ebiten.KeyA, func() {
-		var toggle = !(g.drawFluxes && g.drawBlueTargets && g.drawRedTargets && g.drawDebugGrid)
-		g.drawFluxes = toggle
-		g.drawBlueTargets = toggle
-		g.drawRedTargets = toggle
-		g.drawDebugGrid = toggle
-	})
-	g.developerToggles["drawFlux"] = newToggle(ebiten.KeyF, func() { g.drawFluxes = !g.drawFluxes })
-	g.developerToggles["drawBlueTargets"] = newToggle(ebiten.KeyB, func() { g.drawBlueTargets = !g.drawBlueTargets })
-	g.developerToggles["drawRedTargets"] = newToggle(ebiten.KeyR, func() { g.drawRedTargets = !g.drawRedTargets })
-	g.developerToggles["drawDebugGrid"] = newToggle(ebiten.KeyG, func() { g.drawDebugGrid = !g.drawDebugGrid })
+	g.developerToggles["pause"] = newToggle(
+		ebiten.KeyP,
+		func() { g.paused = !g.paused },
+		g.developerToggleCooldown)
+	g.developerToggles["slowTick"] = newToggle(
+		ebiten.KeyT,
+		func() { g.slowTick = !g.slowTick },
+		g.developerToggleCooldown)
+	g.developerToggles["logLevel"] = newToggle(
+		ebiten.KeyL,
+		func() { logger.toggleLevel() },
+		g.developerToggleCooldown)
+	g.developerToggles["mainLogType"] = newToggle(
+		ebiten.KeyM,
+		func() { logger.toggleType(mainLogType) },
+		g.developerToggleCooldown)
+	g.developerToggles["stateLogType"] = newToggle(
+		ebiten.KeyS,
+		func() { logger.toggleType(stateLogType) },
+		g.developerToggleCooldown)
+	g.developerToggles["selectedUnitLogType"] = newToggle(
+		ebiten.KeyU,
+		func() { logger.toggleType(selectedUnitLogType) },
+		g.developerToggleCooldown)
+	g.developerToggles["drawAll"] = newToggle(
+		ebiten.KeyA,
+		func() {
+			var toggle = !(g.drawFluxes && g.drawBlueTargets && g.drawRedTargets && g.drawDebugGrid)
+			g.drawFluxes = toggle
+			g.drawBlueTargets = toggle
+			g.drawRedTargets = toggle
+			g.drawDebugGrid = toggle
+		},
+		g.developerToggleCooldown)
+	g.developerToggles["drawFlux"] = newToggle(
+		ebiten.KeyF,
+		func() { g.drawFluxes = !g.drawFluxes },
+		g.developerToggleCooldown)
+	g.developerToggles["drawBlueTargets"] = newToggle(
+		ebiten.KeyB,
+		func() { g.drawBlueTargets = !g.drawBlueTargets },
+		g.developerToggleCooldown)
+	g.developerToggles["drawRedTargets"] = newToggle(
+		ebiten.KeyR,
+		func() { g.drawRedTargets = !g.drawRedTargets },
+		g.developerToggleCooldown)
+	g.developerToggles["drawDebugGrid"] = newToggle(
+		ebiten.KeyG,
+		func() { g.drawDebugGrid = !g.drawDebugGrid },
+		g.developerToggleCooldown)
 
 	g.restart()
 	if err := ebiten.RunGame(&g); err != nil {

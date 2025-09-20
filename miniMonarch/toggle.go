@@ -7,8 +7,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-const defaultCooldown = 300 * time.Millisecond
-
 type callBack func()
 
 type toggle struct {
@@ -18,12 +16,12 @@ type toggle struct {
 	cooldown time.Duration
 }
 
-func newToggle(key ebiten.Key, callback callBack) *toggle {
+func newToggle(key ebiten.Key, callback callBack, cooldown time.Duration) *toggle {
 	t := toggle{
 		key:      key,
 		callBack: callback,
 		timer:    time.Now(),
-		cooldown: defaultCooldown,
+		cooldown: cooldown,
 	}
 	return &t
 }
