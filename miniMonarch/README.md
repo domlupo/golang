@@ -100,7 +100,7 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Future Checkpoints
-- Refactor for more idiomatic go code e.g. setting vars, etc
+- Refactor for more idiomatic go code. Already did var declare and switch statements.
 
 - Deterministic seeds:
   - I can easily run simulations to analyze game balance

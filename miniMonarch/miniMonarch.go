@@ -53,6 +53,7 @@ type Game struct {
 	developerToggles         map[string]*toggle
 	developerToggleCooldown  time.Duration
 	initialNodeHealth        int
+	loggerConfig             loggerConfig
 }
 
 func newGame() Game {
@@ -76,6 +77,14 @@ func newGame() Game {
 		developerToggles:        make(map[string]*toggle),
 		developerToggleCooldown: 300 * time.Millisecond,
 		initialNodeHealth:       100,
+		loggerConfig: loggerConfig{
+			initialLogLevel:            slog.LevelDebug,
+			filterTimeAndLevelFromLogs: true,
+			logLoggerLogs:              true,
+			logMainLogs:                false,
+			logStateLogs:               false,
+			logSelectedUnitLogs:        true,
+		},
 	}
 	return g
 }
@@ -285,7 +294,7 @@ func main() {
 
 	ebiten.SetWindowSize(int(float32(g.windowWidth)*g.windowMultiplier), int(float32(g.windowHeight)*g.windowMultiplier))
 
-	logger = newLogger()
+	logger = newLogger(g.loggerConfig)
 
 	g.developerToggles["pause"] = newToggle(
 		ebiten.KeyP,

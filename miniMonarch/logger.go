@@ -24,13 +24,14 @@ const (
 	selectedUnitLogType
 )
 
-// config
-const initialLogLevel = slog.LevelDebug
-const filterTimeAndLevelFromLogs = true
-const logLoggerLogs = true
-const logMainLogs = false
-const logStateLogs = false
-const logSelectedUnitLogs = true
+type loggerConfig struct {
+	initialLogLevel            slog.Level
+	filterTimeAndLevelFromLogs bool
+	logLoggerLogs              bool
+	logMainLogs                bool
+	logStateLogs               bool
+	logSelectedUnitLogs        bool
+}
 
 type l struct {
 	*slog.Logger
@@ -38,13 +39,13 @@ type l struct {
 	enabledLogTypes map[logType]bool
 }
 
-func newLogger() l {
+func newLogger(lc loggerConfig) l {
 	var levelVar = new(slog.LevelVar)
-	levelVar.Set(initialLogLevel)
+	levelVar.Set(lc.initialLogLevel)
 	logOptions := &slog.HandlerOptions{
 		Level: levelVar,
 		ReplaceAttr: func(groups []string, attribute slog.Attr) slog.Attr {
-			if filterTimeAndLevelFromLogs && (attribute.Key == "time" || attribute.Key == "level") {
+			if lc.filterTimeAndLevelFromLogs && (attribute.Key == "time" || attribute.Key == "level") {
 				return slog.Attr{}
 			} else {
 				return attribute
@@ -57,10 +58,10 @@ func newLogger() l {
 		Logger:   logger,
 		LevelVar: levelVar,
 		enabledLogTypes: map[logType]bool{
-			alwaysLogType:       logLoggerLogs,
-			mainLogType:         logMainLogs,
-			stateLogType:        logStateLogs,
-			selectedUnitLogType: logSelectedUnitLogs},
+			alwaysLogType:       lc.logLoggerLogs,
+			mainLogType:         lc.logMainLogs,
+			stateLogType:        lc.logStateLogs,
+			selectedUnitLogType: lc.logSelectedUnitLogs},
 	}
 
 	return l
