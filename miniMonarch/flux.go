@@ -51,17 +51,17 @@ func (f *flux) getFluxDelta(magnitude int) *gridPosition {
 }
 
 func (f *flux) setFluxVector(s *state, xMax int, yMax int) {
-	var northPos = f.gridPos.adjacent(north, xMax, yMax)
-	var northEastPos = f.gridPos.adjacent(northEast, xMax, yMax)
-	var eastPos = f.gridPos.adjacent(east, xMax, yMax)
-	var southEastPos = f.gridPos.adjacent(southEast, xMax, yMax)
-	var southPos = f.gridPos.adjacent(south, xMax, yMax)
-	var southWestPos = f.gridPos.adjacent(southWest, xMax, yMax)
-	var westPos = f.gridPos.adjacent(west, xMax, yMax)
-	var northWestPos = f.gridPos.adjacent(northWest, xMax, yMax)
+	northPos := f.gridPos.adjacent(north, xMax, yMax)
+	northEastPos := f.gridPos.adjacent(northEast, xMax, yMax)
+	eastPos := f.gridPos.adjacent(east, xMax, yMax)
+	southEastPos := f.gridPos.adjacent(southEast, xMax, yMax)
+	southPos := f.gridPos.adjacent(south, xMax, yMax)
+	southWestPos := f.gridPos.adjacent(southWest, xMax, yMax)
+	westPos := f.gridPos.adjacent(west, xMax, yMax)
+	northWestPos := f.gridPos.adjacent(northWest, xMax, yMax)
 
-	var xFlux = 0
-	var yFlux = 0
+	xFlux := 0
+	yFlux := 0
 
 	if northPos != nil {
 		yFlux = yFlux + s.fluxes[*northPos].staticUnits
@@ -92,23 +92,24 @@ func (f *flux) setFluxVector(s *state, xMax int, yMax int) {
 		yFlux = yFlux + s.fluxes[*northWestPos].staticUnits
 	}
 
-	if xFlux == 0 && yFlux == 0 {
+	switch {
+	case xFlux == 0 && yFlux == 0:
 		f.fluxVector = fluxVector{0, noDirection}
-	} else if xFlux == 0 && yFlux < 0 {
+	case xFlux == 0 && yFlux < 0:
 		f.fluxVector = fluxVector{1, north}
-	} else if xFlux > 0 && yFlux < 0 {
+	case xFlux > 0 && yFlux < 0:
 		f.fluxVector = fluxVector{1, northEast}
-	} else if xFlux > 0 && yFlux == 0 {
+	case xFlux > 0 && yFlux == 0:
 		f.fluxVector = fluxVector{1, east}
-	} else if xFlux > 0 && yFlux > 0 {
+	case xFlux > 0 && yFlux > 0:
 		f.fluxVector = fluxVector{1, southEast}
-	} else if xFlux == 0 && yFlux > 0 {
+	case xFlux == 0 && yFlux > 0:
 		f.fluxVector = fluxVector{1, south}
-	} else if xFlux < 0 && yFlux > 0 {
+	case xFlux < 0 && yFlux > 0:
 		f.fluxVector = fluxVector{1, southWest}
-	} else if xFlux < 0 && yFlux == 0 {
+	case xFlux < 0 && yFlux == 0:
 		f.fluxVector = fluxVector{1, west}
-	} else if xFlux < 0 && yFlux < 0 {
+	case xFlux < 0 && yFlux < 0:
 		f.fluxVector = fluxVector{1, northWest}
 	}
 }
@@ -124,9 +125,9 @@ func (f *flux) draw(dc drawContext, fluxPos gridPosition) {
 		return
 	}
 
-	var center = getPixelPosition(fluxPos, innerGridPosition{20, 20})
-	var xEnd = center.x
-	var yEnd = center.y
+	center := getPixelPosition(fluxPos, innerGridPosition{20, 20})
+	xEnd := center.x
+	yEnd := center.y
 
 	switch f.direction {
 	case noDirection:
