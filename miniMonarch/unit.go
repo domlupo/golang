@@ -11,75 +11,79 @@ import (
 
 // Note: unit radius set to an odd number is better for testing due to division bugs
 var infantryConfig = unitConfig{
-	name:                  infantry,
-	radius:                5,
-	maxHealth:             1000,
-	attack:                1,
-	vision:                30,
-	reach:                 6,
-	produceLayer:          ground,
-	staticTarget:          false,
-	attacksGround:         true,
-	attacksLowAltitude:    false,
-	attacksHighAltitude:   false,
-	attacksPosition:       false,
-	detonateAtTerminalPos: false,
-	fluxTurnCountDelay:    10,
-	fluxMagnitude:         10,
+	name:                 infantry,
+	radius:               5,
+	maxHealth:            1000,
+	attack:               1,
+	vision:               30,
+	reach:                6,
+	produceLayer:         ground,
+	staticTarget:         false,
+	attacksGround:        true,
+	attacksLowAltitude:   false,
+	attacksHighAltitude:  false,
+	attacksPosition:      false,
+	explodeAtTerminalPos: false,
+	fluxTurnCountDelay:   10,
+	fluxMagnitude:        10,
+	explodeRadius:        0,
 }
 var sniperConfig = unitConfig{
-	name:                  sniper,
-	radius:                7,
-	maxHealth:             5,
-	attack:                1,
-	vision:                100,
-	reach:                 100,
-	produceLayer:          ground,
-	staticTarget:          false,
-	attacksGround:         true,
-	attacksLowAltitude:    false,
-	attacksHighAltitude:   false,
-	attacksPosition:       false,
-	detonateAtTerminalPos: false,
-	fluxTurnCountDelay:    10,
-	fluxMagnitude:         10,
+	name:                 sniper,
+	radius:               7,
+	maxHealth:            5,
+	attack:               1,
+	vision:               100,
+	reach:                100,
+	produceLayer:         ground,
+	staticTarget:         false,
+	attacksGround:        true,
+	attacksLowAltitude:   false,
+	attacksHighAltitude:  false,
+	attacksPosition:      false,
+	explodeAtTerminalPos: false,
+	fluxTurnCountDelay:   10,
+	fluxMagnitude:        10,
+	explodeRadius:        0,
 }
 
 // TODO: Figure out better naming for various missiles
 // TODO: Figure out better attack conventions e.g. direct, vs explosion, etc
 var unguidedGroundMissileConfig = unitConfig{
-	name:                  unguidedGroundMissile,
-	radius:                3,
-	maxHealth:             100,
-	attack:                1,
-	vision:                100,
-	reach:                 0,
-	produceLayer:          lowAltitude,
-	staticTarget:          true,
-	attacksGround:         false,
-	attacksLowAltitude:    false,
-	attacksHighAltitude:   false,
-	attacksPosition:       true,
-	detonateAtTerminalPos: true,
-	fluxTurnCountDelay:    10,
-	fluxMagnitude:         10,
+	name:                 unguidedGroundMissile,
+	radius:               3,
+	maxHealth:            100,
+	attack:               1,
+	vision:               100,
+	reach:                0,
+	produceLayer:         lowAltitude,
+	staticTarget:         true,
+	attacksGround:        false,
+	attacksLowAltitude:   false,
+	attacksHighAltitude:  false,
+	attacksPosition:      true,
+	explodeAtTerminalPos: true,
+	fluxTurnCountDelay:   10,
+	fluxMagnitude:        10,
+	explodeRadius:        100,
 }
 var guidedAirMissileConfig = unitConfig{
-	name:                  guidedAirMissile,
-	radius:                3,
-	maxHealth:             100,
-	attack:                1000,
-	vision:                3000,
-	reach:                 0,
-	produceLayer:          lowAltitude,
-	staticTarget:          false,
-	attacksGround:         false,
-	attacksLowAltitude:    true,
-	attacksHighAltitude:   true,
-	attacksPosition:       false,
-	detonateAtTerminalPos: true,
-	fluxTurnCountDelay:    10,
-	fluxMagnitude:         10,
+	name:                 guidedAirMissile,
+	radius:               3,
+	maxHealth:            100,
+	attack:               1000,
+	vision:               3000,
+	reach:                0,
+	produceLayer:         lowAltitude,
+	staticTarget:         false,
+	attacksGround:        false,
+	attacksLowAltitude:   true,
+	attacksHighAltitude:  true,
+	attacksPosition:      false,
+	explodeAtTerminalPos: true,
+	fluxTurnCountDelay:   10,
+	fluxMagnitude:        10,
+	explodeRadius:        100,
 }
 
 type name int
@@ -104,21 +108,22 @@ const (
 )
 
 type unitConfig struct {
-	name                  name
-	radius                int
-	maxHealth             int
-	attack                int
-	vision                int
-	reach                 int
-	produceLayer          layer
-	staticTarget          bool
-	attacksGround         bool
-	attacksLowAltitude    bool
-	attacksHighAltitude   bool
-	attacksPosition       bool
-	detonateAtTerminalPos bool
-	fluxTurnCountDelay    int
-	fluxMagnitude         int
+	name                 name
+	radius               int
+	maxHealth            int
+	attack               int
+	vision               int
+	reach                int
+	produceLayer         layer
+	staticTarget         bool
+	attacksGround        bool
+	attacksLowAltitude   bool
+	attacksHighAltitude  bool
+	attacksPosition      bool
+	explodeAtTerminalPos bool
+	fluxTurnCountDelay   int
+	fluxMagnitude        int
+	explodeRadius        int
 }
 
 func (config unitConfig) log() []slog.Attr {
@@ -458,7 +463,7 @@ func (u *unit) draw(dc drawContext, unitPos position, selected bool) {
 				dc.screen,
 				float32(u.currentTarget.x)*dc.windowMultiplier,
 				float32(u.currentTarget.y)*dc.windowMultiplier,
-				float32(missileBlastRadius)*dc.windowMultiplier,
+				float32(u.explodeRadius)*dc.windowMultiplier,
 				float32(dc.missileBlastRadiusLineWidth)*dc.windowMultiplier,
 				dc.highlightColor,
 				false,

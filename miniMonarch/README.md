@@ -259,7 +259,7 @@ Is there a mobile equivalent for war/4x games?
 - Plane collisions would be awesome?
 - air units can produce other units e.g. missiles, paratroops, etc?
 - Should units besides explosives detonate?
-  - e.g. A tank being hit should explode damaging nearby units
+  - e.g. A tank being hit should explode damaging nearby units. Can use unit explode radius variable for this.
   - A missile detonating should detonate other missiles in air
   - This could create interesting explosion chains
 - Should there be a game camera:

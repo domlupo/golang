@@ -14,7 +14,6 @@ import (
 )
 
 var logger l
-var missileBlastRadius = 100
 
 type Game struct {
 	*drawContext

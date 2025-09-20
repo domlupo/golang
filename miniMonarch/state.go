@@ -254,7 +254,7 @@ func (s *state) collidesWithNode(newPos position, unit unit, unitCollisionRadius
 	return nil, collidesWithTargetNode
 }
 
-func (s *state) detonateMissile(pos position, blastRadius int, units map[position]*unit) {
+func (s *state) explode(pos position, blastRadius int, units map[position]*unit) {
 	var x1 = pos.x
 	var y1 = pos.y
 	var r1 = blastRadius
@@ -310,14 +310,14 @@ func (s *state) collidesWithUnit(pos position, unit unit, units map[position]*un
 
 func (s *state) processTerminalPositions() {
 	for unitPos, unit := range s.units {
-		if !unit.detonateAtTerminalPos {
+		if !unit.explodeAtTerminalPos {
 			continue
 		}
 
 		if unit.attacksPosition && unit.atTerminalPosition {
 			unit.health = 0
 			s.units[unitPos] = unit
-			s.detonateMissile(unitPos, missileBlastRadius, s.units)
+			s.explode(unitPos, unit.explodeRadius, s.units)
 		} else if unit.atTerminalPosition {
 			unit.health = 0
 			s.units[unitPos] = unit
