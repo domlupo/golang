@@ -168,8 +168,8 @@ func (s *state) moveUnits() {
 		} else if collidesWithUnit != nil {
 			unitsCollideCount++
 			if uPos.layer == lowAltitude || uPos.layer == highAltitude {
-				otheru := s.units[*collidesWithUnit]
-				otheru.health = 0
+				otherUnit := s.units[*collidesWithUnit]
+				otherUnit.health = 0
 				s.units[*collidesWithUnit] = s.units[position{collidesWithUnit.layer, pixelPosition{collidesWithUnit.x, collidesWithUnit.y}}]
 				u.health = 0
 				s.units[uPos] = s.units[position{uPos.layer, pixelPosition{uPos.x, uPos.y}}]

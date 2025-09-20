@@ -17,6 +17,14 @@ Is there a mobile equivalent for war/4x games?
   - auto despawns for non computer players. This is probably wrong behavior.
   - Determine locking behavior for human player and computer player.
 
+- Determine how to handle flux for units that never had targets or units just produced. Lots of issues.
+  - Do you make flux never move the unit? This creates bimodal behavior where some units respect flux and others dont?
+  - Do you make the unit that was never moved by flux add more or less to flux magnitude?
+  - Not actually spawning the unit until a target is set might be a very simple solution but the
+    player experiencee might be terrible.
+  - How do you handle missiles blowing up from flux moving them.
+  - How do you handle missiles moving without target? Can players abuse this?
+
 - Invest in a visual debugger:
   - First invest in: It can auto select/highlight a specific unit when it spawns
   - Other much lower priority improvements that can be added when needed:
