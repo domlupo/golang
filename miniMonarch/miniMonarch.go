@@ -123,10 +123,10 @@ func (g *Game) Update() error {
 	}
 
 	// player actions
-	var graphicalX, graphicalY = ebiten.CursorPosition()
-	var x = float32(graphicalX) / g.windowMultiplier
-	var y = float32(graphicalY) / g.windowMultiplier
-	var pixelPos = pixelPosition{int(x), int(y)}
+	graphicalX, graphicalY := ebiten.CursorPosition()
+	x := float32(graphicalX) / g.windowMultiplier
+	y := float32(graphicalY) / g.windowMultiplier
+	pixelPos := pixelPosition{int(x), int(y)}
 
 	g.priorLeftMouseClicked = g.leftMouseClicked
 	g.leftMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
@@ -158,7 +158,7 @@ func (g *Game) Update() error {
 			pixelPosition{int(g.initialSelectedX), int(g.initialSelectedY)},
 			pixelPosition{int(g.currentSelectedX), int(g.currentSelectedY)})
 	}
-	var nodeOwnershipChanged = g.gameState.updateNodeOwnership()
+	nodeOwnershipChanged := g.gameState.updateNodeOwnership()
 
 	// play computer moves. Computers currently affect game state directly rather
 	// than the same game state being sent to each one before a final update occurs.
@@ -168,11 +168,11 @@ func (g *Game) Update() error {
 		g.updateComputerTargetNodes()
 	}
 
-	var infantryCount = 0
-	var sniperCount = 0
-	var unguidedGroundMissileCount = 0
-	var guidedAirMissileCount = 0
-	var unknownCount = 0
+	var infantryCount int
+	var sniperCount int
+	var unguidedGroundMissileCount int
+	var guidedAirMissileCount int
+	var unknownCount int
 	for _, u := range g.gameState.units {
 		switch u.name {
 		case infantry:
@@ -195,15 +195,15 @@ func (g *Game) Update() error {
 	logger.log(infoLevel, mainLogType, "game_state", slog.Int("guidedAirMissile", guidedAirMissileCount))
 	logger.log(infoLevel, mainLogType, "game_state", slog.Int("unknownCount", unknownCount))
 
-	var blueNodeCount = 0
-	var redNodeCount = 0
+	var blueNodeCount int
+	var redNodeCount int
 
 	for _, node := range g.gameState.nodes {
 		switch node.player {
 		case bluePlayer:
-			blueNodeCount = blueNodeCount + 1
+			blueNodeCount++
 		case redPlayer:
-			redNodeCount = redNodeCount + 1
+			redNodeCount++
 		}
 	}
 
