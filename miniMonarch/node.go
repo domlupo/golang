@@ -28,7 +28,7 @@ type node struct {
 	unitConfig    unitConfig
 }
 
-func newNode(p player, gridPos gridPosition, initialNodeHealth int, nodeRadius int, unit unitConfig) node {
+func newNode(p player, gridPos gridPosition, initialNodeHealth int, nodeRadius int, uc unitConfig) node {
 	n := node{
 		player:        p,
 		gridPos:       gridPos,
@@ -38,12 +38,12 @@ func newNode(p player, gridPos gridPosition, initialNodeHealth int, nodeRadius i
 		currentHealth: initialNodeHealth,
 		capturedBy:    nil,
 		target:        nil,
-		unitConfig:    unit,
+		unitConfig:    uc,
 	}
 	return n
 }
 
-func (n *node) drawNode(dc drawContext, nodeGridPos gridPosition) {
+func (n *node) drawNode(dc drawContext, gridPos gridPosition) {
 	var nodeColor color.Color
 	switch n.player {
 	case bluePlayer:
@@ -56,7 +56,7 @@ func (n *node) drawNode(dc drawContext, nodeGridPos gridPosition) {
 		panic("unknown player cannot drawNode")
 	}
 
-	var nodePixelPos = getPixelPosition(nodeGridPos, innerGridPosition{0, 0})
+	var nodePixelPos = getPixelPosition(gridPos, innerGridPosition{0, 0})
 
 	vector.DrawFilledCircle(
 		dc.screen,
@@ -91,7 +91,7 @@ func (n *node) drawNode(dc drawContext, nodeGridPos gridPosition) {
 	}
 }
 
-func (n *node) drawTargets(dc drawContext, nodeGridPos gridPosition, drawBlueTargets bool, drawRedTargets bool) {
+func (n *node) drawTargets(dc drawContext, gridPos gridPosition, drawBlueTargets bool, drawRedTargets bool) {
 	var nodeColor color.Color
 	switch n.player {
 	case bluePlayer:
@@ -105,7 +105,7 @@ func (n *node) drawTargets(dc drawContext, nodeGridPos gridPosition, drawBlueTar
 	}
 
 	if n.target != nil && ((n.player == bluePlayer && drawBlueTargets) || (n.player == redPlayer && drawRedTargets)) {
-		var nodePixelPos = getPixelPosition(nodeGridPos, innerGridPosition{0, 0})
+		var nodePixelPos = getPixelPosition(gridPos, innerGridPosition{0, 0})
 		vector.StrokeLine(
 			dc.screen,
 			float32(nodePixelPos.x)*dc.windowMultiplier,
