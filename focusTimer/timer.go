@@ -30,6 +30,7 @@ type Game struct {
 	currentTime                 time.Time
 	startTime                   time.Time
 	logMinsElapsedThresholdMins int
+	logPadding                  int
 	minuteTicker                time.Ticker
 	progressPercent             float64
 	intProgressPercent          int
@@ -45,6 +46,7 @@ func newGame() Game {
 		windowHeight:                720,
 		intDuration:                 60,
 		logMinsElapsedThresholdMins: 100,
+		logPadding:                  5, // Largest number logged (100.0) char length is 5.
 		minuteTicker:                *time.NewTicker(1 * time.Minute),
 		backgroundColor:             color.RGBA{50, 50, 50, 255},
 		timerColor:                  color.RGBA{75, 75, 75, 255},
@@ -67,7 +69,8 @@ func (g *Game) Update() error {
 			g.timerStarted = true
 			g.startTime = time.Now()
 			g.duration = time.Duration(g.intDuration) * time.Minute
-			_, g.err = g.file.WriteString(fmt.Sprintf("Timer set for %d minutes. \nstartTime: %s\n", g.intDuration, g.startTime.Format(time.RFC3339)))
+			_, g.err = g.file.WriteString(
+				fmt.Sprintf("Timer set for %d minutes. \nstartTime: %s\n", g.intDuration, g.startTime.Format(time.RFC3339)))
 			if g.err != nil {
 				log.Fatal(g.err)
 			}
@@ -77,14 +80,11 @@ func (g *Game) Update() error {
 	if g.timerStarted && g.intProgressPercent < maxPercentage {
 		g.progressPercent = float64(g.currentTime.Sub(g.startTime)/time.Millisecond) / float64(g.duration/time.Millisecond) * 100
 
-		singleDigitOffset := ""
-		if g.intProgressPercent < 9 {
-			singleDigitOffset = " "
-		}
-
 		if g.intProgressPercent != int(g.progressPercent) {
+			if g.intProgressPercent < 9 {
+			}
 			g.intProgressPercent = int(g.progressPercent)
-			_, g.err = g.file.WriteString(fmt.Sprintf("  "+singleDigitOffset+"%d%% %s\n", g.intProgressPercent, g.currentTime.Format(time.RFC3339)))
+			_, g.err = g.file.WriteString(fmt.Sprintf("%*d%% %s\n", g.logPadding, g.intProgressPercent, g.currentTime.Format(time.RFC3339)))
 			if g.err != nil {
 				log.Fatal(g.err)
 			}
@@ -95,7 +95,7 @@ func (g *Game) Update() error {
 				for {
 					select {
 					case <-g.minuteTicker.C:
-						_, g.err = g.file.WriteString(fmt.Sprintf(singleDigitOffset+"%.1f%% %s\n", g.progressPercent, g.currentTime.Format(time.RFC3339)))
+						_, g.err = g.file.WriteString(fmt.Sprintf("%*.1f%% %s\n", g.logPadding, g.progressPercent, g.currentTime.Format(time.RFC3339)))
 					default:
 						time.Sleep(1 * time.Microsecond)
 					}
