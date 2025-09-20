@@ -13,6 +13,9 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+// A relatively safe global logger. A few functions affect the state of the logger.
+// e.g. level of logs emitted, type of logs emitted. These should generally be called
+// only from the main game logic file.
 var logger l
 
 type Game struct {
