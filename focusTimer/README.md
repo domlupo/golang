@@ -8,5 +8,4 @@ launch a new timer once break is complete.
 
 ## TODO
 
-- Log minutes remaining
 - Add optional terminal input to set time rather than force mouse wheel.

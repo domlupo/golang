@@ -15,6 +15,7 @@ import (
 )
 
 const maxPercentage = 100
+const minutesInADay = 1440
 
 type Game struct {
 	windowMultiplier            int
@@ -25,12 +26,14 @@ type Game struct {
 	doneColor                   color.RGBA
 	logFileName                 string
 	timerStarted                bool
-	intDuration                 int
+	intDurationStart            int
+	intDurationCount            int
 	duration                    time.Duration
 	currentTime                 time.Time
 	startTime                   time.Time
 	logMinsElapsedThresholdMins int
-	logPadding                  int
+	logPercentPadding           int
+	logMinutePadding            int
 	minuteTicker                time.Ticker
 	progressPercent             float64
 	intProgressPercent          int
@@ -44,14 +47,16 @@ func newGame() Game {
 		windowMultiplier:            2,
 		windowWidth:                 1280,
 		windowHeight:                720,
-		intDuration:                 60,
+		intDurationStart:            60,
 		logMinsElapsedThresholdMins: 100,
-		logPadding:                  5, // Largest number logged (100.0) char length is 5.
-		minuteTicker:                *time.NewTicker(1 * time.Minute),
-		backgroundColor:             color.RGBA{50, 50, 50, 255},
-		timerColor:                  color.RGBA{75, 75, 75, 255},
-		doneColor:                   color.RGBA{0, 150, 100, 255},
-		logFileName:                 "logFocusTimer.txt",
+		// Largest percent logged (100.0) char length is 5.
+		logPercentPadding: 5,
+		// Largest minute log (1440) char length is 4.
+		logMinutePadding: 4,
+		backgroundColor:  color.RGBA{50, 50, 50, 255},
+		timerColor:       color.RGBA{75, 75, 75, 255},
+		doneColor:        color.RGBA{0, 150, 100, 255},
+		logFileName:      "logFocusTimer.txt",
 	}
 	defer g.minuteTicker.Stop()
 	return g
@@ -62,15 +67,18 @@ func (g *Game) Update() error {
 
 	if !g.timerStarted {
 		_, dy := ebiten.Wheel()
-		g.intDuration = max(g.intDuration+int(dy), 0)
-		if (ebiten.IsMouseButtonPressed(ebiten.MouseButton0) ||
+		g.intDurationStart = max(g.intDurationStart+int(dy), 1)
+		g.intDurationStart = min(g.intDurationStart, minutesInADay)
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButton0) ||
 			ebiten.IsMouseButtonPressed(ebiten.MouseButton1) ||
-			ebiten.IsMouseButtonPressed(ebiten.MouseButton2)) && g.intDuration > 0 {
+			ebiten.IsMouseButtonPressed(ebiten.MouseButton2) {
 			g.timerStarted = true
 			g.startTime = time.Now()
-			g.duration = time.Duration(g.intDuration) * time.Minute
+			g.duration = time.Duration(g.intDurationStart) * time.Minute
+			g.intDurationCount = g.intDurationStart
+			g.minuteTicker = *time.NewTicker(1 * time.Minute)
 			_, g.err = g.file.WriteString(
-				fmt.Sprintf("Timer set for %d minutes. \nstartTime: %s\n", g.intDuration, g.startTime.Format(time.RFC3339)))
+				fmt.Sprintf("Timer set for %d minutes. \nstartTime: %s\n", g.intDurationStart, g.startTime.Format(time.RFC3339)))
 			if g.err != nil {
 				log.Fatal(g.err)
 			}
@@ -81,27 +89,38 @@ func (g *Game) Update() error {
 		g.progressPercent = float64(g.currentTime.Sub(g.startTime)/time.Millisecond) / float64(g.duration/time.Millisecond) * 100
 
 		if g.intProgressPercent != int(g.progressPercent) {
-			if g.intProgressPercent < 9 {
-			}
 			g.intProgressPercent = int(g.progressPercent)
-			_, g.err = g.file.WriteString(fmt.Sprintf("%*d%% %s\n", g.logPadding, g.intProgressPercent, g.currentTime.Format(time.RFC3339)))
+			_, g.err = g.file.WriteString(fmt.Sprintf(
+				"%*d%% %s %*d minutes remaining \n",
+				g.logPercentPadding,
+				g.intProgressPercent,
+				g.currentTime.Format(time.RFC3339),
+				g.logMinutePadding,
+				g.intDurationCount))
 			if g.err != nil {
 				log.Fatal(g.err)
 			}
 		}
 
-		if g.intDuration > g.logMinsElapsedThresholdMins {
-			go func() {
-				for {
-					select {
-					case <-g.minuteTicker.C:
-						_, g.err = g.file.WriteString(fmt.Sprintf("%*.1f%% %s\n", g.logPadding, g.progressPercent, g.currentTime.Format(time.RFC3339)))
-					default:
-						time.Sleep(1 * time.Microsecond)
+		go func() {
+			for {
+				select {
+				case <-g.minuteTicker.C:
+					g.intDurationCount = g.intDurationCount - 1
+					if g.intDurationStart > g.logMinsElapsedThresholdMins {
+						_, g.err = g.file.WriteString(fmt.Sprintf(
+							"%*.1f%% %s %*d minutes remaining \n",
+							g.logPercentPadding,
+							g.progressPercent,
+							g.currentTime.Format(time.RFC3339),
+							g.logMinutePadding,
+							g.intDurationCount))
 					}
+				default:
+					time.Sleep(1 * time.Microsecond)
 				}
-			}()
-		}
+			}
+		}()
 	}
 	return nil
 }
@@ -123,7 +142,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	if !g.timerStarted {
 		op := &text.DrawOptions{}
-		text.Draw(screen, fmt.Sprintf("%d minutes. Change minutes with mouse wheel. Press any mouse button to start timer", g.intDuration), &text.GoTextFace{
+		text.Draw(screen, fmt.Sprintf("%d minutes. Change minutes with mouse wheel. Press any mouse button to start timer", g.intDurationStart), &text.GoTextFace{
 			Source: g.mplusFaceSource,
 			Size:   float64(24 * g.windowMultiplier),
 		}, op)
