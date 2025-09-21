@@ -42,7 +42,8 @@ type Game struct {
 	drawRedTargets           bool
 	drawDebugGrid            bool
 	slowTick                 bool
-	runProfiler              bool
+	profilerOn               bool
+	profilerFile             *os.File
 	initialSelectedX         float32
 	initialSelectedY         float32
 	currentSelectedX         float32
@@ -73,7 +74,7 @@ func newGame() Game {
 		blueComputerActive:      true,
 		redComputerActive:       true,
 		hotRestart:              true,
-		runProfiler:             false,
+		profilerOn:              false,
 		developerToggles:        make(map[string]*toggle),
 		developerToggleCooldown: 300 * time.Millisecond,
 		initialNodeHealth:       100,
@@ -217,9 +218,6 @@ func (g *Game) Update() error {
 	}
 
 	if blueNodeCount == 0 || redNodeCount == 0 {
-		if g.runProfiler {
-			pprof.StopCPUProfile()
-		}
 		if g.hotRestart {
 			logger.log(infoLevel, mainLogType, "restartGame")
 
@@ -270,19 +268,6 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 func main() {
 	g := newGame()
 
-	if g.runProfiler {
-		f, err := os.Create("cpu.prof")
-		if err != nil {
-			logger.log(errorLevel, mainLogType, "could not create CPU profile")
-		}
-		defer f.Close()
-
-		if err := pprof.StartCPUProfile(f); err != nil {
-			logger.log(errorLevel, mainLogType, "could not start CPU profile")
-		}
-		defer pprof.StopCPUProfile()
-	}
-
 	var monitors []*ebiten.MonitorType
 	monitors = ebiten.AppendMonitors(monitors)
 	// TODO: Remove before release in order to avoid bugs for customers which own this monitor
@@ -296,6 +281,27 @@ func main() {
 
 	logger = newLogger(g.loggerConfig)
 
+	g.developerToggles["profile"] = newToggle(
+		ebiten.KeyC,
+		func() {
+			if g.profilerOn {
+				logger.log(infoLevel, alwaysLogType, "Stopping profiler.")
+				pprof.StopCPUProfile()
+				g.profilerFile.Close()
+			} else {
+				logger.log(infoLevel, alwaysLogType, "Starting profiler.")
+				f, err := os.Create("cpu.prof")
+				if err != nil {
+					logger.log(errorLevel, alwaysLogType, "Could not create CPU profiler file.")
+				}
+				g.profilerFile = f
+				if err := pprof.StartCPUProfile(f); err != nil {
+					logger.log(errorLevel, alwaysLogType, "Could not start CPU profiler.")
+				}
+			}
+			g.profilerOn = !g.profilerOn
+		},
+		g.developerToggleCooldown)
 	g.developerToggles["pause"] = newToggle(
 		ebiten.KeyP,
 		func() { g.paused = !g.paused },
@@ -348,7 +354,13 @@ func main() {
 		g.developerToggleCooldown)
 
 	g.restart()
+
 	if err := ebiten.RunGame(&g); err != nil {
 		log.Fatal(err)
+	}
+
+	if g.profilerOn {
+		pprof.StopCPUProfile()
+		g.profilerFile.Close()
 	}
 }
