@@ -132,7 +132,10 @@ func (s *state) moveUnits() {
 			continue
 		}
 
-		newPos := u.getNewPos(uPos)
+		// TODO: Consider refactoring this function into a separate moveUnit. Can use named
+		// returns to defer completeMove call on successful moves. Punting this because
+		// the function will probably change a lot in the future and the refactor can happen then.
+		newPos, completeMove := u.getNewPos(uPos)
 
 		if u.currentTarget == nil {
 			unitsWithoutTarget++
@@ -179,13 +182,13 @@ func (s *state) moveUnits() {
 				unitsAtNonTargetNode++
 				unitsMovedCount++
 				s.units[newPos] = s.units[position{uPos.layer, pixelPosition{uPos.x, uPos.y}}]
-				s.units[newPos].completeMove()
+				completeMove()
 				delete(s.units, position{uPos.layer, pixelPosition{uPos.x, uPos.y}})
 			}
 		} else {
 			unitsMovedCount++
 			s.units[newPos] = s.units[position{uPos.layer, pixelPosition{uPos.x, uPos.y}}]
-			s.units[newPos].completeMove()
+			completeMove()
 			delete(s.units, position{uPos.layer, pixelPosition{uPos.x, uPos.y}})
 		}
 	}

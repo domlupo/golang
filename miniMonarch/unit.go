@@ -261,11 +261,11 @@ func (u *unit) analyzeTargets() {
 // Uses Bresenham's line algorithm https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 // Specifically, the integer incremental error form where error is stored over mulitple moves
 // This algorithm prioritizes straight line movement. It is not guaranteed the final position is reached.
-func (u *unit) getNewPos(currentPos position) position {
+func (u *unit) getNewPos(currentPos position) (position, func()) {
 	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "getNewPos", "currentPos", currentPos.log())
 
 	if u.currentTarget == nil {
-		return currentPos
+		return currentPos, func() {}
 	}
 
 	x1 := u.currentTarget.x
@@ -312,7 +312,7 @@ func (u *unit) getNewPos(currentPos position) position {
 		y0 += sy
 	}
 
-	return position{currentPos.layer, pixelPosition{x0, y0}}
+	return position{currentPos.layer, pixelPosition{x0, y0}}, func() { u.completeMove() }
 }
 
 func (u *unit) updateTarget(ut unitTarget, target *position) {
