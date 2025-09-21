@@ -110,6 +110,9 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Future Checkpoints
+
+- Verify if Bresenham error is handle correctlly for Flux movements.
+
 - Refactor for more idiomatic go code. Already did var declare and switch statements.
 
 - Deterministic seeds:

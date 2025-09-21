@@ -242,37 +242,36 @@ func (u *unit) refresh() {
 	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "afterRefresh", "unit", u.log())
 }
 
+func (u *unit) analyzeTargets() {
+	if u.fluxTarget != nil {
+		u.fluxExpire = max(u.fluxExpire-1, 0)
+		u.updateTarget(currentTarget, u.fluxTarget)
+		if u.fluxExpire == 0 {
+			u.fluxTarget = nil
+		}
+	} else if u.localTarget != nil {
+		u.updateTarget(currentTarget, u.localTarget)
+	} else if u.globalTarget != nil {
+		u.updateTarget(currentTarget, u.globalTarget)
+	} else {
+		u.updateTarget(currentTarget, nil)
+	}
+}
+
 // Uses Bresenham's line algorithm https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 // Specifically, the integer incremental error form where error is stored over mulitple moves
 // This algorithm prioritizes straight line movement. It is not guaranteed the final position is reached.
 func (u *unit) getNewPos(currentPos position) position {
 	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "getNewPos", "currentPos", currentPos.log())
 
-	x0 := currentPos.x
-	y0 := currentPos.y
-	x1 := 0
-	y1 := 0
-
-	if u.fluxTarget != nil {
-		u.fluxExpire = max(u.fluxExpire-1, 0)
-		u.updateTarget(currentTarget, u.fluxTarget)
-		x1 = u.fluxTarget.x
-		y1 = u.fluxTarget.y
-		if u.fluxExpire == 0 {
-			u.fluxTarget = nil
-		}
-	} else if u.localTarget != nil {
-		u.updateTarget(currentTarget, u.localTarget)
-		x1 = u.localTarget.x
-		y1 = u.localTarget.y
-	} else if u.globalTarget != nil {
-		u.updateTarget(currentTarget, u.globalTarget)
-		x1 = u.globalTarget.x
-		y1 = u.globalTarget.y
-	} else {
-		u.updateTarget(currentTarget, nil)
+	if u.currentTarget == nil {
 		return currentPos
 	}
+
+	x1 := u.currentTarget.x
+	y1 := u.currentTarget.y
+	x0 := currentPos.x
+	y0 := currentPos.y
 
 	var sx int
 	var sy int

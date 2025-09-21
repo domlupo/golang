@@ -107,7 +107,7 @@ func (s *state) analyzeTargets() {
 		}
 
 		u1.updateTarget(localTarget, closestUnitPos)
-
+		u1.analyzeTargets()
 	}
 }
 
@@ -132,9 +132,6 @@ func (s *state) moveUnits() {
 			continue
 		}
 
-		// TODO: This updating target seems a bit wrong. Check if there is a better way to handle this.
-		// My initial thoughts are to update unit targets only in analyze targets then in move units
-		// I simply get the move. May need to split some logic up.
 		newPos := u.getNewPos(uPos)
 
 		if u.currentTarget == nil {
