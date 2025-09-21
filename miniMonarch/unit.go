@@ -25,7 +25,8 @@ var infantryConfig = unitConfig{
 	attacksPosition:      false,
 	explodeAtTerminalPos: false,
 	fluxTurnCountDelay:   10,
-	fluxMagnitude:        10,
+	fluxMagnitude:        5,
+	fluxExpireMax:        5,
 	explodeRadius:        0,
 }
 var sniperConfig = unitConfig{
@@ -44,6 +45,7 @@ var sniperConfig = unitConfig{
 	explodeAtTerminalPos: false,
 	fluxTurnCountDelay:   10,
 	fluxMagnitude:        10,
+	fluxExpireMax:        10,
 	explodeRadius:        0,
 }
 
@@ -65,6 +67,7 @@ var unguidedGroundMissileConfig = unitConfig{
 	explodeAtTerminalPos: true,
 	fluxTurnCountDelay:   10,
 	fluxMagnitude:        10,
+	fluxExpireMax:        10,
 	explodeRadius:        100,
 }
 var guidedAirMissileConfig = unitConfig{
@@ -83,6 +86,7 @@ var guidedAirMissileConfig = unitConfig{
 	explodeAtTerminalPos: true,
 	fluxTurnCountDelay:   10,
 	fluxMagnitude:        10,
+	fluxExpireMax:        10,
 	explodeRadius:        100,
 }
 
@@ -121,9 +125,11 @@ type unitConfig struct {
 	attacksHighAltitude  bool
 	attacksPosition      bool
 	explodeAtTerminalPos bool
-	fluxTurnCountDelay   int
-	fluxMagnitude        int
-	explodeRadius        int
+	// TODO: Figure out better flux names
+	fluxTurnCountDelay int
+	fluxMagnitude      int
+	fluxExpireMax      int
+	explodeRadius      int
 }
 
 func (uc unitConfig) log() []slog.Attr {
@@ -176,7 +182,6 @@ type unit struct {
 	fluxTarget         *position
 	localTarget        *position
 	globalTarget       *position
-	fluxExpire         int
 	fluxTurnCount      int
 	atTerminalPosition bool
 	bresenhamError     *int
@@ -189,6 +194,7 @@ type unit struct {
 	attackedThisTurn   bool
 	canReachTargetNode *node
 	selected           bool
+	fluxExpireCount    int
 }
 
 func newUnit(p player, globalTarget *position, uc unitConfig) unit {
@@ -197,16 +203,12 @@ func newUnit(p player, globalTarget *position, uc unitConfig) unit {
 		logger.log(errorLevel, selectedUnitLogType, "newUnit", "failed to generate UUID", err)
 	}
 	u := unit{
-		id:            id,
-		player:        p,
-		currentTarget: nil,
-		fluxTarget:    nil,
-		localTarget:   nil,
-		globalTarget:  globalTarget,
-		// TODO: Figure out better naming for these two flux variables
-		// They are a bit confusing but not sure what else to call them at the moment.
-		// Most likely they will change significantly.
-		fluxExpire:         0,
+		id:                 id,
+		player:             p,
+		currentTarget:      nil,
+		fluxTarget:         nil,
+		localTarget:        nil,
+		globalTarget:       globalTarget,
 		fluxTurnCount:      0,
 		atTerminalPosition: false,
 		bresenhamError:     nil,
@@ -219,6 +221,7 @@ func newUnit(p player, globalTarget *position, uc unitConfig) unit {
 		attackedThisTurn:   false,
 		canReachTargetNode: nil,
 		selected:           false,
+		fluxExpireCount:    uc.fluxExpireMax,
 	}
 
 	return u
@@ -244,10 +247,11 @@ func (u *unit) refresh() {
 
 func (u *unit) analyzeTargets() {
 	if u.fluxTarget != nil {
-		u.fluxExpire = max(u.fluxExpire-1, 0)
+		u.fluxExpireCount = max(u.fluxExpireCount-1, 0)
 		u.updateTarget(currentTarget, u.fluxTarget)
-		if u.fluxExpire == 0 {
+		if u.fluxExpireCount == 0 {
 			u.fluxTarget = nil
+			u.fluxExpireCount = u.fluxExpireMax
 		}
 	} else if u.localTarget != nil {
 		u.updateTarget(currentTarget, u.localTarget)
@@ -328,6 +332,7 @@ func (u *unit) updateTarget(ut unitTarget, target *position) {
 		unitTarget = "currentTarget"
 	case fluxTarget:
 		u.fluxTarget = target
+		u.fluxTurnCount = 0
 		unitTarget = "fluxTarget"
 	case localTarget:
 		u.localTarget = target

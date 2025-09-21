@@ -94,7 +94,7 @@ func (g *Game) restart() {
 	g.gameState = *newState(g.windowWidth, g.windowHeight, g.gridSize)
 	g.compOne = *newComputer(bluePlayer)
 	g.compTwo = *newComputer(redPlayer)
-	setupState(g.gameState, complexMissile, g.initialNodeHealth, g.gridSize/2)
+	setupState(g.gameState, complex, g.initialNodeHealth, g.gridSize/2)
 	g.updateComputerTargetNodes()
 }
 

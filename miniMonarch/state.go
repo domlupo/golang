@@ -71,7 +71,6 @@ func (s *state) analyzeTargets() {
 			gridPos, _ := splitPixelPosition(uPos1.pixelPosition, s.gridSize)
 			fluxDelta := s.fluxes[gridPos].getFluxDelta(u1.fluxMagnitude)
 			u1.updateTarget(fluxTarget, &position{ground, pixelPosition{uPos1.x + fluxDelta.x, uPos1.y + fluxDelta.y}})
-			u1.fluxTurnCount = 0
 		}
 
 		var reachesNode, isTargetNode = s.collidesWithNode(
