@@ -9,6 +9,12 @@ Is there a mobile equivalent for war/4x games?
 
 ---
 
+## Top 3 Ranked Concerns : Risks
+
+1. Design and iterate on Local path finding and flux. -> Most unknown but fundamental game engine decision.
+2. Faster iteration from better inspection and debugging tooling. -> Don't waste engineering effort due to poor prioritization.
+3. Playtesting MVP. -> Don't invest major engineering effort into wrong tasks.
+
 ## Checkpoints : Purposes
 
 ### Next Checkpoints
@@ -43,6 +49,7 @@ Is there a mobile equivalent for war/4x games?
 
 - Research more local pathfinding algorithms
   - Flux can be iterated and tuned a lot. I only implemented a basic solution.
+  - Flux resolution can be improved by dynamically changing grid size at compile time. Maybe even run time?
   - Determine better flux structure and contracts.
     - Does flux depend on unit type? Probably harder to maintain, but  more tuneable.
     - Do units contribute a different amount of flux based on other factos like radius?
@@ -110,6 +117,8 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Future Checkpoints
+
+- Determine if existing ground missile bug where computer missiles got stuck on production node still exists
 
 - Verify if Bresenham error is handle correctlly for Flux movements.
 
@@ -248,12 +257,6 @@ Is there a mobile equivalent for war/4x games?
    - Naval units are unneeded for main mechanic and game loop. Also huge scope creep.
    - There is a large enough variety with only land and air units.
    - Medieval theme would not allow air units
-
----
-
-## Issues and Concerns
-
-- Nothing yet since early prototype stage 
 
 ---
 
