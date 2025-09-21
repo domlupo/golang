@@ -21,7 +21,7 @@ Is there a mobile equivalent for war/4x games?
 
 - Improve guided air missile
   - auto despawns for non computer players. This is probably wrong behavior.
-  - Determine locking behavior for human player and computer player.
+  - Determine target locking behavior for human player and computer player.
 
 - Determine how to handle flux for units that never had targets or units just produced. Lots of issues.
   - Do you make flux never move the unit? This creates bimodal behavior where some units respect flux and others dont?
@@ -47,14 +47,24 @@ Is there a mobile equivalent for war/4x games?
     - Unit must keep itself in sync
   - Determine if a different structure is better for Bresenham
 
-- Research more local pathfinding algorithms
+- Iterate on group and local pathfinding
   - Flux can be iterated and tuned a lot. I only implemented a basic solution.
-  - Flux resolution can be improved by dynamically changing grid size at compile time. Maybe even run time?
+  - Flux resolution can be improved by changing flux grid size at compile time. 
+  - Flux grid can be changed at runtime as well but probably unneded complexity. 
+  - How units react to flux can depend on unit type or be the same for all units.
+  - How units contribute to flux can depend on unit type or be the same for all units.
   - Determine better flux structure and contracts.
-    - Does flux depend on unit type? Probably harder to maintain, but  more tuneable.
-    - Do units contribute a different amount of flux based on other factos like radius?
-    - Does flux affect units different? Flux magnitude can be different for all units or the same with an efficiency factor.
-  - Look into other approaches, methods and algorithms.
+
+- Determine path finding goals for individual units to decide on path finding algorithm:
+  - Unit -> player experience -> path finding algorithm
+  - Infantry -> Form tight territory lines of a specific thickness -> 
+  - Sniper -> Clump with other snipers behind infantry line to allow other units pass ->
+  - unguidedGroundMissile ->
+  - guidedAirMissile ->
+  - mobile SAM ->
+  - tank -> 
+  - bomer -> 
+  - fighter ->
 
 - Add more ground units for local path finding iteration
   - tank (counters infantry, secondary mode to push unit?)
@@ -76,15 +86,6 @@ Is there a mobile equivalent for war/4x games?
 - Improve flux debugging
   - Add flux square selection
   - Add selected flux logging for detailed tracing
-
-- Research and iterate local pathfinding algorithms/methods
-  - More realistic short distance pathing
-  - Proper surronding of a target
-  - Proper Units bunching into a single spot
-  - Helps close attack behavior decision
-
-- Determine group unit pathing behavior
-  - May want to decide jitter vs predictable movement
 
 - Improve computer
   - Update computer to be beatable by humans
@@ -201,18 +202,13 @@ Is there a mobile equivalent for war/4x games?
   - Add unit that counters missile and expands game logic?
 
 - Update unit pathing algorithm to Theta* with same cost orthgonal and diagonal movement: (https://en.wikipedia.org/wiki/Theta*)
-  - Unit pathing is fundamental and will need lots of iteration.
-  - More realistic long distance pathing rather than current angled
   - Units will be able to go around obstacles
-  - Very likely this is needed for final game
-
-- Research more global pathfinding algorithms e.g. AP Theta*
-  - ?
 
 - initial map generation:
   - Omitting certain counters or land features from maps might give ticket to ride vibes where
     a different map significantly changes gameplay.
   - Omitting certain tech tree options is another way to randomize games.
+  - Omitting certain tech tree options is a bit like randomized civ pick in AOE
 
 - Tech Tree:
   - ?
@@ -262,6 +258,7 @@ Is there a mobile equivalent for war/4x games?
 
 ## Game Design Questions
 
+- Should air units have impassable terrain e.g. high mountain? Will make path finding harder for air units
 - Stopping node unit production in order to advance tech tree, improve node is probably a good form of risk -> reward.
 - Should nodes support unit cycling e.g. produce missile, then produce infantry, then produce tank, etc
 - Are both low altitude and high altitude needed or would a single air layer be sufficient?
@@ -327,6 +324,38 @@ Is there a mobile equivalent for war/4x games?
 
 ---
 
+### Multi-agent and Local Pathfinding Brainstorm
+
+- Units with different count and layers can employ different path finding algorithms.
+  - total number of bombers will be low relatively fewer collisions
+  - total number of infantry will be high with many collisions
+
+- Pathfinding algorithm buckets:
+  - Static obstacles: 
+    - Theta*
+    - A*
+  - Dynamic obstacles: 
+    - D*
+    - D* focused
+    - D* lite
+    - LPA* aka Lifelong Planning A*
+    - Conflict Based Search
+    - Enhanced Conflict Based Search
+    - Increasing  cost tree seach
+    - Geometric MAPF or MAPF for large agents (LAMAPF)
+    - Lifelong planning conflict-based search (LPCBS)
+  - Group:
+    - flow fields
+    - flocking behaviors
+    - dynamic obstacle avoidance
+    - continuum crowds
+
+- Other consideration:
+  - Anonymous Multi-agent pathfinding: Set of targets to reach but specific agent does not matter
+  - Can use nav meshes to optimize or simplify searches
+  - Can use window searches aka use smaller searches to lower CPU use 
+  - Rapidly-exploring random tree can create randomized pathing 
+
 ### Unit List Brainstorm
 
 - Questions:
@@ -336,7 +365,7 @@ Is there a mobile equivalent for war/4x games?
   - Should planes need to fly back to airport to refuel?
   - Should planes need to fly back to airport to rearm?
   - Should planes need to fly back to airport to repair?
-  - Should plane matience be much quicker than building a new plane?
+  - Should plane maintenance be much quicker than building a new plane?
   - How can other units be unique and fit with node mechanic?
   - Should I do purpose exercise with units like I do with checkpoints
   - Is there a good way to counter artillery?
