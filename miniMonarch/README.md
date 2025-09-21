@@ -19,6 +19,15 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Finalize if grid should be hex or square
+  - Probably an advantage for hexagonal grid is less easier chunking e.g. 7 < 9 adjacent
+  - Record decision in closed game design decisions
+
+- Implement grid chunking to handle more units 
+  - Blocked on "Finalize if grid should be hex or square"
+  - Analyze target is too CPU inefficent
+  - Collides with unit is too CPU inefficient
+
 - Improve guided air missile
   - auto despawns for non computer players. This is probably wrong behavior.
   - Determine target locking behavior for human player and computer player.
@@ -285,7 +294,6 @@ Is there a mobile equivalent for war/4x games?
   - Reminds me of the military diagrams that show battles over time
   - May be able to utilize the idea of target change units
   - Early fight for position, long term fight for ?
-- Grid is square or hexagonal? A potential issue with hexagonal is more CPU for certain algorithms.
 - top down graphics or iso or 3d?
 - Players get to pick starting positions?
 - Hidden or fully visible grid?
