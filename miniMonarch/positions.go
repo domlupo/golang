@@ -1,7 +1,121 @@
 // general position utility functions
 package main
 
-import "log/slog"
+import (
+	"log/slog"
+)
+
+type hexagonTriangle int
+
+// The hexagon position context is a hardcoded mapping to aid with pixel position : relative hexagon.
+// It avoids the the need of CPU intensive math to convert from pixel position -> hexagon.
+// It helps CPU performance by removing the need for floating point or sqrt math logic.
+//
+// Specific CPU profiling did not prove this optimizaton was needed but prior CPU profiling
+// for this game showed that integer math is much more efficient. Other pixel position to
+// hexagon algorithms appeared as complex or even more complex than this method so this
+// more optimized solution was implemented first.
+//
+// It is small portion of the hexagonal grid that is repeated multiple times.
+// It covers 460 (46 cols, 10 rows) of pixels.
+// It has a:
+//   - right triangle on the left side.
+//   - non right triangle in the middle.
+//   - right triangle on the right side.
+//
+// right triangle on left side
+// ***/ \
+// **/   \
+// */     \
+//
+// non right triangle in middle
+//    /*\
+//   /***\
+//  /*****\
+//
+// right triangle on right side
+//    / \***
+//   /   \**
+//  /     \*
+
+const (
+	unknownHexTriangle = iota
+	leftHexTriangle
+	middleHexTriangle
+	rightHexTriangle
+)
+
+// TODO: Remove hard coded hexagon configs
+
+func newHexPositionContext() [460]hexagonTriangle {
+	var pc [460]hexagonTriangle
+
+	rowPixelCount := 46
+
+	// row 1
+	rowStart := 0
+	rowMiddleOffset := 1
+	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	// row 2
+	rowStart = rowPixelCount
+	rowMiddleOffset = 3
+	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	// row 3
+	rowStart = rowPixelCount * 2
+	rowMiddleOffset = 6
+	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	// row 4
+	rowStart = rowPixelCount * 3
+	rowMiddleOffset = 8
+	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	// row 5
+	rowStart = rowPixelCount * 4
+	rowMiddleOffset = 10
+	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	// row 6
+	rowStart = rowPixelCount * 5
+	rowMiddleOffset = 13
+	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	// row 7
+	rowStart = rowPixelCount * 6
+	rowMiddleOffset = 15
+	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	// row 8
+	rowStart = rowPixelCount * 7
+	rowMiddleOffset = 17
+	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	// row 9
+	rowStart = rowPixelCount * 8
+	rowMiddleOffset = 20
+	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	// row 10
+	rowStart = rowPixelCount * 9
+	rowMiddleOffset = 22
+	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+
+	return pc
+}
+
+func setHexPositionContext(pc *[460]hexagonTriangle, rowPixelCount int, rowStart int, rowMiddleOffset int) {
+	pixelCount := rowPixelCount / 2
+
+	leftHexStart := rowStart
+	middleHexStart := rowStart + pixelCount - rowMiddleOffset
+	rightHexStart := middleHexStart + 2*rowMiddleOffset
+	for i := leftHexStart; i < middleHexStart; i++ {
+		pc[i] = leftHexTriangle
+	}
+	for i := middleHexStart; i < rightHexStart; i++ {
+		pc[i] = middleHexTriangle
+	}
+	for i := rightHexStart; i < rowStart+rowPixelCount; i++ {
+		pc[i] = rightHexTriangle
+	}
+}
+
+func hexPosContextIndex(innerGridPos innerGridPosition) int {
+	return innerGridPos.x + innerGridPos.y*46
+}
 
 type direction int
 
