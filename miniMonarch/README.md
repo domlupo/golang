@@ -19,9 +19,7 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Finalize if grid should be hex or square
-  - Probably an advantage for hexagonal grid is less easier chunking e.g. 7 < 9 adjacent
-  - Record decision in closed game design decisions
+- Refactor existing square grid logic to hexagon
 
 - Implement grid chunking to handle more units 
   - Blocked on "Finalize if grid should be hex or square"
@@ -262,6 +260,19 @@ Is there a mobile equivalent for war/4x games?
    - Naval units are unneeded for main mechanic and game loop. Also huge scope creep.
    - There is a large enough variety with only land and air units.
    - Medieval theme would not allow air units
+7. Hexagonal grid rather than square grid
+  - The aesthetics of a verticl layout hexagonal grid is much nice than a square grid
+    - The pattern is more pleasing.
+    - The border is more pleasing.
+    - More variety to connect grid nodes.
+    - Multiple connected hexagon nodes is more pleasing.
+    - It makes the game seem more organic rather than synthetic which match war theme.
+    - Specifically, the same infantry lines are formed but are more pleasing with a hexagon background.
+    - Hexagon is closer to a circle shape for easier art, hacky collision detection, etc
+  - Pixel Position to Hexagon index calcuation is not CPU intensive (floating point nor sqrt math needed)
+  - Grid chunking and flux only requires 6 adjacent rather than 8.
+  - Matches existing games better like Catan, Civ, etc
+  - Optional hexagonal and square grid is more code complexity, work, bimodal behavior, etc
 
 ---
 

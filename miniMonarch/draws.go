@@ -138,41 +138,150 @@ func drawDebug(dc drawContext, drawDebugGrid bool) {
 		return
 	}
 
-	for i := range dc.debugGridIndexCount {
-		x := dc.gridSize * i
-		vector.StrokeLine(
-			dc.screen,
-			float32(x-dc.debugGridOffset)*dc.windowMultiplier,
-			0, float32(x-dc.debugGridOffset)*dc.windowMultiplier,
-			float32(dc.windowHeight)*dc.windowMultiplier,
-			float32(dc.debugGridWidth)*dc.windowMultiplier,
-			dc.debugGridColor,
-			false)
-		vector.StrokeLine(
-			dc.screen,
-			float32(x+dc.debugGridOffset)*dc.windowMultiplier,
-			0, float32(x+dc.debugGridOffset)*dc.windowMultiplier,
-			float32(dc.windowHeight)*dc.windowMultiplier,
-			float32(dc.debugGridWidth)*dc.windowMultiplier,
-			dc.debugGridColor,
-			false)
-		var y = dc.gridSize * i
-		vector.StrokeLine(
-			dc.screen,
-			0, float32(y-dc.debugGridOffset)*dc.windowMultiplier,
-			float32(dc.windowWidth)*dc.windowMultiplier,
-			float32(y-dc.debugGridOffset)*dc.windowMultiplier,
-			float32(dc.debugGridWidth)*dc.windowMultiplier,
-			dc.debugGridColor,
-			false)
-		vector.StrokeLine(
-			dc.screen,
-			0,
-			float32(y+dc.debugGridOffset)*dc.windowMultiplier,
-			float32(dc.windowWidth)*dc.windowMultiplier,
-			float32(y+dc.debugGridOffset)*dc.windowMultiplier,
-			float32(dc.debugGridWidth)*dc.windowMultiplier,
-			dc.debugGridColor,
-			false)
+	// This is the pattern drawn.
+	//    / \
+	//   |
+	//   |
+	//    \ /
+	//     |
+	//     |
+	// when repeated, it forms a hexagonal grid.
+	//    / \ / \
+	//   |   |
+	//   |   |
+	//    \ / \ /
+	//     |   |
+	//     |   |
+	//    / \ / \
+	//   |   |
+	//   |   |
+	//    \ / \ /
+	//     |   |
+	//     |   |
+
+	// For 1280p * 720p resolution, a hexagon height of 40p is ideally 80/sqrt(3) wide.
+	// 80/sqrt(3) is 46.188 which is approximately 46p.
+	xDelta := 46 // hexagon width
+	yDelta := 60 // hexagon height * 1.5
+	verticalLineLength := yDelta / 3
+	horizontalLineLength := xDelta / 2
+	// start drawing the grid with a hexagon partial left side
+	xOffset := -xDelta
+	// start drawing the grid with a hexagon partial bottom side
+	yOffset := -yDelta + (verticalLineLength / 2)
+	// use padding to center the entire hexagonal grid
+	xPadding := (dc.windowWidth % xDelta) / 2
+	yPadding := (verticalLineLength / 2)
+	// draw 2 extra horizontal hexagons to account for a
+	// partially drawn hexagon on left and right side of grid
+	xCount := (dc.windowWidth / xDelta) + 2
+	yCount := (dc.windowHeight / yDelta) + 1
+
+	for i := range xCount {
+		for j := range yCount {
+			// draw left side
+			//    / \
+			//  *|*
+			//  *|*
+			//   |
+			//    \ /
+			//     |
+			//     |
+			vector.StrokeLine(
+				dc.screen,
+				float32(xDelta*i+xOffset+xPadding)*dc.windowMultiplier,
+				float32(yDelta*j+yOffset+yPadding)*dc.windowMultiplier,
+				float32(xDelta*i+xOffset+xPadding)*dc.windowMultiplier,
+				float32(yDelta*j+yOffset+yPadding+verticalLineLength)*dc.windowMultiplier,
+				float32(dc.debugGridWidth)*dc.windowMultiplier,
+				dc.debugGridColor,
+				false)
+
+			// draw top left
+			//   */*\
+			//   |
+			//   |
+			//    \ /
+			//     |
+			//     |
+			vector.StrokeLine(
+				dc.screen,
+				float32(xDelta*i+xOffset+xPadding)*dc.windowMultiplier,
+				float32(yDelta*j+yOffset+yPadding)*dc.windowMultiplier,
+				float32(xDelta*i+xOffset+xPadding+horizontalLineLength)*dc.windowMultiplier,
+				float32(yDelta*j+yOffset+yPadding-(verticalLineLength/2))*dc.windowMultiplier,
+				float32(dc.debugGridWidth)*dc.windowMultiplier,
+				dc.debugGridColor,
+				false)
+
+			// draw top right
+			//    /*\*
+			//   |
+			//   |
+			//    \ /
+			//     |
+			//     |
+			vector.StrokeLine(
+				dc.screen,
+				float32(xDelta*i+xOffset+xPadding+horizontalLineLength)*dc.windowMultiplier,
+				float32(yDelta*j+yOffset+yPadding-(verticalLineLength/2))*dc.windowMultiplier,
+				float32(xDelta*(i+1)+xOffset+xPadding)*dc.windowMultiplier,
+				float32(yDelta*j+yOffset+yPadding)*dc.windowMultiplier,
+				float32(dc.debugGridWidth)*dc.windowMultiplier,
+				dc.debugGridColor,
+				false)
+
+			// draw bottom left
+			//    / \
+			//   |
+			//   |
+			//   *\*/
+			//     |
+			//     |
+			vector.StrokeLine(
+				dc.screen,
+				float32(xDelta*i+xOffset+xPadding)*dc.windowMultiplier,
+				float32(yDelta*j+yOffset+yPadding+verticalLineLength)*dc.windowMultiplier,
+				float32(xDelta*i+xOffset+xPadding+horizontalLineLength)*dc.windowMultiplier,
+				float32(yDelta*j+yOffset+yPadding+verticalLineLength+(verticalLineLength/2))*dc.windowMultiplier,
+				float32(dc.debugGridWidth)*dc.windowMultiplier,
+				dc.debugGridColor,
+				false)
+
+			// draw bottom right
+			//    / \
+			//   |
+			//   |
+			//    \*/*
+			//     |
+			//     |
+			vector.StrokeLine(
+				dc.screen,
+				float32(xDelta*i+xOffset+xPadding+horizontalLineLength)*dc.windowMultiplier,
+				float32(yDelta*j+yOffset+yPadding+verticalLineLength+(verticalLineLength/2))*dc.windowMultiplier,
+				float32(xDelta*(i)+xOffset+xPadding+(horizontalLineLength*2))*dc.windowMultiplier,
+				float32(yDelta*j+yOffset+yPadding+verticalLineLength)*dc.windowMultiplier,
+				float32(dc.debugGridWidth)*dc.windowMultiplier,
+				dc.debugGridColor,
+				false)
+
+			// draw vertical connection between rows
+			//    / \
+			//   |
+			//   |
+			//    \ /
+			//    *|*
+			//    *|*
+			vector.StrokeLine(
+				dc.screen,
+				float32(xDelta*i+xOffset+xPadding+horizontalLineLength)*dc.windowMultiplier,
+				float32(yDelta*j+yOffset+yPadding+verticalLineLength+(verticalLineLength/2))*dc.windowMultiplier,
+				float32(xDelta*i+xOffset+xPadding+horizontalLineLength)*dc.windowMultiplier,
+				float32(yDelta*j+yOffset+yPadding+(verticalLineLength*2)+(verticalLineLength/2))*dc.windowMultiplier,
+				float32(dc.debugGridWidth)*dc.windowMultiplier,
+				dc.debugGridColor,
+				false)
+
+		}
 	}
 }
