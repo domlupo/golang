@@ -20,12 +20,7 @@ Is there a mobile equivalent for war/4x games?
 ### Next Checkpoints
 
 - Refactor existing square grid logic to hexagon
-  - Expand tests for hexagon positions 
-    - border hexagons left and above,
-    - posititons that do not exist
-    - hexagons beyond nominal (right and down)
-    - Fix existing bugs by enforcing commented out tests
-    - Write unit tests for missing automated tests for function getHexPixelPosition
+  - Write unit tests for missing automated tests for function getHexPixelPosition
   - Convert flux
 
 - Implement grid chunking to handle more units 

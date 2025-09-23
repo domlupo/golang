@@ -384,13 +384,12 @@ func getHexGridPostion(pixelPos pixelPosition, hc hexConfig, windowWidth int, wi
 		return gridPosition{}, false
 	}
 
-	xIndex := (hc.hexWidth - hc.xOffset + pixelPos.x) / hc.hexWidth
-	xIndex--
+	xIndex := (pixelPos.x+hc.hexWidth-hc.xOffset)/hc.hexWidth - 1
+	yIndex := (pixelPos.y+(hc.hexHeight/4*3)-hc.yOffset)/(hc.hexHeight/4*3) - 2
 	var xIndexOffset int
-	yIndex := (pixelPos.y - hc.yOffset) / (hc.hexHeight * 3 / 2)
 	var yIndexOffset int
-	innerX := (pixelPos.x - hc.xOffset) % hc.hexWidth
-	innerY := (pixelPos.y - hc.yOffset) % (hc.hexHeight * 3 / 2)
+	innerX := (pixelPos.x + hc.hexWidth - hc.xOffset) % hc.hexWidth
+	innerY := (pixelPos.y + (hc.hexHeight * 3 / 2) - hc.yOffset) % (hc.hexHeight * 3 / 2)
 
 	firstYSectionStart := 0
 	secondYSectionStart := firstYSectionStart + hc.hexHeight/4
@@ -403,17 +402,17 @@ func getHexGridPostion(pixelPos pixelPosition, hc hexConfig, windowWidth int, wi
 		switch triangle {
 		case leftHexTriangle:
 			xIndexOffset = 0
-			yIndexOffset = 0
+			yIndexOffset = 1
 		case middleHexTriangle:
 			xIndexOffset = 1
-			yIndexOffset = 1
+			yIndexOffset = 2
 		case rightHexTriangle:
 			xIndexOffset = 1
-			yIndexOffset = 0
+			yIndexOffset = 1
 		}
 	case innerY >= secondYSectionStart && innerY < thirdYSectionStart:
 		xIndexOffset = 1
-		yIndexOffset = 1
+		yIndexOffset = 2
 	case innerY >= thirdYSectionStart && innerY < fourthYSectionStart:
 		hexPositionContextYOffset := 460 * 3 // TODO: remove hard code
 		var hexPositionContextXOffset int
@@ -428,10 +427,10 @@ func getHexGridPostion(pixelPos pixelPosition, hc hexConfig, windowWidth int, wi
 		case triangle == leftHexTriangle:
 			xIndexOffset = 1
 			yIndexOffset = 1
-		case triangle == middleHexTriangle && innerX < 23:
+		case triangle == middleHexTriangle && innerX < (hc.hexWidth/2):
 			xIndexOffset = 0
 			yIndexOffset = 2
-		case triangle == middleHexTriangle && innerX >= 23:
+		case triangle == middleHexTriangle && innerX >= (hc.hexWidth/2):
 			xIndexOffset = 1
 			yIndexOffset = 2
 		case triangle == rightHexTriangle:
@@ -447,7 +446,7 @@ func getHexGridPostion(pixelPos pixelPosition, hc hexConfig, windowWidth int, wi
 			yIndexOffset = 2
 		}
 	default:
-		panic(fmt.Sprintf("getHexGridPostion could not find a y section for the inner y: %s", pixelPos.log()))
+		panic(fmt.Sprintf("getHexGridPostion could not find a y section for the inner y: %d for pixel position %s", innerY, pixelPos.log()))
 	}
 
 	return gridPosition{xIndex + xIndexOffset, yIndex + yIndexOffset}, true

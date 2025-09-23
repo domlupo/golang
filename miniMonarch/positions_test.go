@@ -22,6 +22,162 @@ func TestGetGridPosition(t *testing.T) {
 		wantedPos gridPosition
 		wantedOk  bool
 	}{
+		// top left of entire hex grid
+		{pixelPosition{0, 0}, gridPosition{0, 0}, true},
+		{pixelPosition{-1, 0}, gridPosition{0, 0}, false},
+		{pixelPosition{0, -1}, gridPosition{0, 0}, false},
+		{pixelPosition{-1, -1}, gridPosition{0, 0}, false},
+
+		// first left border point hex change around 0,12 pixel position
+		{pixelPosition{-1, 11}, gridPosition{0, 0}, false},
+		{pixelPosition{-1, 12}, gridPosition{0, 0}, false},
+		{pixelPosition{-1, 13}, gridPosition{0, 0}, false},
+		{pixelPosition{0, 11}, gridPosition{0, 0}, true},
+		{pixelPosition{0, 12}, gridPosition{0, 1}, true},
+		{pixelPosition{0, 13}, gridPosition{0, 1}, true},
+		{pixelPosition{1, 11}, gridPosition{0, 0}, true},
+		{pixelPosition{1, 12}, gridPosition{0, 1}, true},
+		{pixelPosition{1, 13}, gridPosition{0, 1}, true},
+
+		// second left border point hex change around 0,48 pixel position
+		{pixelPosition{-1, 47}, gridPosition{0, 0}, false},
+		{pixelPosition{-1, 48}, gridPosition{0, 0}, false},
+		{pixelPosition{-1, 49}, gridPosition{0, 0}, false},
+		{pixelPosition{0, 47}, gridPosition{0, 1}, true},
+		{pixelPosition{0, 48}, gridPosition{0, 2}, true},
+		{pixelPosition{0, 49}, gridPosition{0, 2}, true},
+		{pixelPosition{1, 47}, gridPosition{0, 1}, true},
+		{pixelPosition{1, 48}, gridPosition{0, 2}, true},
+		{pixelPosition{1, 49}, gridPosition{0, 2}, true},
+
+		// third left border point hex change around 0,72 pixel position
+		{pixelPosition{-1, 71}, gridPosition{0, 0}, false},
+		{pixelPosition{-1, 72}, gridPosition{0, 0}, false},
+		{pixelPosition{-1, 73}, gridPosition{0, 0}, false},
+		{pixelPosition{0, 71}, gridPosition{0, 2}, true},
+		{pixelPosition{0, 72}, gridPosition{0, 3}, true},
+		{pixelPosition{0, 73}, gridPosition{0, 3}, true},
+		{pixelPosition{1, 71}, gridPosition{0, 2}, true},
+		{pixelPosition{1, 72}, gridPosition{0, 3}, true},
+		{pixelPosition{1, 73}, gridPosition{0, 3}, true},
+
+		// first top border point hex change around 42,0 pixel position
+		{pixelPosition{41, -1}, gridPosition{0, 0}, false},
+		{pixelPosition{41, 0}, gridPosition{0, 0}, true},
+		{pixelPosition{41, 1}, gridPosition{0, 0}, true},
+		{pixelPosition{42, -1}, gridPosition{0, 0}, false},
+		{pixelPosition{42, 0}, gridPosition{1, 0}, true},
+		{pixelPosition{42, 1}, gridPosition{1, 0}, true},
+		{pixelPosition{43, -1}, gridPosition{0, 0}, false},
+		{pixelPosition{43, 0}, gridPosition{1, 0}, true},
+		{pixelPosition{43, 1}, gridPosition{1, 0}, true},
+
+		// second top border point hex change around 88, 0 pixel position
+		{pixelPosition{87, -1}, gridPosition{0, 0}, false},
+		{pixelPosition{87, 0}, gridPosition{1, 0}, true},
+		{pixelPosition{87, 1}, gridPosition{1, 0}, true},
+		{pixelPosition{88, -1}, gridPosition{0, 0}, false},
+		{pixelPosition{88, 0}, gridPosition{2, 0}, true},
+		{pixelPosition{88, 1}, gridPosition{2, 0}, true},
+		{pixelPosition{89, -1}, gridPosition{0, 0}, false},
+		{pixelPosition{89, 0}, gridPosition{2, 0}, true},
+		{pixelPosition{89, 1}, gridPosition{2, 0}, true},
+
+		// second top border point hex change around 134,0 pixel position
+		{pixelPosition{133, -1}, gridPosition{0, 0}, false},
+		{pixelPosition{133, 0}, gridPosition{2, 0}, true},
+		{pixelPosition{133, 1}, gridPosition{2, 0}, true},
+		{pixelPosition{134, -1}, gridPosition{0, 0}, false},
+		{pixelPosition{134, 0}, gridPosition{3, 0}, true},
+		{pixelPosition{134, 1}, gridPosition{3, 0}, true},
+		{pixelPosition{135, -1}, gridPosition{0, 0}, false},
+		{pixelPosition{135, 0}, gridPosition{3, 0}, true},
+		{pixelPosition{135, 1}, gridPosition{3, 0}, true},
+
+		// hexagon points near 19, 80 pixel position
+		{pixelPosition{18, 79}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 80}, gridPosition{0, 3}, true},
+		{pixelPosition{18, 81}, gridPosition{0, 3}, true},
+		{pixelPosition{19, 79}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 80}, gridPosition{1, 3}, true},
+		{pixelPosition{19, 81}, gridPosition{1, 3}, true},
+		{pixelPosition{20, 79}, gridPosition{1, 3}, true},
+		{pixelPosition{20, 80}, gridPosition{1, 3}, true},
+		{pixelPosition{20, 81}, gridPosition{1, 3}, true},
+
+		// hexagon points near 42, 70 pixel position
+		{pixelPosition{41, 69}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 70}, gridPosition{1, 3}, true},
+		{pixelPosition{41, 71}, gridPosition{1, 3}, true},
+		{pixelPosition{42, 69}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 70}, gridPosition{1, 3}, true},
+		{pixelPosition{42, 71}, gridPosition{1, 3}, true},
+		{pixelPosition{43, 69}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 70}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 71}, gridPosition{1, 3}, true},
+
+		// hexagon points near 65, 80 pixel position
+		{pixelPosition{64, 79}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 80}, gridPosition{1, 3}, true},
+		{pixelPosition{64, 81}, gridPosition{1, 3}, true},
+		{pixelPosition{65, 79}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 80}, gridPosition{2, 3}, true},
+		{pixelPosition{65, 81}, gridPosition{2, 3}, true},
+		{pixelPosition{66, 79}, gridPosition{2, 3}, true},
+		{pixelPosition{66, 80}, gridPosition{2, 3}, true},
+		{pixelPosition{66, 81}, gridPosition{2, 3}, true},
+
+		// hexagon points near 88, 10 pixel position
+		{pixelPosition{87, 9}, gridPosition{1, 0}, true},
+		{pixelPosition{87, 10}, gridPosition{2, 1}, true},
+		{pixelPosition{87, 11}, gridPosition{2, 1}, true},
+		{pixelPosition{88, 9}, gridPosition{2, 0}, true},
+		{pixelPosition{88, 10}, gridPosition{2, 1}, true},
+		{pixelPosition{88, 11}, gridPosition{2, 1}, true},
+		{pixelPosition{89, 9}, gridPosition{2, 0}, true},
+		{pixelPosition{89, 10}, gridPosition{2, 0}, true},
+		{pixelPosition{89, 11}, gridPosition{2, 1}, true},
+
+		// hexagon points near 88, 50 pixel position
+		{pixelPosition{87, 49}, gridPosition{2, 1}, true},
+		{pixelPosition{87, 50}, gridPosition{1, 2}, true},
+		{pixelPosition{87, 51}, gridPosition{1, 2}, true},
+		{pixelPosition{88, 49}, gridPosition{2, 1}, true},
+		{pixelPosition{88, 50}, gridPosition{2, 2}, true},
+		{pixelPosition{88, 51}, gridPosition{2, 2}, true},
+		{pixelPosition{89, 49}, gridPosition{2, 2}, true},
+		{pixelPosition{89, 50}, gridPosition{2, 2}, true},
+		{pixelPosition{89, 51}, gridPosition{2, 2}, true},
+
+		// hexagon points near 88, 70 pixel position
+		{pixelPosition{87, 69}, gridPosition{1, 2}, true},
+		{pixelPosition{87, 70}, gridPosition{2, 3}, true},
+		{pixelPosition{87, 71}, gridPosition{2, 3}, true},
+		{pixelPosition{88, 69}, gridPosition{2, 2}, true},
+		{pixelPosition{88, 70}, gridPosition{2, 3}, true},
+		{pixelPosition{88, 71}, gridPosition{2, 3}, true},
+		{pixelPosition{89, 69}, gridPosition{2, 2}, true},
+		{pixelPosition{89, 70}, gridPosition{2, 2}, true},
+		{pixelPosition{89, 71}, gridPosition{2, 3}, true},
+
+		// bottom left of entire hex grid
+		{pixelPosition{-1, 719}, gridPosition{0, 0}, false},
+		{pixelPosition{-1, 720}, gridPosition{0, 0}, false},
+		{pixelPosition{0, 719}, gridPosition{0, 24}, true},
+		{pixelPosition{0, 720}, gridPosition{0, 0}, false},
+
+		// top right of entire hex grid
+		{pixelPosition{1279, -1}, gridPosition{0, 0}, false},
+		{pixelPosition{1280, -1}, gridPosition{0, 0}, false},
+		{pixelPosition{1279, 0}, gridPosition{27, 0}, true},
+		{pixelPosition{1280, 0}, gridPosition{0, 0}, false},
+
+		// bottom right of entire hex grid
+		{pixelPosition{1279, 719}, gridPosition{27, 24}, true},
+		{pixelPosition{1280, 719}, gridPosition{0, 0}, false},
+		{pixelPosition{1279, 720}, gridPosition{0, 0}, false},
+		{pixelPosition{1280, 720}, gridPosition{0, 0}, false},
+
 		// first hexagon y section (hexagon position context)
 		// between hexagons 0,0 1,1 and 1,0
 
@@ -600,7 +756,8 @@ func TestGetGridPosition(t *testing.T) {
 				t.Errorf("Wanted pixel position to %s", sWantedOk)
 			}
 			if pos.x != tt.wantedPos.x || pos.y != tt.wantedPos.y {
-				t.Errorf("Wanted grid position {%d,%d} but it was {%d,%d}",
+				t.Errorf("For pixel position %s, Wanted grid position {%d,%d} but it was {%d,%d}",
+					tt.pixelPos.log(),
 					tt.wantedPos.x,
 					tt.wantedPos.y,
 					pos.x,
