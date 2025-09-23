@@ -6,7 +6,35 @@ import (
 	"log/slog"
 )
 
-type hexagonTriangle int
+// This global should only be used for function signatures, structs, etc. It can
+// be calculated during runtime via hexConfig fields. It is calculated from hexagon width
+// * (hexagon height/4). The 4 is from the hexagon position context being 1/4 of the total
+// hexagon area.
+const hexagonPostitionContextPixelCount = 460
+
+type hexConfig struct {
+	hexPositionContext [hexagonPostitionContextPixelCount]hexagonTriangle
+	hexWidth           int
+	hexHeight          int
+	xOffset            int
+	yOffset            int
+	windowWidth        int
+	windowHeight       int
+}
+
+func newHexConfig(windowWidth int, windowHeight int) hexConfig {
+	hexPositionContext := newHexPositionContext()
+	hc := hexConfig{
+		hexPositionContext: hexPositionContext,
+		hexWidth:           46,
+		hexHeight:          40,
+		xOffset:            19,
+		yOffset:            10,
+		windowWidth:        windowWidth,
+		windowHeight:       windowHeight,
+	}
+	return hc
+}
 
 // The hexagon position context is a hardcoded mapping to aid with converting
 // pixel position to hexagon grid position. It avoids the the need of CPU intensive math.
@@ -83,6 +111,8 @@ type hexagonTriangle int
 // As shown above, the prior sections middile triangle is now converted into
 // this sections left and right triangle.
 
+type hexagonTriangle int
+
 const (
 	unknownHexTriangle = iota
 	leftHexTriangle
@@ -90,10 +120,8 @@ const (
 	rightHexTriangle
 )
 
-// TODO: Remove hard coded hexagon configs
-
-func newHexPositionContext() [460]hexagonTriangle {
-	var pc [460]hexagonTriangle
+func newHexPositionContext() [hexagonPostitionContextPixelCount]hexagonTriangle {
+	var pc [hexagonPostitionContextPixelCount]hexagonTriangle
 
 	rowPixelCount := 46
 
@@ -141,7 +169,7 @@ func newHexPositionContext() [460]hexagonTriangle {
 	return pc
 }
 
-func setHexPositionContext(pc *[460]hexagonTriangle, rowPixelCount int, rowStart int, rowMiddleOffset int) {
+func setHexPositionContext(pc *[hexagonPostitionContextPixelCount]hexagonTriangle, rowPixelCount int, rowStart int, rowMiddleOffset int) {
 	pixelCount := rowPixelCount / 2
 
 	leftHexStart := rowStart
@@ -329,58 +357,44 @@ const (
 	bottomRightOffset
 )
 
-// TODO: remove hard coded values via function signature
 // TODO: write unit tests, did verify manually it worked with a few values
-func getHexPixelPosition(gridPos gridPosition, offset hexOffset) (pixelPosition, bool) {
-
-	xDelta := 46 // hexagon width
-	yDelta := 60 // hexagon height * 1.5
-	xPadding := (1280 % xDelta) / 2
-
-	x := xPadding + xDelta*gridPos.x
+func getHexPixelPosition(gridPos gridPosition, offset hexOffset, hc hexConfig) (pixelPosition, bool) {
+	xPadding := (hc.windowWidth % hc.hexWidth) / 2
+	x := xPadding + hc.hexWidth*gridPos.x
 	if gridPos.y%2 == 1 {
-		x = x - xDelta/2
+		x = x - hc.hexWidth/2
 	}
-	y := (yDelta / 2) * gridPos.y
+	y := (hc.hexHeight * 3 / 4) * gridPos.y
 
 	switch offset {
 	case noHexOffset:
 	case topOffset:
-		y -= 20
+		y -= hc.hexHeight / 2
 	case topLeftOffset:
-		x -= xDelta / 2
-		y -= 10
+		x -= hc.hexWidth / 2
+		y -= hc.hexHeight / 4
 	case topRightOffset:
-		x += xDelta / 2
-		y -= 10
+		x += hc.hexWidth / 2
+		y -= hc.hexHeight / 4
 	case bottomOffset:
-		y += 20
+		y += hc.hexHeight / 2
 	case bottomLeftOffset:
-		x -= xDelta / 2
-		y += 10
+		x -= hc.hexWidth / 2
+		y += hc.hexHeight / 4
 	case bottomRightOffset:
-		x += xDelta / 2
-		y += 10
+		x += hc.hexWidth / 2
+		y += hc.hexHeight / 4
 	}
 
-	if x < 0 || x >= 1280 || y < 0 || y >= 720 {
+	if x < 0 || x >= hc.windowWidth || y < 0 || y >= hc.windowHeight {
 		return pixelPosition{}, false
 	} else {
 		return pixelPosition{x, y}, true
 	}
 }
 
-type hexConfig struct {
-	// TODO: don't hard code 460?
-	hexPositionContext *[460]hexagonTriangle
-	hexWidth           int
-	hexHeight          int
-	xOffset            int
-	yOffset            int
-}
-
-func getHexGridPostion(pixelPos pixelPosition, hc hexConfig, windowWidth int, windowHeight int) (gridPosition, bool) {
-	if pixelPos.x < 0 || pixelPos.x >= windowWidth || pixelPos.y < 0 || pixelPos.y >= windowHeight {
+func getHexGridPostion(pixelPos pixelPosition, hc hexConfig) (gridPosition, bool) {
+	if pixelPos.x < 0 || pixelPos.x >= hc.windowWidth || pixelPos.y < 0 || pixelPos.y >= hc.windowHeight {
 		return gridPosition{}, false
 	}
 
@@ -414,7 +428,7 @@ func getHexGridPostion(pixelPos pixelPosition, hc hexConfig, windowWidth int, wi
 		xIndexOffset = 1
 		yIndexOffset = 2
 	case innerY >= thirdYSectionStart && innerY < fourthYSectionStart:
-		hexPositionContextYOffset := 460 * 3 // TODO: remove hard code
+		hexPositionContextYOffset := (hc.hexWidth * hc.hexHeight / 4) * 3
 		var hexPositionContextXOffset int
 		if innerX >= 0 && innerX < (hc.hexWidth/2) {
 			hexPositionContextXOffset = (hc.hexWidth / 2)

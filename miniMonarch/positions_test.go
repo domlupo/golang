@@ -8,14 +8,14 @@ import (
 func TestGetGridPosition(t *testing.T) {
 	hexPositionContext := newHexPositionContext()
 	hc := hexConfig{
-		hexPositionContext: &hexPositionContext,
+		hexPositionContext: hexPositionContext,
 		hexWidth:           46,
 		hexHeight:          40,
 		xOffset:            19,
 		yOffset:            10,
+		windowWidth:        1280,
+		windowHeight:       720,
 	}
-	windowWidth := 1280
-	windowHeight := 720
 
 	var tests = []struct {
 		pixelPos  pixelPosition
@@ -751,7 +751,7 @@ func TestGetGridPosition(t *testing.T) {
 			sWantedOk)
 
 		t.Run(testname, func(t *testing.T) {
-			pos, ok := getHexGridPostion(tt.pixelPos, hc, windowWidth, windowHeight)
+			pos, ok := getHexGridPostion(tt.pixelPos, hc)
 			if ok != tt.wantedOk {
 				t.Errorf("Wanted pixel position to %s", sWantedOk)
 			}
