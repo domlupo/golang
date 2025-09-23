@@ -22,8 +22,8 @@ func TestGetGridPosition(t *testing.T) {
 		wantedPos gridPosition
 		wantedOk  bool
 	}{
-
 		// first hexagon y section (hexagon position context)
+		// between hexagons 0,0 1,1 and 1,0
 
 		// sanity checks
 		{pixelPosition{19, 10}, gridPosition{0, 0}, true},
@@ -57,7 +57,7 @@ func TestGetGridPosition(t *testing.T) {
 		{pixelPosition{40, 10}, gridPosition{0, 0}, true},
 		//{pixelPosition{41, 9}, gridPosition{0, 0}, true}, // prob bug
 
-		// 1, 1 hexagon slope check between itself and 1, 1 hexagon
+		// 1, 1 hexagon slope check between itself and 0, 0 hexagon
 		{pixelPosition{19, 20}, gridPosition{1, 1}, true},
 		{pixelPosition{20, 19}, gridPosition{1, 1}, true},
 		{pixelPosition{21, 19}, gridPosition{1, 1}, true},
@@ -133,7 +133,7 @@ func TestGetGridPosition(t *testing.T) {
 		{pixelPosition{63, 19}, gridPosition{1, 1}, true},
 		{pixelPosition{64, 20}, gridPosition{1, 1}, true},
 
-		// second hexagon y section (full rectangle)
+		// second hexagon y section (full rectangle of hexagon 1,1)
 
 		// right side of hexagon 0,1
 		{pixelPosition{18, 20}, gridPosition{0, 1}, true},
@@ -267,9 +267,117 @@ func TestGetGridPosition(t *testing.T) {
 		{pixelPosition{66, 38}, gridPosition{2, 1}, true},
 		{pixelPosition{66, 39}, gridPosition{2, 1}, true},
 
-		// TODO: implement inverted section and add tests
+		// third hexagon y section (inverted hexagon position context)
+		// between hexagons 0,2 1,1 and 1,2
 
-		// Fourth section tests
+		// sanity checks
+		{pixelPosition{19, 49}, gridPosition{0, 2}, true},
+		{pixelPosition{65, 49}, gridPosition{1, 2}, true},
+		{pixelPosition{41, 30}, gridPosition{1, 1}, true},
+		{pixelPosition{42, 30}, gridPosition{1, 1}, true},
+		{pixelPosition{43, 30}, gridPosition{1, 1}, true},
+
+		// 0,2 hexagon slope check between itself and 1, 1 hexagon
+		{pixelPosition{19, 40}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 41}, gridPosition{0, 2}, true},
+		{pixelPosition{21, 41}, gridPosition{0, 2}, true},
+		{pixelPosition{22, 42}, gridPosition{0, 2}, true},
+		{pixelPosition{23, 42}, gridPosition{0, 2}, true},
+		{pixelPosition{24, 42}, gridPosition{0, 2}, true},
+		{pixelPosition{25, 43}, gridPosition{0, 2}, true},
+		{pixelPosition{26, 43}, gridPosition{0, 2}, true},
+		{pixelPosition{27, 44}, gridPosition{0, 2}, true},
+		{pixelPosition{28, 44}, gridPosition{0, 2}, true},
+		{pixelPosition{29, 45}, gridPosition{0, 2}, true},
+		{pixelPosition{30, 45}, gridPosition{0, 2}, true},
+		{pixelPosition{31, 45}, gridPosition{0, 2}, true},
+		{pixelPosition{32, 46}, gridPosition{0, 2}, true},
+		{pixelPosition{33, 46}, gridPosition{0, 2}, true},
+		{pixelPosition{34, 47}, gridPosition{0, 2}, true},
+		{pixelPosition{35, 47}, gridPosition{0, 2}, true},
+		{pixelPosition{36, 48}, gridPosition{0, 2}, true},
+		{pixelPosition{37, 48}, gridPosition{0, 2}, true},
+		{pixelPosition{38, 48}, gridPosition{0, 2}, true},
+		{pixelPosition{39, 49}, gridPosition{0, 2}, true},
+		{pixelPosition{40, 49}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 50}, gridPosition{0, 2}, true},
+
+		// 1, 1 hexagon slope check between itself and 0, 2 hexagon
+		{pixelPosition{19, 39}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 40}, gridPosition{1, 1}, true},
+		{pixelPosition{21, 40}, gridPosition{1, 1}, true},
+		{pixelPosition{22, 41}, gridPosition{1, 1}, true},
+		{pixelPosition{23, 41}, gridPosition{1, 1}, true},
+		{pixelPosition{24, 41}, gridPosition{1, 1}, true},
+		{pixelPosition{25, 42}, gridPosition{1, 1}, true},
+		{pixelPosition{26, 42}, gridPosition{1, 1}, true},
+		{pixelPosition{27, 43}, gridPosition{1, 1}, true},
+		{pixelPosition{28, 43}, gridPosition{1, 1}, true},
+		{pixelPosition{29, 44}, gridPosition{1, 1}, true},
+		{pixelPosition{30, 44}, gridPosition{1, 1}, true},
+		{pixelPosition{31, 44}, gridPosition{1, 1}, true},
+		{pixelPosition{32, 45}, gridPosition{1, 1}, true},
+		{pixelPosition{33, 45}, gridPosition{1, 1}, true},
+		{pixelPosition{34, 46}, gridPosition{1, 1}, true},
+		{pixelPosition{35, 46}, gridPosition{1, 1}, true},
+		{pixelPosition{36, 47}, gridPosition{1, 1}, true},
+		{pixelPosition{37, 47}, gridPosition{1, 1}, true},
+		{pixelPosition{38, 47}, gridPosition{1, 1}, true},
+		{pixelPosition{39, 48}, gridPosition{1, 1}, true},
+		{pixelPosition{40, 48}, gridPosition{1, 1}, true},
+		{pixelPosition{41, 49}, gridPosition{1, 1}, true},
+
+		// 1,1 hexagon slope check between itself and 1, 2 hexagon
+		{pixelPosition{42, 49}, gridPosition{1, 1}, true},
+		{pixelPosition{43, 48}, gridPosition{1, 1}, true},
+		{pixelPosition{44, 48}, gridPosition{1, 1}, true},
+		{pixelPosition{45, 47}, gridPosition{1, 1}, true},
+		{pixelPosition{46, 47}, gridPosition{1, 1}, true},
+		{pixelPosition{47, 47}, gridPosition{1, 1}, true},
+		{pixelPosition{48, 46}, gridPosition{1, 1}, true},
+		{pixelPosition{49, 46}, gridPosition{1, 1}, true},
+		{pixelPosition{50, 45}, gridPosition{1, 1}, true},
+		{pixelPosition{51, 45}, gridPosition{1, 1}, true},
+		{pixelPosition{52, 44}, gridPosition{1, 1}, true},
+		{pixelPosition{53, 44}, gridPosition{1, 1}, true},
+		{pixelPosition{54, 44}, gridPosition{1, 1}, true},
+		{pixelPosition{55, 43}, gridPosition{1, 1}, true},
+		{pixelPosition{56, 43}, gridPosition{1, 1}, true},
+		{pixelPosition{57, 42}, gridPosition{1, 1}, true},
+		{pixelPosition{58, 42}, gridPosition{1, 1}, true},
+		{pixelPosition{59, 41}, gridPosition{1, 1}, true},
+		{pixelPosition{60, 41}, gridPosition{1, 1}, true},
+		{pixelPosition{61, 41}, gridPosition{1, 1}, true},
+		{pixelPosition{62, 40}, gridPosition{1, 1}, true},
+		{pixelPosition{63, 40}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 39}, gridPosition{1, 1}, true},
+
+		// 1,2 hexagon slope check between itself and 1, 1 hexagon
+		{pixelPosition{42, 50}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 49}, gridPosition{1, 2}, true},
+		{pixelPosition{44, 49}, gridPosition{1, 2}, true},
+		{pixelPosition{45, 48}, gridPosition{1, 2}, true},
+		{pixelPosition{46, 48}, gridPosition{1, 2}, true},
+		{pixelPosition{47, 48}, gridPosition{1, 2}, true},
+		{pixelPosition{48, 47}, gridPosition{1, 2}, true},
+		{pixelPosition{49, 47}, gridPosition{1, 2}, true},
+		{pixelPosition{50, 46}, gridPosition{1, 2}, true},
+		{pixelPosition{51, 46}, gridPosition{1, 2}, true},
+		{pixelPosition{52, 45}, gridPosition{1, 2}, true},
+		{pixelPosition{53, 45}, gridPosition{1, 2}, true},
+		{pixelPosition{54, 45}, gridPosition{1, 2}, true},
+		{pixelPosition{55, 44}, gridPosition{1, 2}, true},
+		{pixelPosition{56, 44}, gridPosition{1, 2}, true},
+		{pixelPosition{57, 43}, gridPosition{1, 2}, true},
+		{pixelPosition{58, 43}, gridPosition{1, 2}, true},
+		{pixelPosition{59, 42}, gridPosition{1, 2}, true},
+		{pixelPosition{60, 42}, gridPosition{1, 2}, true},
+		{pixelPosition{61, 42}, gridPosition{1, 2}, true},
+		{pixelPosition{62, 41}, gridPosition{1, 2}, true},
+		{pixelPosition{63, 41}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 40}, gridPosition{1, 2}, true},
+
+		// fourth hexagon y section (split rectangle between hexagon 0,2 and 1,2)
 
 		// middle of hexagon 0,2
 		{pixelPosition{18, 50}, gridPosition{0, 2}, true},

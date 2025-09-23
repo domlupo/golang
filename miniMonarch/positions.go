@@ -25,19 +25,63 @@ type hexagonTriangle int
 //   - right triangle on the right side.
 //
 // right triangle on left side
+//
 // ***/ \
 // **/   \
 // */     \
 //
 // non right triangle in middle
+//
 //    /*\
 //   /***\
 //  /*****\
 //
 // right triangle on right side
+//
 //    / \***
 //   /   \**
 //  /     \*
+//
+// The hexagon position context is also used for another section of the hexagonal grid
+// that is repeated multiple times. It is usally referenced as "inverted"
+//
+//  \     /
+//   \   /
+//    \ /
+//
+// This is possible because this section becomes the prior section by following these steps:
+//   - horizontally flip the entire section.
+//   - split entire section vertically in half.
+//   - swap the two vertical halfs.
+//
+// An example highlighting the middle section is shown below:
+//
+// non right triangle in middle
+//
+//    /*\
+//   /***\
+//  /*****\
+//
+// horizontally flip the entire section.
+//
+//  \*****/
+//   \***/
+//    \*/
+//
+// split the entir section vertically in half
+//
+//  \** **/
+//   \* */
+//    \ /
+//
+// swap the two vertical halfs.
+//
+//  **/ \**
+//  */   \*
+//  /     \
+//
+// As shown above, the prior sections middile triangle is now converted into
+// this sections left and right triangle.
 
 const (
 	unknownHexTriangle = iota
@@ -371,9 +415,31 @@ func getHexGridPostion(pixelPos pixelPosition, hc hexConfig, windowWidth int, wi
 		xIndexOffset = 1
 		yIndexOffset = 1
 	case innerY >= thirdYSectionStart && innerY < fourthYSectionStart:
-		panic("unimplemented invert section")
+		hexPositionContextYOffset := 460 * 3 // TODO: remove hard code
+		var hexPositionContextXOffset int
+		if innerX >= 0 && innerX < (hc.hexWidth/2) {
+			hexPositionContextXOffset = (hc.hexWidth / 2)
+		} else {
+			hexPositionContextXOffset = -(hc.hexWidth / 2)
+		}
+
+		triangle := hc.hexPositionContext[innerX+(innerY*hc.hexWidth)+hexPositionContextXOffset-hexPositionContextYOffset]
+		switch {
+		case triangle == leftHexTriangle:
+			xIndexOffset = 1
+			yIndexOffset = 1
+		case triangle == middleHexTriangle && innerX < 23:
+			xIndexOffset = 0
+			yIndexOffset = 2
+		case triangle == middleHexTriangle && innerX >= 23:
+			xIndexOffset = 1
+			yIndexOffset = 2
+		case triangle == rightHexTriangle:
+			xIndexOffset = 1
+			yIndexOffset = 1
+		}
 	case innerY >= fourthYSectionStart && innerY < (hc.hexHeight*3/2):
-		if innerX >= 0 && innerX < 23 {
+		if innerX >= 0 && innerX < (hc.hexWidth/2) {
 			xIndexOffset = 0
 			yIndexOffset = 2
 		} else {

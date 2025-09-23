@@ -19,10 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Close on and document pixel border hexagon decision behavior
-  - Determine if I need a second hard coded position context or the first can be reused or reflected somehow?
-  - Can I offset or reflect the first position context in anyway?
-
 - Refactor existing square grid logic to hexagon
   - Expand tests for hexagon positions 
     - border hexagons left and above,
@@ -30,7 +26,6 @@ Is there a mobile equivalent for war/4x games?
     - hexagons beyond nominal (right and down)
     - Fix existing bugs by enforcing commented out tests
     - Write unit tests for missing automated tests for function getHexPixelPosition
-  - Add second hexagon context section
   - Convert flux
 
 - Implement grid chunking to handle more units 
