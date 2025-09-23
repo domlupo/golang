@@ -14,9 +14,7 @@ type drawContext struct {
 	// Never use for game logic. float32 rather than idiomatic float64
 	// because alot of Ebiten draw APIs use float32
 	windowMultiplier float32
-	windowWidth      int
-	windowHeight     int
-	gridSize         int
+	hexConfig
 	// The debug grid helps debugging display issues. Usually only altering
 	// offset is needed, width can remain 1.
 	// Offset values should only be 0 - 20 (half of grid size without window multipler)
@@ -48,10 +46,8 @@ func newDrawContext() *drawContext {
 	dc := drawContext{
 		screen:           nil,
 		windowMultiplier: 2.5,
+		hexConfig:        newHexConfig(1280, 720),
 		// aspect ratio config (16:9 aspect ratio)
-		windowWidth:                   1280,
-		windowHeight:                  720,
-		gridSize:                      40,
 		debugGridOffset:               0,
 		debugGridWidth:                1,
 		debugGridIndexCount:           32,

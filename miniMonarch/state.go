@@ -7,26 +7,23 @@ import (
 
 // not enforced but must be a singleton
 type state struct {
-	windowWidth  int
-	windowHeight int
-	gridSize     int
-	nodes        map[gridPosition]*node
-	fluxes       map[gridPosition]*flux
-	units        map[position]*unit
+	hexConfig
+	nodes  map[gridPosition]*node
+	fluxes map[gridPosition]*flux
+	units  map[position]*unit
 }
 
-func newState(windowWidth int, windowHeight int, gridSize int) *state {
+func newState(hexConfig hexConfig) *state {
 	s := state{
-		windowWidth:  windowWidth,
-		windowHeight: windowHeight,
-		gridSize:     gridSize,
-		nodes:        make(map[gridPosition]*node),
-		fluxes:       make(map[gridPosition]*flux),
-		units:        make(map[position]*unit),
+		hexConfig: hexConfig,
+		nodes:     make(map[gridPosition]*node),
+		fluxes:    make(map[gridPosition]*flux),
+		units:     make(map[position]*unit),
 	}
 
-	for i := range s.windowWidth / s.gridSize {
-		for j := range s.windowHeight / s.gridSize {
+	// TODO: may need to add 1 to both of these
+	for i := range s.windowWidth / s.hexWidth {
+		for j := range s.windowHeight / s.hexHeight {
 			gridPos := gridPosition{i, j}
 			flux := newFlux(gridPos)
 			s.fluxes[gridPos] = &flux
@@ -45,20 +42,24 @@ func (s *state) refresh() {
 		flux.refresh()
 	}
 
-	for uPos, u := range s.units {
+	for _, u := range s.units {
 		u.refresh()
 
-		if !u.movedLastTurn {
-			gridPos, _ := splitPixelPosition(uPos.pixelPosition, s.gridSize)
-			s.fluxes[gridPos].staticUnits++
-		}
+		/*
+			if !u.movedLastTurn {
+				gridPos, _ := getGridPos(uPos.pixelPosition, s.hexConfig)
+				s.fluxes[gridPos].staticUnits++
+			}
+		*/
 	}
 
-	for _, flux := range s.fluxes {
-		xMax := s.windowWidth/s.gridSize - 1
-		yMax := s.windowHeight/s.gridSize - 1
-		flux.setFluxVector(s, xMax, yMax)
-	}
+	/*
+		for _, flux := range s.fluxes {
+				xMax := s.windowWidth/s.gridSize - 1
+				yMax := s.windowHeight/s.gridSize - 1
+				flux.setFluxVector(s, xMax, yMax)
+		}
+	*/
 }
 
 func (s *state) analyzeTargets() {
@@ -67,11 +68,13 @@ func (s *state) analyzeTargets() {
 			continue
 		}
 
-		if u1.fluxTurnCount > u1.fluxTurnCountDelay {
-			gridPos, _ := splitPixelPosition(uPos1.pixelPosition, s.gridSize)
-			fluxDelta := s.fluxes[gridPos].getFluxDelta(u1.fluxMagnitude)
-			u1.updateTarget(fluxTarget, &position{ground, pixelPosition{uPos1.x + fluxDelta.x, uPos1.y + fluxDelta.y}})
-		}
+		/*
+			if u1.fluxTurnCount > u1.fluxTurnCountDelay {
+				gridPos, _ := getPixelPosition(uPos1.pixelPosition, s.gridSize)
+				fluxDelta := s.fluxes[gridPos].getFluxDelta(u1.fluxMagnitude)
+				u1.updateTarget(fluxTarget, &position{ground, pixelPosition{uPos1.x + fluxDelta.x, uPos1.y + fluxDelta.y}})
+			}
+		*/
 
 		var reachesNode, isTargetNode = s.collidesWithNode(
 			uPos1,
@@ -224,7 +227,7 @@ func (s *state) collidesWithNode(pos position, unit unit, unitCollisionRadius in
 			continue
 		}
 
-		nPixelPos := getPixelPosition(nPos, topLeft, s.gridSize)
+		nPixelPos, _ := getPixelPosition(nPos, center, s.hexConfig)
 
 		x2 := nPixelPos.x
 		y2 := nPixelPos.y
@@ -428,7 +431,7 @@ func (s *state) updateNodeOwnership() bool {
 
 	for nGridPos, n := range s.nodes {
 		if n.currentHealth == 0 {
-			newNode := newNode(*n.capturedBy, n.gridPos, n.maxHealth, n.radius, n.unitConfig)
+			newNode := newNode(*n.capturedBy, n.gridPos, n.maxHealth, s.hexConfig, n.unitConfig)
 			s.nodes[nGridPos] = &newNode
 			nodeOwnershipChanged = true
 		}
@@ -456,8 +459,8 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 		bottomRightPixelPos = pixelPosition{releasePosition.x, clickPosition.y}
 	}
 
-	topLeftGridPos, _ := splitPixelPosition(topLeftPixelPos, s.gridSize)
-	bottomRightGridPos, _ := splitPixelPosition(bottomRightPixelPos, s.gridSize)
+	topLeftGridPos, _ := getGridPos(topLeftPixelPos, s.hexConfig)
+	bottomRightGridPos, _ := getGridPos(bottomRightPixelPos, s.hexConfig)
 
 	for nGridPos, n := range s.nodes {
 		if (topLeftGridPos.x < nGridPos.x) &&
@@ -521,7 +524,8 @@ func (s *state) produceUnits() {
 		}
 
 		// TODO: determine how to produce units during collision
-		uPos := position{n.unitConfig.produceLayer, getPixelPosition(nPos, topLeft, s.gridSize)}
+		pixelPos, _ := getPixelPosition(nPos, center, s.hexConfig)
+		uPos := position{n.unitConfig.produceLayer, pixelPos}
 		if s.collidesWithUnit(uPos, newUnit(n.player, n.target, n.unitConfig), s.units) == nil {
 			newUnit := newUnit(n.player, n.target, n.unitConfig)
 			s.units[uPos] = &newUnit
@@ -563,8 +567,10 @@ func (s *state) draw(dc drawContext, drawBlueTargets bool, drawRedTargets, drawF
 		}
 	}
 	if drawFluxes {
-		for fluxPos, flux := range s.fluxes {
-			flux.draw(dc, fluxPos)
-		}
+		/*
+			for fluxPos, flux := range s.fluxes {
+				flux.draw(dc, fluxPos)
+			}
+		*/
 	}
 }

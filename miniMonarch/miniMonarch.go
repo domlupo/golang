@@ -92,10 +92,10 @@ func newGame() Game {
 
 func (g *Game) restart() {
 	// TODO: Need to restart timers, etc
-	g.gameState = *newState(g.windowWidth, g.windowHeight, g.gridSize)
+	g.gameState = *newState(g.drawContext.hexConfig)
 	g.compOne = *newComputer(bluePlayer)
 	g.compTwo = *newComputer(redPlayer)
-	setupState(g.gameState, complex, g.initialNodeHealth, g.gridSize/2)
+	setupState(g.gameState, complexOffset, g.drawContext.hexConfig, g.initialNodeHealth)
 	g.updateComputerTargetNodes()
 }
 

@@ -316,27 +316,6 @@ func (pixelPos pixelPosition) log() []slog.Attr {
 	return a
 }
 
-type offset int
-
-const (
-	topLeft = iota
-	center
-)
-
-func getPixelPosition(gridPos gridPosition, offset offset, gridSize int) pixelPosition {
-	var innerGridPos innerGridPosition
-	switch offset {
-	case topLeft:
-		innerGridPos = innerGridPosition{0, 0}
-	case center:
-		innerGridPos = innerGridPosition{gridSize / 2, gridSize / 2}
-	}
-
-	x := (gridPos.x * gridSize) + innerGridPos.x
-	y := (gridPos.y * gridSize) + innerGridPos.y
-	return pixelPosition{x, y}
-}
-
 func splitPixelPosition(pixelPos pixelPosition, gridSize int) (gridPosition, innerGridPosition) {
 	gridPosX := pixelPos.x / gridSize
 	gridPosY := pixelPos.y / gridSize
@@ -348,7 +327,7 @@ func splitPixelPosition(pixelPos pixelPosition, gridSize int) (gridPosition, inn
 type hexOffset int
 
 const (
-	noHexOffset = iota
+	center = iota
 	topOffset
 	topLeftOffset
 	topRightOffset
@@ -358,7 +337,7 @@ const (
 )
 
 // TODO: write unit tests, did verify manually it worked with a few values
-func getHexPixelPosition(gridPos gridPosition, offset hexOffset, hc hexConfig) (pixelPosition, bool) {
+func getPixelPosition(gridPos gridPosition, offset hexOffset, hc hexConfig) (pixelPosition, bool) {
 	xPadding := (hc.windowWidth % hc.hexWidth) / 2
 	x := xPadding + hc.hexWidth*gridPos.x
 	if gridPos.y%2 == 1 {
@@ -367,7 +346,8 @@ func getHexPixelPosition(gridPos gridPosition, offset hexOffset, hc hexConfig) (
 	y := (hc.hexHeight * 3 / 4) * gridPos.y
 
 	switch offset {
-	case noHexOffset:
+	case center:
+		// do nothing
 	case topOffset:
 		y -= hc.hexHeight / 2
 	case topLeftOffset:
@@ -393,7 +373,7 @@ func getHexPixelPosition(gridPos gridPosition, offset hexOffset, hc hexConfig) (
 	}
 }
 
-func getHexGridPostion(pixelPos pixelPosition, hc hexConfig) (gridPosition, bool) {
+func getGridPos(pixelPos pixelPosition, hc hexConfig) (gridPosition, bool) {
 	if pixelPos.x < 0 || pixelPos.x >= hc.windowWidth || pixelPos.y < 0 || pixelPos.y >= hc.windowHeight {
 		return gridPosition{}, false
 	}

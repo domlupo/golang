@@ -1,10 +1,6 @@
 // A project specific concept for forces which contriubute to local pathfinding
 package main
 
-import (
-	"github.com/hajimehoshi/ebiten/v2/vector"
-)
-
 type fluxVector struct {
 	magnitude int
 	direction int
@@ -120,12 +116,13 @@ func (f *flux) refresh() {
 	f.direction = noDirection
 }
 
+/*
 func (f *flux) draw(dc drawContext, fluxPos gridPosition) {
 	if f.magnitude == 0 {
 		return
 	}
 
-	center := getPixelPosition(fluxPos, center, dc.gridSize)
+	center, _ := getPixelPosition(fluxPos, center, dc.hexConfig)
 	xEnd := center.x
 	yEnd := center.y
 
@@ -174,3 +171,4 @@ func (f *flux) draw(dc drawContext, fluxPos gridPosition) {
 		false,
 	)
 }
+*/

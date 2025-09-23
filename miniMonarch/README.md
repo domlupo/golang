@@ -29,6 +29,7 @@ Is there a mobile equivalent for war/4x games?
   - Collides with unit is too CPU inefficient
 
 - Improve guided air missile
+  - Fix bug where ground missile (not air missile) is not moving for computer player
   - auto despawns for non computer players. This is probably wrong behavior.
   - Determine target locking behavior for human player and computer player.
 
