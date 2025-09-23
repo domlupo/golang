@@ -32,7 +32,7 @@ func TestGetGridPosition(t *testing.T) {
 		{pixelPosition{42, 20}, gridPosition{1, 1}, true},
 		{pixelPosition{43, 20}, gridPosition{1, 1}, true},
 
-		// 0, 0 hexagon slope check between itself and 1, 1 hexagon
+		// 0,0 hexagon slope check between itself and 1, 1 hexagon
 		{pixelPosition{19, 19}, gridPosition{0, 0}, true},
 		{pixelPosition{20, 18}, gridPosition{0, 0}, true},
 		{pixelPosition{21, 18}, gridPosition{0, 0}, true},
@@ -82,7 +82,7 @@ func TestGetGridPosition(t *testing.T) {
 		{pixelPosition{40, 11}, gridPosition{1, 1}, true},
 		{pixelPosition{41, 10}, gridPosition{1, 1}, true},
 
-		// 1, 0 hexagon slope check between itself and 1, 1 hexagon
+		// 1,0 hexagon slope check between itself and 1, 1 hexagon
 		//{pixelPosition{42, 9}, gridPosition{1, 0}, true}, prob bug
 		{pixelPosition{43, 10}, gridPosition{1, 0}, true},
 		{pixelPosition{44, 10}, gridPosition{1, 0}, true},
@@ -108,7 +108,7 @@ func TestGetGridPosition(t *testing.T) {
 		{pixelPosition{63, 18}, gridPosition{1, 0}, true},
 		{pixelPosition{64, 19}, gridPosition{1, 0}, true},
 
-		// 1, 1 hexagon slope check between itself and 1, 0 hexagon
+		// 1,1 hexagon slope check between itself and 1, 0 hexagon
 		{pixelPosition{42, 10}, gridPosition{1, 1}, true},
 		{pixelPosition{43, 11}, gridPosition{1, 1}, true},
 		{pixelPosition{44, 11}, gridPosition{1, 1}, true},
@@ -157,7 +157,8 @@ func TestGetGridPosition(t *testing.T) {
 		{pixelPosition{18, 38}, gridPosition{0, 1}, true},
 		{pixelPosition{18, 39}, gridPosition{0, 1}, true},
 
-		// left side of hexagon 1, 1
+		// left side of hexagon 1,1
+		// hexagons are right side inclusive and left side exclusive
 		{pixelPosition{19, 20}, gridPosition{1, 1}, true},
 		{pixelPosition{19, 21}, gridPosition{1, 1}, true},
 		{pixelPosition{19, 22}, gridPosition{1, 1}, true},
@@ -178,7 +179,7 @@ func TestGetGridPosition(t *testing.T) {
 		{pixelPosition{19, 37}, gridPosition{1, 1}, true},
 		{pixelPosition{19, 38}, gridPosition{1, 1}, true},
 		{pixelPosition{19, 39}, gridPosition{1, 1}, true},
-		// continue left side of hexagon 1, 1
+		// continue left side of hexagon 1,1
 		{pixelPosition{20, 20}, gridPosition{1, 1}, true},
 		{pixelPosition{20, 21}, gridPosition{1, 1}, true},
 		{pixelPosition{20, 22}, gridPosition{1, 1}, true},
@@ -223,6 +224,7 @@ func TestGetGridPosition(t *testing.T) {
 		{pixelPosition{64, 39}, gridPosition{1, 1}, true},
 
 		// left side of hexagon 2,1
+		// hexagons are right side inclusive and left side exclusive
 		{pixelPosition{65, 20}, gridPosition{2, 1}, true},
 		{pixelPosition{65, 21}, gridPosition{2, 1}, true},
 		{pixelPosition{65, 22}, gridPosition{2, 1}, true},
@@ -335,7 +337,7 @@ func TestGetGridPosition(t *testing.T) {
 		{pixelPosition{20, 68}, gridPosition{0, 2}, true},
 		{pixelPosition{20, 69}, gridPosition{0, 2}, true},
 
-		// middle of hexagon 1,2
+		// border of hexagon 0,2 and 1,2
 		{pixelPosition{41, 50}, gridPosition{0, 2}, true},
 		{pixelPosition{41, 51}, gridPosition{0, 2}, true},
 		{pixelPosition{41, 52}, gridPosition{0, 2}, true},
@@ -357,7 +359,8 @@ func TestGetGridPosition(t *testing.T) {
 		{pixelPosition{41, 68}, gridPosition{0, 2}, true},
 		{pixelPosition{41, 69}, gridPosition{0, 2}, true},
 
-		// continue midddle of hexagon 1,2
+		// border of hexagon 0,2 and 1,2
+		// hexagons are right left side inclusive, right side exclusive
 		{pixelPosition{42, 50}, gridPosition{1, 2}, true},
 		{pixelPosition{42, 51}, gridPosition{1, 2}, true},
 		{pixelPosition{42, 52}, gridPosition{1, 2}, true},
@@ -379,7 +382,7 @@ func TestGetGridPosition(t *testing.T) {
 		{pixelPosition{42, 68}, gridPosition{1, 2}, true},
 		{pixelPosition{42, 69}, gridPosition{1, 2}, true},
 
-		// continue midddle of hexagon 1,2
+		// border of hexagon 0,2 and 1,2
 		{pixelPosition{43, 50}, gridPosition{1, 2}, true},
 		{pixelPosition{43, 51}, gridPosition{1, 2}, true},
 		{pixelPosition{43, 52}, gridPosition{1, 2}, true},
@@ -401,7 +404,7 @@ func TestGetGridPosition(t *testing.T) {
 		{pixelPosition{43, 68}, gridPosition{1, 2}, true},
 		{pixelPosition{43, 69}, gridPosition{1, 2}, true},
 
-		// right side of hexagon 0,2
+		// right side of hexagon 1,2
 		{pixelPosition{64, 50}, gridPosition{1, 2}, true},
 		{pixelPosition{64, 51}, gridPosition{1, 2}, true},
 		{pixelPosition{64, 52}, gridPosition{1, 2}, true},
@@ -423,7 +426,7 @@ func TestGetGridPosition(t *testing.T) {
 		{pixelPosition{64, 68}, gridPosition{1, 2}, true},
 		{pixelPosition{64, 69}, gridPosition{1, 2}, true},
 
-		// left side of hexagon 1,2
+		// cotinue right side of hexagon 1,2
 		{pixelPosition{65, 50}, gridPosition{1, 2}, true},
 		{pixelPosition{65, 51}, gridPosition{1, 2}, true},
 		{pixelPosition{65, 52}, gridPosition{1, 2}, true},
@@ -445,7 +448,7 @@ func TestGetGridPosition(t *testing.T) {
 		{pixelPosition{65, 68}, gridPosition{1, 2}, true},
 		{pixelPosition{65, 69}, gridPosition{1, 2}, true},
 
-		// continue left side of hexagon 1,2
+		// continue right side of hexagon hexagon 1,2
 		{pixelPosition{66, 50}, gridPosition{1, 2}, true},
 		{pixelPosition{66, 51}, gridPosition{1, 2}, true},
 		{pixelPosition{66, 52}, gridPosition{1, 2}, true},

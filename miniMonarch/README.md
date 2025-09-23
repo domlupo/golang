@@ -20,8 +20,6 @@ Is there a mobile equivalent for war/4x games?
 ### Next Checkpoints
 
 - Close on and document pixel border hexagon decision behavior
-  - Determine which 3 edges of the hexagon should be inclusive and what 3 should be exclusive.
-  - The existing implementation already made a decision but I need to think it through since its fundamental.
   - Determine if I need a second hard coded position context or the first can be reused or reflected somehow?
   - Can I offset or reflect the first position context in anyway?
 
@@ -287,6 +285,9 @@ Is there a mobile equivalent for war/4x games?
   - Grid chunking and flux only requires 6 adjacent rather than 8.
   - Matches existing games better like Catan, Civ, etc
   - Optional hexagonal and square grid is more code complexity, work, bimodal behavior, etc
+8. Hexagons are left side side inclusive, right side exclusive. 
+  - This was chosen mostly arbitrarily. Probably simplifies some code.
+  - The remaining 4 sides are sloped which determines tie breaks nicely.
 
 ---
 
