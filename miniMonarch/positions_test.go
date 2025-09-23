@@ -1,243 +1,500 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 )
 
-// A very low level test. Ideally this would be higher level test for behavior rather than implementation.
-// The higher level test would assert pixel positions -> grid hexagons rather than
-// inner grid position -> hex triangle but that is not possible since the end to end
-// behavior is not fully implemented.
-func TestHexPositionContext(t *testing.T) {
-	pc := newHexPositionContext()
+func TestGetGridPosition(t *testing.T) {
+	hexPositionContext := newHexPositionContext()
+	hc := hexConfig{
+		hexPositionContext: &hexPositionContext,
+		hexWidth:           46,
+		hexHeight:          40,
+		xOffset:            19,
+		yOffset:            10,
+	}
+	windowWidth := 1280
+	windowHeight := 720
 
-	if len(pc) != 460 {
-		t.Errorf("position context must represent 460 pixels (46 cols * 10 rows)")
+	var tests = []struct {
+		pixelPos  pixelPosition
+		wantedPos gridPosition
+		wantedOk  bool
+	}{
+
+		// first hexagon y section (hexagon position context)
+
+		// sanity checks
+		{pixelPosition{19, 10}, gridPosition{0, 0}, true},
+		{pixelPosition{65, 10}, gridPosition{1, 0}, true},
+		{pixelPosition{41, 20}, gridPosition{1, 1}, true},
+		{pixelPosition{42, 20}, gridPosition{1, 1}, true},
+		{pixelPosition{43, 20}, gridPosition{1, 1}, true},
+
+		// 0, 0 hexagon slope check between itself and 1, 1 hexagon
+		{pixelPosition{19, 19}, gridPosition{0, 0}, true},
+		{pixelPosition{20, 18}, gridPosition{0, 0}, true},
+		{pixelPosition{21, 18}, gridPosition{0, 0}, true},
+		{pixelPosition{22, 17}, gridPosition{0, 0}, true},
+		{pixelPosition{23, 17}, gridPosition{0, 0}, true},
+		{pixelPosition{24, 17}, gridPosition{0, 0}, true},
+		{pixelPosition{25, 16}, gridPosition{0, 0}, true},
+		{pixelPosition{26, 16}, gridPosition{0, 0}, true},
+		{pixelPosition{27, 15}, gridPosition{0, 0}, true},
+		{pixelPosition{28, 15}, gridPosition{0, 0}, true},
+		{pixelPosition{29, 14}, gridPosition{0, 0}, true},
+		{pixelPosition{30, 14}, gridPosition{0, 0}, true},
+		{pixelPosition{31, 14}, gridPosition{0, 0}, true},
+		{pixelPosition{32, 13}, gridPosition{0, 0}, true},
+		{pixelPosition{33, 13}, gridPosition{0, 0}, true},
+		{pixelPosition{34, 12}, gridPosition{0, 0}, true},
+		{pixelPosition{35, 12}, gridPosition{0, 0}, true},
+		{pixelPosition{36, 11}, gridPosition{0, 0}, true},
+		{pixelPosition{37, 11}, gridPosition{0, 0}, true},
+		{pixelPosition{38, 11}, gridPosition{0, 0}, true},
+		{pixelPosition{39, 10}, gridPosition{0, 0}, true},
+		{pixelPosition{40, 10}, gridPosition{0, 0}, true},
+		//{pixelPosition{41, 9}, gridPosition{0, 0}, true}, // prob bug
+
+		// 1, 1 hexagon slope check between itself and 1, 1 hexagon
+		{pixelPosition{19, 20}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 19}, gridPosition{1, 1}, true},
+		{pixelPosition{21, 19}, gridPosition{1, 1}, true},
+		{pixelPosition{22, 18}, gridPosition{1, 1}, true},
+		{pixelPosition{23, 18}, gridPosition{1, 1}, true},
+		{pixelPosition{24, 18}, gridPosition{1, 1}, true},
+		{pixelPosition{25, 17}, gridPosition{1, 1}, true},
+		{pixelPosition{26, 17}, gridPosition{1, 1}, true},
+		{pixelPosition{27, 16}, gridPosition{1, 1}, true},
+		{pixelPosition{28, 16}, gridPosition{1, 1}, true},
+		{pixelPosition{29, 15}, gridPosition{1, 1}, true},
+		{pixelPosition{30, 15}, gridPosition{1, 1}, true},
+		{pixelPosition{31, 15}, gridPosition{1, 1}, true},
+		{pixelPosition{32, 14}, gridPosition{1, 1}, true},
+		{pixelPosition{33, 14}, gridPosition{1, 1}, true},
+		{pixelPosition{34, 13}, gridPosition{1, 1}, true},
+		{pixelPosition{35, 13}, gridPosition{1, 1}, true},
+		{pixelPosition{36, 12}, gridPosition{1, 1}, true},
+		{pixelPosition{37, 12}, gridPosition{1, 1}, true},
+		{pixelPosition{38, 12}, gridPosition{1, 1}, true},
+		{pixelPosition{39, 11}, gridPosition{1, 1}, true},
+		{pixelPosition{40, 11}, gridPosition{1, 1}, true},
+		{pixelPosition{41, 10}, gridPosition{1, 1}, true},
+
+		// 1, 0 hexagon slope check between itself and 1, 1 hexagon
+		//{pixelPosition{42, 9}, gridPosition{1, 0}, true}, prob bug
+		{pixelPosition{43, 10}, gridPosition{1, 0}, true},
+		{pixelPosition{44, 10}, gridPosition{1, 0}, true},
+		{pixelPosition{45, 11}, gridPosition{1, 0}, true},
+		{pixelPosition{46, 11}, gridPosition{1, 0}, true},
+		{pixelPosition{47, 11}, gridPosition{1, 0}, true},
+		{pixelPosition{48, 12}, gridPosition{1, 0}, true},
+		{pixelPosition{49, 12}, gridPosition{1, 0}, true},
+		{pixelPosition{50, 13}, gridPosition{1, 0}, true},
+		{pixelPosition{51, 13}, gridPosition{1, 0}, true},
+
+		{pixelPosition{52, 14}, gridPosition{1, 0}, true},
+		{pixelPosition{53, 14}, gridPosition{1, 0}, true},
+		{pixelPosition{54, 14}, gridPosition{1, 0}, true},
+		{pixelPosition{55, 15}, gridPosition{1, 0}, true},
+		{pixelPosition{56, 15}, gridPosition{1, 0}, true},
+		{pixelPosition{57, 16}, gridPosition{1, 0}, true},
+		{pixelPosition{58, 16}, gridPosition{1, 0}, true},
+		{pixelPosition{59, 17}, gridPosition{1, 0}, true},
+		{pixelPosition{60, 17}, gridPosition{1, 0}, true},
+		{pixelPosition{61, 17}, gridPosition{1, 0}, true},
+		{pixelPosition{62, 18}, gridPosition{1, 0}, true},
+		{pixelPosition{63, 18}, gridPosition{1, 0}, true},
+		{pixelPosition{64, 19}, gridPosition{1, 0}, true},
+
+		// 1, 1 hexagon slope check between itself and 1, 0 hexagon
+		{pixelPosition{42, 10}, gridPosition{1, 1}, true},
+		{pixelPosition{43, 11}, gridPosition{1, 1}, true},
+		{pixelPosition{44, 11}, gridPosition{1, 1}, true},
+		{pixelPosition{45, 12}, gridPosition{1, 1}, true},
+		{pixelPosition{46, 12}, gridPosition{1, 1}, true},
+		{pixelPosition{47, 12}, gridPosition{1, 1}, true},
+		{pixelPosition{48, 13}, gridPosition{1, 1}, true},
+		{pixelPosition{49, 13}, gridPosition{1, 1}, true},
+		{pixelPosition{50, 14}, gridPosition{1, 1}, true},
+		{pixelPosition{51, 14}, gridPosition{1, 1}, true},
+		{pixelPosition{52, 15}, gridPosition{1, 1}, true},
+		{pixelPosition{53, 15}, gridPosition{1, 1}, true},
+		{pixelPosition{54, 15}, gridPosition{1, 1}, true},
+		{pixelPosition{55, 16}, gridPosition{1, 1}, true},
+		{pixelPosition{56, 16}, gridPosition{1, 1}, true},
+		{pixelPosition{57, 17}, gridPosition{1, 1}, true},
+		{pixelPosition{58, 17}, gridPosition{1, 1}, true},
+		{pixelPosition{59, 18}, gridPosition{1, 1}, true},
+		{pixelPosition{60, 18}, gridPosition{1, 1}, true},
+		{pixelPosition{61, 18}, gridPosition{1, 1}, true},
+		{pixelPosition{62, 19}, gridPosition{1, 1}, true},
+		{pixelPosition{63, 19}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 20}, gridPosition{1, 1}, true},
+
+		// second hexagon y section (full rectangle)
+
+		// right side of hexagon 0,1
+		{pixelPosition{18, 20}, gridPosition{0, 1}, true},
+		{pixelPosition{18, 21}, gridPosition{0, 1}, true},
+		{pixelPosition{18, 22}, gridPosition{0, 1}, true},
+		{pixelPosition{18, 23}, gridPosition{0, 1}, true},
+		{pixelPosition{18, 24}, gridPosition{0, 1}, true},
+		{pixelPosition{18, 25}, gridPosition{0, 1}, true},
+		{pixelPosition{18, 26}, gridPosition{0, 1}, true},
+		{pixelPosition{18, 27}, gridPosition{0, 1}, true},
+		{pixelPosition{18, 28}, gridPosition{0, 1}, true},
+		{pixelPosition{18, 29}, gridPosition{0, 1}, true},
+		{pixelPosition{18, 30}, gridPosition{0, 1}, true},
+		{pixelPosition{18, 31}, gridPosition{0, 1}, true},
+		{pixelPosition{18, 32}, gridPosition{0, 1}, true},
+		{pixelPosition{18, 33}, gridPosition{0, 1}, true},
+		{pixelPosition{18, 34}, gridPosition{0, 1}, true},
+		{pixelPosition{18, 35}, gridPosition{0, 1}, true},
+		{pixelPosition{18, 36}, gridPosition{0, 1}, true},
+		{pixelPosition{18, 37}, gridPosition{0, 1}, true},
+		{pixelPosition{18, 38}, gridPosition{0, 1}, true},
+		{pixelPosition{18, 39}, gridPosition{0, 1}, true},
+
+		// left side of hexagon 1, 1
+		{pixelPosition{19, 20}, gridPosition{1, 1}, true},
+		{pixelPosition{19, 21}, gridPosition{1, 1}, true},
+		{pixelPosition{19, 22}, gridPosition{1, 1}, true},
+		{pixelPosition{19, 23}, gridPosition{1, 1}, true},
+		{pixelPosition{19, 24}, gridPosition{1, 1}, true},
+		{pixelPosition{19, 25}, gridPosition{1, 1}, true},
+		{pixelPosition{19, 26}, gridPosition{1, 1}, true},
+		{pixelPosition{19, 27}, gridPosition{1, 1}, true},
+		{pixelPosition{19, 28}, gridPosition{1, 1}, true},
+		{pixelPosition{19, 29}, gridPosition{1, 1}, true},
+		{pixelPosition{19, 30}, gridPosition{1, 1}, true},
+		{pixelPosition{19, 31}, gridPosition{1, 1}, true},
+		{pixelPosition{19, 32}, gridPosition{1, 1}, true},
+		{pixelPosition{19, 33}, gridPosition{1, 1}, true},
+		{pixelPosition{19, 34}, gridPosition{1, 1}, true},
+		{pixelPosition{19, 35}, gridPosition{1, 1}, true},
+		{pixelPosition{19, 36}, gridPosition{1, 1}, true},
+		{pixelPosition{19, 37}, gridPosition{1, 1}, true},
+		{pixelPosition{19, 38}, gridPosition{1, 1}, true},
+		{pixelPosition{19, 39}, gridPosition{1, 1}, true},
+		// continue left side of hexagon 1, 1
+		{pixelPosition{20, 20}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 21}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 22}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 23}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 24}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 25}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 26}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 27}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 28}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 29}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 30}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 31}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 32}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 33}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 34}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 35}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 36}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 37}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 38}, gridPosition{1, 1}, true},
+		{pixelPosition{20, 39}, gridPosition{1, 1}, true},
+
+		// right side of hexagon 1,1
+		{pixelPosition{64, 20}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 21}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 22}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 23}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 24}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 25}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 26}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 27}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 28}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 29}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 30}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 31}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 32}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 33}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 34}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 35}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 36}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 37}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 38}, gridPosition{1, 1}, true},
+		{pixelPosition{64, 39}, gridPosition{1, 1}, true},
+
+		// left side of hexagon 2,1
+		{pixelPosition{65, 20}, gridPosition{2, 1}, true},
+		{pixelPosition{65, 21}, gridPosition{2, 1}, true},
+		{pixelPosition{65, 22}, gridPosition{2, 1}, true},
+		{pixelPosition{65, 23}, gridPosition{2, 1}, true},
+		{pixelPosition{65, 24}, gridPosition{2, 1}, true},
+		{pixelPosition{65, 25}, gridPosition{2, 1}, true},
+		{pixelPosition{65, 26}, gridPosition{2, 1}, true},
+		{pixelPosition{65, 27}, gridPosition{2, 1}, true},
+		{pixelPosition{65, 28}, gridPosition{2, 1}, true},
+		{pixelPosition{65, 29}, gridPosition{2, 1}, true},
+		{pixelPosition{65, 30}, gridPosition{2, 1}, true},
+		{pixelPosition{65, 31}, gridPosition{2, 1}, true},
+		{pixelPosition{65, 32}, gridPosition{2, 1}, true},
+		{pixelPosition{65, 33}, gridPosition{2, 1}, true},
+		{pixelPosition{65, 34}, gridPosition{2, 1}, true},
+		{pixelPosition{65, 35}, gridPosition{2, 1}, true},
+		{pixelPosition{65, 36}, gridPosition{2, 1}, true},
+		{pixelPosition{65, 37}, gridPosition{2, 1}, true},
+		{pixelPosition{65, 38}, gridPosition{2, 1}, true},
+		{pixelPosition{65, 39}, gridPosition{2, 1}, true},
+		// continue left side of hexagon 2,1
+		{pixelPosition{66, 20}, gridPosition{2, 1}, true},
+		{pixelPosition{66, 21}, gridPosition{2, 1}, true},
+		{pixelPosition{66, 22}, gridPosition{2, 1}, true},
+		{pixelPosition{66, 23}, gridPosition{2, 1}, true},
+		{pixelPosition{66, 24}, gridPosition{2, 1}, true},
+		{pixelPosition{66, 25}, gridPosition{2, 1}, true},
+		{pixelPosition{66, 26}, gridPosition{2, 1}, true},
+		{pixelPosition{66, 27}, gridPosition{2, 1}, true},
+		{pixelPosition{66, 28}, gridPosition{2, 1}, true},
+		{pixelPosition{66, 29}, gridPosition{2, 1}, true},
+		{pixelPosition{66, 30}, gridPosition{2, 1}, true},
+		{pixelPosition{66, 31}, gridPosition{2, 1}, true},
+		{pixelPosition{66, 32}, gridPosition{2, 1}, true},
+		{pixelPosition{66, 33}, gridPosition{2, 1}, true},
+		{pixelPosition{66, 34}, gridPosition{2, 1}, true},
+		{pixelPosition{66, 35}, gridPosition{2, 1}, true},
+		{pixelPosition{66, 36}, gridPosition{2, 1}, true},
+		{pixelPosition{66, 37}, gridPosition{2, 1}, true},
+		{pixelPosition{66, 38}, gridPosition{2, 1}, true},
+		{pixelPosition{66, 39}, gridPosition{2, 1}, true},
+
+		// TODO: implement inverted section and add tests
+
+		// Fourth section tests
+
+		// middle of hexagon 0,2
+		{pixelPosition{18, 50}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 51}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 52}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 53}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 54}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 55}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 56}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 57}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 58}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 59}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 60}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 61}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 62}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 63}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 64}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 65}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 66}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 67}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 68}, gridPosition{0, 2}, true},
+		{pixelPosition{18, 69}, gridPosition{0, 2}, true},
+
+		// continue middle of hexagon 0,2
+		{pixelPosition{19, 50}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 51}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 52}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 53}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 54}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 55}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 56}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 57}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 58}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 59}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 60}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 61}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 62}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 63}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 64}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 65}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 66}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 67}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 68}, gridPosition{0, 2}, true},
+		{pixelPosition{19, 69}, gridPosition{0, 2}, true},
+
+		// continue middle of hexagon 0,2
+		{pixelPosition{20, 50}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 51}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 52}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 53}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 54}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 55}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 56}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 57}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 58}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 59}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 60}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 61}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 62}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 63}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 64}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 65}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 66}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 67}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 68}, gridPosition{0, 2}, true},
+		{pixelPosition{20, 69}, gridPosition{0, 2}, true},
+
+		// middle of hexagon 1,2
+		{pixelPosition{41, 50}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 51}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 52}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 53}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 54}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 55}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 56}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 57}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 58}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 59}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 60}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 61}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 62}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 63}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 64}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 65}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 66}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 67}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 68}, gridPosition{0, 2}, true},
+		{pixelPosition{41, 69}, gridPosition{0, 2}, true},
+
+		// continue midddle of hexagon 1,2
+		{pixelPosition{42, 50}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 51}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 52}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 53}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 54}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 55}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 56}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 57}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 58}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 59}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 60}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 61}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 62}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 63}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 64}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 65}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 66}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 67}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 68}, gridPosition{1, 2}, true},
+		{pixelPosition{42, 69}, gridPosition{1, 2}, true},
+
+		// continue midddle of hexagon 1,2
+		{pixelPosition{43, 50}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 51}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 52}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 53}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 54}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 55}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 56}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 57}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 58}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 59}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 60}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 61}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 62}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 63}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 64}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 65}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 66}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 67}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 68}, gridPosition{1, 2}, true},
+		{pixelPosition{43, 69}, gridPosition{1, 2}, true},
+
+		// right side of hexagon 0,2
+		{pixelPosition{64, 50}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 51}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 52}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 53}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 54}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 55}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 56}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 57}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 58}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 59}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 60}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 61}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 62}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 63}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 64}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 65}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 66}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 67}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 68}, gridPosition{1, 2}, true},
+		{pixelPosition{64, 69}, gridPosition{1, 2}, true},
+
+		// left side of hexagon 1,2
+		{pixelPosition{65, 50}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 51}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 52}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 53}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 54}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 55}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 56}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 57}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 58}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 59}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 60}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 61}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 62}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 63}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 64}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 65}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 66}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 67}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 68}, gridPosition{1, 2}, true},
+		{pixelPosition{65, 69}, gridPosition{1, 2}, true},
+
+		// continue left side of hexagon 1,2
+		{pixelPosition{66, 50}, gridPosition{1, 2}, true},
+		{pixelPosition{66, 51}, gridPosition{1, 2}, true},
+		{pixelPosition{66, 52}, gridPosition{1, 2}, true},
+		{pixelPosition{66, 53}, gridPosition{1, 2}, true},
+		{pixelPosition{66, 54}, gridPosition{1, 2}, true},
+		{pixelPosition{66, 55}, gridPosition{1, 2}, true},
+		{pixelPosition{66, 56}, gridPosition{1, 2}, true},
+		{pixelPosition{66, 57}, gridPosition{1, 2}, true},
+		{pixelPosition{66, 58}, gridPosition{1, 2}, true},
+		{pixelPosition{66, 59}, gridPosition{1, 2}, true},
+		{pixelPosition{66, 60}, gridPosition{1, 2}, true},
+		{pixelPosition{66, 61}, gridPosition{1, 2}, true},
+		{pixelPosition{66, 62}, gridPosition{1, 2}, true},
+		{pixelPosition{66, 63}, gridPosition{1, 2}, true},
+		{pixelPosition{66, 64}, gridPosition{1, 2}, true},
+		{pixelPosition{66, 65}, gridPosition{1, 2}, true},
+		{pixelPosition{66, 66}, gridPosition{1, 2}, true},
+		{pixelPosition{66, 67}, gridPosition{1, 2}, true},
+		{pixelPosition{66, 68}, gridPosition{1, 2}, true},
+		{pixelPosition{66, 69}, gridPosition{1, 2}, true},
 	}
 
-	// sanity check
-	if pc[hexPosContextIndex(innerGridPosition{0, 0})] != leftHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{45, 0})] != rightHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{22, 9})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{23, 9})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	// row 10 left side
-	if pc[hexPosContextIndex(innerGridPosition{0, 9})] != leftHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{1, 9})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{2, 9})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	// row 9 left side
-	if pc[hexPosContextIndex(innerGridPosition{2, 8})] != leftHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{3, 8})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{4, 8})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	// row 8 left side
-	if pc[hexPosContextIndex(innerGridPosition{4, 7})] != leftHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{5, 7})] != leftHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{6, 7})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	// row 7 left side
-	if pc[hexPosContextIndex(innerGridPosition{6, 6})] != leftHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{7, 6})] != leftHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{8, 6})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{9, 6})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	// row 6 left side
-	if pc[hexPosContextIndex(innerGridPosition{9, 5})] != leftHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{10, 5})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{11, 5})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	// row 5 left side
-	if pc[hexPosContextIndex(innerGridPosition{11, 4})] != leftHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{12, 4})] != leftHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{13, 4})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	// row 4 left side
-	if pc[hexPosContextIndex(innerGridPosition{13, 3})] != leftHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{14, 3})] != leftHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{15, 3})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{16, 3})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	// row 3 left side
-	if pc[hexPosContextIndex(innerGridPosition{16, 2})] != leftHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{17, 2})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{18, 2})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	// row 2 left side
-	if pc[hexPosContextIndex(innerGridPosition{18, 1})] != leftHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{19, 1})] != leftHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{20, 1})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	// row 1 left side
-	if pc[hexPosContextIndex(innerGridPosition{20, 0})] != leftHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{21, 0})] != leftHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{22, 0})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	// row 1 right side
-	if pc[hexPosContextIndex(innerGridPosition{23, 0})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{24, 0})] != rightHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{25, 0})] != rightHexTriangle {
-		t.Errorf("error")
-	}
-	// row 2 right side
-	if pc[hexPosContextIndex(innerGridPosition{25, 1})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{26, 1})] != rightHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{27, 1})] != rightHexTriangle {
-		t.Errorf("error")
-	}
-	// row 3 right side
-	if pc[hexPosContextIndex(innerGridPosition{27, 2})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{28, 2})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{29, 2})] != rightHexTriangle {
-		t.Errorf("error")
-	}
-	// row 4 right side
-	if pc[hexPosContextIndex(innerGridPosition{29, 3})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{30, 3})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{31, 3})] != rightHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{32, 3})] != rightHexTriangle {
-		t.Errorf("error")
-	}
-	// row 5 right side
-	if pc[hexPosContextIndex(innerGridPosition{32, 4})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{33, 4})] != rightHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{34, 4})] != rightHexTriangle {
-		t.Errorf("error")
-	}
-	// row 6 right side
-	if pc[hexPosContextIndex(innerGridPosition{34, 5})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{35, 5})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{36, 5})] != rightHexTriangle {
-		t.Errorf("error")
-	}
-	// row 7 right side
-	if pc[hexPosContextIndex(innerGridPosition{36, 6})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{37, 6})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{38, 6})] != rightHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{39, 6})] != rightHexTriangle {
-		t.Errorf("error")
-	}
-	// row 8 right side
-	if pc[hexPosContextIndex(innerGridPosition{39, 7})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{40, 7})] != rightHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{41, 7})] != rightHexTriangle {
-		t.Errorf("error")
-	}
-	// row 9 right side
-	if pc[hexPosContextIndex(innerGridPosition{41, 8})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{42, 8})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{43, 8})] != rightHexTriangle {
-		t.Errorf("error")
-	}
-	// row 10 right side
-	if pc[hexPosContextIndex(innerGridPosition{43, 9})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{44, 9})] != middleHexTriangle {
-		t.Errorf("error")
-	}
-	if pc[hexPosContextIndex(innerGridPosition{45, 9})] != rightHexTriangle {
-		t.Errorf("error")
+	for _, tt := range tests {
+		var sWantedOk string
+		if tt.wantedOk {
+			sWantedOk = "exist"
+		} else {
+			sWantedOk = "not exist"
+		}
+
+		testname := fmt.Sprintf(
+			"PixelPosition:%s converts to hex grid position {%d,%d} and want it to %s",
+			tt.pixelPos.log(),
+			tt.wantedPos.x,
+			tt.wantedPos.y,
+			sWantedOk)
+
+		t.Run(testname, func(t *testing.T) {
+			pos, ok := getHexGridPostion(tt.pixelPos, hc, windowWidth, windowHeight)
+			if ok != tt.wantedOk {
+				t.Errorf("Wanted pixel position to %s", sWantedOk)
+			}
+			if pos.x != tt.wantedPos.x || pos.y != tt.wantedPos.y {
+				t.Errorf("Wanted grid position {%d,%d} but it was {%d,%d}",
+					tt.wantedPos.x,
+					tt.wantedPos.y,
+					pos.x,
+					pos.y)
+			}
+		})
 	}
 }

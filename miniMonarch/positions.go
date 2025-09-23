@@ -2,13 +2,14 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 )
 
 type hexagonTriangle int
 
-// The hexagon position context is a hardcoded mapping to aid with pixel position : relative hexagon.
-// It avoids the the need of CPU intensive math to convert from pixel position -> hexagon.
+// The hexagon position context is a hardcoded mapping to aid with converting
+// pixel position to hexagon grid position. It avoids the the need of CPU intensive math.
 // It helps CPU performance by removing the need for floating point or sqrt math logic.
 //
 // Specific CPU profiling did not prove this optimizaton was needed but prior CPU profiling
@@ -111,10 +112,6 @@ func setHexPositionContext(pc *[460]hexagonTriangle, rowPixelCount int, rowStart
 	for i := rightHexStart; i < rowStart+rowPixelCount; i++ {
 		pc[i] = rightHexTriangle
 	}
-}
-
-func hexPosContextIndex(innerGridPos innerGridPosition) int {
-	return innerGridPos.x + innerGridPos.y*46
 }
 
 type direction int
@@ -274,4 +271,118 @@ func splitPixelPosition(pixelPos pixelPosition, gridSize int) (gridPosition, inn
 	innerGridPosX := pixelPos.x % gridSize
 	innerGridPosY := pixelPos.y % gridSize
 	return gridPosition{gridPosX, gridPosY}, innerGridPosition{innerGridPosX, innerGridPosY}
+}
+
+type hexOffset int
+
+const (
+	noHexOffset = iota
+	topOffset
+	topLeftOffset
+	topRightOffset
+	bottomOffset
+	bottomLeftOffset
+	bottomRightOffset
+)
+
+// TODO: remove hard coded values via function signature
+// TODO: write unit tests, did verify manually it worked with a few values
+func getHexPixelPosition(gridPos gridPosition, offset hexOffset) (pixelPosition, bool) {
+
+	xDelta := 46 // hexagon width
+	yDelta := 60 // hexagon height * 1.5
+	xPadding := (1280 % xDelta) / 2
+
+	x := xPadding + xDelta*gridPos.x
+	if gridPos.y%2 == 1 {
+		x = x - xDelta/2
+	}
+	y := (yDelta / 2) * gridPos.y
+
+	switch offset {
+	case noHexOffset:
+	case topOffset:
+		y -= 20
+	case topLeftOffset:
+		x -= xDelta / 2
+		y -= 10
+	case topRightOffset:
+		x += xDelta / 2
+		y -= 10
+	case bottomOffset:
+		y += 20
+	case bottomLeftOffset:
+		x -= xDelta / 2
+		y += 10
+	case bottomRightOffset:
+		x += xDelta / 2
+		y += 10
+	}
+
+	if x < 0 || x >= 1280 || y < 0 || y >= 720 {
+		return pixelPosition{}, false
+	} else {
+		return pixelPosition{x, y}, true
+	}
+}
+
+type hexConfig struct {
+	// TODO: don't hard code 460?
+	hexPositionContext *[460]hexagonTriangle
+	hexWidth           int
+	hexHeight          int
+	xOffset            int
+	yOffset            int
+}
+
+func getHexGridPostion(pixelPos pixelPosition, hc hexConfig, windowWidth int, windowHeight int) (gridPosition, bool) {
+	if pixelPos.x < 0 || pixelPos.x >= windowWidth || pixelPos.y < 0 || pixelPos.y >= windowHeight {
+		return gridPosition{}, false
+	}
+
+	xIndex := (hc.hexWidth - hc.xOffset + pixelPos.x) / hc.hexWidth
+	xIndex--
+	var xIndexOffset int
+	yIndex := (pixelPos.y - hc.yOffset) / (hc.hexHeight * 3 / 2)
+	var yIndexOffset int
+	innerX := (pixelPos.x - hc.xOffset) % hc.hexWidth
+	innerY := (pixelPos.y - hc.yOffset) % (hc.hexHeight * 3 / 2)
+
+	firstYSectionStart := 0
+	secondYSectionStart := firstYSectionStart + hc.hexHeight/4
+	thirdYSectionStart := secondYSectionStart + hc.hexHeight/2
+	fourthYSectionStart := thirdYSectionStart + hc.hexHeight/4
+
+	switch {
+	case innerY >= firstYSectionStart && innerY < secondYSectionStart:
+		triangle := hc.hexPositionContext[innerX+innerY*hc.hexWidth]
+		switch triangle {
+		case leftHexTriangle:
+			xIndexOffset = 0
+			yIndexOffset = 0
+		case middleHexTriangle:
+			xIndexOffset = 1
+			yIndexOffset = 1
+		case rightHexTriangle:
+			xIndexOffset = 1
+			yIndexOffset = 0
+		}
+	case innerY >= secondYSectionStart && innerY < thirdYSectionStart:
+		xIndexOffset = 1
+		yIndexOffset = 1
+	case innerY >= thirdYSectionStart && innerY < fourthYSectionStart:
+		panic("unimplemented invert section")
+	case innerY >= fourthYSectionStart && innerY < (hc.hexHeight*3/2):
+		if innerX >= 0 && innerX < 23 {
+			xIndexOffset = 0
+			yIndexOffset = 2
+		} else {
+			xIndexOffset = 1
+			yIndexOffset = 2
+		}
+	default:
+		panic(fmt.Sprintf("getHexGridPostion could not find a y section for the inner y: %s", pixelPos.log()))
+	}
+
+	return gridPosition{xIndex + xIndexOffset, yIndex + yIndexOffset}, true
 }
