@@ -22,7 +22,7 @@ func (c *computer) updateTargetNodes(s state) {
 
 		selfNodePos := nodePos
 		selfNode := node
-		selfNode.target = nil
+		selfNode.target = position{}
 		nearestTargetDistanceSquared := math.MaxInt
 
 		for nodePos, node := range s.nodes {
@@ -39,7 +39,7 @@ func (c *computer) updateTargetNodes(s state) {
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
 				var targetPixelPos, _ = getPixelPosition(otherNodePos, center, s.hexConfig)
-				selfNode.target = &position{ground, targetPixelPos}
+				selfNode.target = position{ground, targetPixelPos}
 			}
 
 		}
@@ -72,7 +72,7 @@ func (c *computer) updateTargetNodes(s state) {
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
 				var targetPixelPos, _ = getPixelPosition(otherNodePos, center, s.hexConfig)
-				selfUnit.updateTarget(globalTarget, &position{ground, targetPixelPos})
+				selfUnit.updateTarget(globalTarget, position{ground, targetPixelPos})
 			}
 		}
 	}

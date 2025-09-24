@@ -66,7 +66,7 @@ func (s *state) analyzeTargets() {
 		if u1.fluxTurnCount > u1.fluxTurnCountDelay {
 			gridPos, _ := getGridPos(uPos1.pixelPosition, s.hexConfig)
 			fluxDelta := s.fluxes[gridPos].getFluxDelta(u1.fluxMagnitude)
-			u1.updateTarget(fluxTarget, &position{ground, pixelPosition{uPos1.x + fluxDelta.x, uPos1.y + fluxDelta.y}})
+			u1.updateTarget(fluxTarget, position{ground, pixelPosition{uPos1.x + fluxDelta.x, uPos1.y + fluxDelta.y}})
 		}
 
 		var reachesNode, isTargetNode = s.collidesWithNode(
@@ -79,7 +79,7 @@ func (s *state) analyzeTargets() {
 		}
 
 		shortestDistance := math.MaxInt64
-		var closestUnitPos *position
+		var closestUnitPos position
 		for uPos2, u2 := range s.units {
 			if u1.player == u2.player {
 				// unit cannot see itself or comrades
@@ -97,7 +97,7 @@ func (s *state) analyzeTargets() {
 			distance := xDelta*xDelta + yDelta*yDelta
 			if distance < shortestDistance && distance < u1.vision*u1.vision {
 				shortestDistance = distance
-				closestUnitPos = &uPos2
+				closestUnitPos = uPos2
 			}
 		}
 
@@ -132,7 +132,7 @@ func (s *state) moveUnits() {
 		// the function will probably change a lot in the future and the refactor can happen then.
 		newPos, completeMove := u.getNewPos(uPos)
 
-		if u.currentTarget == nil {
+		if u.currentTarget.isZero() {
 			unitsWithoutTarget++
 		}
 
@@ -231,7 +231,7 @@ func (s *state) collidesWithNode(pos position, unit unit, unitCollisionRadius in
 		rSum := r1 + r2
 
 		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
-			if unit.globalTarget != nil {
+			if !unit.globalTarget.isZero() {
 				x1 := unit.globalTarget.x
 				y1 := unit.globalTarget.y
 				r1 := 1 // TODO: why is this 1? Is this a bug?
@@ -330,7 +330,7 @@ func (s *state) attackUnits() {
 		// TODO: This may be wrong behavior but I am not sure if the issue is occurring
 		// e.g. the target was killed by another unit this unit should probably find a potential new target.
 		// Then attack that rather than not attack for a turn
-		if u.localTarget == nil {
+		if u.localTarget.isZero() {
 			continue
 		}
 
@@ -350,13 +350,13 @@ func (s *state) attackUnits() {
 			yDelta = uPos.y - yTargetPixelPos
 		}
 
-		var nearestVisibleUnit = s.units[*u.localTarget]
+		var nearestVisibleUnit = s.units[u.localTarget]
 		var rSum = u.reach + nearestVisibleUnit.radius
 		if rSum*rSum >= xDelta*xDelta+yDelta*yDelta {
 			nearestVisibleUnit.health = nearestVisibleUnit.health - u.attack
 			u.attackedThisTurn = true
 			unitAttackedOtherUnitCount++
-			s.units[*u.localTarget] = nearestVisibleUnit
+			s.units[u.localTarget] = nearestVisibleUnit
 			s.units[uPos] = u
 		}
 	}
@@ -384,7 +384,7 @@ func (s *state) attackNodes() {
 	var cannotReachNodeCount int
 
 	for _, u := range s.units {
-		if u.globalTarget == nil {
+		if u.globalTarget.isZero() {
 			noTargetNodeCount++
 			continue
 		}
@@ -481,7 +481,7 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 
 }
 
-func (s *state) updateTargets(target *position, blueComputerActive bool, redComputerActive bool) {
+func (s *state) updateTargets(target position, blueComputerActive bool, redComputerActive bool) {
 	for nGridPos, n := range s.nodes {
 		switch {
 		case n.player == neutralPlayer:

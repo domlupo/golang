@@ -178,10 +178,10 @@ func (uc unitConfig) log() []slog.Attr {
 type unit struct {
 	id                 uuid.UUID
 	player             player
-	currentTarget      *position
-	fluxTarget         *position
-	localTarget        *position
-	globalTarget       *position
+	currentTarget      position
+	fluxTarget         position
+	localTarget        position
+	globalTarget       position
 	fluxTurnCount      int
 	atTerminalPosition bool
 	bresenhamError     *int
@@ -197,7 +197,7 @@ type unit struct {
 	fluxExpireCount    int
 }
 
-func newUnit(p player, globalTarget *position, uc unitConfig) unit {
+func newUnit(p player, globalTarget position, uc unitConfig) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
 		logger.log(errorLevel, selectedUnitLogType, "newUnit", "failed to generate UUID", err)
@@ -205,9 +205,9 @@ func newUnit(p player, globalTarget *position, uc unitConfig) unit {
 	u := unit{
 		id:                 id,
 		player:             p,
-		currentTarget:      nil,
-		fluxTarget:         nil,
-		localTarget:        nil,
+		currentTarget:      position{},
+		fluxTarget:         position{},
+		localTarget:        position{},
 		globalTarget:       globalTarget,
 		fluxTurnCount:      0,
 		atTerminalPosition: false,
@@ -246,19 +246,19 @@ func (u *unit) refresh() {
 }
 
 func (u *unit) analyzeTargets() {
-	if u.fluxTarget != nil {
+	if !u.fluxTarget.isZero() {
 		u.fluxExpireCount = max(u.fluxExpireCount-1, 0)
 		u.updateTarget(currentTarget, u.fluxTarget)
 		if u.fluxExpireCount == 0 {
-			u.fluxTarget = nil
+			u.fluxTarget = position{}
 			u.fluxExpireCount = u.fluxExpireMax
 		}
-	} else if u.localTarget != nil {
+	} else if !u.localTarget.isZero() {
 		u.updateTarget(currentTarget, u.localTarget)
-	} else if u.globalTarget != nil {
+	} else if !u.globalTarget.isZero() {
 		u.updateTarget(currentTarget, u.globalTarget)
 	} else {
-		u.updateTarget(currentTarget, nil)
+		u.updateTarget(currentTarget, position{})
 	}
 }
 
@@ -268,7 +268,7 @@ func (u *unit) analyzeTargets() {
 func (u *unit) getNewPos(currentPos position) (position, func()) {
 	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "getNewPos", "currentPos", currentPos.log())
 
-	if u.currentTarget == nil {
+	if u.currentTarget.isZero() {
 		return currentPos, func() {}
 	}
 
@@ -319,12 +319,11 @@ func (u *unit) getNewPos(currentPos position) (position, func()) {
 	return position{currentPos.layer, pixelPosition{x0, y0}}, func() { u.completeMove() }
 }
 
-func (u *unit) updateTarget(ut unitTarget, target *position) {
+func (u *unit) updateTarget(ut unitTarget, target position) {
 	var unitTarget string
 	switch ut {
 	case currentTarget:
-		// TODO: Look into if there is a better way to handle nil equality
-		if target == nil || u.currentTarget == nil || u.currentTarget != target {
+		if target.isZero() || u.currentTarget.isZero() {
 			u.bresenhamError = nil
 			u.nextBresenhamError = nil
 		}
@@ -345,7 +344,7 @@ func (u *unit) updateTarget(ut unitTarget, target *position) {
 	}
 
 	var targetLog []slog.Attr
-	if target == nil {
+	if target.isZero() {
 		targetLog = nil
 	} else {
 		targetLog = target.log()
@@ -374,22 +373,22 @@ func (u unit) log() []slog.Attr {
 		player = "neutralPlayer"
 	}
 	a = append(a, slog.String("player", player))
-	if u.currentTarget != nil {
+	if !u.currentTarget.isZero() {
 		a = append(a, slog.Any("currentTarget", u.currentTarget.log()))
 	} else {
 		a = append(a, slog.String("currentTarget", "nil"))
 	}
-	if u.fluxTarget != nil {
+	if !u.fluxTarget.isZero() {
 		a = append(a, slog.Any("fluxTarget", u.fluxTarget.log()))
 	} else {
 		a = append(a, slog.String("fluxTarget", "nil"))
 	}
-	if u.localTarget != nil {
+	if !u.localTarget.isZero() {
 		a = append(a, slog.Any("localTarget", u.localTarget.log()))
 	} else {
 		a = append(a, slog.String("localTarget", "nil"))
 	}
-	if u.globalTarget != nil {
+	if !u.globalTarget.isZero() {
 		a = append(a, slog.Any("globalTarget", u.globalTarget.log()))
 	} else {
 		a = append(a, slog.String("globalTarget", "nil"))
@@ -448,7 +447,7 @@ func (u *unit) draw(dc drawContext, pos position, selected bool) {
 		)
 	}
 
-	if selected && u.currentTarget != nil {
+	if selected && !u.currentTarget.isZero() {
 		vector.StrokeLine(
 			dc.screen,
 			float32(pos.x)*dc.windowMultiplier,

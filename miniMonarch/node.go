@@ -24,7 +24,7 @@ type node struct {
 	maxHealth     int
 	currentHealth int
 	capturedBy    *player
-	target        *position
+	target        position
 	unitConfig    unitConfig
 }
 
@@ -37,7 +37,7 @@ func newNode(p player, gridPos gridPosition, initialNodeHealth int, hexConfig he
 		maxHealth:     initialNodeHealth,
 		currentHealth: initialNodeHealth,
 		capturedBy:    nil,
-		target:        nil,
+		target:        position{},
 		unitConfig:    uc,
 	}
 	return n
@@ -104,7 +104,7 @@ func (n *node) drawTargets(dc drawContext, gridPos gridPosition, drawBlueTargets
 		panic("unknown player for drawTargets")
 	}
 
-	if n.target != nil && ((n.player == bluePlayer && drawBlueTargets) || (n.player == redPlayer && drawRedTargets)) {
+	if !n.target.isZero() && ((n.player == bluePlayer && drawBlueTargets) || (n.player == redPlayer && drawRedTargets)) {
 		var nodePixelPos, _ = getPixelPosition(gridPos, center, dc.hexConfig)
 		vector.StrokeLine(
 			dc.screen,

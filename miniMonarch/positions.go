@@ -259,6 +259,10 @@ type position struct {
 	pixelPosition
 }
 
+func (pos position) isZero() bool {
+	return pos.layer == noLayer
+}
+
 func (pos position) log() []slog.Attr {
 	var a = []slog.Attr{}
 	var layer string
