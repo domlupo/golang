@@ -19,10 +19,12 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Write unit tests for missing automated tests for function getHexPixelPosition
-
-- Implement grid chunking to handle more units 
-  - Blocked on "Finalize if grid should be hex or square"
+- Determine if I should implement grid chunking or something else for game engine to support higher unit count.
+  - Investigate why collides with Node and collides with Unit are taking up so much CPU. 
+  - It is very intersting that collides with node is taking up similar CPU as collides with Units.
+  - I am not convinced grid chunking will improve collides with performance.
+  - The fix for collides with may be lower hanging fruit than grid chunking.
+  - Collides fix may be a big enough benefit that I can punt grid chunking for awhile.
   - Analyze target is too CPU inefficent
   - Collides with unit is too CPU inefficient
 
@@ -123,17 +125,24 @@ Is there a mobile equivalent for war/4x games?
   - If feedback is good, then I can work on adding more features.
   - If feedback is good, then I can work on polishing existing features.
 
+- Refactor for more idiomatic go code as I read learning Go. Already did var declare and switch statements.
+
 ---
 
 ### Future Checkpoints
 
-- Determine if existing ground missile bug where computer missiles got stuck on production node still exists
+- Invest in a visual debugger:
+  - First invest in: It can auto select/highlight a specific unit when it spawns
+  - Other much lower priority improvements that can be added when needed:
+    - It can can ping the pixel pos where the bug is occurring.
+    - It can ping differently based on layer.
+    - It can also do something like log unit and pause game so I can read logs?
 
-- Verify if Bresenham error is handle correctlly for Flux movements.
+- Write unit tests for missing automated tests for function getHexPixelPosition
 
-- Refactor for more idiomatic go code. Already did var declare and switch statements.
+- Verify if Bresenham error is handle correctly for Flux movements.
 
-- Deterministic seeds:
+- Deterministic seeds and deterministic game engine:
   - I can easily run simulations to analyze game balance
 
 - Determine if a node should be a type of unit rather than a separate struct
