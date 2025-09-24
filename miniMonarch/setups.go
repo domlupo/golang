@@ -9,7 +9,8 @@ const (
 	vertical
 	diagonal
 	complex
-	complexOffset
+	horizontalOffsetFull
+	verticalOffsetFull
 )
 
 func setupState(gameState state, s setup, hexConfig hexConfig, initialNodeHealth int) {
@@ -68,7 +69,7 @@ func setupState(gameState state, s setup, hexConfig hexConfig, initialNodeHealth
 		gameState.addNode(newNode(neutralPlayer, gridPosition{16, 21}, initialNodeHealth, hexConfig, infantryConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{21, 21}, initialNodeHealth, hexConfig, infantryConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{26, 21}, initialNodeHealth, hexConfig, infantryConfig))
-	case complexOffset:
+	case horizontalOffsetFull:
 		gameState.addNode(newNode(bluePlayer, gridPosition{1, 1}, initialNodeHealth, hexConfig, infantryConfig))
 		gameState.addNode(newNode(bluePlayer, gridPosition{6, 1}, initialNodeHealth, hexConfig, infantryConfig))
 		gameState.addNode(newNode(neutralPlayer, gridPosition{11, 1}, initialNodeHealth, hexConfig, infantryConfig))
@@ -103,6 +104,41 @@ func setupState(gameState state, s setup, hexConfig hexConfig, initialNodeHealth
 		gameState.addNode(newNode(neutralPlayer, gridPosition{16, 21}, initialNodeHealth, hexConfig, infantryConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{21, 21}, initialNodeHealth, hexConfig, infantryConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{26, 21}, initialNodeHealth, hexConfig, infantryConfig))
+	case verticalOffsetFull:
+		gameState.addNode(newNode(bluePlayer, gridPosition{1, 1}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{6, 1}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(neutralPlayer, gridPosition{11, 2}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(neutralPlayer, gridPosition{16, 2}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{21, 3}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{26, 3}, initialNodeHealth, hexConfig, infantryConfig))
+
+		gameState.addNode(newNode(bluePlayer, gridPosition{1, 6}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{6, 6}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(neutralPlayer, gridPosition{11, 7}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(neutralPlayer, gridPosition{16, 7}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{21, 8}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{26, 8}, initialNodeHealth, hexConfig, infantryConfig))
+
+		gameState.addNode(newNode(bluePlayer, gridPosition{1, 11}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{6, 11}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(neutralPlayer, gridPosition{11, 12}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(neutralPlayer, gridPosition{16, 12}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{21, 13}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{26, 13}, initialNodeHealth, hexConfig, infantryConfig))
+
+		gameState.addNode(newNode(bluePlayer, gridPosition{1, 16}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{6, 16}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(neutralPlayer, gridPosition{11, 17}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(neutralPlayer, gridPosition{16, 17}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{21, 18}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{26, 18}, initialNodeHealth, hexConfig, infantryConfig))
+
+		gameState.addNode(newNode(bluePlayer, gridPosition{1, 21}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{6, 21}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(neutralPlayer, gridPosition{11, 22}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(neutralPlayer, gridPosition{16, 22}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{21, 23}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(redPlayer, gridPosition{26, 23}, initialNodeHealth, hexConfig, infantryConfig))
 	default:
 		panic("setup does not exist")
 	}
