@@ -188,14 +188,11 @@ func setHexPositionContext(pc *[hexagonPostitionContextPixelCount]hexagonTriangl
 
 type direction int
 
-// typically, iterate CW north to northWest throughout codebase
 const (
 	noDirection = iota
-	north
 	northEast
 	east
 	southEast
-	south
 	southWest
 	west
 	northWest
@@ -207,68 +204,45 @@ type gridPosition struct {
 	y int
 }
 
-func (pos gridPosition) adjacent(d direction, maxX int, maxY int) *gridPosition {
-	var gridPos *gridPosition
+func (pos gridPosition) adjacent(d direction, xMax int, yMax int) (gridPosition, bool) {
+	x := pos.x
+	y := pos.y
 	switch d {
 	case noDirection:
 		panic("need a direction to find adjacent grid position")
-	case north:
-		if pos.y == 0 {
-			gridPos = nil
-		} else {
-			gridPos = &gridPosition{pos.x, pos.y - 1}
-		}
 	case northEast:
-		if pos.x == maxX || pos.y == 0 {
-			gridPos = nil
-		} else {
-			gridPos = &gridPosition{pos.x + 1, pos.y - 1}
+		y--
+		if pos.y%2 == 0 {
+			x++
 		}
 	case east:
-		if pos.x == maxX {
-			gridPos = nil
-		} else {
-			gridPos = &gridPosition{pos.x + 1, pos.y}
-		}
+		x++
 	case southEast:
-		if pos.x == maxX || pos.y == maxY {
-			gridPos = nil
-		} else {
-			gridPos = &gridPosition{pos.x + 1, pos.y + 1}
-		}
-	case south:
-		if pos.y == maxY {
-			gridPos = nil
-		} else {
-			gridPos = &gridPosition{pos.x, pos.y + 1}
-		}
-	case southWest:
-		if pos.x == 0 || pos.y == maxY {
-			gridPos = nil
-		} else {
-			gridPos = &gridPosition{pos.x - 1, pos.y + 1}
+		y++
+		if pos.y%2 == 0 {
+			x++
 		}
 	case west:
-		if pos.x == 0 {
-			gridPos = nil
-		} else {
-			gridPos = &gridPosition{pos.x - 1, pos.y}
+		x--
+	case southWest:
+		y++
+		if pos.y%2 == 1 {
+			x--
 		}
 	case northWest:
-		if pos.x == 0 || pos.y == 0 {
-			gridPos = nil
-		} else {
-			gridPos = &gridPosition{pos.x - 1, pos.y - 1}
+		y--
+		if pos.y%2 == 1 {
+			x--
 		}
+	default:
+		panic("No adjacent")
 	}
 
-	return gridPos
-}
-
-// readable high resolution position used for non grid items e.g. units
-type innerGridPosition struct {
-	x int
-	y int
+	if x < 0 || x > xMax || y < 0 || y > yMax {
+		return gridPosition{}, false
+	} else {
+		return gridPosition{x, y}, true
+	}
 }
 
 type layer int
@@ -314,14 +288,6 @@ func (pixelPos pixelPosition) log() []slog.Attr {
 	a = append(a, slog.Int("x", pixelPos.x))
 	a = append(a, slog.Int("y", pixelPos.y))
 	return a
-}
-
-func splitPixelPosition(pixelPos pixelPosition, gridSize int) (gridPosition, innerGridPosition) {
-	gridPosX := pixelPos.x / gridSize
-	gridPosY := pixelPos.y / gridSize
-	innerGridPosX := pixelPos.x % gridSize
-	innerGridPosY := pixelPos.y % gridSize
-	return gridPosition{gridPosX, gridPosY}, innerGridPosition{innerGridPosX, innerGridPosY}
 }
 
 type hexOffset int

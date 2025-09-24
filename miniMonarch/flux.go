@@ -1,6 +1,8 @@
 // A project specific concept for forces which contriubute to local pathfinding
 package main
 
+import "github.com/hajimehoshi/ebiten/v2/vector"
+
 type fluxVector struct {
 	magnitude int
 	direction int
@@ -25,16 +27,12 @@ func (f *flux) getFluxDelta(magnitude int) *gridPosition {
 	switch f.direction {
 	case noDirection:
 		return &gridPosition{0, 0}
-	case north:
-		return &gridPosition{0, -magnitude}
 	case northEast:
 		return &gridPosition{magnitude, -magnitude}
 	case east:
 		return &gridPosition{magnitude, 0}
 	case southEast:
 		return &gridPosition{magnitude, magnitude}
-	case south:
-		return &gridPosition{0, magnitude}
 	case southWest:
 		return &gridPosition{-magnitude, magnitude}
 	case west:
@@ -47,60 +45,48 @@ func (f *flux) getFluxDelta(magnitude int) *gridPosition {
 }
 
 func (f *flux) setFluxVector(s *state, xMax int, yMax int) {
-	northPos := f.gridPos.adjacent(north, xMax, yMax)
-	northEastPos := f.gridPos.adjacent(northEast, xMax, yMax)
-	eastPos := f.gridPos.adjacent(east, xMax, yMax)
-	southEastPos := f.gridPos.adjacent(southEast, xMax, yMax)
-	southPos := f.gridPos.adjacent(south, xMax, yMax)
-	southWestPos := f.gridPos.adjacent(southWest, xMax, yMax)
-	westPos := f.gridPos.adjacent(west, xMax, yMax)
-	northWestPos := f.gridPos.adjacent(northWest, xMax, yMax)
+	northEastPos, northEastPosOk := f.gridPos.adjacent(northEast, xMax, yMax)
+	eastPos, eastPosOk := f.gridPos.adjacent(east, xMax, yMax)
+	southEastPos, southEastPosOk := f.gridPos.adjacent(southEast, xMax, yMax)
+	southWestPos, southWestPosOk := f.gridPos.adjacent(southWest, xMax, yMax)
+	westPos, westPosOk := f.gridPos.adjacent(west, xMax, yMax)
+	northWestPos, northWestPosOk := f.gridPos.adjacent(northWest, xMax, yMax)
 
 	xFlux := 0
 	yFlux := 0
 
-	if northPos != nil {
-		yFlux = yFlux + s.fluxes[*northPos].staticUnits
+	if northEastPosOk {
+		xFlux = xFlux - s.fluxes[northEastPos].staticUnits
+		yFlux = yFlux + s.fluxes[northEastPos].staticUnits
 	}
-	if northEastPos != nil {
-		xFlux = xFlux - s.fluxes[*northEastPos].staticUnits
-		yFlux = yFlux + s.fluxes[*northEastPos].staticUnits
+	if eastPosOk {
+		xFlux = xFlux - s.fluxes[eastPos].staticUnits
 	}
-	if eastPos != nil {
-		xFlux = xFlux - s.fluxes[*eastPos].staticUnits
+	if southEastPosOk {
+		xFlux = xFlux - s.fluxes[southEastPos].staticUnits
+		yFlux = yFlux - s.fluxes[southEastPos].staticUnits
 	}
-	if southEastPos != nil {
-		xFlux = xFlux - s.fluxes[*southEastPos].staticUnits
-		yFlux = yFlux - s.fluxes[*southEastPos].staticUnits
+	if southWestPosOk {
+		xFlux = xFlux + s.fluxes[southWestPos].staticUnits
+		yFlux = yFlux - s.fluxes[southWestPos].staticUnits
 	}
-	if southPos != nil {
-		yFlux = yFlux - s.fluxes[*southPos].staticUnits
+	if westPosOk {
+		xFlux = xFlux + s.fluxes[westPos].staticUnits
 	}
-	if southWestPos != nil {
-		xFlux = xFlux + s.fluxes[*southWestPos].staticUnits
-		yFlux = yFlux - s.fluxes[*southWestPos].staticUnits
-	}
-	if westPos != nil {
-		xFlux = xFlux + s.fluxes[*westPos].staticUnits
-	}
-	if northWestPos != nil {
-		xFlux = xFlux + s.fluxes[*northWestPos].staticUnits
-		yFlux = yFlux + s.fluxes[*northWestPos].staticUnits
+	if northWestPosOk {
+		xFlux = xFlux + s.fluxes[northWestPos].staticUnits
+		yFlux = yFlux + s.fluxes[northWestPos].staticUnits
 	}
 
 	switch {
 	case xFlux == 0 && yFlux == 0:
 		f.fluxVector = fluxVector{0, noDirection}
-	case xFlux == 0 && yFlux < 0:
-		f.fluxVector = fluxVector{1, north}
 	case xFlux > 0 && yFlux < 0:
 		f.fluxVector = fluxVector{1, northEast}
 	case xFlux > 0 && yFlux == 0:
 		f.fluxVector = fluxVector{1, east}
 	case xFlux > 0 && yFlux > 0:
 		f.fluxVector = fluxVector{1, southEast}
-	case xFlux == 0 && yFlux > 0:
-		f.fluxVector = fluxVector{1, south}
 	case xFlux < 0 && yFlux > 0:
 		f.fluxVector = fluxVector{1, southWest}
 	case xFlux < 0 && yFlux == 0:
@@ -116,7 +102,6 @@ func (f *flux) refresh() {
 	f.direction = noDirection
 }
 
-/*
 func (f *flux) draw(dc drawContext, fluxPos gridPosition) {
 	if f.magnitude == 0 {
 		return
@@ -129,26 +114,22 @@ func (f *flux) draw(dc drawContext, fluxPos gridPosition) {
 	switch f.direction {
 	case noDirection:
 		panic("need a direction to draw flux")
-	case north:
-		yEnd -= (dc.gridSize / 2)
 	case northEast:
-		xEnd += (dc.gridSize / 2)
-		yEnd -= (dc.gridSize / 2)
+		xEnd += (dc.hexWidth / 2)
+		yEnd -= (dc.hexWidth / 2)
 	case east:
-		xEnd += (dc.gridSize / 2)
+		xEnd += (dc.hexWidth / 2)
 	case southEast:
-		xEnd += (dc.gridSize / 2)
-		yEnd += (dc.gridSize / 2)
-	case south:
-		yEnd += (dc.gridSize / 2)
+		xEnd += (dc.hexWidth / 2)
+		yEnd += (dc.hexWidth / 2)
 	case southWest:
-		xEnd -= (dc.gridSize / 2)
-		yEnd += (dc.gridSize / 2)
+		xEnd -= (dc.hexWidth / 2)
+		yEnd += (dc.hexWidth / 2)
 	case west:
-		xEnd -= (dc.gridSize / 2)
+		xEnd -= (dc.hexWidth / 2)
 	case northWest:
-		xEnd -= (dc.gridSize / 2)
-		yEnd -= (dc.gridSize / 2)
+		xEnd -= (dc.hexWidth / 2)
+		yEnd -= (dc.hexWidth / 2)
 	}
 
 	vector.StrokeLine(
@@ -171,4 +152,3 @@ func (f *flux) draw(dc drawContext, fluxPos gridPosition) {
 		false,
 	)
 }
-*/

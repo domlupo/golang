@@ -19,9 +19,7 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Refactor existing square grid logic to hexagon
-  - Write unit tests for missing automated tests for function getHexPixelPosition
-  - Convert flux
+- Write unit tests for missing automated tests for function getHexPixelPosition
 
 - Implement grid chunking to handle more units 
   - Blocked on "Finalize if grid should be hex or square"

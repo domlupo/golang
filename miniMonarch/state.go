@@ -21,9 +21,8 @@ func newState(hexConfig hexConfig) *state {
 		units:     make(map[position]*unit),
 	}
 
-	// TODO: may need to add 1 to both of these
-	for i := range s.windowWidth / s.hexWidth {
-		for j := range s.windowHeight / s.hexHeight {
+	for i := range s.windowWidth/s.hexWidth + 1 {
+		for j := range s.windowHeight/(s.hexHeight/4*3) + 1 {
 			gridPos := gridPosition{i, j}
 			flux := newFlux(gridPos)
 			s.fluxes[gridPos] = &flux
@@ -42,24 +41,20 @@ func (s *state) refresh() {
 		flux.refresh()
 	}
 
-	for _, u := range s.units {
+	for uPos, u := range s.units {
 		u.refresh()
 
-		/*
-			if !u.movedLastTurn {
-				gridPos, _ := getGridPos(uPos.pixelPosition, s.hexConfig)
-				s.fluxes[gridPos].staticUnits++
-			}
-		*/
+		if !u.movedLastTurn {
+			gridPos, _ := getGridPos(uPos.pixelPosition, s.hexConfig)
+			s.fluxes[gridPos].staticUnits++
+		}
 	}
 
-	/*
-		for _, flux := range s.fluxes {
-				xMax := s.windowWidth/s.gridSize - 1
-				yMax := s.windowHeight/s.gridSize - 1
-				flux.setFluxVector(s, xMax, yMax)
-		}
-	*/
+	for _, flux := range s.fluxes {
+		xMax := s.windowWidth / s.hexWidth
+		yMax := s.windowHeight / (s.hexHeight / 4 * 3)
+		flux.setFluxVector(s, xMax, yMax)
+	}
 }
 
 func (s *state) analyzeTargets() {
@@ -68,13 +63,11 @@ func (s *state) analyzeTargets() {
 			continue
 		}
 
-		/*
-			if u1.fluxTurnCount > u1.fluxTurnCountDelay {
-				gridPos, _ := getPixelPosition(uPos1.pixelPosition, s.gridSize)
-				fluxDelta := s.fluxes[gridPos].getFluxDelta(u1.fluxMagnitude)
-				u1.updateTarget(fluxTarget, &position{ground, pixelPosition{uPos1.x + fluxDelta.x, uPos1.y + fluxDelta.y}})
-			}
-		*/
+		if u1.fluxTurnCount > u1.fluxTurnCountDelay {
+			gridPos, _ := getGridPos(uPos1.pixelPosition, s.hexConfig)
+			fluxDelta := s.fluxes[gridPos].getFluxDelta(u1.fluxMagnitude)
+			u1.updateTarget(fluxTarget, &position{ground, pixelPosition{uPos1.x + fluxDelta.x, uPos1.y + fluxDelta.y}})
+		}
 
 		var reachesNode, isTargetNode = s.collidesWithNode(
 			uPos1,
@@ -567,10 +560,8 @@ func (s *state) draw(dc drawContext, drawBlueTargets bool, drawRedTargets, drawF
 		}
 	}
 	if drawFluxes {
-		/*
-			for fluxPos, flux := range s.fluxes {
-				flux.draw(dc, fluxPos)
-			}
-		*/
+		for fluxPos, flux := range s.fluxes {
+			flux.draw(dc, fluxPos)
+		}
 	}
 }
