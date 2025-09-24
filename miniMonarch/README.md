@@ -20,9 +20,15 @@ Is there a mobile equivalent for war/4x games?
 ### Next Checkpoints
 
 - Determine if I should implement grid chunking or something else for game engine to support higher unit count.
+  - This is a very hard design task. Some design questions below.
+    - How to implement code and structure it so I can swap methods, test different structure performance, etc 
+    - Am i finalizing doing 2 or 3 layers for units?
+    - This will probably take much longer than square -> hex implementation and more likely to fail during design.
   - Analyze target is too CPU inefficent
   - Collides with unit is too CPU inefficient
   - Both are taking up ~75% of total CPU cycle. Just the map iter is taking up 52.5% of total CPU cycle.
+  - Determine FPS target? How do I set fps as well?
+  - How does multiplayer networking code affect this?
 
 - Improve guided air missile
   - Fix bug where ground missile (not air missile) is not moving for computer player
