@@ -192,7 +192,7 @@ type unit struct {
 	movedThisTurn      bool
 	attackedLastTurn   bool
 	attackedThisTurn   bool
-	canReachTargetNode *node
+	canReachTargetNode node
 	selected           bool
 	fluxExpireCount    int
 }
@@ -219,7 +219,7 @@ func newUnit(p player, globalTarget position, uc unitConfig) unit {
 		movedThisTurn:      false,
 		attackedLastTurn:   false,
 		attackedThisTurn:   false,
-		canReachTargetNode: nil,
+		canReachTargetNode: node{},
 		selected:           false,
 		fluxExpireCount:    uc.fluxExpireMax,
 	}
@@ -240,7 +240,7 @@ func (u *unit) refresh() {
 	u.movedThisTurn = false
 	u.attackedLastTurn = u.attackedThisTurn
 	u.attackedThisTurn = false
-	u.canReachTargetNode = nil
+	u.canReachTargetNode = node{}
 
 	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "afterRefresh", "unit", u.log())
 }

@@ -69,13 +69,13 @@ func (s *state) analyzeTargets() {
 			u1.updateTarget(fluxTarget, position{ground, pixelPosition{uPos1.x + fluxDelta.x, uPos1.y + fluxDelta.y}})
 		}
 
-		var reachesNode, isTargetNode = s.collidesWithNode(
+		var node, isTargetNode, _ = s.collidesWithNode(
 			uPos1,
 			*u1,
 			u1.reach,
 			s.nodes)
 		if isTargetNode {
-			u1.canReachTargetNode = reachesNode
+			u1.canReachTargetNode = node
 		}
 
 		shortestDistance := math.MaxInt64
@@ -147,7 +147,7 @@ func (s *state) moveUnits() {
 			*u,
 			s.units)
 
-		var collidesWithNode, isTargetNode = s.collidesWithNode(
+		var _, isTargetNode, collidesWithNode = s.collidesWithNode(
 			newPos,
 			*u,
 			u.radius,
@@ -169,7 +169,7 @@ func (s *state) moveUnits() {
 				u.health = 0
 				s.units[uPos] = s.units[position{uPos.layer, pixelPosition{uPos.x, uPos.y}}]
 			}
-		} else if collidesWithNode != nil {
+		} else if collidesWithNode {
 			if isTargetNode {
 				unitsAtTargetNode++
 			} else {
@@ -202,9 +202,9 @@ func (s *state) moveUnits() {
 }
 
 // TODO: This does not handle a unit colliding with multiple nodes which will probably occur in the future.
-func (s *state) collidesWithNode(pos position, unit unit, unitCollisionRadius int, nodes map[gridPosition]*node) (*node, bool) {
+func (s *state) collidesWithNode(pos position, unit unit, unitCollisionRadius int, nodes map[gridPosition]*node) (node, bool, bool) {
 	if pos.layer == lowAltitude || pos.layer == highAltitude {
-		return nil, false
+		return node{}, false, false
 	}
 
 	var collidesWithTargetNode bool
@@ -243,11 +243,11 @@ func (s *state) collidesWithNode(pos position, unit unit, unitCollisionRadius in
 					collidesWithTargetNode = true
 				}
 			}
-			return n, collidesWithTargetNode
+			return *n, collidesWithTargetNode, true
 		}
 	}
 
-	return nil, collidesWithTargetNode
+	return node{}, collidesWithTargetNode, true
 }
 
 func (s *state) explode(pos position, blastRadius int, units map[position]*unit) {
@@ -394,15 +394,14 @@ func (s *state) attackNodes() {
 			continue
 		}
 
-		if u.canReachTargetNode != nil {
+		if !u.canReachTargetNode.isZero() {
 			attackedNodeThisTurnCount++
-			targetNode := u.canReachTargetNode
+			targetNode := s.nodes[u.canReachTargetNode.gridPos]
 			targetNode.currentHealth = max(targetNode.currentHealth-u.attack, 0)
 			u.attackedThisTurn = true
 			if targetNode.currentHealth == 0 {
-				targetNode.capturedBy = &u.player
+				targetNode.capturedBy = u.player
 			}
-			s.nodes[targetNode.gridPos] = targetNode
 		} else {
 			cannotReachNodeCount++
 		}
@@ -424,7 +423,7 @@ func (s *state) updateNodeOwnership() bool {
 
 	for nGridPos, n := range s.nodes {
 		if n.currentHealth == 0 {
-			newNode := newNode(*n.capturedBy, n.gridPos, n.maxHealth, s.hexConfig, n.unitConfig)
+			newNode := newNode(n.capturedBy, n.gridPos, n.maxHealth, s.hexConfig, n.unitConfig)
 			s.nodes[nGridPos] = &newNode
 			nodeOwnershipChanged = true
 		}

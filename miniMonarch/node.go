@@ -23,7 +23,7 @@ type node struct {
 	selected      bool
 	maxHealth     int
 	currentHealth int
-	capturedBy    *player
+	capturedBy    player
 	target        position
 	unitConfig    unitConfig
 }
@@ -36,11 +36,16 @@ func newNode(p player, gridPos gridPosition, initialNodeHealth int, hexConfig he
 		selected:      false,
 		maxHealth:     initialNodeHealth,
 		currentHealth: initialNodeHealth,
-		capturedBy:    nil,
+		capturedBy:    noPlayer,
 		target:        position{},
 		unitConfig:    uc,
 	}
 	return n
+}
+
+func (n node) isZero() bool {
+	// TODO: fix implementation
+	return n.player == noPlayer && n.gridPos.x == 0 && n.gridPos.y == 0 && n.target.layer == noLayer
 }
 
 func (n *node) drawNode(dc drawContext, gridPos gridPosition) {
