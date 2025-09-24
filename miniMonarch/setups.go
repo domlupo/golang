@@ -13,7 +13,7 @@ const (
 	verticalOffsetFull
 )
 
-func setupState(gameState state, s setup, hexConfig hexConfig, initialNodeHealth int) {
+func setupState(gameState state, s setup, hexConfig *hexConfig, initialNodeHealth int) {
 	switch s {
 	case horizontal:
 		gameState.addNode(newNode(bluePlayer, gridPosition{1, 23}, initialNodeHealth, hexConfig, infantryConfig))

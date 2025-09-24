@@ -751,7 +751,7 @@ func TestGetGridPosition(t *testing.T) {
 			sWantedOk)
 
 		t.Run(testname, func(t *testing.T) {
-			pos, ok := getGridPos(tt.pixelPos, hc)
+			pos, ok := getGridPos(tt.pixelPos, &hc)
 			if ok != tt.wantedOk {
 				t.Errorf("Wanted pixel position to %s", sWantedOk)
 			}

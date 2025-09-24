@@ -28,7 +28,7 @@ type node struct {
 	unitConfig    unitConfig
 }
 
-func newNode(p player, gridPos gridPosition, initialNodeHealth int, hexConfig hexConfig, uc unitConfig) node {
+func newNode(p player, gridPos gridPosition, initialNodeHealth int, hexConfig *hexConfig, uc unitConfig) node {
 	n := node{
 		player:        p,
 		gridPos:       gridPos,
@@ -61,7 +61,7 @@ func (n *node) drawNode(dc drawContext, gridPos gridPosition) {
 		panic("unknown player cannot drawNode")
 	}
 
-	var nodePixelPos, _ = getPixelPosition(gridPos, center, dc.hexConfig)
+	var nodePixelPos, _ = getPixelPosition(gridPos, center, &dc.hexConfig)
 
 	vector.DrawFilledCircle(
 		dc.screen,
@@ -110,7 +110,7 @@ func (n *node) drawTargets(dc drawContext, gridPos gridPosition, drawBlueTargets
 	}
 
 	if !n.target.isZero() && ((n.player == bluePlayer && drawBlueTargets) || (n.player == redPlayer && drawRedTargets)) {
-		var nodePixelPos, _ = getPixelPosition(gridPos, center, dc.hexConfig)
+		var nodePixelPos, _ = getPixelPosition(gridPos, center, &dc.hexConfig)
 		vector.StrokeLine(
 			dc.screen,
 			float32(nodePixelPos.x)*dc.windowMultiplier,

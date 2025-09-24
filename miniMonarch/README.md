@@ -20,8 +20,7 @@ Is there a mobile equivalent for war/4x games?
 ### Next Checkpoints
 
 - Determine if I should implement grid chunking or something else for game engine to support higher unit count.
-  - Investigate why collides with Node and collides with Unit are taking up so much CPU. 
-  - It is very intersting that collides with node is taking up similar CPU as collides with Units.
+  - Investigate collides with Unit is taking up so much CPU. 
   - I am not convinced grid chunking will improve collides with performance.
   - The fix for collides with may be lower hanging fruit than grid chunking.
   - Collides fix may be a big enough benefit that I can punt grid chunking for awhile.

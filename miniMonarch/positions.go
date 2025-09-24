@@ -307,7 +307,7 @@ const (
 )
 
 // TODO: write unit tests, did verify manually it worked with a few values
-func getPixelPosition(gridPos gridPosition, offset hexOffset, hc hexConfig) (pixelPosition, bool) {
+func getPixelPosition(gridPos gridPosition, offset hexOffset, hc *hexConfig) (pixelPosition, bool) {
 	xPadding := (hc.windowWidth % hc.hexWidth) / 2
 	x := xPadding + hc.hexWidth*gridPos.x
 	if gridPos.y%2 == 1 {
@@ -343,7 +343,7 @@ func getPixelPosition(gridPos gridPosition, offset hexOffset, hc hexConfig) (pix
 	}
 }
 
-func getGridPos(pixelPos pixelPosition, hc hexConfig) (gridPosition, bool) {
+func getGridPos(pixelPos pixelPosition, hc *hexConfig) (gridPosition, bool) {
 	if pixelPos.x < 0 || pixelPos.x >= hc.windowWidth || pixelPos.y < 0 || pixelPos.y >= hc.windowHeight {
 		return gridPosition{}, false
 	}

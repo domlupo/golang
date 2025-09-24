@@ -7,13 +7,13 @@ import (
 
 // not enforced but must be a singleton
 type state struct {
-	hexConfig
+	*hexConfig
 	nodes  map[gridPosition]*node
 	fluxes map[gridPosition]*flux
 	units  map[position]*unit
 }
 
-func newState(hexConfig hexConfig) *state {
+func newState(hexConfig *hexConfig) *state {
 	s := state{
 		hexConfig: hexConfig,
 		nodes:     make(map[gridPosition]*node),
@@ -220,7 +220,7 @@ func (s *state) collidesWithNode(pos position, unit unit, unitCollisionRadius in
 			continue
 		}
 
-		nPixelPos, _ := getPixelPosition(nPos, center, s.hexConfig)
+		nPixelPos, _ := wrapGetPixelPosition(nPos, center, s.hexConfig)
 
 		x2 := nPixelPos.x
 		y2 := nPixelPos.y
@@ -231,23 +231,22 @@ func (s *state) collidesWithNode(pos position, unit unit, unitCollisionRadius in
 		rSum := r1 + r2
 
 		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
+			var globalTargetGridPos gridPosition
+			var globalTargetGridPosOk bool
 			if !unit.globalTarget.isZero() {
-				x1 := unit.globalTarget.x
-				y1 := unit.globalTarget.y
-				r1 := 1 // TODO: why is this 1? Is this a bug?
-
-				xDelta := x2 - x1
-				yDelta := y2 - y1
-				rSum := r1 + r2
-				if (xDelta*xDelta)+(yDelta*yDelta) <= (rSum * rSum) {
-					collidesWithTargetNode = true
-				}
+				globalTargetGridPos, globalTargetGridPosOk = getGridPos(unit.globalTarget.pixelPosition, s.hexConfig)
 			}
+			collidesWithTargetNode := globalTargetGridPosOk && globalTargetGridPos.x == nPos.x && globalTargetGridPos.y == nPos.y
 			return *n, collidesWithTargetNode, true
 		}
 	}
 
-	return node{}, collidesWithTargetNode, true
+	return node{}, collidesWithTargetNode, false
+}
+
+func wrapGetPixelPosition(pos gridPosition, dir direction, hc *hexConfig) (pixelPosition, bool) {
+	var p, b = getPixelPosition(pos, center, hc)
+	return p, b
 }
 
 func (s *state) explode(pos position, blastRadius int, units map[position]*unit) {
