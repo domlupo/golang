@@ -20,12 +20,9 @@ Is there a mobile equivalent for war/4x games?
 ### Next Checkpoints
 
 - Determine if I should implement grid chunking or something else for game engine to support higher unit count.
-  - Investigate collides with Unit is taking up so much CPU. 
-  - I am not convinced grid chunking will improve collides with performance.
-  - The fix for collides with may be lower hanging fruit than grid chunking.
-  - Collides fix may be a big enough benefit that I can punt grid chunking for awhile.
   - Analyze target is too CPU inefficent
   - Collides with unit is too CPU inefficient
+  - Both are taking up ~75% of total CPU cycle. Just the map iter is taking up 52.5% of total CPU cycle.
 
 - Improve guided air missile
   - Fix bug where ground missile (not air missile) is not moving for computer player

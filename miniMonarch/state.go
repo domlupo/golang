@@ -142,7 +142,7 @@ func (s *state) moveUnits() {
 
 		collidesWithBorder := s.collidesWithBorder(newPos, u.radius)
 
-		var collidesWithUnit = s.collidesWithUnit(
+		var collidedUnitPos, collidesWithUnit = s.collidesWithUnit(
 			newPos,
 			*u,
 			s.units)
@@ -153,19 +153,19 @@ func (s *state) moveUnits() {
 			u.radius,
 			s.nodes)
 
-		if collidesWithBorder && collidesWithUnit != nil {
+		if collidesWithBorder && collidesWithUnit {
 			// TODO: Low priority but eventually need to handle air collision here.
 			// Most likely can refactor to avoid updating this code directly.
 			unitsBorderCollideCount++
 			unitsCollideCount++
 		} else if collidesWithBorder {
 			unitsBorderCollideCount++
-		} else if collidesWithUnit != nil {
+		} else if collidesWithUnit {
 			unitsCollideCount++
 			if uPos.layer == lowAltitude || uPos.layer == highAltitude {
-				otherUnit := s.units[*collidesWithUnit]
+				otherUnit := s.units[collidedUnitPos]
 				otherUnit.health = 0
-				s.units[*collidesWithUnit] = s.units[position{collidesWithUnit.layer, pixelPosition{collidesWithUnit.x, collidesWithUnit.y}}]
+				s.units[collidedUnitPos] = s.units[position{collidedUnitPos.layer, pixelPosition{collidedUnitPos.x, collidedUnitPos.y}}]
 				u.health = 0
 				s.units[uPos] = s.units[position{uPos.layer, pixelPosition{uPos.x, uPos.y}}]
 			}
@@ -273,7 +273,7 @@ func (s *state) explode(pos position, blastRadius int, units map[position]*unit)
 	}
 }
 
-func (s *state) collidesWithUnit(pos position, unit unit, units map[position]*unit) *position {
+func (s *state) collidesWithUnit(pos position, unit unit, units map[position]*unit) (position, bool) {
 	x1 := pos.x + unit.radius
 	y1 := pos.y + unit.radius
 	r1 := unit.radius
@@ -296,11 +296,11 @@ func (s *state) collidesWithUnit(pos position, unit unit, units map[position]*un
 		yDelta := y2 - y1
 		rSum := r1 + r2
 		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
-			return &otherPos
+			return otherPos, true
 		}
 	}
 
-	return nil
+	return position{}, false
 }
 
 func (s *state) processTerminalPositions() {
@@ -514,10 +514,10 @@ func (s *state) produceUnits() {
 			continue
 		}
 
-		// TODO: determine how to produce units during collision
+		// TODO: determine behavior for producing units during collision
 		pixelPos, _ := getPixelPosition(nPos, center, s.hexConfig)
 		uPos := position{n.unitConfig.produceLayer, pixelPos}
-		if s.collidesWithUnit(uPos, newUnit(n.player, n.target, n.unitConfig), s.units) == nil {
+		if _, ok := s.collidesWithUnit(uPos, newUnit(n.player, n.target, n.unitConfig), s.units); !ok {
 			newUnit := newUnit(n.player, n.target, n.unitConfig)
 			s.units[uPos] = &newUnit
 		}
