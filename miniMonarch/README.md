@@ -66,6 +66,10 @@ Is there a mobile equivalent for war/4x games?
   - How units react to flux can depend on unit type or be the same for all units.
   - How units contribute to flux can depend on unit type or be the same for all units.
   - Determine better flux structure and contracts.
+  - Does a flat top hexagon grid perform better for flux? If yes, is it worth it for potentially
+    worse asethetics? I think flux can most likely be designed around this but the monitor display
+    limitation for wide resolution suggests left vs right pathing is more likely where as phone 
+    vertical display suggests top vs bottom pathing is more likely.
 
 - Determine path finding goals for individual units to decide on path finding algorithm:
   - Unit -> player experience -> path finding algorithm
