@@ -7,6 +7,7 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"runtime"
 	"runtime/pprof"
 	"time"
 
@@ -42,8 +43,10 @@ type Game struct {
 	drawRedTargets           bool
 	drawDebugGrid            bool
 	slowTick                 bool
-	profilerOn               bool
-	profilerFile             *os.File
+	cpuProfilerOn            bool
+	memoryProfilerOn         bool
+	cpuProfilerFile          *os.File
+	memoryProfilerFile       *os.File
 	initialSelectedX         float32
 	initialSelectedY         float32
 	currentSelectedX         float32
@@ -74,7 +77,8 @@ func newGame() Game {
 		blueComputerActive:      true,
 		redComputerActive:       true,
 		hotRestart:              true,
-		profilerOn:              false,
+		cpuProfilerOn:           false,
+		memoryProfilerOn:        false,
 		developerToggles:        make(map[string]*toggle),
 		developerToggleCooldown: 300 * time.Millisecond,
 		initialNodeHealth:       100,
@@ -281,25 +285,47 @@ func main() {
 
 	logger = newLogger(g.loggerConfig)
 
-	g.developerToggles["profile"] = newToggle(
+	g.developerToggles["cpuProfile"] = newToggle(
 		ebiten.KeyC,
 		func() {
-			if g.profilerOn {
-				logger.log(infoLevel, alwaysLogType, "Stopping profiler.")
+			if g.cpuProfilerOn {
+				logger.log(infoLevel, alwaysLogType, "Stopping CPU profiler.")
 				pprof.StopCPUProfile()
-				g.profilerFile.Close()
+				g.cpuProfilerFile.Close()
 			} else {
-				logger.log(infoLevel, alwaysLogType, "Starting profiler.")
+				logger.log(infoLevel, alwaysLogType, "Starting CPU profiler.")
 				f, err := os.Create("cpu.prof")
 				if err != nil {
 					logger.log(errorLevel, alwaysLogType, "Could not create CPU profiler file.")
 				}
-				g.profilerFile = f
+				g.cpuProfilerFile = f
 				if err := pprof.StartCPUProfile(f); err != nil {
 					logger.log(errorLevel, alwaysLogType, "Could not start CPU profiler.")
 				}
 			}
-			g.profilerOn = !g.profilerOn
+			g.cpuProfilerOn = !g.cpuProfilerOn
+		},
+		g.developerToggleCooldown)
+	g.developerToggles["memoryProfile"] = newToggle(
+		ebiten.KeyV,
+		func() {
+			if g.memoryProfilerOn {
+				logger.log(infoLevel, alwaysLogType, "Stopping memory profiler.")
+
+				if err := pprof.WriteHeapProfile(g.memoryProfilerFile); err != nil {
+					logger.log(errorLevel, alwaysLogType, "Could not write heap profile.")
+				}
+				g.memoryProfilerFile.Close()
+			} else {
+				logger.log(infoLevel, alwaysLogType, "Starting memory profiler.")
+				f, err := os.Create("mem.prof")
+				if err != nil {
+					logger.log(errorLevel, alwaysLogType, "Could not create memory profiler file.")
+				}
+				g.memoryProfilerFile = f
+				runtime.GC()
+			}
+			g.memoryProfilerOn = !g.memoryProfilerOn
 		},
 		g.developerToggleCooldown)
 	g.developerToggles["pause"] = newToggle(
@@ -359,8 +385,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if g.profilerOn {
+	if g.cpuProfilerOn {
 		pprof.StopCPUProfile()
-		g.profilerFile.Close()
+		g.cpuProfilerFile.Close()
+	}
+	if g.memoryProfilerOn {
+		if err := pprof.WriteHeapProfile(g.memoryProfilerFile); err != nil {
+			logger.log(errorLevel, alwaysLogType, "Could not write heap profile.")
+		}
+		g.memoryProfilerFile.Close()
 	}
 }

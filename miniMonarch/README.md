@@ -232,6 +232,8 @@ Is there a mobile equivalent for war/4x games?
 
 ```go tool pprof -http=:6060 cpu.prof```
 
+```go tool pprof -http=:6060 mem.prof```
+
 ---
 
 ## Closed Decisions

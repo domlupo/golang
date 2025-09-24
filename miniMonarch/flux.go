@@ -23,22 +23,22 @@ func newFlux(gridPos gridPosition) flux {
 	return f
 }
 
-func (f *flux) getFluxDelta(magnitude int) *gridPosition {
+func (f *flux) getFluxDelta(magnitude int) gridPosition {
 	switch f.direction {
 	case noDirection:
-		return &gridPosition{0, 0}
+		return gridPosition{0, 0}
 	case northEast:
-		return &gridPosition{magnitude, -magnitude}
+		return gridPosition{magnitude, -magnitude}
 	case east:
-		return &gridPosition{magnitude, 0}
+		return gridPosition{magnitude, 0}
 	case southEast:
-		return &gridPosition{magnitude, magnitude}
+		return gridPosition{magnitude, magnitude}
 	case southWest:
-		return &gridPosition{-magnitude, magnitude}
+		return gridPosition{-magnitude, magnitude}
 	case west:
-		return &gridPosition{-magnitude, 0}
+		return gridPosition{-magnitude, 0}
 	case northWest:
-		return &gridPosition{-magnitude, -magnitude}
+		return gridPosition{-magnitude, -magnitude}
 	default:
 		panic("unknown direction for getFluxDelta")
 	}
