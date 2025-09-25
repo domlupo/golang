@@ -45,6 +45,7 @@ type Game struct {
 	slowTick                 bool
 	cpuProfilerOn            bool
 	memoryProfilerOn         bool
+	produceUnits             bool
 	cpuProfilerFile          *os.File
 	memoryProfilerFile       *os.File
 	initialSelectedX         float32
@@ -76,6 +77,7 @@ func newGame() Game {
 		currentSelectedY:        float32(-1.0),
 		blueComputerActive:      true,
 		redComputerActive:       true,
+		produceUnits:            false,
 		hotRestart:              true,
 		cpuProfilerOn:           false,
 		memoryProfilerOn:        false,
@@ -130,7 +132,7 @@ func (g *Game) Update() error {
 
 		if g.produceWait < g.produceInterval {
 			g.produceWait = g.produceWait + g.currentTime.Sub(g.priorTime)
-		} else {
+		} else if g.produceUnits {
 			g.produceWait = 0
 			g.gameState.produceUnits()
 		}
