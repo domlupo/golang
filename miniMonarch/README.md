@@ -19,16 +19,17 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Determine if I should implement grid chunking or something else for game engine to support higher unit count.
-  - This is a very hard design task. Some design questions below.
-    - How to implement code and structure it so I can swap methods, test different structure performance, etc 
-    - Am i finalizing doing 2 or 3 layers for units?
-    - This will probably take much longer than square -> hex implementation and more likely to fail during design.
-  - Analyze target is too CPU inefficent
-  - Collides with unit is too CPU inefficient
-  - Both are taking up ~75% of total CPU cycle. Just the map iter is taking up 52.5% of total CPU cycle.
-  - Determine FPS target? How do I set fps as well?
-  - How does multiplayer networking code affect this?
+- Finish spatial partition design and implementation
+  - Convert nodes to drawn hexagons with hexagonal collision before sta
+  - Finish design
+  - Finish implementation
+  - Did I reach outcomes:
+    - Did analyze target CPU usage become acceptable
+    - Did collides with unit CPU usage become acceptable
+    - What FPS can I support?
+    - What local path finding algorithms can I utilize now?
+    - How does multiplayer networking code affect this?
+    - How does state saved into file affect this?
 
 - Improve guided air missile
   - Fix bug where ground missile (not air missile) is not moving for computer player
@@ -136,6 +137,12 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Future Checkpoints
+
+- Do I need to think about layers more?
+  - Right now I think this decision can only be known far in the future and it should be 
+    much easier to refactor three layer back to two layer.
+  - two (groun vs air), three (ground, low altitude, high altitude) have major game differences
+  - Should anything be on multiple layers e.g. high altitude mountains technically are on all 3.
 
 - Invest in a visual debugger:
   - First invest in: It can auto select/highlight a specific unit when it spawns
@@ -294,6 +301,14 @@ Is there a mobile equivalent for war/4x games?
 8. Hexagons are left side side inclusive, right side exclusive. 
   - This was chosen mostly arbitrarily. Probably simplifies some code.
   - The remaining 4 sides are sloped which determines tie breaks nicely.
+9. Avoid quadtree optimization for as long as possible.
+  - Seems more complex and error prone than other methods
+  - Dynamic performance seems harder to tune and profile
+  - Can't reuse existing hexagon logic.
+10. Avoid GPU optimization for as long as possible.
+  - I don't have any experience with this type of optimization.
+  - I assume it may be platform dependent e.g. phone GPU is less powerful than computer integrated GPU
+     is less powerful than computer dedicated GPU.
 
 ---
 
@@ -364,6 +379,72 @@ Is there a mobile equivalent for war/4x games?
 
 ---
 
+###  Spatial Partitioning Brainstorm
+
+In general:
+- Start simple, refactor and optimie later. I will most likely need to make significant changes 
+  in the future no matter what I build. Get a frame work in place that unblocks other tasks like 
+  local path finding and adding more units types.
+- This may unblock performing more CPU intensive local path finding (e.g. theta*) for
+  single hexagon of unit or local 7 hexagons. This might work much better than flux.
+  Also, the unit can calculate for additional hexagons or add more more adjacent 
+  hexagons as needed.
+
+- High level Implementation:
+  - Units store next and prior pointer. Hexagon should also store next and prior or maybe call it something else.
+  - Use double linked list that store pointers to relate units and next units.
+  - Not sure best way to break up player and layer. Probably best to start with a map
+    with a key of (player + layer) and see if performance optimization is needed.
+  - Use existing hexagons as grid
+    - coupling seems fine since hexagons are so fundemental to game.
+    - most likely there is a way to reuse hexagon collision logic for units changing hexagons 
+    - writing save file is easier if I reuse hexagon
+    - hexagon has a soft limit of <20 or <=20 pixel for units. Seems fine for now and can be worked around.
+
+- Low level implementation:
+  - start per unit heap allocation during new unit production. 
+  - start with using getGridPos on every turn to figure out hexagon. There many ways to optimize this in future.
+
+- Careful of issues:
+  - Will probably need to support checking a lot of hexagons for certain scenarios:
+    - A large explosion will have collision > one hexagon. This is something I am concerned about
+      because this will probablhy be the most performance sensitive computation since players
+      will want to most likely target areas with alot of units.
+    - A unit with large vision e.g. guided air missile will probably need to check multiple hexagons.
+    - If I implement in the future units which capture a city atttempt to capture the next closest city
+      to themself rather than to the city. It might be more on theme that they all attack the same city
+      which is an easier calculation? 
+  - For closest unit I can either check optimially by iterating through more distance hexagons or brute
+    force check all hexagons.
+  - On unit kill need to handle its double linked list pointers
+  - Need to sync or verify or handle units switching layers. 
+
+- Think through more before implementing:
+  - Think through issues or future work for units larger than one hexagon?
+  - Think through issues or future work for units moving fast?
+  - Can I ignore the need of units moving more than one pixel for now?
+  - how to handle layers better?
+  - are units categorized by player?
+  - double linked list means I am iterating through heap memory... this seems fine.
+  - Are these optimiations I can perform when units are not moving?
+  - Do I remove node struct and make a new hexagon struct?
+  - Is there an easy optimization to avoid double checking the same collision?
+    - targets avoid this by only iterating through opposing units.
+    - Not sure if I can avoid this for collisions easily.
+    - This is also referred to as tagging, object sorting or one way check instead of two way check.
+
+- Notes to organize:
+  - if "city" nodes become dynamically added in the future, I probably should preallocate them all at start of game.
+  - "city" nodes being destroyed seems simple enough to handle in future.
+  - allow easy layer switch
+  - nodes switching ownership should not use newNode anymore.
+  - knowing how many units of a certain player are in a given hexagon 
+    might be good for guided missile targets. Can easily increment and 
+    decrement a counter on node rather than iterate through heap 
+    allocations. Can calculate unit delta e.g. opponenet has 10 units, I have 2, so missile is +8 overall.
+
+---
+
 ### Multi-agent and Local Pathfinding Brainstorm
 
 - Units with different count and layers can employ different path finding algorithms.
@@ -395,6 +476,8 @@ Is there a mobile equivalent for war/4x games?
   - Can use nav meshes to optimize or simplify searches
   - Can use window searches aka use smaller searches to lower CPU use 
   - Rapidly-exploring random tree can create randomized pathing 
+
+---
 
 ### Unit List Brainstorm
 

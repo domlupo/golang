@@ -77,7 +77,7 @@ func newGame() Game {
 		currentSelectedY:        float32(-1.0),
 		blueComputerActive:      true,
 		redComputerActive:       true,
-		produceUnits:            false,
+		produceUnits:            true,
 		hotRestart:              true,
 		cpuProfilerOn:           false,
 		memoryProfilerOn:        false,
