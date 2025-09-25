@@ -8,8 +8,4 @@ launch a new timer once break is complete.
 
 ## TODO
 
-- Add ability for the timer to read the log file to continue the 
-  session. e.g. I just stopped timer at 50 mins so next time I open
-  the default time is set to 50 and I can opt into continue to log in
-  the same file.
 - Add optional terminal input to set time rather than force mouse wheel.

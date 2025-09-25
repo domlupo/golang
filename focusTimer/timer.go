@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"image/color"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -26,6 +29,7 @@ type Game struct {
 	doneColor                   color.RGBA
 	logFileName                 string
 	timerStarted                bool
+	intDurationStartReadFromLog int
 	intDurationStart            int
 	intDurationCount            int
 	duration                    time.Duration
@@ -72,9 +76,11 @@ func (g *Game) Update() error {
 		if ebiten.IsMouseButtonPressed(ebiten.MouseButton0) ||
 			ebiten.IsMouseButtonPressed(ebiten.MouseButton1) ||
 			ebiten.IsMouseButtonPressed(ebiten.MouseButton2) {
-			g.file, g.err = os.Create(g.logFileName)
-			if g.err != nil {
-				log.Fatal(g.err)
+			if g.file == nil || g.intDurationStartReadFromLog != g.intDurationStart {
+				g.file, g.err = os.Create(g.logFileName)
+				if g.err != nil {
+					log.Fatal(g.err)
+				}
 			}
 			g.timerStarted = true
 			g.startTime = time.Now()
@@ -95,7 +101,7 @@ func (g *Game) Update() error {
 		if g.intProgressPercent != int(g.progressPercent) {
 			g.intProgressPercent = int(g.progressPercent)
 			_, g.err = g.file.WriteString(fmt.Sprintf(
-				"%*d%% %s %*d minutes remaining \n",
+				"%*d%% %s %*d minutes remaining\n",
 				g.logPercentPadding,
 				g.intProgressPercent,
 				g.currentTime.Format(time.RFC3339),
@@ -113,7 +119,7 @@ func (g *Game) Update() error {
 					g.intDurationCount = g.intDurationCount - 1
 					if g.intDurationStart > g.logMinsElapsedThresholdMins {
 						_, g.err = g.file.WriteString(fmt.Sprintf(
-							"%*.1f%% %s %*d minutes remaining \n",
+							"%*.1f%% %s %*d minutes remaining\n",
 							g.logPercentPadding,
 							g.progressPercent,
 							g.currentTime.Format(time.RFC3339),
@@ -126,6 +132,11 @@ func (g *Game) Update() error {
 			}
 		}()
 	}
+
+	if g.intProgressPercent == maxPercentage {
+		g.file.Close()
+	}
+
 	return nil
 }
 
@@ -172,6 +183,32 @@ func main() {
 	}
 
 	ebiten.SetWindowSize(g.windowWidth*g.windowMultiplier, g.windowHeight*g.windowMultiplier)
+
+	file, fileErr := os.OpenFile(g.logFileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if fileErr == nil {
+		scanner := bufio.NewReader(file)
+		for {
+			textLine, err := scanner.ReadString('\n')
+			if err != nil {
+				break
+			}
+			text := strings.Split(textLine, " ")
+			for i, v := range text {
+				if v == "minutes" {
+					loggedMins, err := strconv.Atoi(text[i-1])
+					if err != nil {
+						break
+					}
+					g.intDurationStartReadFromLog = loggedMins
+				}
+			}
+		}
+	}
+
+	if g.intDurationStartReadFromLog > 0 {
+		g.intDurationStart = g.intDurationStartReadFromLog
+		g.file = file
+	}
 
 	if err := ebiten.RunGame(&g); err != nil {
 		log.Fatal(err)
