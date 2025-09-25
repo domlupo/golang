@@ -221,7 +221,7 @@ func (s *state) collidesWithNode(pos position, unit unit, unitCollisionRadius in
 			continue
 		}
 
-		nPixelPos, _ := wrapGetPixelPosition(nPos, center, s.hexConfig)
+		nPixelPos, _ := getPixelPosition(nPos, center, s.hexConfig)
 
 		x2 := nPixelPos.x
 		y2 := nPixelPos.y
@@ -243,11 +243,6 @@ func (s *state) collidesWithNode(pos position, unit unit, unitCollisionRadius in
 	}
 
 	return node{}, collidesWithTargetNode, false
-}
-
-func wrapGetPixelPosition(pos gridPosition, dir direction, hc *hexConfig) (pixelPosition, bool) {
-	var p, b = getPixelPosition(pos, center, hc)
-	return p, b
 }
 
 func (s *state) explode(pos position, blastRadius int, units map[position]*unit) {

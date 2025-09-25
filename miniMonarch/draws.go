@@ -39,15 +39,20 @@ type drawContext struct {
 	redPlayerNodeColor            color.RGBA
 	redPlayerUnitColor            color.RGBA
 	neutralNodeColor              color.RGBA
+	drawTriangleDefaultImage      *ebiten.Image
 }
 
 func newDrawContext() *drawContext {
+	// TODO: check if this should use a subimage if final game uses draw triangle.
+	// Not investigating now since draw triangle may not be used in final game.
+	drawTriangleDefaultImage := ebiten.NewImage(1, 1)
+	drawTriangleDefaultImage.Fill(color.White)
 	highlightColor := color.RGBA{70, 255, 0, 200}
 	dc := drawContext{
 		screen:           nil,
 		windowMultiplier: 2.5,
-		hexConfig:        newHexConfig(1280, 720),
 		// aspect ratio config (16:9 aspect ratio)
+		hexConfig:                     newHexConfig(1280, 720),
 		debugGridOffset:               0,
 		debugGridWidth:                1,
 		debugGridIndexCount:           32,
@@ -68,6 +73,7 @@ func newDrawContext() *drawContext {
 		redPlayerNodeColor:            color.RGBA{255, 0, 0, 100},
 		redPlayerUnitColor:            color.RGBA{255, 0, 0, 100},
 		neutralNodeColor:              color.RGBA{100, 60, 100, 200},
+		drawTriangleDefaultImage:      drawTriangleDefaultImage,
 	}
 	return &dc
 }

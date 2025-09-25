@@ -20,7 +20,6 @@ Is there a mobile equivalent for war/4x games?
 ### Next Checkpoints
 
 - Finish spatial partition design and implementation
-  - Convert nodes to drawn hexagons with hexagonal collision before sta
   - Finish design
   - Finish implementation
   - Did I reach outcomes:
@@ -133,6 +132,12 @@ Is there a mobile equivalent for war/4x games?
   - If feedback is good, then I can work on polishing existing features.
 
 - Refactor for more idiomatic go code as I read learning Go. Already did var declare and switch statements.
+
+- Determine if I need to implement separating axis theorem for collision other than (circle <-> circle)
+  - Right now node collision is hacky. It is just a circle that is smaller than the hexagon.
+  - Unpassable terrain e.g. water, high altitude mountains will probably require this for a* pathing.
+  - Nodes are hexagon. Determine if SAT is the simplest and most performant collision check for hexagons.
+  - Units like tank may need represented as a square. 
 
 ---
 

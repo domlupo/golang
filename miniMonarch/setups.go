@@ -8,9 +8,9 @@ const (
 	horizontalMissile
 	vertical
 	diagonal
-	rightVsLeft
-	rightVsLeftHorizontalOffset
-	rightVsLeftVerticalOffset
+	leftVsRight
+	leftVsRightHorizontalOffset
+	leftVsRightVerticalOffset
 	topVsBottom
 	topVsBottomHorizontalOffset
 )
@@ -29,7 +29,7 @@ func setupState(gameState state, s setup, hexConfig *hexConfig, initialNodeHealt
 	case diagonal:
 		gameState.addNode(newNode(bluePlayer, gridPosition{1, 1}, initialNodeHealth, hexConfig, infantryConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{5, 5}, initialNodeHealth, hexConfig, infantryConfig))
-	case rightVsLeft:
+	case leftVsRight:
 		gameState.addNode(newNode(bluePlayer, gridPosition{1, 1}, initialNodeHealth, hexConfig, infantryConfig))
 		gameState.addNode(newNode(bluePlayer, gridPosition{6, 1}, initialNodeHealth, hexConfig, infantryConfig))
 		gameState.addNode(newNode(neutralPlayer, gridPosition{11, 1}, initialNodeHealth, hexConfig, infantryConfig))
@@ -71,7 +71,7 @@ func setupState(gameState state, s setup, hexConfig *hexConfig, initialNodeHealt
 		gameState.addNode(newNode(neutralPlayer, gridPosition{16, 21}, initialNodeHealth, hexConfig, infantryConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{21, 21}, initialNodeHealth, hexConfig, infantryConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{26, 21}, initialNodeHealth, hexConfig, infantryConfig))
-	case rightVsLeftHorizontalOffset:
+	case leftVsRightHorizontalOffset:
 		gameState.addNode(newNode(bluePlayer, gridPosition{1, 1}, initialNodeHealth, hexConfig, infantryConfig))
 		gameState.addNode(newNode(bluePlayer, gridPosition{6, 1}, initialNodeHealth, hexConfig, infantryConfig))
 		gameState.addNode(newNode(neutralPlayer, gridPosition{11, 1}, initialNodeHealth, hexConfig, infantryConfig))
@@ -106,7 +106,7 @@ func setupState(gameState state, s setup, hexConfig *hexConfig, initialNodeHealt
 		gameState.addNode(newNode(neutralPlayer, gridPosition{16, 21}, initialNodeHealth, hexConfig, infantryConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{21, 21}, initialNodeHealth, hexConfig, infantryConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{26, 21}, initialNodeHealth, hexConfig, infantryConfig))
-	case rightVsLeftVerticalOffset:
+	case leftVsRightVerticalOffset:
 		gameState.addNode(newNode(bluePlayer, gridPosition{1, 1}, initialNodeHealth, hexConfig, infantryConfig))
 		gameState.addNode(newNode(bluePlayer, gridPosition{6, 1}, initialNodeHealth, hexConfig, infantryConfig))
 		gameState.addNode(newNode(neutralPlayer, gridPosition{11, 2}, initialNodeHealth, hexConfig, infantryConfig))
