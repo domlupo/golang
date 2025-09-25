@@ -402,10 +402,16 @@ In general:
     - hexagon has a soft limit of <20 or <=20 pixel for units. Seems fine for now and can be worked around.
 
 - Low level implementation:
+  - Go through issues to make sure they are all addressed.
   - start per unit heap allocation during new unit production. 
   - start with using getGridPos on every turn to figure out hexagon. There many ways to optimize this in future.
+  - Avoid two way checks where possible with tagging. Some two ways checks are easier to avoid than others.
+  - knowing how many units of a certain player are in a given hexagon 
+    might be good for guided missile targets. Can easily increment and 
+    decrement a counter on node rather than iterate through heap 
+    allocations. Can calculate unit delta e.g. opponenet has 10 units, I have 2, so missile is +8 overall.
 
-- Careful of issues:
+- Careful of current issues:
   - Will probably need to support checking a lot of hexagons for certain scenarios:
     - A large explosion will have collision > one hexagon. This is something I am concerned about
       because this will probablhy be the most performance sensitive computation since players
@@ -418,30 +424,14 @@ In general:
     force check all hexagons.
   - On unit kill need to handle its double linked list pointers
   - Need to sync or verify or handle units switching layers. 
+  - Units able to move more than one pos per turn cannot transfer hexagons via single line check.
+    Need to use something more robust like current getGridPos.
+  - nodes switching ownership should not use newNode anymore unless pointers are preserved.
 
-- Think through more before implementing:
-  - Think through issues or future work for units larger than one hexagon?
-  - Think through issues or future work for units moving fast?
-  - Can I ignore the need of units moving more than one pixel for now?
-  - how to handle layers better?
-  - are units categorized by player?
-  - double linked list means I am iterating through heap memory... this seems fine.
-  - Are these optimiations I can perform when units are not moving?
-  - Do I remove node struct and make a new hexagon struct?
-  - Is there an easy optimization to avoid double checking the same collision?
-    - targets avoid this by only iterating through opposing units.
-    - Not sure if I can avoid this for collisions easily.
-    - This is also referred to as tagging, object sorting or one way check instead of two way check.
-
-- Notes to organize:
-  - if "city" nodes become dynamically added in the future, I probably should preallocate them all at start of game.
-  - "city" nodes being destroyed seems simple enough to handle in future.
-  - allow easy layer switch
-  - nodes switching ownership should not use newNode anymore.
-  - knowing how many units of a certain player are in a given hexagon 
-    might be good for guided missile targets. Can easily increment and 
-    decrement a counter on node rather than iterate through heap 
-    allocations. Can calculate unit delta e.g. opponenet has 10 units, I have 2, so missile is +8 overall.
+- Potential future issues:
+  - Units largers than one hexagon have work arounds e.g. add unit to more than one hexagon.
+  - Same work around is possible for units moving fast.
+  - Any work arounds needed will probably be a pain but this issue is far in future.
 
 ---
 
