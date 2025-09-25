@@ -72,6 +72,10 @@ func (g *Game) Update() error {
 		if ebiten.IsMouseButtonPressed(ebiten.MouseButton0) ||
 			ebiten.IsMouseButtonPressed(ebiten.MouseButton1) ||
 			ebiten.IsMouseButtonPressed(ebiten.MouseButton2) {
+			g.file, g.err = os.Create(g.logFileName)
+			if g.err != nil {
+				log.Fatal(g.err)
+			}
 			g.timerStarted = true
 			g.startTime = time.Now()
 			g.duration = time.Duration(g.intDurationStart) * time.Minute
@@ -156,12 +160,6 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 func main() {
 	g := newGame()
 
-	g.file, g.err = os.Create(g.logFileName)
-	if g.err != nil {
-		log.Fatal(g.err)
-	}
-	defer g.file.Close()
-
 	g.mplusFaceSource, _ = text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
 
 	var monitors []*ebiten.MonitorType
@@ -178,4 +176,6 @@ func main() {
 	if err := ebiten.RunGame(&g); err != nil {
 		log.Fatal(err)
 	}
+
+	g.file.Close()
 }
