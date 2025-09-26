@@ -31,9 +31,11 @@ type node struct {
 
 func newNode(p player, gridPos gridPosition, initialNodeHealth int, hexConfig *hexConfig, uc unitConfig) node {
 	n := node{
-		player:        p,
-		gridPos:       gridPos,
-		radius:        hexConfig.hexWidth / 2,
+		player:  p,
+		gridPos: gridPos,
+		// HACK: "/ 9 * 2 is temporarily set until hexagon collision is implemented
+		// This value was chosen since it is large but still fully within hexagon.
+		radius:        (hexConfig.hexHeight + hexConfig.hexWidth) / 9 * 2,
 		selected:      false,
 		maxHealth:     initialNodeHealth,
 		currentHealth: initialNodeHealth,
@@ -75,30 +77,30 @@ func (n *node) drawNode(dc drawContext, gridPos gridPosition) {
 	}
 
 	center, _ := getPixelPosition(gridPos, center, &dc.hexConfig)
-	top, _ := getPixelPosition(gridPos, topOffset, &dc.hexConfig)
-	topRight, _ := getPixelPosition(gridPos, topRightOffset, &dc.hexConfig)
-	bottomRight, _ := getPixelPosition(gridPos, bottomRightOffset, &dc.hexConfig)
-	bottomLeft, _ := getPixelPosition(gridPos, bottomLeftOffset, &dc.hexConfig)
-	bottom, _ := getPixelPosition(gridPos, bottomOffset, &dc.hexConfig)
-	topLeft, _ := getPixelPosition(gridPos, topLeftOffset, &dc.hexConfig)
+	north, _ := getPixelPosition(gridPos, northPoint, &dc.hexConfig)
+	northeast, _ := getPixelPosition(gridPos, northeastPoint, &dc.hexConfig)
+	southeast, _ := getPixelPosition(gridPos, southeastPoint, &dc.hexConfig)
+	south, _ := getPixelPosition(gridPos, southPoint, &dc.hexConfig)
+	southwest, _ := getPixelPosition(gridPos, southwestPoint, &dc.hexConfig)
+	northwest, _ := getPixelPosition(gridPos, northwestPoint, &dc.hexConfig)
 
 	xCenter, yCenter := float32(center.x)*dc.windowMultiplier, float32(center.y)*dc.windowMultiplier
-	xTop, yTop := float32(top.x)*dc.windowMultiplier, float32(top.y)*dc.windowMultiplier
-	xTopRight, yTopRight := float32(topRight.x)*dc.windowMultiplier, float32(topRight.y)*dc.windowMultiplier
-	xBottomRight, yBottomRight := float32(bottomRight.x)*dc.windowMultiplier, float32(bottomRight.y)*dc.windowMultiplier
-	xBottom, yBottom := float32(bottom.x)*dc.windowMultiplier, float32(bottom.y)*dc.windowMultiplier
-	xBottomLeft, yBottomLeft := float32(bottomLeft.x)*dc.windowMultiplier, float32(bottomLeft.y)*dc.windowMultiplier
-	xTopLeft, yTopLeft := float32(topLeft.x)*dc.windowMultiplier, float32(topLeft.y)*dc.windowMultiplier
+	xNorth, yNorth := float32(north.x)*dc.windowMultiplier, float32(north.y)*dc.windowMultiplier
+	xNortheast, yNortheast := float32(northeast.x)*dc.windowMultiplier, float32(northeast.y)*dc.windowMultiplier
+	xSoutheast, ySoutheast := float32(southeast.x)*dc.windowMultiplier, float32(southeast.y)*dc.windowMultiplier
+	xSouth, ySouth := float32(south.x)*dc.windowMultiplier, float32(south.y)*dc.windowMultiplier
+	xSouthwest, ySouthwest := float32(southwest.x)*dc.windowMultiplier, float32(southwest.y)*dc.windowMultiplier
+	xNorthwest, yNorthwest := float32(northwest.x)*dc.windowMultiplier, float32(northwest.y)*dc.windowMultiplier
 
 	indices := []uint16{0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 1}
 	vertices := []ebiten.Vertex{
 		{DstX: xCenter, DstY: yCenter, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
-		{DstX: xTop, DstY: yTop, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
-		{DstX: xTopRight, DstY: yTopRight, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
-		{DstX: xBottomRight, DstY: yBottomRight, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
-		{DstX: xBottom, DstY: yBottom, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
-		{DstX: xBottomLeft, DstY: yBottomLeft, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
-		{DstX: xTopLeft, DstY: yTopLeft, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
+		{DstX: xNorth, DstY: yNorth, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
+		{DstX: xNortheast, DstY: yNortheast, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
+		{DstX: xSoutheast, DstY: ySoutheast, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
+		{DstX: xSouth, DstY: ySouth, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
+		{DstX: xSouthwest, DstY: ySouthwest, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
+		{DstX: xNorthwest, DstY: yNorthwest, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
 	}
 
 	dc.screen.DrawTriangles(vertices, indices, dc.drawTriangleDefaultImage, &ebiten.DrawTrianglesOptions{})

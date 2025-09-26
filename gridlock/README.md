@@ -19,16 +19,26 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Log FPS
+  - Easier to verify CPU performance improvements
+
+- Determine if Fix slow ticket interval bug still exists.
+  - when set to interval of 1 second time interval was not being respected
+
+- Refactor functions since units store their position now... Be careful for ones where 
+  the unit pos is currently being updated via game logic.
+
+- Update spatial partioning brainstorm with results
+  - reflect on outcomes and intuition
+
 - Finish spatial partition design and implementation
-  - Finish design
-  - Finish implementation
   - Did I reach outcomes:
-    - Did analyze target CPU usage become acceptable
-    - Did collides with unit CPU usage become acceptable
     - What FPS can I support?
     - What local path finding algorithms can I utilize now?
     - How does multiplayer networking code affect this?
     - How does state saved into file affect this?
+
+- Update analyze Targets to use new spatial partitioning linked lists
 
 - Improve guided air missile
   - Fix bug where ground missile (not air missile) is not moving for computer player
@@ -142,6 +152,8 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Future Checkpoints
+
+- How can I use more unit tests? Or how can i write automated high level tests.
 
 - Do I need to think about layers more?
   - Right now I think this decision can only be known far in the future and it should be 
@@ -314,6 +326,8 @@ Is there a mobile equivalent for war/4x games?
   - I don't have any experience with this type of optimization.
   - I assume it may be platform dependent e.g. phone GPU is less powerful than computer integrated GPU
      is less powerful than computer dedicated GPU.
+11. Use cardinal directions for hexagon points and sides (north, northeast, etc) because the order is more
+    obvious e.g. northeast not eastnorth where as topRight and rightTop are both used.
 
 ---
 
@@ -387,7 +401,7 @@ Is there a mobile equivalent for war/4x games?
 ###  Spatial Partitioning Brainstorm
 
 In general:
-- Start simple, refactor and optimie later. I will most likely need to make significant changes 
+- Start simple, refactor and optimize later. I will most likely need to make significant changes 
   in the future no matter what I build. Get a frame work in place that unblocks other tasks like 
   local path finding and adding more units types.
 - This may unblock performing more CPU intensive local path finding (e.g. theta*) for

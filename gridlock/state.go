@@ -8,24 +8,32 @@ import (
 // not enforced but must be a singleton
 type state struct {
 	*hexConfig
-	nodes  map[gridPosition]*node
-	fluxes map[gridPosition]*flux
-	units  map[position]*unit
+	// TODO: The next largest optimization might be to split hexagon linked list
+	// into respective layers.
+	hexagons           map[gridPosition]*hexagon
+	nodes              map[gridPosition]*node
+	fluxes             map[gridPosition]*flux
+	units              map[position]*unit
+	unitsProducedTotal int
+	unitsDeletedTotal  int
 }
 
 func newState(hexConfig *hexConfig) *state {
 	s := state{
 		hexConfig: hexConfig,
+		hexagons:  make(map[gridPosition]*hexagon),
 		nodes:     make(map[gridPosition]*node),
 		fluxes:    make(map[gridPosition]*flux),
 		units:     make(map[position]*unit),
 	}
 
-	for i := range s.windowWidth/s.hexWidth + 1 {
-		for j := range s.windowHeight/(s.hexHeight/4*3) + 1 {
+	for i := range s.hexConfig.xIndexMax {
+		for j := range s.hexConfig.yIndexMax {
 			gridPos := gridPosition{i, j}
 			flux := newFlux(gridPos)
 			s.fluxes[gridPos] = &flux
+			hexagon := hexagon{}
+			s.hexagons[gridPos] = &hexagon
 		}
 	}
 
@@ -52,9 +60,7 @@ func (s *state) refresh() {
 	}
 
 	for _, flux := range s.fluxes {
-		xMax := s.windowWidth / s.hexWidth
-		yMax := s.windowHeight / (s.hexHeight / 4 * 3)
-		flux.setFluxVector(s, xMax, yMax)
+		flux.setFluxVector(s)
 	}
 }
 
@@ -145,8 +151,7 @@ func (s *state) moveUnits() {
 
 		var collidedUnitPos, collidesWithUnit = s.collidesWithUnit(
 			newPos,
-			*u,
-			s.units)
+			*u)
 
 		var _, isTargetNode, collidesWithNode = s.collidesWithNode(
 			newPos,
@@ -174,16 +179,34 @@ func (s *state) moveUnits() {
 			if isTargetNode {
 				unitsAtTargetNode++
 			} else {
-				// TODO: determine behavior. Prob don't want us to pass thru enemy nodes
-				unitsAtNonTargetNode++
-				unitsMovedCount++
-				s.units[newPos] = s.units[position{uPos.layer, pixelPosition{uPos.x, uPos.y}}]
-				completeMove()
-				delete(s.units, position{uPos.layer, pixelPosition{uPos.x, uPos.y}})
+				panic("This path doesn't really happen yet. Handle it when it starts to occur if it ever does...")
 			}
 		} else {
 			unitsMovedCount++
 			s.units[newPos] = s.units[position{uPos.layer, pixelPosition{uPos.x, uPos.y}}]
+
+			oldGridPos, _ := getGridPos(uPos.pixelPosition, s.hexConfig)
+			newGridPos, _ := getGridPos(newPos.pixelPosition, s.hexConfig)
+			if oldGridPos.x != newGridPos.x || oldGridPos.y != newGridPos.y {
+				oldHex := s.hexagons[oldGridPos]
+				newHex := s.hexagons[newGridPos]
+				oldHex.unitCount--
+				newHex.unitCount++
+
+				if u.next.id == u.id && u.prior.id == u.id {
+					oldHex.linkedList = nil
+				} else if u.next.id == u.id || u.prior.id == u.id {
+					panic("unit is in an invalid state")
+				} else {
+					oldHex.linkedList = u.next
+				}
+
+				u.next.prior = u.prior
+				u.prior.next = u.next
+
+				updatePointers(newHex, u)
+			}
+
 			completeMove()
 			delete(s.units, position{uPos.layer, pixelPosition{uPos.x, uPos.y}})
 		}
@@ -200,6 +223,18 @@ func (s *state) moveUnits() {
 		"units collided", unitsCollideCount,
 		"units already attacked", unitsAlreadyAttacked,
 	)
+}
+
+func updatePointers(h *hexagon, u *unit) {
+	if h.linkedList == nil {
+		h.linkedList = u
+		h.linkedList.prior = u
+		h.linkedList.next = u
+	}
+	u.next = h.linkedList
+	u.prior = h.linkedList.prior
+	h.linkedList.prior.next = u
+	h.linkedList.prior = u
 }
 
 // TODO: This does not handle a unit colliding with multiple nodes which will probably occur in the future.
@@ -269,30 +304,90 @@ func (s *state) explode(pos position, blastRadius int, units map[position]*unit)
 	}
 }
 
-func (s *state) collidesWithUnit(pos position, unit unit, units map[position]*unit) (position, bool) {
-	x1 := pos.x + unit.radius
-	y1 := pos.y + unit.radius
+// checks the passed newPos hexagon and its adjacent hexagons for collisions between
+// passed unit and unit midpoints within those hexagons. Returns the position
+// of the unit which collided with the passed unit.
+func (s *state) collidesWithUnit(newPos position, unit unit) (position, bool) {
+	x1 := newPos.x + unit.radius
+	y1 := newPos.y + unit.radius
 	r1 := unit.radius
 
-	for otherPos, otherUnit := range units {
-		if unit.id == otherUnit.id {
-			// unit cannot collide with itself
+	gridPos, _ := getGridPos(newPos.pixelPosition, s.hexConfig)
+	hex := s.hexagons[gridPos]
+	var neHex *hexagon
+	var eHex *hexagon
+	var seHex *hexagon
+	var swHex *hexagon
+	var wHex *hexagon
+	var nwHex *hexagon
+	if pos, ok := gridPos.adjacent(northeastSide, s.hexConfig); ok {
+		neHex = s.hexagons[pos]
+	}
+	if pos, ok := gridPos.adjacent(eastSide, s.hexConfig); ok {
+		eHex = s.hexagons[pos]
+	}
+	if pos, ok := gridPos.adjacent(southeastSide, s.hexConfig); ok {
+		seHex = s.hexagons[pos]
+	}
+	if pos, ok := gridPos.adjacent(southwestSide, s.hexConfig); ok {
+		swHex = s.hexagons[pos]
+	}
+	if pos, ok := gridPos.adjacent(westSide, s.hexConfig); ok {
+		wHex = s.hexagons[pos]
+	}
+	if pos, ok := gridPos.adjacent(northwestSide, s.hexConfig); ok {
+		nwHex = s.hexagons[pos]
+	}
+
+	hexagons := [7]*hexagon{hex, neHex, eHex, seHex, swHex, wHex, nwHex}
+
+	for _, hex := range hexagons {
+		if hex == nil {
 			continue
 		}
 
-		if pos.layer != otherPos.layer {
+		linkedList := hex.linkedList
+
+		switch {
+		case linkedList == nil || (linkedList.id == unit.id && linkedList == linkedList.next):
 			continue
 		}
 
-		x2 := otherPos.x + otherUnit.radius
-		y2 := otherPos.y + otherUnit.radius
-		r2 := otherUnit.radius
+		end := linkedList
+		current := linkedList
+		// checkOccurred handles the edge case where a hexagon has a single
+		// unit within in. This unit should still be checked since it
+		// is not the unit passed into the function but don't self cycle
+		// since it will never progress to a different current unit.
+		var checkOccurred bool
+		for {
+			if current.id == end.id && checkOccurred {
+				break
+			}
 
-		xDelta := x2 - x1
-		yDelta := y2 - y1
-		rSum := r1 + r2
-		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
-			return otherPos, true
+			if current.id == unit.id {
+				current = current.next
+				continue
+			}
+
+			if newPos.layer != current.layer {
+				current = current.next
+				continue
+			}
+
+			x2 := current.x + current.radius
+			y2 := current.y + current.radius
+			r2 := current.radius
+
+			xDelta := x2 - x1
+			yDelta := y2 - y1
+			rSum := r1 + r2
+			checkOccurred = true
+			if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
+				return current.position, true
+			}
+
+			current = current.next
 		}
 	}
 
@@ -356,10 +451,23 @@ func (s *state) attackUnits() {
 		}
 	}
 
-	for unitPos, unit := range s.units {
-		if unit.health <= 0 {
+	for uPos, u := range s.units {
+		if u.health <= 0 {
+
+			gridPos, _ := getGridPos(uPos.pixelPosition, s.hexConfig)
+			hex := s.hexagons[gridPos]
+			hex.unitCount--
+			if hex.linkedList.id == u.id && u.next.id != u.id {
+				hex.linkedList = u.next
+			} else if hex.linkedList.id == u.id && u.next.id == u.id {
+				hex.linkedList = nil
+			}
+
+			u.next.prior = u.prior
+			u.prior.next = u.next
+			delete(s.units, uPos)
+			s.unitsDeletedTotal++
 			unitsDeletedCount++
-			delete(s.units, unitPos)
 		}
 	}
 
@@ -513,9 +621,18 @@ func (s *state) produceUnits() {
 		// TODO: determine behavior for producing units during collision
 		pixelPos, _ := getPixelPosition(nPos, center, s.hexConfig)
 		uPos := position{n.unitConfig.produceLayer, pixelPos}
-		if _, ok := s.collidesWithUnit(uPos, newUnit(n.player, n.target, n.unitConfig), s.units); !ok {
-			newUnit := newUnit(n.player, n.target, n.unitConfig)
+		newUnit := newUnit(n.player, n.target, n.unitConfig, uPos, s.unitsProducedTotal)
+		if _, collides := s.collidesWithUnit(uPos, newUnit); !collides {
+			hex := s.hexagons[nPos]
+			if hex.linkedList == nil && hex.unitCount != 0 {
+				panic("if hex linked list is nil, unit count should be 0")
+			}
+
+			updatePointers(hex, &newUnit)
+
 			s.units[uPos] = &newUnit
+			hex.unitCount++
+			s.unitsProducedTotal++
 		}
 	}
 }

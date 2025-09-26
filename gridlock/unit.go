@@ -176,7 +176,8 @@ func (uc unitConfig) log() []slog.Attr {
 }
 
 type unit struct {
-	id                 uuid.UUID
+	id uuid.UUID
+	position
 	player             player
 	currentTarget      position
 	fluxTarget         position
@@ -195,15 +196,19 @@ type unit struct {
 	canReachTargetNode node
 	selected           bool
 	fluxExpireCount    int
+	prior              *unit
+	next               *unit
+	producedAt         int
 }
 
-func newUnit(p player, globalTarget position, uc unitConfig) unit {
+func newUnit(p player, globalTarget position, uc unitConfig, pos position, producedOrder int) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
 		logger.log(errorLevel, selectedUnitLogType, "newUnit", "failed to generate UUID", err)
 	}
 	u := unit{
 		id:                 id,
+		position:           pos,
 		player:             p,
 		currentTarget:      position{},
 		fluxTarget:         position{},
@@ -222,6 +227,7 @@ func newUnit(p player, globalTarget position, uc unitConfig) unit {
 		canReachTargetNode: node{},
 		selected:           false,
 		fluxExpireCount:    uc.fluxExpireMax,
+		producedAt:         producedOrder,
 	}
 
 	return u
@@ -316,7 +322,8 @@ func (u *unit) getNewPos(currentPos position) (position, func()) {
 		y0 += sy
 	}
 
-	return position{currentPos.layer, pixelPosition{x0, y0}}, func() { u.completeMove() }
+	newPos := position{currentPos.layer, pixelPosition{x0, y0}}
+	return newPos, func() { u.completeMove(newPos) }
 }
 
 func (u *unit) updateTarget(ut unitTarget, target position) {
@@ -352,7 +359,8 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "updateTarget", "unitTarget", unitTarget, "target", targetLog)
 }
 
-func (u *unit) completeMove() {
+func (u *unit) completeMove(pos position) {
+	u.position = pos
 	u.movedThisTurn = true
 	intCopy := &u.nextBresenhamError
 	u.bresenhamError = *intCopy
@@ -373,6 +381,10 @@ func (u unit) log() []slog.Attr {
 		player = "neutralPlayer"
 	}
 	a = append(a, slog.String("player", player))
+	a = append(a, slog.Any("position", position.log(u.position)))
+	a = append(a, slog.Any("next", u.next.id))
+	a = append(a, slog.Any("prior", u.prior.id))
+	a = append(a, slog.Int("producedOrder", u.producedAt))
 	if !u.currentTarget.isZero() {
 		a = append(a, slog.Any("currentTarget", u.currentTarget.log()))
 	} else {

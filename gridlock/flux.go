@@ -5,7 +5,7 @@ import "github.com/hajimehoshi/ebiten/v2/vector"
 
 type fluxVector struct {
 	magnitude int
-	direction int
+	hexSide   int
 }
 
 type flux struct {
@@ -18,39 +18,39 @@ func newFlux(gridPos gridPosition) flux {
 	f := flux{
 		gridPos:     gridPos,
 		staticUnits: 0,
-		fluxVector:  fluxVector{0, noDirection},
+		fluxVector:  fluxVector{0, noSide},
 	}
 	return f
 }
 
 func (f *flux) getFluxDelta(magnitude int) gridPosition {
-	switch f.direction {
-	case noDirection:
+	switch f.hexSide {
+	case noSide:
 		return gridPosition{0, 0}
-	case northEast:
+	case northeastSide:
 		return gridPosition{magnitude, -magnitude}
-	case east:
+	case eastSide:
 		return gridPosition{magnitude, 0}
-	case southEast:
+	case southeastSide:
 		return gridPosition{magnitude, magnitude}
-	case southWest:
+	case southwestSide:
 		return gridPosition{-magnitude, magnitude}
-	case west:
+	case westSide:
 		return gridPosition{-magnitude, 0}
-	case northWest:
+	case northwestSide:
 		return gridPosition{-magnitude, -magnitude}
 	default:
 		panic("unknown direction for getFluxDelta")
 	}
 }
 
-func (f *flux) setFluxVector(s *state, xMax int, yMax int) {
-	northEastPos, northEastPosOk := f.gridPos.adjacent(northEast, xMax, yMax)
-	eastPos, eastPosOk := f.gridPos.adjacent(east, xMax, yMax)
-	southEastPos, southEastPosOk := f.gridPos.adjacent(southEast, xMax, yMax)
-	southWestPos, southWestPosOk := f.gridPos.adjacent(southWest, xMax, yMax)
-	westPos, westPosOk := f.gridPos.adjacent(west, xMax, yMax)
-	northWestPos, northWestPosOk := f.gridPos.adjacent(northWest, xMax, yMax)
+func (f *flux) setFluxVector(s *state) {
+	northEastPos, northEastPosOk := f.gridPos.adjacent(northeastSide, s.hexConfig)
+	eastPos, eastPosOk := f.gridPos.adjacent(eastSide, s.hexConfig)
+	southEastPos, southEastPosOk := f.gridPos.adjacent(southeastSide, s.hexConfig)
+	southWestPos, southWestPosOk := f.gridPos.adjacent(southwestSide, s.hexConfig)
+	westPos, westPosOk := f.gridPos.adjacent(westSide, s.hexConfig)
+	northWestPos, northWestPosOk := f.gridPos.adjacent(northwestSide, s.hexConfig)
 
 	xFlux := 0
 	yFlux := 0
@@ -80,26 +80,26 @@ func (f *flux) setFluxVector(s *state, xMax int, yMax int) {
 
 	switch {
 	case xFlux == 0 && yFlux == 0:
-		f.fluxVector = fluxVector{0, noDirection}
+		f.fluxVector = fluxVector{0, noSide}
 	case xFlux > 0 && yFlux < 0:
-		f.fluxVector = fluxVector{1, northEast}
+		f.fluxVector = fluxVector{1, northeastSide}
 	case xFlux > 0 && yFlux == 0:
-		f.fluxVector = fluxVector{1, east}
+		f.fluxVector = fluxVector{1, eastSide}
 	case xFlux > 0 && yFlux > 0:
-		f.fluxVector = fluxVector{1, southEast}
+		f.fluxVector = fluxVector{1, southeastSide}
 	case xFlux < 0 && yFlux > 0:
-		f.fluxVector = fluxVector{1, southWest}
+		f.fluxVector = fluxVector{1, southwestSide}
 	case xFlux < 0 && yFlux == 0:
-		f.fluxVector = fluxVector{1, west}
+		f.fluxVector = fluxVector{1, westSide}
 	case xFlux < 0 && yFlux < 0:
-		f.fluxVector = fluxVector{1, northWest}
+		f.fluxVector = fluxVector{1, northwestSide}
 	}
 }
 
 func (f *flux) refresh() {
 	f.staticUnits = 0
 	f.magnitude = 0
-	f.direction = noDirection
+	f.hexSide = noSide
 }
 
 func (f *flux) draw(dc drawContext, fluxPos gridPosition) {
@@ -111,23 +111,23 @@ func (f *flux) draw(dc drawContext, fluxPos gridPosition) {
 	xEnd := center.x
 	yEnd := center.y
 
-	switch f.direction {
-	case noDirection:
+	switch f.hexSide {
+	case noSide:
 		panic("need a direction to draw flux")
-	case northEast:
+	case northeastSide:
 		xEnd += (dc.hexWidth / 2)
 		yEnd -= (dc.hexWidth / 2)
-	case east:
+	case eastSide:
 		xEnd += (dc.hexWidth / 2)
-	case southEast:
+	case southeastSide:
 		xEnd += (dc.hexWidth / 2)
 		yEnd += (dc.hexWidth / 2)
-	case southWest:
+	case southwestSide:
 		xEnd -= (dc.hexWidth / 2)
 		yEnd += (dc.hexWidth / 2)
-	case west:
+	case westSide:
 		xEnd -= (dc.hexWidth / 2)
-	case northWest:
+	case northwestSide:
 		xEnd -= (dc.hexWidth / 2)
 		yEnd -= (dc.hexWidth / 2)
 	}
