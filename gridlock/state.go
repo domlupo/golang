@@ -314,12 +314,8 @@ func (s *state) collidesWithUnit(newPos position, unit unit) (position, bool) {
 
 	gridPos, _ := getGridPos(newPos.pixelPosition, s.hexConfig)
 	hex := s.hexagons[gridPos]
-	var neHex *hexagon
-	var eHex *hexagon
-	var seHex *hexagon
-	var swHex *hexagon
-	var wHex *hexagon
-	var nwHex *hexagon
+	var neHex, eHex, seHex, swHex, wHex, nwHex *hexagon
+
 	if pos, ok := gridPos.adjacent(northeastSide, s.hexConfig); ok {
 		neHex = s.hexagons[pos]
 	}
@@ -348,8 +344,7 @@ func (s *state) collidesWithUnit(newPos position, unit unit) (position, bool) {
 
 		linkedList := hex.linkedList
 
-		switch {
-		case linkedList == nil || (linkedList.id == unit.id && linkedList == linkedList.next):
+		if linkedList == nil || (linkedList.id == unit.id && linkedList == linkedList.next) {
 			continue
 		}
 
