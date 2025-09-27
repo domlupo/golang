@@ -1,4 +1,4 @@
-# Mini Monarch
+ # Gridlock
 
 A prototype for a simple war/4x game. Simple like mini metro or mini motorways. 
 War game like civ, hearts of iron, 9 kings etc. (also other popular war games on steamdb). 
@@ -22,9 +22,6 @@ Is there a mobile equivalent for war/4x games?
 - Log FPS
   - Easier to verify CPU performance improvements
 
-- Determine if Fix slow ticket interval bug still exists.
-  - when set to interval of 1 second time interval was not being respected
-
 - Refactor functions since units store their position now... Be careful for ones where 
   the unit pos is currently being updated via game logic.
 
@@ -41,24 +38,10 @@ Is there a mobile equivalent for war/4x games?
 - Update analyze Targets to use new spatial partitioning linked lists
 
 - Improve guided air missile
+  - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.
   - Fix bug where ground missile (not air missile) is not moving for computer player
   - auto despawns for non computer players. This is probably wrong behavior.
   - Determine target locking behavior for human player and computer player.
-
-- Determine how to handle flux for units that never had targets or units just produced. Lots of issues.
-  - Do you make flux never move the unit? This creates bimodal behavior where some units respect flux and others dont?
-  - Do you make the unit that was never moved by flux add more or less to flux magnitude?
-  - Not actually spawning the unit until a target is set might be a very simple solution but the
-    player experiencee might be terrible.
-  - How do you handle missiles blowing up from flux moving them.
-  - How do you handle missiles moving without target? Can players abuse this?
-
-- Invest in a visual debugger:
-  - First invest in: It can auto select/highlight a specific unit when it spawns
-  - Other much lower priority improvements that can be added when needed:
-    - It can can ping the pixel pos where the bug is occurring.
-    - It can ping differently based on layer.
-    - It can also do something like log unit and pause game so I can read logs?
 
 - Fix Bresenham's algorithm edge cases:
   - Bresenham error needs to reset itself for several reasons. I still need to handle:
@@ -70,6 +53,8 @@ Is there a mobile equivalent for war/4x games?
   - Determine if a different structure is better for Bresenham
 
 - Iterate on group and local pathfinding
+  - Figure out which CPU intensive path finding I can do. Probably theta* for local hexagon is  good start?
+  - Every hexagons can probably be used as nav meshes as well.
   - Flux can be iterated and tuned a lot. I only implemented a basic solution.
   - Flux resolution can be improved by changing flux grid size at compile time. 
   - Flux grid can be changed at runtime as well but probably unneded complexity. 
@@ -80,6 +65,14 @@ Is there a mobile equivalent for war/4x games?
     worse asethetics? I think flux can most likely be designed around this but the monitor display
     limitation for wide resolution suggests left vs right pathing is more likely where as phone 
     vertical display suggests top vs bottom pathing is more likely.
+
+- Determine how to handle flux for units that never had targets or units just produced. Lots of issues.
+  - Do you make flux never move the unit? This creates bimodal behavior where some units respect flux and others dont?
+  - Do you make the unit that was never moved by flux add more or less to flux magnitude?
+  - Not actually spawning the unit until a target is set might be a very simple solution but the
+    player experiencee might be terrible.
+  - How do you handle missiles blowing up from flux moving them.
+  - How do you handle missiles moving without target? Can players abuse this?
 
 - Determine path finding goals for individual units to decide on path finding algorithm:
   - Unit -> player experience -> path finding algorithm
@@ -141,7 +134,7 @@ Is there a mobile equivalent for war/4x games?
   - If feedback is good, then I can work on adding more features.
   - If feedback is good, then I can work on polishing existing features.
 
-- Refactor for more idiomatic go code as I read learning Go. Already did var declare and switch statements.
+- Refactor for more idiomatic go code as I read learning Go.
 
 - Determine if I need to implement separating axis theorem for collision other than (circle <-> circle)
   - Right now node collision is hacky. It is just a circle that is smaller than the hexagon.
@@ -227,10 +220,18 @@ Is there a mobile equivalent for war/4x games?
 
 ### Punted Checkpoints
 
-- Should I add a config file?
+- Should I add a yaml, toml or json config file that is loaded at runtime?
 
-- Investigate if logging impacts game performance
-  - Might be able to fix via build tags to compile different code for release build
+- Invest in a visual debugger:
+  - First feature would most likely be it can auto select/highlight a specific unit when it spawns
+  - Other much lower priority improvements that can be added when needed:
+    - It can can ping the pixel pos where the bug is occurring.
+    - It can ping differently based on layer.
+    - It can also do something like log unit and pause game so I can read logs?
+
+- Logging affects game performance. Especially hot loop logs e.g. unit refresh
+  - Can I use build tags for a development vs release build?
+  - Can I conditionally compile?
 
 - Polish logger
   - Improve always log logic. Right now it is a bit confusing if always log surpasses logging level. I should
@@ -239,7 +240,7 @@ Is there a mobile equivalent for war/4x games?
   - Add runtime dynamic log sampling rates. Is this even possible? Are the benefits worth it?
   - Paused debugging? e.g. Updating unit during state.go execution can log state at game level.
 
-- Controls which work on computer, steam deck, phone, etc: 
+- Controls interface which work on computer, steam deck, phone, etc: 
   - multiple platform means more sales
   - customers can pick favorite device if multiple owned
 
@@ -248,9 +249,6 @@ Is there a mobile equivalent for war/4x games?
   - Fall off damage?
   - Add unit that counters missile and expands game logic?
 
-- Update unit pathing algorithm to Theta* with same cost orthgonal and diagonal movement: (https://en.wikipedia.org/wiki/Theta*)
-  - Units will be able to go around obstacles
-
 - initial map generation:
   - Omitting certain counters or land features from maps might give ticket to ride vibes where
     a different map significantly changes gameplay.
@@ -258,7 +256,9 @@ Is there a mobile equivalent for war/4x games?
   - Omitting certain tech tree options is a bit like randomized civ pick in AOE
 
 - Tech Tree:
-  - ?
+  - Can randomize what is availably per game for all players or everyone has the same random tree
+  - Can randommize connections between the tech tree somewhat but keep is thematic.
+  - Perhaps certain node connections should be consistent e.g. plane node always leads to (plane -> bomb -> heat seaking)
 
 - Different terrains: 
   - Careful, this may be hard to implement due to pathfinding algorithms assuming same cost movement
@@ -319,7 +319,7 @@ Is there a mobile equivalent for war/4x games?
   - This was chosen mostly arbitrarily. Probably simplifies some code.
   - The remaining 4 sides are sloped which determines tie breaks nicely.
 9. Avoid quadtree optimization for as long as possible.
-  - Seems more complex and error prone than other methods
+  - Seems more complex and error prone than other methods like spatial partitioning
   - Dynamic performance seems harder to tune and profile
   - Can't reuse existing hexagon logic.
 10. Avoid GPU optimization for as long as possible.
@@ -439,10 +439,10 @@ In general:
     - If I implement in the future units which capture a city atttempt to capture the next closest city
       to themself rather than to the city. It might be more on theme that they all attack the same city
       which is an easier calculation? 
-  - For closest unit I can either check optimially by iterating through more distance hexagons or brute
+  - For nearest unit I can either check optimially by iterating through more distance hexagons or brute
     force check all hexagons.
   - On unit kill need to handle its double linked list pointers
-  - Need to sync or verify or handle units switching layers. 
+  - Need to sync or verify or handle units switching layers if layer optimization is needed
   - Units able to move more than one pos per turn cannot transfer hexagons via single line check.
     Need to use something more robust like current getGridPos.
   - nodes switching ownership should not use newNode anymore unless pointers are preserved.
@@ -451,6 +451,18 @@ In general:
   - Units largers than one hexagon have work arounds e.g. add unit to more than one hexagon.
   - Same work around is possible for units moving fast.
   - Any work arounds needed will probably be a pain but this issue is far in future.
+
+- Post Work Reflection:
+  - The implementation worked because CPU performance for collidesWithUnit became negligible.
+  - The implementation is simpler than what was designed
+    - I didn't split layers. This was a good decision since I needed to start simple and this is an optimization.
+    - Hexagon only stores a single pointer, not two which is simpler.
+    - units per player in hex would require multiple counters. Only added a single total unit counter per hex.
+    - Hexagons are separate from nodes, so node ownership update logic did not need an update.
+  - The implementation feels much more elegant than prior code. 
+    - collidesWithUnit signature simplified from (newPos, unit, s.units) -> (newPos, unit)
+    - Same updatePointers function is used for unit production and unit movement between hexagons.
+  - The design and imp
 
 ---
 
