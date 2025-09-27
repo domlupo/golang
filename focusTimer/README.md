@@ -8,4 +8,5 @@ launch a new timer once break is complete.
 
 ## TODO
 
+- Load percentage when continuing session recorded in log file
 - Add optional terminal input to set time rather than force mouse wheel.
