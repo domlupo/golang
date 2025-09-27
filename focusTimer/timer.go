@@ -21,29 +21,31 @@ const maxPercentage = 100
 const minutesInADay = 1440
 
 type Game struct {
-	windowMultiplier            int
-	windowWidth                 int
-	windowHeight                int
-	backgroundColor             color.RGBA
-	timerColor                  color.RGBA
-	doneColor                   color.RGBA
-	logFileName                 string
-	timerStarted                bool
-	intDurationStartReadFromLog int
-	intDurationStart            int
-	intDurationCount            int
-	duration                    time.Duration
-	currentTime                 time.Time
-	startTime                   time.Time
-	logMinsElapsedThresholdMins int
-	logPercentPadding           int
-	logMinutePadding            int
-	minuteTicker                time.Ticker
-	progressPercent             float64
-	intProgressPercent          int
-	file                        *os.File
-	err                         error
-	mplusFaceSource             *text.GoTextFaceSource
+	windowMultiplier              int
+	windowWidth                   int
+	windowHeight                  int
+	backgroundColor               color.RGBA
+	timerColor                    color.RGBA
+	doneColor                     color.RGBA
+	logFileName                   string
+	timerStarted                  bool
+	intDurationStartReadFromLog   int
+	intDurationStart              int
+	intDurationCount              int
+	duration                      time.Duration
+	currentTime                   time.Time
+	startTime                     time.Time
+	logMinsElapsedThresholdMins   int
+	logPercentPadding             int
+	logMinutePadding              int
+	minuteTicker                  time.Ticker
+	progressPercent               float64
+	intProgressPercent            int
+	intProgressPercentReadFromLog int
+	file                          *os.File
+	progressLoadedFromLogFile     bool
+	err                           error
+	mplusFaceSource               *text.GoTextFaceSource
 }
 
 func newGame() Game {
@@ -76,7 +78,7 @@ func (g *Game) Update() error {
 		if ebiten.IsMouseButtonPressed(ebiten.MouseButton0) ||
 			ebiten.IsMouseButtonPressed(ebiten.MouseButton1) ||
 			ebiten.IsMouseButtonPressed(ebiten.MouseButton2) {
-			if g.file == nil || g.intDurationStartReadFromLog != g.intDurationStart {
+			if !g.progressLoadedFromLogFile {
 				g.file, g.err = os.Create(g.logFileName)
 				if g.err != nil {
 					log.Fatal(g.err)
@@ -100,10 +102,12 @@ func (g *Game) Update() error {
 
 		if g.intProgressPercent != int(g.progressPercent) {
 			g.intProgressPercent = int(g.progressPercent)
+			loggedProgressPercent := (g.intProgressPercent * (maxPercentage - g.intProgressPercentReadFromLog) / maxPercentage) + g.intProgressPercentReadFromLog
+
 			_, g.err = g.file.WriteString(fmt.Sprintf(
 				"%*d%% %s %*d minutes remaining\n",
 				g.logPercentPadding,
-				g.intProgressPercent,
+				loggedProgressPercent,
 				g.currentTime.Format(time.RFC3339),
 				g.logMinutePadding,
 				g.intDurationCount))
@@ -145,11 +149,14 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		screen.Fill(g.doneColor)
 	} else {
 		screen.Fill(g.backgroundColor)
+		// Use int not percent read from log for prior timer progress since timer has 1 minute granularity.
+		priorTimerProgress := float64(g.intProgressPercentReadFromLog) / 100
+		currentTimerProgess := (g.progressPercent * float64(maxPercentage-g.intProgressPercentReadFromLog) / maxPercentage) / 100
 		vector.DrawFilledRect(
 			screen,
 			0,
 			0,
-			float32(float64(g.windowWidth*g.windowMultiplier)*g.progressPercent/float64(maxPercentage)),
+			float32(float64(g.windowWidth*g.windowMultiplier)*(priorTimerProgress+currentTimerProgess)),
 			float32(g.windowHeight*g.windowMultiplier),
 			g.timerColor,
 			false)
@@ -188,10 +195,17 @@ func main() {
 	if fileErr == nil {
 		scanner := bufio.NewReader(file)
 		for {
-			textLine, err := scanner.ReadString('\n')
-			if err != nil {
+			textLine, readLineErr := scanner.ReadString('\n')
+			if readLineErr != nil {
 				break
 			}
+
+			percent := strings.Split(textLine, "%")[0]
+			percent = strings.TrimSpace(percent)
+			if loggedProgressPercent, convertErr := strconv.Atoi(percent); convertErr == nil {
+				g.intProgressPercentReadFromLog = loggedProgressPercent
+			}
+
 			text := strings.Split(textLine, " ")
 			for i, v := range text {
 				if v == "minutes" {
@@ -205,9 +219,13 @@ func main() {
 		}
 	}
 
-	if g.intDurationStartReadFromLog > 0 {
+	if g.intDurationStartReadFromLog > 0 && g.intProgressPercentReadFromLog < 100 {
+		g.progressLoadedFromLogFile = true
 		g.intDurationStart = g.intDurationStartReadFromLog
 		g.file = file
+	} else {
+		g.intProgressPercentReadFromLog = 0
+		g.intDurationStartReadFromLog = 0
 	}
 
 	if err := ebiten.RunGame(&g); err != nil {
