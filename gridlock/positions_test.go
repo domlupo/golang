@@ -5,6 +5,130 @@ import (
 	"testing"
 )
 
+func TestGetPixelPosition(t *testing.T) {
+	hexPositionContext := newHexPositionContext()
+	hc := hexConfig{
+		hexPositionContext: hexPositionContext,
+		hexWidth:           46,
+		hexHeight:          40,
+		xOffset:            19,
+		yOffset:            10,
+		windowWidth:        1280,
+		windowHeight:       720,
+	}
+
+	var tests = []struct {
+		gridPos        gridPosition
+		hexPoint       hexPoint
+		wantedPixelPos pixelPosition
+		wantedOk       bool
+	}{
+
+		// check hexagon {1, 1}, {1, 2}, {2,1} to ensure hex points are correct
+		{gridPosition{1, 1}, center, pixelPosition{42, 30}, true},
+		{gridPosition{1, 1}, northPoint, pixelPosition{42, 10}, true},
+		{gridPosition{1, 1}, northeastPoint, pixelPosition{64, 20}, true},
+		{gridPosition{1, 1}, southeastPoint, pixelPosition{64, 39}, true},
+		{gridPosition{1, 1}, southPoint, pixelPosition{42, 49}, true},
+		{gridPosition{1, 1}, southwestPoint, pixelPosition{19, 39}, true},
+		{gridPosition{1, 1}, northwestPoint, pixelPosition{19, 20}, true},
+		{gridPosition{2, 1}, center, pixelPosition{88, 30}, true},
+		{gridPosition{2, 1}, northPoint, pixelPosition{88, 10}, true},
+		{gridPosition{2, 1}, northeastPoint, pixelPosition{110, 20}, true},
+		{gridPosition{2, 1}, southeastPoint, pixelPosition{110, 39}, true},
+		{gridPosition{2, 1}, southPoint, pixelPosition{88, 49}, true},
+		{gridPosition{2, 1}, southwestPoint, pixelPosition{65, 39}, true},
+		{gridPosition{2, 1}, northwestPoint, pixelPosition{65, 20}, true},
+		{gridPosition{1, 2}, center, pixelPosition{65, 60}, true},
+		{gridPosition{1, 2}, northPoint, pixelPosition{65, 40}, true},
+		{gridPosition{1, 2}, northeastPoint, pixelPosition{87, 50}, true},
+		{gridPosition{1, 2}, southeastPoint, pixelPosition{87, 69}, true},
+		{gridPosition{1, 2}, southPoint, pixelPosition{65, 79}, true},
+		{gridPosition{1, 2}, southwestPoint, pixelPosition{42, 69}, true},
+		{gridPosition{1, 2}, northwestPoint, pixelPosition{42, 50}, true},
+
+		// check hexagon {26,23} to ensure large x and large y positions are correct
+		{gridPosition{27, 23}, center, pixelPosition{1238, 690}, true},
+		{gridPosition{27, 23}, northPoint, pixelPosition{1238, 670}, true},
+		{gridPosition{27, 23}, northeastPoint, pixelPosition{1260, 680}, true},
+		{gridPosition{27, 23}, southeastPoint, pixelPosition{1260, 699}, true},
+		{gridPosition{27, 23}, southPoint, pixelPosition{1238, 709}, true},
+		{gridPosition{27, 23}, southwestPoint, pixelPosition{1215, 699}, true},
+		{gridPosition{27, 23}, northwestPoint, pixelPosition{1215, 680}, true},
+
+		// check top left hexagon {0,0}
+		{gridPosition{0, 0}, center, pixelPosition{19, 0}, true},
+		{gridPosition{0, 0}, northPoint, pixelPosition{0, 0}, false},
+		{gridPosition{0, 0}, northeastPoint, pixelPosition{0, 0}, false},
+		{gridPosition{0, 0}, southeastPoint, pixelPosition{41, 9}, true},
+		{gridPosition{0, 0}, southPoint, pixelPosition{19, 19}, true},
+		{gridPosition{0, 0}, southwestPoint, pixelPosition{0, 0}, false},
+		{gridPosition{0, 0}, northwestPoint, pixelPosition{0, 0}, false},
+
+		// check bottom left hexagon {0,24}
+		{gridPosition{0, 24}, center, pixelPosition{0, 0}, false},
+		{gridPosition{0, 24}, northPoint, pixelPosition{19, 700}, true},
+		{gridPosition{0, 24}, northeastPoint, pixelPosition{41, 710}, true},
+		{gridPosition{0, 24}, southeastPoint, pixelPosition{0, 0}, false},
+		{gridPosition{0, 24}, southPoint, pixelPosition{0, 0}, false},
+		{gridPosition{0, 24}, southwestPoint, pixelPosition{0, 0}, false},
+		{gridPosition{0, 24}, northwestPoint, pixelPosition{0, 0}, false},
+
+		// check top right hexagon {27,0}
+		{gridPosition{27, 0}, center, pixelPosition{1261, 0}, true},
+		{gridPosition{27, 0}, northPoint, pixelPosition{0, 0}, false},
+		{gridPosition{27, 0}, northeastPoint, pixelPosition{0, 0}, false},
+		{gridPosition{27, 0}, southeastPoint, pixelPosition{0, 0}, false},
+		{gridPosition{27, 0}, southPoint, pixelPosition{1261, 19}, true},
+		{gridPosition{27, 0}, southwestPoint, pixelPosition{1238, 9}, true},
+		{gridPosition{27, 0}, northwestPoint, pixelPosition{0, 0}, false},
+
+		// check bottom right hexagon {27, 24}
+		{gridPosition{27, 24}, center, pixelPosition{0, 0}, false},
+		{gridPosition{27, 24}, northPoint, pixelPosition{1261, 700}, true},
+		{gridPosition{27, 24}, northeastPoint, pixelPosition{0, 0}, false},
+		{gridPosition{27, 24}, southeastPoint, pixelPosition{0, 0}, false},
+		{gridPosition{27, 24}, southPoint, pixelPosition{0, 0}, false},
+		{gridPosition{27, 24}, southwestPoint, pixelPosition{0, 0}, false},
+		{gridPosition{27, 24}, northwestPoint, pixelPosition{1238, 710}, true},
+	}
+
+	for _, tt := range tests {
+		var sWantedOk string
+		if tt.wantedOk {
+			sWantedOk = "exist"
+		} else {
+			sWantedOk = "not exist"
+		}
+
+		testname := fmt.Sprintf(
+			"gridPos:{%d,%d} and hex point %d converts to hex grid position {%d,%d} and want it to %s",
+			tt.gridPos.x,
+			tt.gridPos.y,
+			tt.hexPoint,
+			tt.wantedPixelPos.x,
+			tt.wantedPixelPos.y,
+			sWantedOk)
+
+		t.Run(testname, func(t *testing.T) {
+			pos, ok := getPixelPosition(tt.gridPos, tt.hexPoint, &hc)
+			if ok != tt.wantedOk {
+				t.Errorf("Wanted pixel position to %s", sWantedOk)
+			}
+			if pos.x != tt.wantedPixelPos.x || pos.y != tt.wantedPixelPos.y {
+				t.Errorf("For grid pos {%d,%d} and hex point %d  Wanted grid position {%d,%d} but it was {%d,%d}",
+					tt.gridPos.x,
+					tt.gridPos.y,
+					tt.hexPoint,
+					tt.wantedPixelPos.x,
+					tt.wantedPixelPos.y,
+					pos.x,
+					pos.y)
+			}
+		})
+	}
+}
+
 func TestGetGridPosition(t *testing.T) {
 	hexPositionContext := newHexPositionContext()
 	hc := hexConfig{

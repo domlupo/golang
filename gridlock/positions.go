@@ -1,5 +1,4 @@
 // general position utility functions. Most are pure functions. Used across many different files.
-
 package main
 
 import (
@@ -133,7 +132,6 @@ func (pos position) log() []slog.Attr {
 	return a
 }
 
-// TODO: write unit tests, did verify manually it worked with a few values
 func getPixelPosition(gridPos gridPosition, hexPoint hexPoint, hc *hexConfig) (pixelPosition, bool) {
 	xPadding := (hc.windowWidth % hc.hexWidth) / 2
 	x := xPadding + hc.hexWidth*gridPos.x
@@ -142,6 +140,8 @@ func getPixelPosition(gridPos gridPosition, hexPoint hexPoint, hc *hexConfig) (p
 	}
 	y := (hc.hexHeight * 3 / 4) * gridPos.y
 
+	// The values are found from the 1. hex position context defined in hexConfig.go
+	// and 2. arbitrary rule of hexagons sides are left inclusive and right exclusive.
 	switch hexPoint {
 	case center:
 		// do nothing
@@ -151,19 +151,19 @@ func getPixelPosition(gridPos gridPosition, hexPoint hexPoint, hc *hexConfig) (p
 		x -= hc.hexWidth / 2
 		y -= hc.hexHeight / 4
 	case northeastPoint:
-		x += hc.hexWidth / 2
+		x += hc.hexWidth/2 - 1
 		y -= hc.hexHeight / 4
 	case southPoint:
-		y += hc.hexHeight / 2
+		y += hc.hexHeight/2 - 1
 	case southwestPoint:
 		x -= hc.hexWidth / 2
-		y += hc.hexHeight / 4
+		y += hc.hexHeight/4 - 1
 	case southeastPoint:
-		x += hc.hexWidth / 2
-		y += hc.hexHeight / 4
+		x += hc.hexWidth/2 - 1
+		y += hc.hexHeight/4 - 1
 	}
 
-	if x < 0 || x > hc.windowWidth || y < 0 || y > hc.windowHeight {
+	if x < 0 || x >= hc.windowWidth || y < 0 || y >= hc.windowHeight {
 		return pixelPosition{}, false
 	} else {
 		return pixelPosition{x, y}, true
@@ -171,7 +171,7 @@ func getPixelPosition(gridPos gridPosition, hexPoint hexPoint, hc *hexConfig) (p
 }
 
 func getGridPos(pixelPos pixelPosition, hc *hexConfig) (gridPosition, bool) {
-	if pixelPos.x < 0 || pixelPos.x >= hc.windowWidth || pixelPos.y < 0 || pixelPos.y >= hc.windowHeight {
+	if pixelPos.x < 0 || pixelPos.x > hc.windowWidth-1 || pixelPos.y < 0 || pixelPos.y > hc.windowHeight-1 {
 		return gridPosition{}, false
 	}
 

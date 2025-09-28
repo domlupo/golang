@@ -1,5 +1,4 @@
 // The hexagon configuration is relatively complex due to CPU optimizations, so it is given its own file.
-
 package main
 
 // This global should only be used for function signatures, structs, etc. It can

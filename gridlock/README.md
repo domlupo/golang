@@ -145,8 +145,6 @@ Is there a mobile equivalent for war/4x games?
     - It can ping differently based on layer.
     - It can also do something like log unit and pause game so I can read logs?
 
-- Write unit tests for missing automated tests for function getHexPixelPosition
-
 - Verify if Bresenham error is handle correctly for Flux movements.
 
 - Deterministic seeds and deterministic game engine:
