@@ -15,23 +15,23 @@ func newComputer(p player) *computer {
 }
 
 func (c *computer) updateTargetNodes(s state) {
-	for nodePos, node := range s.nodes {
-		if node.player != c.player {
+	for _, n := range s.nodes {
+		if n.player != c.player {
 			continue
 		}
 
-		selfNodePos := nodePos
-		selfNode := node
+		selfNodePos := n.gridPos
+		selfNode := n
 		selfNode.target = position{}
 		nearestTargetDistanceSquared := math.MaxInt
 
-		for nodePos, node := range s.nodes {
-			if node.player == c.player {
+		for _, n := range s.nodes {
+			if n.player == c.player {
 				continue
 			}
 
-			otherNodePos := nodePos
-			otherNode := node
+			otherNodePos := n.gridPos
+			otherNode := n
 			xDelta := (selfNodePos.x - otherNode.gridPos.x)
 			yDelta := (selfNodePos.y - otherNode.gridPos.y)
 			otherTargetDistanceSquared := xDelta*xDelta + yDelta*yDelta
@@ -45,34 +45,30 @@ func (c *computer) updateTargetNodes(s state) {
 		}
 	}
 
-	for unitPos, unit := range s.units {
-		if unit.staticTarget {
+	for _, u := range s.units {
+		if u.staticTarget {
 			continue
 		}
 
-		if unit.player != c.player {
+		if u.player != c.player {
 			continue
 		}
 
-		selfUnitPos := unitPos
-		selfUnit := unit
 		nearestTargetDistanceSquared := math.MaxInt
 
-		for nodePos, node := range s.nodes {
-			if node.player == c.player {
+		for _, n := range s.nodes {
+			if n.player == c.player {
 				continue
 			}
 
-			otherNodePos := nodePos
-			otherNodePixelPos, _ := getPixelPosition(otherNodePos, center, s.hexConfig)
-			xDelta := (selfUnitPos.x - otherNodePixelPos.x)
-			yDelta := (selfUnitPos.y - otherNodePixelPos.y)
+			nPixelPos, _ := getPixelPosition(n.gridPos, center, s.hexConfig)
+			xDelta := (u.x - nPixelPos.x)
+			yDelta := (u.y - nPixelPos.y)
 			otherTargetDistanceSquared := xDelta*xDelta + yDelta*yDelta
 
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
-				var targetPixelPos, _ = getPixelPosition(otherNodePos, center, s.hexConfig)
-				selfUnit.updateTarget(globalTarget, position{ground, targetPixelPos})
+				u.updateTarget(globalTarget, position{ground, nPixelPos})
 			}
 		}
 	}

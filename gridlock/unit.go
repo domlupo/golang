@@ -271,17 +271,17 @@ func (u *unit) analyzeTargets() {
 // Uses Bresenham's line algorithm https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 // Specifically, the integer incremental error form where error is stored over mulitple moves
 // This algorithm prioritizes straight line movement. It is not guaranteed the final position is reached.
-func (u *unit) getNewPos(currentPos position) (position, func()) {
-	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "getNewPos", "currentPos", currentPos.log())
+func (u *unit) getNewPos() (position, func()) {
+	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "getNewPos", "currentPos", u.position.log())
 
 	if u.currentTarget.isZero() {
-		return currentPos, func() {}
+		return u.position, func() {}
 	}
 
 	x1 := u.currentTarget.x
 	y1 := u.currentTarget.y
-	x0 := currentPos.x
-	y0 := currentPos.y
+	x0 := u.x
+	y0 := u.y
 
 	var sx int
 	var sy int
@@ -322,7 +322,7 @@ func (u *unit) getNewPos(currentPos position) (position, func()) {
 		y0 += sy
 	}
 
-	newPos := position{currentPos.layer, pixelPosition{x0, y0}}
+	newPos := position{u.layer, pixelPosition{x0, y0}}
 	return newPos, func() { u.completeMove(newPos) }
 }
 
@@ -428,7 +428,7 @@ func (u unit) log() []slog.Attr {
 	return a
 }
 
-func (u *unit) draw(dc drawContext, pos position, selected bool) {
+func (u *unit) draw(dc drawContext, selected bool) {
 	var unitColor color.Color
 	switch u.player {
 	case bluePlayer:
@@ -441,8 +441,8 @@ func (u *unit) draw(dc drawContext, pos position, selected bool) {
 
 	vector.DrawFilledCircle(
 		dc.screen,
-		float32(pos.x)*dc.windowMultiplier,
-		float32(pos.y)*dc.windowMultiplier,
+		float32(u.x)*dc.windowMultiplier,
+		float32(u.y)*dc.windowMultiplier,
 		float32(u.radius)*dc.windowMultiplier,
 		unitColor,
 		false,
@@ -452,18 +452,18 @@ func (u *unit) draw(dc drawContext, pos position, selected bool) {
 		drawUnfilledBoxInt(
 			dc,
 			dc.highlightColor,
-			pos.x-u.radius,
-			pos.y-u.radius,
-			pos.x+u.radius,
-			pos.y+u.radius,
+			u.x-u.radius,
+			u.y-u.radius,
+			u.x+u.radius,
+			u.y+u.radius,
 		)
 	}
 
 	if selected && !u.currentTarget.isZero() {
 		vector.StrokeLine(
 			dc.screen,
-			float32(pos.x)*dc.windowMultiplier,
-			float32(pos.y)*dc.windowMultiplier,
+			float32(u.x)*dc.windowMultiplier,
+			float32(u.y)*dc.windowMultiplier,
 			float32(u.currentTarget.x)*dc.windowMultiplier,
 			float32(u.currentTarget.y)*dc.windowMultiplier,
 			float32(dc.targetNodeLineWidth)*dc.windowMultiplier,
@@ -486,8 +486,8 @@ func (u *unit) draw(dc drawContext, pos position, selected bool) {
 		if u.unitConfig.name == guidedAirMissile {
 			vector.StrokeCircle(
 				dc.screen,
-				float32(pos.x)*dc.windowMultiplier,
-				float32(pos.y)*dc.windowMultiplier,
+				float32(u.x)*dc.windowMultiplier,
+				float32(u.y)*dc.windowMultiplier,
 				float32(u.vision)*dc.windowMultiplier,
 				float32(dc.missileExplodeRadiusLineWidth)*dc.windowMultiplier,
 				dc.highlightColor,
@@ -501,8 +501,8 @@ func (u *unit) draw(dc drawContext, pos position, selected bool) {
 
 		vector.DrawFilledRect(
 			dc.screen,
-			float32(pos.x-u.radius)*dc.windowMultiplier,
-			float32(pos.y-u.radius)*dc.windowMultiplier,
+			float32(u.x-u.radius)*dc.windowMultiplier,
+			float32(u.y-u.radius)*dc.windowMultiplier,
 			healthLineLength*dc.windowMultiplier,
 			float32(u.radius)*dc.windowMultiplier,
 			dc.unitHealthColor,

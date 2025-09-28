@@ -19,9 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Refactor functions since units store their position now... Be careful for ones where 
-  the unit pos is currently being updated via game logic.
-
 - Determine which local path finding algorithm to implment with hex linked list optimizatons
 
 - Improve guided air missile

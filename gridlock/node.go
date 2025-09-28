@@ -51,7 +51,7 @@ func (n node) isZero() bool {
 	return n.player == noPlayer && n.gridPos.x == 0 && n.gridPos.y == 0 && n.target.layer == noLayer
 }
 
-func (n *node) drawNode(dc drawContext, gridPos gridPosition) {
+func (n *node) drawNode(dc drawContext) {
 	var cR float32
 	var cB float32
 	var cG float32
@@ -76,13 +76,13 @@ func (n *node) drawNode(dc drawContext, gridPos gridPosition) {
 		panic("unknown player cannot drawNode")
 	}
 
-	center, _ := getPixelPosition(gridPos, center, &dc.hexConfig)
-	north, _ := getPixelPosition(gridPos, northPoint, &dc.hexConfig)
-	northeast, _ := getPixelPosition(gridPos, northeastPoint, &dc.hexConfig)
-	southeast, _ := getPixelPosition(gridPos, southeastPoint, &dc.hexConfig)
-	south, _ := getPixelPosition(gridPos, southPoint, &dc.hexConfig)
-	southwest, _ := getPixelPosition(gridPos, southwestPoint, &dc.hexConfig)
-	northwest, _ := getPixelPosition(gridPos, northwestPoint, &dc.hexConfig)
+	center, _ := getPixelPosition(n.gridPos, center, &dc.hexConfig)
+	north, _ := getPixelPosition(n.gridPos, northPoint, &dc.hexConfig)
+	northeast, _ := getPixelPosition(n.gridPos, northeastPoint, &dc.hexConfig)
+	southeast, _ := getPixelPosition(n.gridPos, southeastPoint, &dc.hexConfig)
+	south, _ := getPixelPosition(n.gridPos, southPoint, &dc.hexConfig)
+	southwest, _ := getPixelPosition(n.gridPos, southwestPoint, &dc.hexConfig)
+	northwest, _ := getPixelPosition(n.gridPos, northwestPoint, &dc.hexConfig)
 
 	xCenter, yCenter := float32(center.x)*dc.windowMultiplier, float32(center.y)*dc.windowMultiplier
 	xNorth, yNorth := float32(north.x)*dc.windowMultiplier, float32(north.y)*dc.windowMultiplier
@@ -129,7 +129,7 @@ func (n *node) drawNode(dc drawContext, gridPos gridPosition) {
 	}
 }
 
-func (n *node) drawTargets(dc drawContext, gridPos gridPosition, drawBlueTargets bool, drawRedTargets bool) {
+func (n *node) drawTargets(dc drawContext, drawBlueTargets bool, drawRedTargets bool) {
 	var nodeColor color.Color
 	switch n.player {
 	case bluePlayer:
@@ -143,7 +143,7 @@ func (n *node) drawTargets(dc drawContext, gridPos gridPosition, drawBlueTargets
 	}
 
 	if !n.target.isZero() && ((n.player == bluePlayer && drawBlueTargets) || (n.player == redPlayer && drawRedTargets)) {
-		var center, _ = getPixelPosition(gridPos, center, &dc.hexConfig)
+		var center, _ = getPixelPosition(n.gridPos, center, &dc.hexConfig)
 		vector.StrokeLine(
 			dc.screen,
 			float32(center.x)*dc.windowMultiplier,
