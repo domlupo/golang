@@ -80,34 +80,14 @@ func (s *state) analyzeTargets() {
 			*u1,
 			u1.reach,
 			s.nodes)
+
 		if isTargetNode {
 			u1.canReachTargetNode = node
 		}
 
-		shortestDistance := math.MaxInt64
-		var closestUnitPos position
-		for uPos2, u2 := range s.units {
-			if u1.player == u2.player {
-				// unit cannot see itself or comrades
-				continue
-			}
+		nearest, _ := s.nearestUnitWithinVision(uPos1, *u1)
 
-			if !u1.attacksGround && uPos2.layer == ground ||
-				!u1.attacksLowAltitude && uPos2.layer == lowAltitude ||
-				!u1.attacksHighAltitude && uPos2.layer == highAltitude {
-				continue
-			}
-
-			xDelta := uPos1.x - uPos2.x
-			yDelta := uPos1.y - uPos2.y
-			distance := xDelta*xDelta + yDelta*yDelta
-			if distance < shortestDistance && distance < u1.vision*u1.vision {
-				shortestDistance = distance
-				closestUnitPos = uPos2
-			}
-		}
-
-		u1.updateTarget(localTarget, closestUnitPos)
+		u1.updateTarget(localTarget, nearest)
 		u1.analyzeTargets()
 	}
 }
@@ -303,6 +283,98 @@ func (s *state) explode(pos position, blastRadius int, units map[position]*unit)
 	}
 }
 
+func (s *state) nearestUnitWithinVision(pos position, unit unit) (position, bool) {
+	x1 := pos.x + unit.radius
+	y1 := pos.y + unit.radius
+
+	gridPos, _ := getGridPos(pos.pixelPosition, s.hexConfig)
+	hex := s.hexagons[gridPos]
+	var neHex, eHex, seHex, swHex, wHex, nwHex *hexagon
+
+	if pos, ok := gridPos.adjacent(northeastSide, s.hexConfig); ok {
+		neHex = s.hexagons[pos]
+	}
+	if pos, ok := gridPos.adjacent(eastSide, s.hexConfig); ok {
+		eHex = s.hexagons[pos]
+	}
+	if pos, ok := gridPos.adjacent(southeastSide, s.hexConfig); ok {
+		seHex = s.hexagons[pos]
+	}
+	if pos, ok := gridPos.adjacent(southwestSide, s.hexConfig); ok {
+		swHex = s.hexagons[pos]
+	}
+	if pos, ok := gridPos.adjacent(westSide, s.hexConfig); ok {
+		wHex = s.hexagons[pos]
+	}
+	if pos, ok := gridPos.adjacent(northwestSide, s.hexConfig); ok {
+		nwHex = s.hexagons[pos]
+	}
+
+	hexagons := [7]*hexagon{hex, neHex, eHex, seHex, swHex, wHex, nwHex}
+
+	shortestDistance := math.MaxInt64
+	var nearestUnitPos position
+
+	for _, hex := range hexagons {
+		if hex == nil {
+			continue
+		}
+
+		linkedList := hex.linkedList
+
+		if linkedList == nil || (linkedList.id == unit.id && linkedList == linkedList.next) {
+			continue
+		}
+
+		end := linkedList
+		current := linkedList
+		// checkOccurred handles the edge case where a hexagon has a single
+		// unit within in. This unit should still be checked since it
+		// is not the unit passed into the function but don't self cycle
+		// since it will never progress to a different current unit.
+		var checkOccurred bool
+		for {
+			if current.id == end.id && checkOccurred {
+				break
+			}
+
+			if current.id == unit.id {
+				current = current.next
+				continue
+			}
+
+			checkOccurred = true
+
+			if unit.player == current.player {
+				current = current.next
+				continue
+			}
+
+			if !unit.attacksGround && current.layer == ground ||
+				!unit.attacksLowAltitude && current.layer == lowAltitude ||
+				!unit.attacksHighAltitude && current.layer == highAltitude {
+				current = current.next
+				continue
+			}
+
+			x2 := current.x + current.radius
+			y2 := current.y + current.radius
+
+			xDelta := x2 - x1
+			yDelta := y2 - y1
+			distance := xDelta*xDelta + yDelta*yDelta
+			if distance < shortestDistance && distance <= unit.vision*unit.vision {
+				shortestDistance = distance
+				nearestUnitPos = current.position
+			}
+
+			current = current.next
+		}
+	}
+
+	return nearestUnitPos, shortestDistance == math.MaxInt64
+}
+
 // checks the passed newPos hexagon and its adjacent hexagons for collisions between
 // passed unit and unit midpoints within those hexagons. Returns the position
 // of the unit which collided with the passed unit.
@@ -364,6 +436,8 @@ func (s *state) collidesWithUnit(newPos position, unit unit) (position, bool) {
 				continue
 			}
 
+			checkOccurred = true
+
 			if newPos.layer != current.layer {
 				current = current.next
 				continue
@@ -376,7 +450,6 @@ func (s *state) collidesWithUnit(newPos position, unit unit) (position, bool) {
 			xDelta := x2 - x1
 			yDelta := y2 - y1
 			rSum := r1 + r2
-			checkOccurred = true
 			if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
 				return current.position, true
 			}

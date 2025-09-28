@@ -22,8 +22,6 @@ Is there a mobile equivalent for war/4x games?
 - Refactor functions since units store their position now... Be careful for ones where 
   the unit pos is currently being updated via game logic.
 
-- Update analyze Targets to use new spatial partitioning linked lists
-
 - Determine which local path finding algorithm to implment with hex linked list optimizatons
 
 - Improve guided air missile
@@ -442,7 +440,10 @@ In general:
   - Any work arounds needed will probably be a pain but this issue is far in future.
 
 - Post Work Reflection:
-  - The implementation worked because CPU performance for collidesWithUnit became negligible. ~1300 infantry units at 60 FPS possible.
+  - The implementation worked because CPU performance has improved multiple times:
+    - collidesWithUnit became negligible and allowed ~1300 infantry units at 60 FPS.
+    - analyzeTargets became negligible and allowed ~2500 infantry units with radius of 3 pixels at 60 FPS.
+      Performance is understanted since it was tested with developer logging taking 50% of update game CPU usage.
   - The implementation is simpler than what was designed
     - I didn't split layers. This was a good decision since I needed to start simple and this is an optimization.
     - Hexagon only stores a single pointer, not two which is simpler.
@@ -451,7 +452,6 @@ In general:
   - The implementation feels much more elegant than prior code. 
     - collidesWithUnit signature simplified from (newPos, unit, s.units) -> (newPos, unit)
     - Same updatePointers function is used for unit production and unit movement between hexagons.
-  - The design and imp
 
 ---
 
