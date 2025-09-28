@@ -4,7 +4,11 @@ package main
 type setup int
 
 const (
-	horizontal = iota
+	noNodes = iota
+	nodeSurrounded
+	zeroZero
+	oneOne
+	horizontal
 	horizontalMissile
 	vertical
 	diagonal
@@ -21,6 +25,19 @@ const (
 
 func setupState(gameState state, s setup, hexConfig *hexConfig, initialNodeHealth int) {
 	switch s {
+	case noNodes:
+	case nodeSurrounded:
+		gameState.addNode(newNode(bluePlayer, gridPosition{3, 1}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{4, 1}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{2, 2}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{3, 2}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{4, 2}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{3, 3}, initialNodeHealth, hexConfig, infantryConfig))
+		gameState.addNode(newNode(bluePlayer, gridPosition{4, 3}, initialNodeHealth, hexConfig, infantryConfig))
+	case zeroZero:
+		gameState.addNode(newNode(bluePlayer, gridPosition{0, 0}, initialNodeHealth, hexConfig, infantryConfig))
+	case oneOne:
+		gameState.addNode(newNode(bluePlayer, gridPosition{1, 1}, initialNodeHealth, hexConfig, infantryConfig))
 	case horizontal:
 		gameState.addNode(newNode(bluePlayer, gridPosition{1, 23}, initialNodeHealth, hexConfig, infantryConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{3, 23}, initialNodeHealth, hexConfig, infantryConfig))

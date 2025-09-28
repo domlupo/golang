@@ -31,8 +31,8 @@ func newHexConfig(windowWidth int, windowHeight int) hexConfig {
 		// 80/sqrt(3) is 46.188 which is approximately 46p.
 		hexWidth:     hexWidth,
 		hexHeight:    hexHeight,
-		xOffset:      19,
-		yOffset:      10,
+		xOffset:      -4,
+		yOffset:      0,
 		windowWidth:  windowWidth,
 		windowHeight: windowHeight,
 		xIndexMax:    xIndexMax,

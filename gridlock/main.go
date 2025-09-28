@@ -101,7 +101,7 @@ func (g *Game) restart() {
 	g.gameState = *newState(&g.drawContext.hexConfig)
 	g.compOne = *newComputer(bluePlayer)
 	g.compTwo = *newComputer(redPlayer)
-	setupState(g.gameState, zoomHorizontal, &g.drawContext.hexConfig, g.initialNodeHealth)
+	setupState(g.gameState, leftVsRightVerticalOffset, &g.drawContext.hexConfig, g.initialNodeHealth)
 	g.updateComputerTargetNodes()
 }
 

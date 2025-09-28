@@ -144,134 +144,78 @@ func drawDebug(dc drawContext, drawDebugGrid bool) {
 	//    / \
 	//   |
 	//   |
-	//    \ /
-	//     |
-	//     |
+	//
 	// when repeated, it forms a hexagonal grid.
 	//    / \ / \
 	//   |   |
 	//   |   |
-	//    \ / \ /
-	//     |   |
-	//     |   |
+	//  / \ / \ / \
+	// |   |   |
+	// |   |   |
 	//    / \ / \
 	//   |   |
 	//   |   |
-	//    \ / \ /
-	//     |   |
-	//     |   |
 
-	xDelta := dc.hexWidth
-	yDelta := dc.hexHeight * 3 / 2
-	verticalLineLength := dc.hexHeight / 2
-	horizontalLineLength := dc.hexWidth / 2
-	xStartIndex := -1
-	yStartIndex := -1
-	xCount := (dc.windowWidth / dc.hexWidth) + 1
-	yCount := (dc.windowHeight / dc.hexHeight)
+	for i := 0; i < dc.xIndexMax+1; i++ {
+		for j := 0; j < dc.yIndexMax; j++ {
+			lineWidth := float32(dc.debugGridWidth) * dc.windowMultiplier
+			pos := gridPosition{i, j}
 
-	for i := xStartIndex; i < xCount; i++ {
-		for j := yStartIndex; j < yCount; j++ {
-			// draw left side
+			n := getPixelPosOutbounds(pos, northPoint, &dc.hexConfig)
+			nX := float32(n.x)*dc.windowMultiplier + (float32(dc.xOffset) * dc.windowMultiplier)
+			nY := float32(n.y)*dc.windowMultiplier + (float32(dc.yOffset) * dc.windowMultiplier)
+
+			nw := getPixelPosOutbounds(pos, northwestPoint, &dc.hexConfig)
+			nwX := float32(nw.x)*dc.windowMultiplier + (float32(dc.xOffset) * dc.windowMultiplier)
+			nwY := float32(nw.y)*dc.windowMultiplier + (float32(dc.yOffset) * dc.windowMultiplier)
+
+			ne := getPixelPosOutbounds(pos, northeastPoint, &dc.hexConfig)
+			neX := float32(ne.x+1)*dc.windowMultiplier + (float32(dc.xOffset) * dc.windowMultiplier) - 1
+			neY := float32(ne.y)*dc.windowMultiplier + (float32(dc.yOffset) * dc.windowMultiplier)
+
+			sw := getPixelPosOutbounds(pos, southwestPoint, &dc.hexConfig)
+			swX := float32(sw.x)*dc.windowMultiplier + (float32(dc.xOffset) * dc.windowMultiplier)
+			swY := float32(sw.y+1)*dc.windowMultiplier + (float32(dc.yOffset) * dc.windowMultiplier) - 1
+
+			// draw west side
 			//    / \
 			//  *|*
 			//  *|*
-			//   |
-			//    \ /
-			//     |
-			//     |
 			vector.StrokeLine(
 				dc.screen,
-				float32(xDelta*i+dc.xOffset)*dc.windowMultiplier,
-				float32(yDelta*j+(dc.yOffset*2))*dc.windowMultiplier,
-				float32(xDelta*i+dc.xOffset)*dc.windowMultiplier,
-				float32(yDelta*j+(dc.yOffset*2)+verticalLineLength)*dc.windowMultiplier,
-				float32(dc.debugGridWidth)*dc.windowMultiplier,
+				nwX,
+				nwY,
+				swX,
+				swY,
+				lineWidth,
 				dc.debugGridColor,
 				false)
 
-			// draw top left
+			// draw northwest
 			//   */*\
 			//   |
 			//   |
-			//    \ /
-			//     |
-			//     |
 			vector.StrokeLine(
 				dc.screen,
-				float32(xDelta*i+dc.xOffset)*dc.windowMultiplier,
-				float32(yDelta*j+(dc.yOffset*2))*dc.windowMultiplier,
-				float32(xDelta*i+dc.xOffset+horizontalLineLength)*dc.windowMultiplier,
-				float32(yDelta*j+(dc.yOffset*2)-(verticalLineLength/2))*dc.windowMultiplier,
-				float32(dc.debugGridWidth)*dc.windowMultiplier,
+				nX,
+				nY,
+				nwX,
+				nwY,
+				lineWidth,
 				dc.debugGridColor,
 				false)
 
-			// draw top right
+			// draw northeast
 			//    /*\*
 			//   |
 			//   |
-			//    \ /
-			//     |
-			//     |
 			vector.StrokeLine(
 				dc.screen,
-				float32(xDelta*i+dc.xOffset+horizontalLineLength)*dc.windowMultiplier,
-				float32(yDelta*j+(dc.yOffset*2)-(verticalLineLength/2))*dc.windowMultiplier,
-				float32(xDelta*(i+1)+dc.xOffset)*dc.windowMultiplier,
-				float32(yDelta*j+(dc.yOffset*2))*dc.windowMultiplier,
-				float32(dc.debugGridWidth)*dc.windowMultiplier,
-				dc.debugGridColor,
-				false)
-
-			// draw bottom left
-			//    / \
-			//   |
-			//   |
-			//   *\*/
-			//     |
-			//     |
-			vector.StrokeLine(
-				dc.screen,
-				float32(xDelta*i+dc.xOffset)*dc.windowMultiplier,
-				float32(yDelta*j+(dc.yOffset*2)+verticalLineLength)*dc.windowMultiplier,
-				float32(xDelta*i+dc.xOffset+horizontalLineLength)*dc.windowMultiplier,
-				float32(yDelta*j+(dc.yOffset*2)+verticalLineLength+(verticalLineLength/2))*dc.windowMultiplier,
-				float32(dc.debugGridWidth)*dc.windowMultiplier,
-				dc.debugGridColor,
-				false)
-
-			// draw bottom right
-			//    / \
-			//   |
-			//   |
-			//    \*/*
-			//     |
-			//     |
-			vector.StrokeLine(
-				dc.screen,
-				float32(xDelta*i+dc.xOffset+horizontalLineLength)*dc.windowMultiplier,
-				float32(yDelta*j+(dc.yOffset*2)+verticalLineLength+(verticalLineLength/2))*dc.windowMultiplier,
-				float32(xDelta*(i)+dc.xOffset+(horizontalLineLength*2))*dc.windowMultiplier,
-				float32(yDelta*j+(dc.yOffset*2)+verticalLineLength)*dc.windowMultiplier,
-				float32(dc.debugGridWidth)*dc.windowMultiplier,
-				dc.debugGridColor,
-				false)
-
-			// draw vertical connection between rows
-			//    / \
-			//   |
-			//   |
-			//    \ /
-			//    *|*
-			//    *|*
-			vector.StrokeLine(
-				dc.screen,
-				float32(xDelta*i+dc.xOffset+horizontalLineLength)*dc.windowMultiplier,
-				float32(yDelta*j+(dc.yOffset*2)+verticalLineLength+(verticalLineLength/2))*dc.windowMultiplier,
-				float32(xDelta*i+dc.xOffset+horizontalLineLength)*dc.windowMultiplier,
-				float32(yDelta*j+(dc.yOffset*2)+(verticalLineLength*2)+(verticalLineLength/2))*dc.windowMultiplier,
-				float32(dc.debugGridWidth)*dc.windowMultiplier,
+				nX,
+				nY,
+				neX,
+				neY,
+				lineWidth,
 				dc.debugGridColor,
 				false)
 

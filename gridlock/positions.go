@@ -133,6 +133,17 @@ func (pos position) log() []slog.Attr {
 }
 
 func getPixelPosition(gridPos gridPosition, hexPoint hexPoint, hc *hexConfig) (pixelPosition, bool) {
+	pixelPos := getPixelPosOutbounds(gridPos, hexPoint, hc)
+	x, y := pixelPos.x, pixelPos.y
+
+	if x < 0 || x >= hc.windowWidth || y < 0 || y >= hc.windowHeight {
+		return pixelPosition{}, false
+	} else {
+		return pixelPosition{x, y}, true
+	}
+}
+
+func getPixelPosOutbounds(gridPos gridPosition, hexPoint hexPoint, hc *hexConfig) pixelPosition {
 	xPadding := (hc.windowWidth % hc.hexWidth) / 2
 	x := xPadding + hc.hexWidth*gridPos.x
 	if gridPos.y%2 == 1 {
@@ -163,11 +174,7 @@ func getPixelPosition(gridPos gridPosition, hexPoint hexPoint, hc *hexConfig) (p
 		y += hc.hexHeight/4 - 1
 	}
 
-	if x < 0 || x >= hc.windowWidth || y < 0 || y >= hc.windowHeight {
-		return pixelPosition{}, false
-	} else {
-		return pixelPosition{x, y}, true
-	}
+	return pixelPosition{x, y}
 }
 
 func getGridPos(pixelPos pixelPosition, hc *hexConfig) (gridPosition, bool) {

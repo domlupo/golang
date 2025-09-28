@@ -135,8 +135,8 @@ func TestGetGridPosition(t *testing.T) {
 		hexPositionContext: hexPositionContext,
 		hexWidth:           46,
 		hexHeight:          40,
-		xOffset:            19,
-		yOffset:            10,
+		xOffset:            -4,
+		yOffset:            0,
 		windowWidth:        1280,
 		windowHeight:       720,
 	}
