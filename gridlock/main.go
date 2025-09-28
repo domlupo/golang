@@ -106,7 +106,9 @@ func (g *Game) restart() {
 }
 
 func (g *Game) Update() error {
+	g.priorTime = g.currentTime
 	g.currentTime = time.Now()
+	logger.log(infoLevel, mainLogType, "game performance", "fps", ebiten.ActualFPS(), "tps", ebiten.ActualTPS())
 
 	for _, toggle := range g.developerToggles {
 		toggle.checkToggle(g.currentTime)
@@ -233,7 +235,6 @@ func (g *Game) Update() error {
 		}
 	}
 
-	g.priorTime = g.currentTime
 	return nil
 }
 

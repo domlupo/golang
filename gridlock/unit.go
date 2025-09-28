@@ -12,11 +12,11 @@ import (
 // Note: unit radius set to an odd number is better for testing due to division bugs
 var infantryConfig = unitConfig{
 	name:                 infantry,
-	radius:               5,
-	maxHealth:            1000,
+	radius:               3,
+	maxHealth:            2000,
 	attack:               1,
 	vision:               30,
-	reach:                6,
+	reach:                4,
 	produceLayer:         ground,
 	staticTarget:         false,
 	attacksGround:        true,

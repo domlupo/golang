@@ -19,23 +19,12 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Log FPS
-  - Easier to verify CPU performance improvements
-
 - Refactor functions since units store their position now... Be careful for ones where 
   the unit pos is currently being updated via game logic.
 
-- Update spatial partioning brainstorm with results
-  - reflect on outcomes and intuition
-
-- Finish spatial partition design and implementation
-  - Did I reach outcomes:
-    - What FPS can I support?
-    - What local path finding algorithms can I utilize now?
-    - How does multiplayer networking code affect this?
-    - How does state saved into file affect this?
-
 - Update analyze Targets to use new spatial partitioning linked lists
+
+- Determine which local path finding algorithm to implment with hex linked list optimizatons
 
 - Improve guided air missile
   - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.
@@ -453,7 +442,7 @@ In general:
   - Any work arounds needed will probably be a pain but this issue is far in future.
 
 - Post Work Reflection:
-  - The implementation worked because CPU performance for collidesWithUnit became negligible.
+  - The implementation worked because CPU performance for collidesWithUnit became negligible. ~1300 infantry units at 60 FPS possible.
   - The implementation is simpler than what was designed
     - I didn't split layers. This was a good decision since I needed to start simple and this is an optimization.
     - Hexagon only stores a single pointer, not two which is simpler.
