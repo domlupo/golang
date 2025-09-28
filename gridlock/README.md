@@ -19,6 +19,10 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Update draws.go draw debug grid to utilize getHexGridPos.
+  - The initial debug grid was implementation to see if hex was aesthetically pleasing.
+  - It is a few pixels off since exact hexagon position was not known until implemented.
+
 - Determine which local path finding algorithm to implment with hex linked list optimizatons
 
 - Improve guided air missile
