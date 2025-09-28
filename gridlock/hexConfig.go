@@ -24,8 +24,8 @@ func newHexConfig(windowWidth int, windowHeight int) hexConfig {
 	hexPositionContext := newHexPositionContext()
 	hexWidth := 46
 	hexHeight := 40
-	xIndexMax := windowWidth / hexWidth
-	yIndexMax := windowHeight / (hexHeight / 4 * 3)
+	xIndexMax := windowWidth/hexWidth + 1
+	yIndexMax := windowHeight/(hexHeight/4*3) + 1
 	hc := hexConfig{
 		hexPositionContext: hexPositionContext,
 		// For 1280p * 720p resolution, a hexagon height of 40p is ideally 80/sqrt(3) wide.

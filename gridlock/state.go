@@ -54,7 +54,6 @@ func (s *state) refresh() {
 
 		if !u.movedLastTurn {
 			gridPos, _ := getGridPos(uPos.pixelPosition, s.hexConfig)
-			// TODO: debug why the below line can cause panics at runtime
 			s.fluxes[gridPos].staticUnits++
 		}
 	}
