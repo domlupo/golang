@@ -19,10 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Add notes for why hexagon offsets were chosen and what the alternatives would be (0, -4)
-
-- Fix node selection highlight.
-
 - Determine which local path finding algorithm to implment with hex linked list optimizatons
 
 - Improve guided air missile
@@ -208,6 +204,8 @@ Is there a mobile equivalent for war/4x games?
 
 - Should I add a yaml, toml or json config file that is loaded at runtime?
 
+- Fix node selection highlight.
+
 - Invest in a visual debugger:
   - First feature would most likely be it can auto select/highlight a specific unit when it spawns
   - Other much lower priority improvements that can be added when needed:
@@ -314,6 +312,9 @@ Is there a mobile equivalent for war/4x games?
      is less powerful than computer dedicated GPU.
 11. Use cardinal directions for hexagon points and sides (north, northeast, etc) because the order is more
     obvious e.g. northeast not eastnorth where as topRight and rightTop are both used.
+12. Use {19,10} as initial hexagon offsets. These offsets greatly simplify getGridPos but makes getPixelPos
+    slightly more complex. If hexagon configuration changes in the future, probably should prioritze
+    simplifying getGridPos over getPixelPos.
 
 ---
 
