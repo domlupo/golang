@@ -4,7 +4,7 @@ package main
 type setup int
 
 const (
-	noNodes = iota
+	noNodes setup = iota
 	nodeSurrounded
 	zeroZero
 	oneOne

@@ -26,7 +26,7 @@ type pixelPosition struct {
 type layer int
 
 const (
-	noLayer = iota
+	noLayer layer = iota
 	ground
 	lowAltitude
 	highAltitude
@@ -41,7 +41,7 @@ type position struct {
 type hexPoint int
 
 const (
-	center = iota
+	center hexPoint = iota
 	northPoint
 	northeastPoint
 	southeastPoint
@@ -53,7 +53,7 @@ const (
 type hexSide int
 
 const (
-	noSide = iota
+	noSide hexSide = iota
 	northeastSide
 	eastSide
 	southeastSide
@@ -152,6 +152,8 @@ func getPixelPosOutbounds(gridPos gridPosition, hexPoint hexPoint, hc *hexConfig
 
 	// The values are found from the 1. hex position context defined in hexConfig.go
 	// and 2. arbitrary rule of hexagons sides are left inclusive and right exclusive.
+	// These offsets are found from the hex position context start point which is
+	// located at (xOffset, yOffset).
 	switch hexPoint {
 	case center:
 		y -= hc.hexHeight / 4

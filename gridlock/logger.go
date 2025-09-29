@@ -10,14 +10,14 @@ type level int
 type logType int
 
 const (
-	debugLevel = iota
+	debugLevel level = iota
 	infoLevel
 	warnLevel
 	errorLevel
 )
 
 const (
-	noLogType = iota
+	noLogType logType = iota
 	alwaysLogType
 	mainLogType
 	stateLogType

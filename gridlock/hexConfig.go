@@ -123,7 +123,7 @@ func newHexConfig(windowWidth int, windowHeight int) hexConfig {
 type hexagonTriangle int
 
 const (
-	unknownHexTriangle = iota
+	unknownHexTriangle hexagonTriangle = iota
 	leftHexTriangle
 	middleHexTriangle
 	rightHexTriangle

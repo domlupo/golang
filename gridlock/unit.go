@@ -93,7 +93,7 @@ var guidedAirMissileConfig = unitConfig{
 type name int
 
 const (
-	noName = iota
+	noName name = iota
 	infantry
 	sniper
 	unguidedGroundMissile
@@ -104,7 +104,7 @@ const (
 type unitTarget int
 
 const (
-	noTarget = iota
+	noTarget unitTarget = iota
 	currentTarget
 	fluxTarget
 	localTarget

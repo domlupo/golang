@@ -11,7 +11,7 @@ import (
 type player int
 
 const (
-	noPlayer = iota
+	noPlayer player = iota
 	bluePlayer
 	redPlayer
 	neutralPlayer

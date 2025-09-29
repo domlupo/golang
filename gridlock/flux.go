@@ -5,7 +5,7 @@ import "github.com/hajimehoshi/ebiten/v2/vector"
 
 type fluxVector struct {
 	magnitude int
-	hexSide   int
+	hexSide   hexSide
 }
 
 type flux struct {
