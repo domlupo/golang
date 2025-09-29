@@ -144,37 +144,36 @@ func getPixelPos(gridPos gridPosition, hexPoint hexPoint, hc *hexConfig) (pixelP
 }
 
 func getPixelPosOutbounds(gridPos gridPosition, hexPoint hexPoint, hc *hexConfig) pixelPosition {
-	xPadding := (hc.windowWidth % hc.hexWidth) / 2
-	x := xPadding + hc.hexWidth*gridPos.x
+	x := gridPos.x * hc.hexWidth
+	y := gridPos.y * (hc.hexHeight / 4 * 3)
 	if gridPos.y%2 == 1 {
-		x = x - hc.hexWidth/2
+		x -= (hc.hexWidth) / 2
 	}
-	y := (hc.hexHeight * 3 / 4) * gridPos.y
 
 	// The values are found from the 1. hex position context defined in hexConfig.go
 	// and 2. arbitrary rule of hexagons sides are left inclusive and right exclusive.
 	switch hexPoint {
 	case center:
-		// do nothing
+		y -= hc.hexHeight / 4
 	case northPoint:
-		y -= hc.hexHeight / 2
+		y -= hc.hexHeight / 4 * 3
 	case northwestPoint:
 		x -= hc.hexWidth / 2
-		y -= hc.hexHeight / 4
+		y -= hc.hexHeight / 2
 	case northeastPoint:
 		x += hc.hexWidth/2 - 1
-		y -= hc.hexHeight / 4
+		y -= hc.hexHeight / 2
 	case southPoint:
-		y += hc.hexHeight/2 - 1
+		y += hc.hexHeight/4 - 1
 	case southwestPoint:
 		x -= hc.hexWidth / 2
-		y += hc.hexHeight/4 - 1
+		y -= 1
 	case southeastPoint:
 		x += hc.hexWidth/2 - 1
-		y += hc.hexHeight/4 - 1
+		y -= 1
 	}
 
-	return pixelPosition{x, y}
+	return pixelPosition{x + hc.xOffset, y + hc.yOffset}
 }
 
 func getGridPos(pixelPos pixelPosition, hc *hexConfig) (gridPosition, bool) {

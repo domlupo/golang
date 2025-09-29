@@ -38,7 +38,11 @@ func (c *computer) updateTargetNodes(s state) {
 
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
-				var targetPixelPos, _ = getPixelPos(otherNodePos, center, s.hexConfig)
+				var targetPixelPos, ok = getPixelPos(otherNodePos, center, s.hexConfig)
+				if !ok {
+					panic("could not get pixel pos for update computer node targets")
+				}
+
 				selfNode.target = position{ground, targetPixelPos}
 			}
 
@@ -61,7 +65,10 @@ func (c *computer) updateTargetNodes(s state) {
 				continue
 			}
 
-			nPixelPos, _ := getPixelPos(n.gridPos, center, s.hexConfig)
+			nPixelPos, ok := getPixelPos(n.gridPos, center, s.hexConfig)
+			if !ok {
+				panic("could not get pixel pos for update computer unit targets")
+			}
 			xDelta := (u.x - nPixelPos.x)
 			yDelta := (u.y - nPixelPos.y)
 			otherTargetDistanceSquared := xDelta*xDelta + yDelta*yDelta

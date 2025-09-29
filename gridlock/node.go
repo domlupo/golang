@@ -84,13 +84,15 @@ func (n *node) drawNode(dc drawContext) {
 	south := getPixelPosOutbounds(n.gridPos, southPoint, &dc.hexConfig)
 	northwest := getPixelPosOutbounds(n.gridPos, northwestPoint, &dc.hexConfig)
 
-	xCenter, yCenter := float32(center.x+dc.xOffset)*dc.windowMultiplier, float32(center.y+dc.yOffset)*dc.windowMultiplier
-	xNorth, yNorth := float32(north.x+dc.xOffset)*dc.windowMultiplier, float32(north.y+dc.yOffset)*dc.windowMultiplier
-	xNortheast, yNortheast := float32(northeast.x+dc.xOffset+1)*dc.windowMultiplier-1, float32(northeast.y+dc.yOffset)*dc.windowMultiplier
-	xSoutheast, ySoutheast := float32(southeast.x+dc.xOffset+1)*dc.windowMultiplier-1, float32(southeast.y+dc.yOffset+1)*dc.windowMultiplier-1
-	xSouthwest, ySouthwest := float32(southwest.x+dc.xOffset)*dc.windowMultiplier, float32(southwest.y+dc.yOffset+1)*dc.windowMultiplier-1
-	xSouth, ySouth := float32(south.x+dc.xOffset)*dc.windowMultiplier, float32(south.y+dc.yOffset+1)*dc.windowMultiplier-1
-	xNorthwest, yNorthwest := float32(northwest.x+dc.xOffset)*dc.windowMultiplier, float32(northwest.y+dc.yOffset)*dc.windowMultiplier
+	// The one pixel offsets for inclusive or exclusive hex points are handled at the game logic layer.
+	// The window multiplier offsets are handled here since window multiplier is a draw concept.
+	xCenter, yCenter := float32(center.x)*dc.windowMultiplier, float32(center.y)*dc.windowMultiplier
+	xNorth, yNorth := float32(north.x)*dc.windowMultiplier, float32(north.y)*dc.windowMultiplier
+	xNortheast, yNortheast := float32(northeast.x+1)*dc.windowMultiplier, float32(northeast.y)*dc.windowMultiplier
+	xSoutheast, ySoutheast := float32(southeast.x+1)*dc.windowMultiplier, float32(southeast.y+1)*dc.windowMultiplier
+	xSouthwest, ySouthwest := float32(southwest.x)*dc.windowMultiplier, float32(southwest.y+1)*dc.windowMultiplier
+	xSouth, ySouth := float32(south.x)*dc.windowMultiplier, float32(south.y+1)*dc.windowMultiplier
+	xNorthwest, yNorthwest := float32(northwest.x)*dc.windowMultiplier, float32(northwest.y)*dc.windowMultiplier
 
 	indices := []uint16{0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 1}
 	vertices := []ebiten.Vertex{
@@ -143,7 +145,10 @@ func (n *node) drawTargets(dc drawContext, drawBlueTargets bool, drawRedTargets 
 	}
 
 	if !n.target.isZero() && ((n.player == bluePlayer && drawBlueTargets) || (n.player == redPlayer && drawRedTargets)) {
-		var center, _ = getPixelPos(n.gridPos, center, &dc.hexConfig)
+		var center, ok = getPixelPos(n.gridPos, center, &dc.hexConfig)
+		if !ok {
+			panic("could not get pixel pos for node draw targets")
+		}
 		vector.StrokeLine(
 			dc.screen,
 			float32(center.x)*dc.windowMultiplier,

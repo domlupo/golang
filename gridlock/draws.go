@@ -162,20 +162,20 @@ func drawDebug(dc drawContext, drawDebugGrid bool) {
 			pos := gridPosition{i, j}
 
 			n := getPixelPosOutbounds(pos, northPoint, &dc.hexConfig)
-			nX := float32(n.x)*dc.windowMultiplier + (float32(dc.xOffset) * dc.windowMultiplier)
-			nY := float32(n.y)*dc.windowMultiplier + (float32(dc.yOffset) * dc.windowMultiplier)
+			nX := float32(n.x) * dc.windowMultiplier
+			nY := float32(n.y) * dc.windowMultiplier
 
 			nw := getPixelPosOutbounds(pos, northwestPoint, &dc.hexConfig)
-			nwX := float32(nw.x)*dc.windowMultiplier + (float32(dc.xOffset) * dc.windowMultiplier)
-			nwY := float32(nw.y)*dc.windowMultiplier + (float32(dc.yOffset) * dc.windowMultiplier)
+			nwX := float32(nw.x) * dc.windowMultiplier
+			nwY := float32(nw.y) * dc.windowMultiplier
 
 			ne := getPixelPosOutbounds(pos, northeastPoint, &dc.hexConfig)
-			neX := float32(ne.x+1)*dc.windowMultiplier + (float32(dc.xOffset) * dc.windowMultiplier) - 1
-			neY := float32(ne.y)*dc.windowMultiplier + (float32(dc.yOffset) * dc.windowMultiplier)
+			neX := float32(ne.x+1) * dc.windowMultiplier
+			neY := float32(ne.y) * dc.windowMultiplier
 
 			sw := getPixelPosOutbounds(pos, southwestPoint, &dc.hexConfig)
-			swX := float32(sw.x)*dc.windowMultiplier + (float32(dc.xOffset) * dc.windowMultiplier)
-			swY := float32(sw.y+1)*dc.windowMultiplier + (float32(dc.yOffset) * dc.windowMultiplier) - 1
+			swX := float32(sw.x) * dc.windowMultiplier
+			swY := float32(sw.y+1) * dc.windowMultiplier
 
 			// draw west side
 			//    / \

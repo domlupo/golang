@@ -11,12 +11,14 @@ type hexConfig struct {
 	hexPositionContext [hexagonPostitionContextPixelCount]hexagonTriangle
 	hexWidth           int
 	hexHeight          int
-	xOffset            int
-	yOffset            int
-	windowWidth        int
-	windowHeight       int
-	xIndexMax          int
-	yIndexMax          int
+	// These offsets define the top left point for the most top left hex position
+	// context pattern. It was chosen since both a positive x and y simplifies code.
+	xOffset      int
+	yOffset      int
+	windowWidth  int
+	windowHeight int
+	xIndexMax    int
+	yIndexMax    int
 }
 
 func newHexConfig(windowWidth int, windowHeight int) hexConfig {
@@ -31,8 +33,8 @@ func newHexConfig(windowWidth int, windowHeight int) hexConfig {
 		// 80/sqrt(3) is 46.188 which is approximately 46p.
 		hexWidth:     hexWidth,
 		hexHeight:    hexHeight,
-		xOffset:      -4,
-		yOffset:      0,
+		xOffset:      19,
+		yOffset:      10,
 		windowWidth:  windowWidth,
 		windowHeight: windowHeight,
 		xIndexMax:    xIndexMax,
@@ -51,7 +53,9 @@ func newHexConfig(windowWidth int, windowHeight int) hexConfig {
 // more optimized solution was implemented first.
 //
 // It is small portion of the hexagonal grid that is repeated multiple times.
-// It covers 460 (46 cols, 10 rows) of pixels.
+// It covers 460 (46 cols, 10 rows) of pixels. The top left point in the most
+// top left pattern is located at {xOffset, yOffset}.
+//
 // It has a:
 //   - right triangle on the left side.
 //   - non right triangle in the middle.

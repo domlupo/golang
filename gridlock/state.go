@@ -235,7 +235,10 @@ func (s *state) collidesWithNode(pos position, u unit, unitCollisionRadius int, 
 			continue
 		}
 
-		nPixelPos, _ := getPixelPos(n.gridPos, center, s.hexConfig)
+		nPixelPos, ok := getPixelPos(n.gridPos, center, s.hexConfig)
+		if !ok {
+			panic("could not get pixel pos for collide with node")
+		}
 
 		x2 := nPixelPos.x
 		y2 := nPixelPos.y
@@ -686,7 +689,10 @@ func (s *state) produceUnits() {
 		}
 
 		// TODO: determine behavior for producing units during collision
-		pixelPos, _ := getPixelPos(n.gridPos, center, s.hexConfig)
+		pixelPos, ok := getPixelPos(n.gridPos, center, s.hexConfig)
+		if !ok {
+			panic("could not get pixel pos for produce units")
+		}
 		uPos := position{n.unitConfig.produceLayer, pixelPos}
 		newUnit := newUnit(n.player, n.target, n.unitConfig, uPos, s.unitsProducedTotal)
 		if _, collides := s.collidesWithUnit(uPos, newUnit); !collides {

@@ -19,6 +19,8 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Add notes for why hexagon offsets were chosen and what the alternatives would be (0, -4)
+
 - Fix node selection highlight.
 
 - Determine which local path finding algorithm to implment with hex linked list optimizatons
