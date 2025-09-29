@@ -132,7 +132,7 @@ func (pos position) log() []slog.Attr {
 	return a
 }
 
-func getPixelPosition(gridPos gridPosition, hexPoint hexPoint, hc *hexConfig) (pixelPosition, bool) {
+func getPixelPos(gridPos gridPosition, hexPoint hexPoint, hc *hexConfig) (pixelPosition, bool) {
 	pixelPos := getPixelPosOutbounds(gridPos, hexPoint, hc)
 	x, y := pixelPos.x, pixelPos.y
 

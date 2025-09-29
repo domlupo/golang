@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestGetPixelPosition(t *testing.T) {
+func TestGetPixelPos(t *testing.T) {
 	hexPositionContext := newHexPositionContext()
 	hc := hexConfig{
 		hexPositionContext: hexPositionContext,
@@ -111,7 +111,7 @@ func TestGetPixelPosition(t *testing.T) {
 			sWantedOk)
 
 		t.Run(testname, func(t *testing.T) {
-			pos, ok := getPixelPosition(tt.gridPos, tt.hexPoint, &hc)
+			pos, ok := getPixelPos(tt.gridPos, tt.hexPoint, &hc)
 			if ok != tt.wantedOk {
 				t.Errorf("Wanted pixel position to %s", sWantedOk)
 			}
@@ -129,7 +129,7 @@ func TestGetPixelPosition(t *testing.T) {
 	}
 }
 
-func TestGetGridPosition(t *testing.T) {
+func TestGetGridPos(t *testing.T) {
 	hexPositionContext := newHexPositionContext()
 	hc := hexConfig{
 		hexPositionContext: hexPositionContext,

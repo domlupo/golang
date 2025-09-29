@@ -143,7 +143,7 @@ func (n *node) drawTargets(dc drawContext, drawBlueTargets bool, drawRedTargets 
 	}
 
 	if !n.target.isZero() && ((n.player == bluePlayer && drawBlueTargets) || (n.player == redPlayer && drawRedTargets)) {
-		var center, _ = getPixelPosition(n.gridPos, center, &dc.hexConfig)
+		var center, _ = getPixelPos(n.gridPos, center, &dc.hexConfig)
 		vector.StrokeLine(
 			dc.screen,
 			float32(center.x)*dc.windowMultiplier,

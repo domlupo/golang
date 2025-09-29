@@ -21,8 +21,6 @@ Is there a mobile equivalent for war/4x games?
 
 - Fix node selection highlight.
 
-- Rename getPixelPosition to getPixelPos
-
 - Determine which local path finding algorithm to implment with hex linked list optimizatons
 
 - Improve guided air missile

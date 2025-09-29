@@ -107,7 +107,7 @@ func (f *flux) draw(dc drawContext, fluxPos gridPosition) {
 		return
 	}
 
-	center, _ := getPixelPosition(fluxPos, center, &dc.hexConfig)
+	center, _ := getPixelPos(fluxPos, center, &dc.hexConfig)
 	xEnd := center.x
 	yEnd := center.y
 
