@@ -170,6 +170,7 @@ func (s *state) moveUnits() {
 				oldHex := s.hexagons[oldGridPos]
 				newHex := s.hexagons[newGridPos]
 				oldHex.unitCount--
+				// TODO: This can panic, debug why.
 				newHex.unitCount++
 
 				if u.next.id == u.id && u.prior.id == u.id {

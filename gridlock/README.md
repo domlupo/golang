@@ -19,7 +19,17 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Update notes for hex positional context:
+  - Refactor hex positional context notes to use the term look up table aka direct addressing.
+  - Note potential optimization to use compile time creation with static lookup vs 
+    initial runtime setup with heap allocated look up at runtime.
+  - Might be worth making a library for this in c or zig for others to use and to practice
+    programming.
+
 - Determine which local path finding algorithm to implment with hex linked list optimizatons
+
+- Add impassable grids (mountains) and update global path finding to avoid them
+  - theta* / bresenham with visibility grids should be implemented.
 
 - Improve guided air missile
   - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.
@@ -311,6 +321,16 @@ Is there a mobile equivalent for war/4x games?
 
 ## Game Design Questions
 
+- Risk vs reward for how many units to produce and what type vs how production to invest elsewhere could be nice. 
+  e.g. I invested too much, my enemy lines are breaking apart. Infantry units may need to be ranged in order for
+  more units to matter. It might also be nice to allow bimodal behavior. E.g. Charge infantry vs infantry shoots
+  from far away. This affects all infantry to keep game controls simple.
+- Having different constraints on layers may help optimize. e.g. ground layer restricts unit movement to 1 pixel
+  but low altitude and high altitude units allow more than 1 pixel movement. Can aslo sub tick only 1 layer
+  and regular tick the others.
+- Using 3 layers instead of 2 may help with spatial partitioning
+- Flux looks visually nice because units in combat vs out of combat have different animations. In final game,
+  perhaps there should be an attack animations for infantry and a non attack animation.
 - Should air units have impassable terrain e.g. high mountain? Will make path finding harder for air units
 - Stopping node unit production in order to advance tech tree, improve node is probably a good form of risk -> reward.
 - Should nodes support unit cycling e.g. produce missile, then produce infantry, then produce tank, etc
@@ -376,9 +396,10 @@ Is there a mobile equivalent for war/4x games?
 
 ---
 
-###  Spatial Partitioning Brainstorm
+###  Brainstorm Spatial Partitioning
 
 In general:
+
 - Start simple, refactor and optimize later. I will most likely need to make significant changes 
   in the future no matter what I build. Get a frame work in place that unblocks other tasks like 
   local path finding and adding more units types.
@@ -387,100 +408,203 @@ In general:
   Also, the unit can calculate for additional hexagons or add more more adjacent 
   hexagons as needed.
 
-- High level Implementation:
-  - Units store next and prior pointer. Hexagon should also store next and prior or maybe call it something else.
-  - Use double linked list that store pointers to relate units and next units.
-  - Not sure best way to break up player and layer. Probably best to start with a map
-    with a key of (player + layer) and see if performance optimization is needed.
-  - Use existing hexagons as grid
-    - coupling seems fine since hexagons are so fundemental to game.
-    - most likely there is a way to reuse hexagon collision logic for units changing hexagons 
-    - writing save file is easier if I reuse hexagon
-    - hexagon has a soft limit of <20 or <=20 pixel for units. Seems fine for now and can be worked around.
+High level Implementation:
 
-- Low level implementation:
-  - Go through issues to make sure they are all addressed.
-  - start per unit heap allocation during new unit production. 
-  - start with using getGridPos on every turn to figure out hexagon. There many ways to optimize this in future.
-  - Avoid two way checks where possible with tagging. Some two ways checks are easier to avoid than others.
-  - knowing how many units of a certain player are in a given hexagon 
-    might be good for guided missile targets. Can easily increment and 
-    decrement a counter on node rather than iterate through heap 
-    allocations. Can calculate unit delta e.g. opponenet has 10 units, I have 2, so missile is +8 overall.
+- Units store next and prior pointer. Hexagon should also store next and prior or maybe call it something else.
+- Use double linked list that store pointers to relate units and next units.
+- Not sure best way to break up player and layer. Probably best to start with a map
+  with a key of (player + layer) and see if performance optimization is needed.
+- Use existing hexagons as grid
+  - coupling seems fine since hexagons are so fundemental to game.
+  - most likely there is a way to reuse hexagon collision logic for units changing hexagons 
+  - writing save file is easier if I reuse hexagon
+  - hexagon has a soft limit of <20 or <=20 pixel for units. Seems fine for now and can be worked around.
 
-- Careful of current issues:
-  - Will probably need to support checking a lot of hexagons for certain scenarios:
-    - A large explosion will have collision > one hexagon. This is something I am concerned about
-      because this will probablhy be the most performance sensitive computation since players
-      will want to most likely target areas with alot of units.
-    - A unit with large vision e.g. guided air missile will probably need to check multiple hexagons.
-    - If I implement in the future units which capture a city atttempt to capture the next closest city
-      to themself rather than to the city. It might be more on theme that they all attack the same city
-      which is an easier calculation? 
-  - For nearest unit I can either check optimially by iterating through more distance hexagons or brute
-    force check all hexagons.
-  - On unit kill need to handle its double linked list pointers
-  - Need to sync or verify or handle units switching layers if layer optimization is needed
-  - Units able to move more than one pos per turn cannot transfer hexagons via single line check.
-    Need to use something more robust like current getGridPos.
-  - nodes switching ownership should not use newNode anymore unless pointers are preserved.
+Low level implementation:
 
-- Potential future issues:
-  - Units largers than one hexagon have work arounds e.g. add unit to more than one hexagon.
-  - Same work around is possible for units moving fast.
-  - Any work arounds needed will probably be a pain but this issue is far in future.
+- Go through issues to make sure they are all addressed.
+- start per unit heap allocation during new unit production. 
+- start with using getGridPos on every turn to figure out hexagon. There many ways to optimize this in future.
+- Avoid two way checks where possible with tagging. Some two ways checks are easier to avoid than others.
+- knowing how many units of a certain player are in a given hexagon 
+  might be good for guided missile targets. Can easily increment and 
+  decrement a counter on node rather than iterate through heap 
+  allocations. Can calculate unit delta e.g. opponenet has 10 units, I have 2, so missile is +8 overall.
 
-- Post Work Reflection:
-  - The implementation worked because CPU performance has improved multiple times:
-    - collidesWithUnit became negligible and allowed ~1300 infantry units at 60 FPS.
-    - analyzeTargets became negligible and allowed ~2500 infantry units with radius of 3 pixels at 60 FPS.
-      Performance is understanted since it was tested with developer logging taking 50% of update game CPU usage.
-  - The implementation is simpler than what was designed
-    - I didn't split layers. This was a good decision since I needed to start simple and this is an optimization.
-    - Hexagon only stores a single pointer, not two which is simpler.
-    - units per player in hex would require multiple counters. Only added a single total unit counter per hex.
-    - Hexagons are separate from nodes, so node ownership update logic did not need an update.
-  - The implementation feels much more elegant than prior code. 
-    - collidesWithUnit signature simplified from (newPos, unit, s.units) -> (newPos, unit)
-    - Same updatePointers function is used for unit production and unit movement between hexagons.
+Careful of current issues:
 
----
+- Will probably need to support checking a lot of hexagons for certain scenarios:
+  - A large explosion will have collision > one hexagon. This is something I am concerned about
+    because this will probablhy be the most performance sensitive computation since players
+    will want to most likely target areas with alot of units.
+  - A unit with large vision e.g. guided air missile will probably need to check multiple hexagons.
+  - If I implement in the future units which capture a city atttempt to capture the next closest city
+    to themself rather than to the city. It might be more on theme that they all attack the same city
+    which is an easier calculation? 
+- For nearest unit I can either check optimially by iterating through more distance hexagons or brute
+  force check all hexagons.
+- On unit kill need to handle its double linked list pointers
+- Need to sync or verify or handle units switching layers if layer optimization is needed
+- Units able to move more than one pos per turn cannot transfer hexagons via single line check.
+  Need to use something more robust like current getGridPos.
+- nodes switching ownership should not use newNode anymore unless pointers are preserved.
 
-### Multi-agent and Local Pathfinding Brainstorm
+Potential future issues:
 
-- Units with different count and layers can employ different path finding algorithms.
-  - total number of bombers will be low relatively fewer collisions
-  - total number of infantry will be high with many collisions
+- Units largers than one hexagon have work arounds e.g. add unit to more than one hexagon.
+- Same work around is possible for units moving fast.
+- Any work arounds needed will probably be a pain but this issue is far in future.
 
-- Pathfinding algorithm buckets:
-  - Static obstacles: 
-    - Theta*
-    - A*
-  - Dynamic obstacles: 
-    - D*
-    - D* focused
-    - D* lite
-    - LPA* aka Lifelong Planning A*
-    - Conflict Based Search
-    - Enhanced Conflict Based Search
-    - Increasing  cost tree seach
-    - Geometric MAPF or MAPF for large agents (LAMAPF)
-    - Lifelong planning conflict-based search (LPCBS)
-  - Group:
-    - flow fields
-    - flocking behaviors
-    - dynamic obstacle avoidance
-    - continuum crowds
+Post Work Reflection:
 
-- Other consideration:
-  - Anonymous Multi-agent pathfinding: Set of targets to reach but specific agent does not matter
-  - Can use nav meshes to optimize or simplify searches
-  - Can use window searches aka use smaller searches to lower CPU use 
-  - Rapidly-exploring random tree can create randomized pathing 
+- The implementation worked because CPU performance has improved multiple times:
+  - collidesWithUnit became negligible and allowed ~1300 infantry units at 60 FPS.
+  - analyzeTargets became negligible and allowed ~2500 infantry units with radius of 3 pixels at 60 FPS.
+    Performance is understanted since it was tested with developer logging taking 50% of update game CPU usage.
+- The implementation is simpler than what was designed
+  - I didn't split layers. This was a good decision since I needed to start simple and this is an optimization.
+  - Hexagon only stores a single pointer, not two which is simpler.
+  - units per player in hex would require multiple counters. Only added a single total unit counter per hex.
+  - Hexagons are separate from nodes, so node ownership update logic did not need an update.
+- The implementation feels much more elegant than prior code. 
+  - collidesWithUnit signature simplified from (newPos, unit, s.units) -> (newPos, unit)
+  - Same updatePointers function is used for unit production and unit movement between hexagons.
 
 ---
 
-### Unit List Brainstorm
+### Brainstorm Implementation for Local Pathfinding with Spatial Partioning
+
+Overall Thoughts:
+
+- Start with an optimal solution. This can be used for few units. If this is too CPU intense, 
+  can use large agent count algorithms or methods when more than a few units are present. 
+- Probably want a default path finding algorithm for most units and specialized for infantry.
+- Think about and define common player experiences and the desired behavior.
+- First implementation goal is to allow better gridlock/clumping that forms lines of engagement efficiently.
+- Units moving the same speed mean that only static units will collide. So don't perform
+  expensive path find unless static units are nearby.
+- Unfiorm cost grid greatly simplifies algorithms and helps reduce CPU usage. This is probably
+  needed for optimal game experience since pathfinding is fundamental and dynamic movement cost is 
+  a minor idea.
+- Can use different path finding techniques based on how many local units are nearby. Probably
+  don't want to change techniques based on total game units since it would add a lot of complexity
+  and modality.
+- Can use different path finding techniques based on unit type e.g. infantry will have high count
+  and high number of collisions. Infantry needs optimized, low CPU, path finding which helps clumps
+  them together. Bombers will be low count, low number of collisions.
+- Might need to perform specific path finding for a few units, then large unit updates e.g. missile
+  kills off several units, perform large agent count path finding.
+
+Potential optimizations
+
+- p100 runtime calcuation should be prioritzed. What can i compute at startup and during other
+  game actions or turns to speed up computation?
+- When a change occurs, only recalculate nodes affected 
+- What heuristics can I use for better performacne e.g euclidean distance, octile distance, other distances, etc
+- What optimizations does uniform grid cost allow?
+- What optimizatoin does 1 pixel movemnt cost allow?
+- JPS pruning gains (avoid duplicate paths via uniform movement, allow jumps)
+- JPS* precompute gains (save runtime calculations to determine JPS nodes)
+
+Implementation order:
+- Implement globa theta*. Global is probably needed long term, seems easier to implement, small stepping stone.
+- Implement local theta*. Use visibility grids for hexagons and units. Use hexagon spatial partitioning.
+- Determine how "extra" units are handled? Do they pack in tightly? or sit back? 
+- If conflicts are causing issues, determine if normal CBS vs enhanced CBS is better for handling conflicts.
+
+---
+
+### Brainstorm Multi-agent and Local Pathfinding
+
+Pathfinding algorithm types:
+
+- Static obstacles: 
+  - Theta* (any angle, more natural paths) https://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter16_Theta_Star_for_Any-Angle_Pathfinding.pdf
+  - A* (grid based movement) without post processing
+  - A* with post processing
+  - Visibility graphs (find shortest path, find collisions, find vertexs of collision, use these for paths)
+- Dynamic obstacles: 
+  - D* https://www.ri.cmu.edu/pub_files/pub3/stentz_anthony__tony__1994_2/stentz_anthony__tony__1994_2.pdf
+  - D* focused
+  - D* lite
+  - Conflict Based Search
+  - Enhanced Conflict Based Search (Not optimal, but faster computation) https://www.ijcai.org/Proceedings/15/Papers/110.pdf
+  - Meta agent conflict based search (optimization for units which collide frequently with eachother)
+  - Geometric MAPF or MAPF for large agents (LAMAPF) https://ojs.aaai.org/index.php/AAAI/article/view/4756 
+    (Large agents are just not single point)
+- Group:
+  - flow fields
+  - flocking behaviors
+  - dynamic obstacle avoidance
+  - continuum crowds
+
+Other considerations:
+
+- Anonymous Multi-agent pathfinding: Set of targets to reach but specific agent does not matter
+- Can use nav meshes to optimize or simplify searches
+- Use window searches aka use smaller searches to lower CPU usage
+- If randomness is desired, Rapidly-exploring random tree can be used.
+
+Probably don't want:
+
+- life long planning since I am not using multiple objective plans. Multiple targets or types of 
+  target (local, global and flux) might make this relevant.
+  - LPA* Life long planning A*
+  - LPCBS Lifelong planning conflict-based search
+- ICT seems way too complex for minimal gains over a* (https://www.sciencedirect.com/science/article/pii/S0004370212001543)
+ 
+CBS in depth notes: https://www.sciencedirect.com/science/article/pii/S0004370214001386
+
+- CBS usually attempts to get all units to destination while also minimizing the total cost.
+- CBS can be one of two classes. Optimal or suboptimal. Large number of agents usually uses suboptimal. 
+- Suboptimal can't guarantee the solution is optimal. 
+- CBS can not group units or group units together based on how often they are colliding.
+- Some algorithms allow units to leave the destiantion and return. I probably don't want this since units lock
+  together during attack.
+- CBS can priotize some units over other units. Or create a priority for units.
+- Cost functions can be used to limit the total cost or the p100 amongst all agents
+- CBS calculation can either be distributed or centralized on hosts. This game is centralized since its single computer.
+- Units can move or idle per tick.
+- Centralized solvers have three classes:
+  - reduce MAPF to other well studied computer science problems
+  - MAPF-specific sub-optimal solvers
+  - MAPF-specific optimal solvers
+- This paper focuses on optimal solvers
+- Reduce MAPF to other well studied vs problems:
+  - Examples are boolean satisfiability (SAT), integer linear programming (ILP), answer set programming (ASP)
+  - Usually for low nuber of agents, solvers optimally, high CPU cost
+- MAPF-specific sub-optimal solvers (Probably what I want to implement)
+  - Examples are:
+    - search based solvers (close to optimal) (Hierachical cooperate A* aka HCA*)
+    - Rule based handle specific scenarios with specific movements. They run in polynomial time. (TASS, Push and SWAP).
+    - Hybrid approaches combine search and rule e.g. large grid with specific pathways to move units thru
+- MAPF optimal solvers 
+  - usually search a global space that is a combination of all agents individual states
+- Avoiding surplus nodes helps with speed up. Usually called node pruning.
+- CBS uses two levels
+  - The high level is called a constraint tree. It is a binary tree.
+  - root has no constraints, child inherit parent constraints, add one contraint per agent.
+  - Goal node when all set of paths for all agents have no conflicts.
+  - high level does BFS
+  - When a conflict is found between two agents, two children nodes are created with single a 
+    constraint for each respective agent.
+  - Nodes can extract constaints by traveling up the tree
+  - The root node can have more than one agent but all other nodes have at most one agent and path.
+  - conflicts of more than 2 agenst can be handled by generating more than two nodes or by generating
+    deeper trees with only 2 children.
+- CBS behavors poorly for strongly coupled units aka high rate of internal conflicts.
+- MA-CBS tries to overcome this by merging agents into a meta agent.
+- A* can sometimes outperform CBS. CBS sometimes outperforms A*. Generally CBS is worst when a lot of conflicts occur.
+
+Have read through several college publications and game ai pro articles not linked above:
+
+- https://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter14_JPS_Plus_An_Extreme_A_Star_Speed_Optimization_for_Static_Uniform_Cost_Grids.pdf
+- https://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter15_Subgoal_Graphs_for_Fast_Optimal_Pathfinding.pdf
+- https://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter23_Faster_Dijkstra_Search_on_Uniform_Cost_Grids.pdf
+
+---
+
+### Brainstorm Unit List
 
 - Questions:
   - Which units will counter other units?
