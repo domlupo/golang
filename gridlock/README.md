@@ -138,13 +138,6 @@ Is there a mobile equivalent for war/4x games?
   - two (groun vs air), three (ground, low altitude, high altitude) have major game differences
   - Should anything be on multiple layers e.g. high altitude mountains technically are on all 3.
 
-- Invest in a visual debugger:
-  - First invest in: It can auto select/highlight a specific unit when it spawns
-  - Other much lower priority improvements that can be added when needed:
-    - It can can ping the pixel pos where the bug is occurring.
-    - It can ping differently based on layer.
-    - It can also do something like log unit and pause game so I can read logs?
-
 - Verify if Bresenham error is handle correctly for Flux movements.
 
 - Deterministic seeds and deterministic game engine:
@@ -183,9 +176,6 @@ Is there a mobile equivalent for war/4x games?
   - Will expose platform concerns
   - May expose issues with work so far 
 
-- Determine if frames per second lock is needed:
-  - fundmental issue that I have not considered
-
 - Release to web:
   - learn how to deploy
   - easier to share with friends
@@ -202,9 +192,12 @@ Is there a mobile equivalent for war/4x games?
 
 ### Punted Checkpoints
 
-- Should I add a yaml, toml or json config file that is loaded at runtime?
+- Set FPS or add setting for low performance platforms e.g. mobile?
 
 - Fix node selection highlight.
+
+- Should I add a yaml, toml or json config file that is loaded at runtime?
+  - Toggles are already allowing runtime updates, rather than manually updating a text file.
 
 - Invest in a visual debugger:
   - First feature would most likely be it can auto select/highlight a specific unit when it spawns
