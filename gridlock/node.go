@@ -108,13 +108,87 @@ func (n *node) drawNode(dc drawContext) {
 	dc.screen.DrawTriangles(vertices, indices, dc.drawTriangleDefaultImage, &ebiten.DrawTrianglesOptions{})
 
 	if n.selected {
-		drawUnfilledBoxInt(
-			dc,
+		lineWidth := float32(dc.debugGridWidth) * dc.windowMultiplier
+
+		north := getPixelPosOutbounds(n.gridPos, northPoint, &dc.hexConfig)
+		nX := float32(north.x) * dc.windowMultiplier
+		nY := float32(north.y) * dc.windowMultiplier
+
+		nw := getPixelPosOutbounds(n.gridPos, northwestPoint, &dc.hexConfig)
+		nwX := float32(nw.x) * dc.windowMultiplier
+		nwY := float32(nw.y) * dc.windowMultiplier
+
+		ne := getPixelPosOutbounds(n.gridPos, northeastPoint, &dc.hexConfig)
+		neX := float32(ne.x+1) * dc.windowMultiplier
+		neY := float32(ne.y) * dc.windowMultiplier
+
+		sw := getPixelPosOutbounds(n.gridPos, southwestPoint, &dc.hexConfig)
+		swX := float32(sw.x) * dc.windowMultiplier
+		swY := float32(sw.y+1) * dc.windowMultiplier
+
+		se := getPixelPosOutbounds(n.gridPos, southeastPoint, &dc.hexConfig)
+		seX := float32(se.x+1) * dc.windowMultiplier
+		seY := float32(se.y+1) * dc.windowMultiplier
+
+		s := getPixelPosOutbounds(n.gridPos, southPoint, &dc.hexConfig)
+		sX := float32(s.x) * dc.windowMultiplier
+		sY := float32(s.y+1) * dc.windowMultiplier
+
+		vector.StrokeLine(
+			dc.screen,
+			nwX,
+			nwY,
+			swX,
+			swY,
+			lineWidth,
 			dc.highlightColor,
-			center.x-n.radius,
-			center.y-n.radius,
-			center.x+n.radius,
-			center.y+n.radius)
+			false)
+		vector.StrokeLine(
+			dc.screen,
+			nX,
+			nY,
+			nwX,
+			nwY,
+			lineWidth,
+			dc.highlightColor,
+			false)
+		vector.StrokeLine(
+			dc.screen,
+			nX,
+			nY,
+			neX,
+			neY,
+			lineWidth,
+			dc.highlightColor,
+			false)
+		vector.StrokeLine(
+			dc.screen,
+			neX,
+			neY,
+			seX,
+			seY,
+			lineWidth,
+			dc.highlightColor,
+			false)
+		vector.StrokeLine(
+			dc.screen,
+			seX,
+			seY,
+			sX,
+			sY,
+			lineWidth,
+			dc.highlightColor,
+			false)
+		vector.StrokeLine(
+			dc.screen,
+			swX,
+			swY,
+			sX,
+			sY,
+			lineWidth,
+			dc.highlightColor,
+			false)
+
 	}
 
 	if n.currentHealth != n.maxHealth {

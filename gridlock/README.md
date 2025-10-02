@@ -194,8 +194,6 @@ Is there a mobile equivalent for war/4x games?
 
 - Set FPS or add setting for low performance platforms e.g. mobile?
 
-- Fix node selection highlight.
-
 - Should I add a yaml, toml or json config file that is loaded at runtime?
   - Toggles are already allowing runtime updates, rather than manually updating a text file.
 
