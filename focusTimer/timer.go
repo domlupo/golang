@@ -78,7 +78,7 @@ func (g *Game) Update() error {
 		if ebiten.IsMouseButtonPressed(ebiten.MouseButton0) ||
 			ebiten.IsMouseButtonPressed(ebiten.MouseButton1) ||
 			ebiten.IsMouseButtonPressed(ebiten.MouseButton2) {
-			if !g.progressLoadedFromLogFile {
+			if !g.progressLoadedFromLogFile || g.intDurationStart != g.intDurationStartReadFromLog {
 				g.file, g.err = os.Create(g.logFileName)
 				if g.err != nil {
 					log.Fatal(g.err)
