@@ -21,31 +21,31 @@ const maxPercentage = 100
 const minutesInADay = 1440
 
 type Game struct {
-	windowMultiplier              int
-	windowWidth                   int
-	windowHeight                  int
-	backgroundColor               color.RGBA
-	timerColor                    color.RGBA
-	doneColor                     color.RGBA
-	logFileName                   string
-	timerStarted                  bool
-	intDurationStartReadFromLog   int
-	intDurationStart              int
-	intDurationCount              int
-	duration                      time.Duration
-	currentTime                   time.Time
-	startTime                     time.Time
-	logMinsElapsedThresholdMins   int
-	logPercentPadding             int
-	logMinutePadding              int
-	minuteTicker                  time.Ticker
-	progressPercent               float64
-	intProgressPercent            int
-	intProgressPercentReadFromLog int
-	file                          *os.File
-	progressLoadedFromLogFile     bool
-	err                           error
-	mplusFaceSource               *text.GoTextFaceSource
+	windowMultiplier            int
+	windowWidth                 int
+	windowHeight                int
+	backgroundColor             color.RGBA
+	timerColor                  color.RGBA
+	doneColor                   color.RGBA
+	logFileName                 string
+	timerStarted                bool
+	intDurationStartReadFromLog int
+	intDurationStart            int
+	intDurationCount            int
+	duration                    time.Duration
+	currentTime                 time.Time
+	startTime                   time.Time
+	logMinsElapsedThresholdMins int
+	logPercentPadding           int
+	logMinutePadding            int
+	minuteTicker                time.Ticker
+	progressPercent             float64
+	progressPercentReadFromLog  float64
+	intProgressPercent          int
+	file                        *os.File
+	progressLoadedFromLogFile   bool
+	err                         error
+	mplusFaceSource             *text.GoTextFaceSource
 }
 
 func newGame() Game {
@@ -102,8 +102,7 @@ func (g *Game) Update() error {
 
 		if g.intProgressPercent != int(g.progressPercent) {
 			g.intProgressPercent = int(g.progressPercent)
-			loggedProgressPercent := (g.intProgressPercent * (maxPercentage - g.intProgressPercentReadFromLog) / maxPercentage) + g.intProgressPercentReadFromLog
-
+			loggedProgressPercent := int((float64(g.intProgressPercent) * (float64(maxPercentage) - g.progressPercentReadFromLog) / maxPercentage) + g.progressPercentReadFromLog)
 			_, g.err = g.file.WriteString(fmt.Sprintf(
 				"%*d%% %s %*d minutes remaining\n",
 				g.logPercentPadding,
@@ -121,11 +120,12 @@ func (g *Game) Update() error {
 				select {
 				case <-g.minuteTicker.C:
 					g.intDurationCount = g.intDurationCount - 1
+					loggedProgressPercent := (g.progressPercent * (float64(maxPercentage) - g.progressPercentReadFromLog) / maxPercentage) + g.progressPercentReadFromLog
 					if g.intDurationStart > g.logMinsElapsedThresholdMins {
 						_, g.err = g.file.WriteString(fmt.Sprintf(
 							"%*.1f%% %s %*d minutes remaining\n",
 							g.logPercentPadding,
-							g.progressPercent,
+							loggedProgressPercent,
 							g.currentTime.Format(time.RFC3339),
 							g.logMinutePadding,
 							g.intDurationCount))
@@ -150,8 +150,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	} else {
 		screen.Fill(g.backgroundColor)
 		// Use int not percent read from log for prior timer progress since timer has 1 minute granularity.
-		priorTimerProgress := float64(g.intProgressPercentReadFromLog) / 100
-		currentTimerProgess := (g.progressPercent * float64(maxPercentage-g.intProgressPercentReadFromLog) / maxPercentage) / 100
+		priorTimerProgress := g.progressPercentReadFromLog / 100
+		currentTimerProgess := (g.progressPercent * (maxPercentage - g.progressPercentReadFromLog) / maxPercentage) / 100
 		vector.DrawFilledRect(
 			screen,
 			0,
@@ -202,8 +202,8 @@ func main() {
 
 			percent := strings.Split(textLine, "%")[0]
 			percent = strings.TrimSpace(percent)
-			if loggedProgressPercent, convertErr := strconv.Atoi(percent); convertErr == nil {
-				g.intProgressPercentReadFromLog = loggedProgressPercent
+			if loggedProgressPercent, convertErr := strconv.ParseFloat(percent, 64); convertErr == nil {
+				g.progressPercentReadFromLog = loggedProgressPercent
 			}
 
 			text := strings.Split(textLine, " ")
@@ -219,12 +219,12 @@ func main() {
 		}
 	}
 
-	if g.intDurationStartReadFromLog > 0 && g.intProgressPercentReadFromLog < 100 {
+	if g.intDurationStartReadFromLog > 0 && g.progressPercentReadFromLog < 100 {
 		g.progressLoadedFromLogFile = true
 		g.intDurationStart = g.intDurationStartReadFromLog
 		g.file = file
 	} else {
-		g.intProgressPercentReadFromLog = 0
+		g.progressPercentReadFromLog = 0
 		g.intDurationStartReadFromLog = 0
 	}
 
