@@ -890,3 +890,54 @@ func TestGetGridPos(t *testing.T) {
 		})
 	}
 }
+
+// TODO: write higher level tests with more cases once more source code is implemented, these are too low level and sparse.
+func TestIntersects(t *testing.T) {
+
+	var tests = []struct {
+		l1               line
+		l2               line
+		wantedIntersects bool
+	}{
+		// does not intersect
+		{line{pixelPosition{0, 0}, pixelPosition{2, 0}}, line{pixelPosition{3, -1}, pixelPosition{3, 1}}, false},
+		{line{pixelPosition{0, 0}, pixelPosition{2, 0}}, line{pixelPosition{3, 1}, pixelPosition{3, -1}}, false},
+		{line{pixelPosition{2, 0}, pixelPosition{0, 0}}, line{pixelPosition{3, -1}, pixelPosition{3, 1}}, false},
+		{line{pixelPosition{2, 0}, pixelPosition{0, 0}}, line{pixelPosition{3, 1}, pixelPosition{3, -1}}, false},
+
+		// does intersects
+		{line{pixelPosition{0, 0}, pixelPosition{2, 0}}, line{pixelPosition{1, -1}, pixelPosition{1, 1}}, true},
+		{line{pixelPosition{2, 0}, pixelPosition{0, 0}}, line{pixelPosition{1, -1}, pixelPosition{1, 1}}, true},
+		{line{pixelPosition{0, 0}, pixelPosition{2, 0}}, line{pixelPosition{1, 1}, pixelPosition{1, -1}}, true},
+		{line{pixelPosition{2, 0}, pixelPosition{0, 0}}, line{pixelPosition{1, 1}, pixelPosition{1, -1}}, true},
+
+		// 3 collinear points
+		{line{pixelPosition{0, 0}, pixelPosition{2, 0}}, line{pixelPosition{2, 0}, pixelPosition{2, 1}}, true},
+		{line{pixelPosition{0, 0}, pixelPosition{2, 0}}, line{pixelPosition{2, 1}, pixelPosition{2, 0}}, true},
+		{line{pixelPosition{2, 0}, pixelPosition{0, 0}}, line{pixelPosition{2, 0}, pixelPosition{2, 1}}, true},
+		{line{pixelPosition{2, 0}, pixelPosition{0, 0}}, line{pixelPosition{2, 1}, pixelPosition{2, 0}}, true},
+
+		// 4 collinear points
+		{line{pixelPosition{0, 0}, pixelPosition{2, 0}}, line{pixelPosition{2, 0}, pixelPosition{4, 0}}, true},
+		{line{pixelPosition{0, 0}, pixelPosition{2, 0}}, line{pixelPosition{4, 0}, pixelPosition{2, 0}}, true},
+		{line{pixelPosition{2, 0}, pixelPosition{0, 0}}, line{pixelPosition{2, 0}, pixelPosition{4, 0}}, true},
+		{line{pixelPosition{2, 0}, pixelPosition{0, 0}}, line{pixelPosition{4, 0}, pixelPosition{2, 0}}, true},
+
+		// lines are equal
+		{line{pixelPosition{0, 0}, pixelPosition{1, 0}}, line{pixelPosition{0, 0}, pixelPosition{1, 0}}, true},
+		{line{pixelPosition{0, 0}, pixelPosition{1, 0}}, line{pixelPosition{1, 0}, pixelPosition{0, 0}}, true},
+		{line{pixelPosition{1, 0}, pixelPosition{0, 0}}, line{pixelPosition{0, 0}, pixelPosition{1, 0}}, true},
+		{line{pixelPosition{1, 0}, pixelPosition{0, 0}}, line{pixelPosition{1, 0}, pixelPosition{0, 0}}, true},
+	}
+
+	for _, tt := range tests {
+		testname := "low level test to be replaced"
+		t.Run(testname, func(t *testing.T) {
+			intersects := intersects(tt.l1, tt.l2)
+			if intersects != tt.wantedIntersects {
+				t.Errorf("low level test failed")
+			}
+		})
+	}
+
+}

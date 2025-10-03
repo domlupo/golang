@@ -62,6 +62,20 @@ const (
 	northwestSide
 )
 
+type line struct {
+	start pixelPosition
+	end   pixelPosition
+}
+
+type pointOrientation int
+
+const (
+	noOrientation pointOrientation = iota
+	counterClockwise
+	clockwise
+	collinear
+)
+
 func (pos position) isZero() bool {
 	return pos.layer == noLayer
 }
@@ -249,4 +263,45 @@ func getGridPos(pixelPos pixelPosition, hc *hexConfig) (gridPosition, bool) {
 	}
 
 	return gridPosition{xIndex + xIndexOffset, yIndex + yIndexOffset}, true
+}
+
+func orientation(p pixelPosition, q pixelPosition, r pixelPosition) pointOrientation {
+	v := (q.y-p.y)*(r.x-q.x) - (q.x-p.x)*(r.y-q.y)
+	switch {
+	case v == 0:
+		return collinear
+	case v > 0:
+		return clockwise
+	case v < 0:
+		return counterClockwise
+	default:
+		panic("cannot find pixel position orientation")
+
+	}
+}
+
+func onSegment(p pixelPosition, q pixelPosition, r pixelPosition) bool {
+	return q.x <= max(p.x, r.x) && q.x >= min(p.x, r.x) && q.y <= max(p.y, r.y) && q.y >= min(p.y, r.y)
+}
+
+func intersects(l1 line, l2 line) bool {
+	o1 := orientation(l1.start, l1.end, l2.start)
+	o2 := orientation(l1.start, l1.end, l2.end)
+	o3 := orientation(l2.start, l2.end, l1.start)
+	o4 := orientation(l2.start, l2.end, l1.end)
+
+	switch {
+	case o1 != o2 && o3 != o4:
+		return true
+	case o1 == collinear && onSegment(l1.start, l2.start, l1.end):
+		return true
+	case o2 == collinear && onSegment(l1.start, l2.end, l1.end):
+		return true
+	case o3 == collinear && onSegment(l2.start, l1.start, l2.end):
+		return true
+	case o4 == collinear && onSegment(l2.start, l1.end, l2.end):
+		return true
+	default:
+		return false
+	}
 }

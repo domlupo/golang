@@ -19,17 +19,13 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Implement and unit test edge intersections: 
-  - https://www.geeksforgeeks.org/dsa/check-if-two-given-line-segments-intersect
-  - Unit tests should be sparse and temporary because they are too lowlevel? 
-  - Ideally test level is given a unit X and grid setup of Y, this is the path it takes.
-
 - Add impassable grids (mountains) and update global path finding to avoid them
   - theta* / bresenham with visibility grids should be implemented.
     - Implement edge intersection
     - When first line of sight and edges intersect, determine what points are valid to avoid it via visiblity grids
     - Can precompute visibility grids at setup time based on unit radius.
     - May need to implement target arrays. Is this life long planning?
+    - Determine if high level unit tests should be added now or punted till later.
   - step towards local path finding. Code can be reused. Should be simpler to implement.
   - Long term:
     - may need to use local collision avoidance with other units.
