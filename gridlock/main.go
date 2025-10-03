@@ -37,8 +37,9 @@ type Game struct {
 	paused                   bool
 	blueComputerActive       bool
 	redComputerActive        bool
-	hotRestart               bool
+	enableFlux               bool
 	drawFluxes               bool
+	hotRestart               bool
 	drawBlueTargets          bool
 	drawRedTargets           bool
 	drawDebugGrid            bool
@@ -77,6 +78,7 @@ func newGame() Game {
 		currentSelectedY:        float32(-1.0),
 		blueComputerActive:      true,
 		redComputerActive:       true,
+		enableFlux:              true,
 		produceUnits:            true,
 		hotRestart:              true,
 		cpuProfilerOn:           false,
@@ -98,7 +100,7 @@ func newGame() Game {
 
 func (g *Game) restart() {
 	// TODO: Need to restart timers, etc
-	g.gameState = *newState(&g.drawContext.hexConfig)
+	g.gameState = *newState(&g.drawContext.hexConfig, g.enableFlux)
 	g.compOne = *newComputer(bluePlayer)
 	g.compTwo = *newComputer(redPlayer)
 	setupState(g.gameState, leftVsRightVerticalOffset, &g.drawContext.hexConfig, g.initialNodeHealth)

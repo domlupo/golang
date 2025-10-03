@@ -26,8 +26,6 @@ Is there a mobile equivalent for war/4x games?
   - Might be worth making a library for this in c or zig for others to use and to practice
     programming.
 
-- Add compile time flux toggle for quicker development
-
 - Implement and unit test edge intersections: 
   - https://www.geeksforgeeks.org/dsa/check-if-two-given-line-segments-intersect
   - Unit tests should be sparse and temporary because they are too lowlevel? 

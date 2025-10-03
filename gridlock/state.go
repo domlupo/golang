@@ -14,17 +14,19 @@ type state struct {
 	nodes              map[gridPosition]*node
 	fluxes             map[gridPosition]*flux
 	units              map[position]*unit
+	enableFlux         bool
 	unitsProducedTotal int
 	unitsDeletedTotal  int
 }
 
-func newState(hexConfig *hexConfig) *state {
+func newState(hexConfig *hexConfig, enableFlux bool) *state {
 	s := state{
-		hexConfig: hexConfig,
-		hexagons:  make(map[gridPosition]*hexagon),
-		nodes:     make(map[gridPosition]*node),
-		fluxes:    make(map[gridPosition]*flux),
-		units:     make(map[position]*unit),
+		hexConfig:  hexConfig,
+		hexagons:   make(map[gridPosition]*hexagon),
+		nodes:      make(map[gridPosition]*node),
+		fluxes:     make(map[gridPosition]*flux),
+		units:      make(map[position]*unit),
+		enableFlux: enableFlux,
 	}
 
 	for i := range s.hexConfig.xIndexMax {
@@ -69,7 +71,7 @@ func (s *state) analyzeTargets() {
 			continue
 		}
 
-		if u.fluxTurnCount > u.fluxTurnCountDelay {
+		if s.enableFlux && u.fluxTurnCount > u.fluxTurnCountDelay {
 			gridPos, _ := getGridPos(u.pixelPosition, s.hexConfig)
 			fluxDelta := s.fluxes[gridPos].getFluxDelta(u.fluxMagnitude)
 			u.updateTarget(fluxTarget, position{ground, pixelPosition{u.x + fluxDelta.x, u.y + fluxDelta.y}})
