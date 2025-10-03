@@ -4,7 +4,6 @@ package main
 import (
 	"image/color"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -52,153 +51,42 @@ func (n node) isZero() bool {
 }
 
 func (n *node) drawNode(dc drawContext) {
-	var cR float32
-	var cB float32
-	var cG float32
-	var cA float32
+	var red float32
+	var blue float32
+	var green float32
+	var alpha float32
 	switch n.player {
 	case bluePlayer:
-		cR = 0.5
-		cB = 1
-		cG = 0.5
-		cA = 1
+		red = 0.5
+		blue = 1
+		green = 0.5
+		alpha = 1
 	case redPlayer:
-		cR = 1
-		cB = 0.5
-		cG = 0.5
-		cA = 1
+		red = 1
+		blue = 0.5
+		green = 0.5
+		alpha = 1
 	case neutralPlayer:
-		cR = 0.5
-		cB = 0.5
-		cG = 0.5
-		cA = 1
+		red = 0.5
+		blue = 0.5
+		green = 0.5
+		alpha = 1
 	default:
 		panic("unknown player cannot drawNode")
 	}
 
-	center := getPixelPosOutbounds(n.gridPos, center, &dc.hexConfig)
-	north := getPixelPosOutbounds(n.gridPos, northPoint, &dc.hexConfig)
-	northeast := getPixelPosOutbounds(n.gridPos, northeastPoint, &dc.hexConfig)
-	southeast := getPixelPosOutbounds(n.gridPos, southeastPoint, &dc.hexConfig)
-	southwest := getPixelPosOutbounds(n.gridPos, southwestPoint, &dc.hexConfig)
-	south := getPixelPosOutbounds(n.gridPos, southPoint, &dc.hexConfig)
-	northwest := getPixelPosOutbounds(n.gridPos, northwestPoint, &dc.hexConfig)
+	drawHex(dc, n.gridPos, drawTriangleColor{red: red, blue: blue, green: green, alpha: alpha}, n.selected)
 
-	// The one pixel offsets for inclusive or exclusive hex points are handled at the game logic layer.
-	// The window multiplier offsets are handled here since window multiplier is a draw concept.
-	xCenter, yCenter := float32(center.x)*dc.windowMultiplier, float32(center.y)*dc.windowMultiplier
-	xNorth, yNorth := float32(north.x)*dc.windowMultiplier, float32(north.y)*dc.windowMultiplier
-	xNortheast, yNortheast := float32(northeast.x+1)*dc.windowMultiplier, float32(northeast.y)*dc.windowMultiplier
-	xSoutheast, ySoutheast := float32(southeast.x+1)*dc.windowMultiplier, float32(southeast.y+1)*dc.windowMultiplier
-	xSouthwest, ySouthwest := float32(southwest.x)*dc.windowMultiplier, float32(southwest.y+1)*dc.windowMultiplier
-	xSouth, ySouth := float32(south.x)*dc.windowMultiplier, float32(south.y+1)*dc.windowMultiplier
-	xNorthwest, yNorthwest := float32(northwest.x)*dc.windowMultiplier, float32(northwest.y)*dc.windowMultiplier
-
-	indices := []uint16{0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 1}
-	vertices := []ebiten.Vertex{
-		{DstX: xCenter, DstY: yCenter, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
-		{DstX: xNorth, DstY: yNorth, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
-		{DstX: xNortheast, DstY: yNortheast, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
-		{DstX: xSoutheast, DstY: ySoutheast, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
-		{DstX: xSouth, DstY: ySouth, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
-		{DstX: xSouthwest, DstY: ySouthwest, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
-		{DstX: xNorthwest, DstY: yNorthwest, SrcX: 0, SrcY: 0, ColorR: cR, ColorG: cG, ColorB: cB, ColorA: cA},
-	}
-
-	dc.screen.DrawTriangles(vertices, indices, dc.drawTriangleDefaultImage, &ebiten.DrawTrianglesOptions{})
-
-	if n.selected {
-		lineWidth := float32(dc.debugGridWidth) * dc.windowMultiplier
-
-		north := getPixelPosOutbounds(n.gridPos, northPoint, &dc.hexConfig)
-		nX := float32(north.x) * dc.windowMultiplier
-		nY := float32(north.y) * dc.windowMultiplier
-
-		nw := getPixelPosOutbounds(n.gridPos, northwestPoint, &dc.hexConfig)
-		nwX := float32(nw.x) * dc.windowMultiplier
-		nwY := float32(nw.y) * dc.windowMultiplier
-
-		ne := getPixelPosOutbounds(n.gridPos, northeastPoint, &dc.hexConfig)
-		neX := float32(ne.x+1) * dc.windowMultiplier
-		neY := float32(ne.y) * dc.windowMultiplier
-
-		sw := getPixelPosOutbounds(n.gridPos, southwestPoint, &dc.hexConfig)
-		swX := float32(sw.x) * dc.windowMultiplier
-		swY := float32(sw.y+1) * dc.windowMultiplier
-
-		se := getPixelPosOutbounds(n.gridPos, southeastPoint, &dc.hexConfig)
-		seX := float32(se.x+1) * dc.windowMultiplier
-		seY := float32(se.y+1) * dc.windowMultiplier
-
-		s := getPixelPosOutbounds(n.gridPos, southPoint, &dc.hexConfig)
-		sX := float32(s.x) * dc.windowMultiplier
-		sY := float32(s.y+1) * dc.windowMultiplier
-
-		vector.StrokeLine(
-			dc.screen,
-			nwX,
-			nwY,
-			swX,
-			swY,
-			lineWidth,
-			dc.highlightColor,
-			false)
-		vector.StrokeLine(
-			dc.screen,
-			nX,
-			nY,
-			nwX,
-			nwY,
-			lineWidth,
-			dc.highlightColor,
-			false)
-		vector.StrokeLine(
-			dc.screen,
-			nX,
-			nY,
-			neX,
-			neY,
-			lineWidth,
-			dc.highlightColor,
-			false)
-		vector.StrokeLine(
-			dc.screen,
-			neX,
-			neY,
-			seX,
-			seY,
-			lineWidth,
-			dc.highlightColor,
-			false)
-		vector.StrokeLine(
-			dc.screen,
-			seX,
-			seY,
-			sX,
-			sY,
-			lineWidth,
-			dc.highlightColor,
-			false)
-		vector.StrokeLine(
-			dc.screen,
-			swX,
-			swY,
-			sX,
-			sY,
-			lineWidth,
-			dc.highlightColor,
-			false)
-
-	}
+	c := getPixelPosOutbounds(n.gridPos, center, &dc.hexConfig)
 
 	if n.currentHealth != n.maxHealth {
 		var healthLineLength = (float32(n.currentHealth) / float32(n.maxHealth)) * float32(n.radius*2)
 		vector.StrokeLine(
 			dc.screen,
-			float32(center.x-n.radius)*dc.windowMultiplier,
-			float32(center.y)*dc.windowMultiplier,
-			(float32(center.x-n.radius)+healthLineLength)*dc.windowMultiplier,
-			float32(center.y)*dc.windowMultiplier,
+			float32(c.x-n.radius)*dc.windowMultiplier,
+			float32(c.y)*dc.windowMultiplier,
+			(float32(c.x-n.radius)+healthLineLength)*dc.windowMultiplier,
+			float32(c.y)*dc.windowMultiplier,
 			float32(dc.healthLineWidth)*dc.windowMultiplier,
 			dc.nodeHealthColor,
 			false)

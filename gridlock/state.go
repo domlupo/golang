@@ -11,6 +11,7 @@ type state struct {
 	// TODO: The next largest optimization might be to split hexagon linked list
 	// into respective layers.
 	hexagons           map[gridPosition]*hexagon
+	obstacles          map[gridPosition]*obstacle
 	nodes              map[gridPosition]*node
 	fluxes             map[gridPosition]*flux
 	units              map[position]*unit
@@ -23,6 +24,7 @@ func newState(hexConfig *hexConfig, enableFlux bool) *state {
 	s := state{
 		hexConfig:  hexConfig,
 		hexagons:   make(map[gridPosition]*hexagon),
+		obstacles:  make(map[gridPosition]*obstacle),
 		nodes:      make(map[gridPosition]*node),
 		fluxes:     make(map[gridPosition]*flux),
 		units:      make(map[position]*unit),
@@ -44,6 +46,10 @@ func newState(hexConfig *hexConfig, enableFlux bool) *state {
 
 func (s *state) addNode(n node) {
 	s.nodes[n.gridPos] = &n
+}
+
+func (s *state) addObstacle(o obstacle) {
+	s.obstacles[o.gridPos] = &o
 }
 
 func (s *state) refresh() {
@@ -724,7 +730,14 @@ func (s *state) collidesWithBorder(pos position, offset int) bool {
 	}
 }
 
-func (s *state) draw(dc drawContext, drawBlueTargets bool, drawRedTargets, drawFluxes bool) {
+func (s *state) draw(dc drawContext, drawBlueTargets bool, drawRedTargets, drawFluxes bool, drawVisibilityGrids bool) {
+	for _, o := range s.obstacles {
+		o.drawObstacle(dc)
+		if drawVisibilityGrids {
+			o.drawVisibilityGrid(dc)
+		}
+	}
+
 	for _, n := range s.nodes {
 		n.drawNode(dc)
 	}

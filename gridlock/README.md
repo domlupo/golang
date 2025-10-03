@@ -19,17 +19,21 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Refactor positions.go functions into methods if more readable
+
 - Add impassable grids (mountains) and update global path finding to avoid them
   - theta* / bresenham with visibility grids should be implemented.
     - Implement edge intersection
-    - When first line of sight and edges intersect, determine what points are valid to avoid it via visiblity grids
-    - Can precompute visibility grids at setup time based on unit radius.
     - May need to implement target arrays. Is this life long planning?
     - Determine if high level unit tests should be added now or punted till later.
+    - Handle line of sight checks. I think unit size needs to be accounted for somehow. 
+    - Handle setting up visiblity grids edge cases e.g. obstacle on border, etc
   - step towards local path finding. Code can be reused. Should be simpler to implement.
   - Long term:
-    - may need to use local collision avoidance with other units.
-    - may want to not use center of hexagon as target. 
+    - May need to use local collision avoidance with other units since obstacles should funnel units together
+    - May want to not use center of hexagon as target. 
+    - May want a way to setup single obstacles on grid, then a function determines how to group 
+      obstacles together. Overall, it should probably be w/e is CPU efficient for state.go to process.
 
 - Design and implement local path finding algorithm:
   - theta star

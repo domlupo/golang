@@ -222,3 +222,128 @@ func drawDebug(dc drawContext, drawDebugGrid bool) {
 		}
 	}
 }
+
+type drawTriangleColor struct {
+	red   float32
+	green float32
+	blue  float32
+	alpha float32
+}
+
+func drawHex(dc drawContext, gridPos gridPosition, color drawTriangleColor, selected bool) {
+	center := getPixelPosOutbounds(gridPos, center, &dc.hexConfig)
+	north := getPixelPosOutbounds(gridPos, northPoint, &dc.hexConfig)
+	northeast := getPixelPosOutbounds(gridPos, northeastPoint, &dc.hexConfig)
+	southeast := getPixelPosOutbounds(gridPos, southeastPoint, &dc.hexConfig)
+	southwest := getPixelPosOutbounds(gridPos, southwestPoint, &dc.hexConfig)
+	south := getPixelPosOutbounds(gridPos, southPoint, &dc.hexConfig)
+	northwest := getPixelPosOutbounds(gridPos, northwestPoint, &dc.hexConfig)
+
+	// The one pixel offsets for inclusive or exclusive hex points are handled at the game logic layer.
+	// The window multiplier offsets are handled here since window multiplier is a draw concept.
+	xCenter, yCenter := float32(center.x)*dc.windowMultiplier, float32(center.y)*dc.windowMultiplier
+	xNorth, yNorth := float32(north.x)*dc.windowMultiplier, float32(north.y)*dc.windowMultiplier
+	xNortheast, yNortheast := float32(northeast.x+1)*dc.windowMultiplier, float32(northeast.y)*dc.windowMultiplier
+	xSoutheast, ySoutheast := float32(southeast.x+1)*dc.windowMultiplier, float32(southeast.y+1)*dc.windowMultiplier
+	xSouthwest, ySouthwest := float32(southwest.x)*dc.windowMultiplier, float32(southwest.y+1)*dc.windowMultiplier
+	xSouth, ySouth := float32(south.x)*dc.windowMultiplier, float32(south.y+1)*dc.windowMultiplier
+	xNorthwest, yNorthwest := float32(northwest.x)*dc.windowMultiplier, float32(northwest.y)*dc.windowMultiplier
+
+	indices := []uint16{0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 1}
+	vertices := []ebiten.Vertex{
+		{DstX: xCenter, DstY: yCenter, SrcX: 0, SrcY: 0, ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
+		{DstX: xNorth, DstY: yNorth, SrcX: 0, SrcY: 0, ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
+		{DstX: xNortheast, DstY: yNortheast, SrcX: 0, SrcY: 0, ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
+		{DstX: xSoutheast, DstY: ySoutheast, SrcX: 0, SrcY: 0, ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
+		{DstX: xSouth, DstY: ySouth, SrcX: 0, SrcY: 0, ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
+		{DstX: xSouthwest, DstY: ySouthwest, SrcX: 0, SrcY: 0, ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
+		{DstX: xNorthwest, DstY: yNorthwest, SrcX: 0, SrcY: 0, ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
+	}
+
+	dc.screen.DrawTriangles(vertices, indices, dc.drawTriangleDefaultImage, &ebiten.DrawTrianglesOptions{})
+
+	if selected {
+		lineWidth := float32(dc.debugGridWidth) * dc.windowMultiplier
+
+		north := getPixelPosOutbounds(gridPos, northPoint, &dc.hexConfig)
+		nX := float32(north.x) * dc.windowMultiplier
+		nY := float32(north.y) * dc.windowMultiplier
+
+		nw := getPixelPosOutbounds(gridPos, northwestPoint, &dc.hexConfig)
+		nwX := float32(nw.x) * dc.windowMultiplier
+		nwY := float32(nw.y) * dc.windowMultiplier
+
+		ne := getPixelPosOutbounds(gridPos, northeastPoint, &dc.hexConfig)
+		neX := float32(ne.x) * dc.windowMultiplier
+		neY := float32(ne.y) * dc.windowMultiplier
+
+		sw := getPixelPosOutbounds(gridPos, southwestPoint, &dc.hexConfig)
+		swX := float32(sw.x) * dc.windowMultiplier
+		swY := float32(sw.y) * dc.windowMultiplier
+
+		se := getPixelPosOutbounds(gridPos, southeastPoint, &dc.hexConfig)
+		seX := float32(se.x) * dc.windowMultiplier
+		seY := float32(se.y) * dc.windowMultiplier
+
+		s := getPixelPosOutbounds(gridPos, southPoint, &dc.hexConfig)
+		sX := float32(s.x) * dc.windowMultiplier
+		sY := float32(s.y) * dc.windowMultiplier
+
+		vector.StrokeLine(
+			dc.screen,
+			nwX,
+			nwY,
+			swX,
+			swY,
+			lineWidth,
+			dc.highlightColor,
+			false)
+		vector.StrokeLine(
+			dc.screen,
+			nX,
+			nY,
+			nwX,
+			nwY,
+			lineWidth,
+			dc.highlightColor,
+			false)
+		vector.StrokeLine(
+			dc.screen,
+			nX,
+			nY,
+			neX,
+			neY,
+			lineWidth,
+			dc.highlightColor,
+			false)
+		vector.StrokeLine(
+			dc.screen,
+			neX,
+			neY,
+			seX,
+			seY,
+			lineWidth,
+			dc.highlightColor,
+			false)
+		vector.StrokeLine(
+			dc.screen,
+			seX,
+			seY,
+			sX,
+			sY,
+			lineWidth,
+			dc.highlightColor,
+			false)
+		vector.StrokeLine(
+			dc.screen,
+			swX,
+			swY,
+			sX,
+			sY,
+			lineWidth,
+			dc.highlightColor,
+			false)
+
+	}
+
+}

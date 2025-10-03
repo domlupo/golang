@@ -146,6 +146,17 @@ func (pos position) log() []slog.Attr {
 	return a
 }
 
+func (pos pixelPosition) add(other pixelPosition, hc *hexConfig) (pixelPosition, bool) {
+	x := pos.x + other.x
+	y := pos.y + other.y
+
+	if x < 0 || x >= hc.windowWidth || y < 0 || y >= hc.windowHeight {
+		return pixelPosition{}, false
+	} else {
+		return pixelPosition{x, y}, true
+	}
+}
+
 func getPixelPos(gridPos gridPosition, hexPoint hexPoint, hc *hexConfig) (pixelPosition, bool) {
 	pixelPos := getPixelPosOutbounds(gridPos, hexPoint, hc)
 	x, y := pixelPos.x, pixelPos.y

@@ -43,6 +43,7 @@ type Game struct {
 	drawBlueTargets          bool
 	drawRedTargets           bool
 	drawDebugGrid            bool
+	drawVisibilityGrids      bool
 	slowTick                 bool
 	cpuProfilerOn            bool
 	memoryProfilerOn         bool
@@ -103,7 +104,7 @@ func (g *Game) restart() {
 	g.gameState = *newState(&g.drawContext.hexConfig, g.enableFlux)
 	g.compOne = *newComputer(bluePlayer)
 	g.compTwo = *newComputer(redPlayer)
-	setupState(g.gameState, leftVsRightVerticalOffset, &g.drawContext.hexConfig, g.initialNodeHealth)
+	setupState(g.gameState, zoomHorizontalObstacles, &g.drawContext.hexConfig, g.initialNodeHealth)
 	g.updateComputerTargetNodes()
 }
 
@@ -256,7 +257,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	screen.Fill(g.drawContext.backgroundColor)
 	drawDebug(*g.drawContext, g.drawDebugGrid)
-	g.gameState.draw(*g.drawContext, g.drawBlueTargets, g.drawRedTargets, g.drawFluxes)
+	g.gameState.draw(*g.drawContext, g.drawBlueTargets, g.drawRedTargets, g.drawFluxes, g.drawVisibilityGrids)
 
 	if g.leftMouseHeld {
 		drawUnfilledBoxFloat32(
@@ -312,7 +313,7 @@ func main() {
 		},
 		g.developerToggleCooldown)
 	g.developerToggles["memoryProfile"] = newToggle(
-		ebiten.KeyV,
+		ebiten.KeyX,
 		func() {
 			if g.memoryProfilerOn {
 				logger.log(infoLevel, alwaysLogType, "Stopping memory profiler.")
@@ -360,11 +361,12 @@ func main() {
 	g.developerToggles["drawAll"] = newToggle(
 		ebiten.KeyA,
 		func() {
-			var toggle = !(g.drawFluxes && g.drawBlueTargets && g.drawRedTargets && g.drawDebugGrid)
+			var toggle = !(g.drawFluxes && g.drawBlueTargets && g.drawRedTargets && g.drawDebugGrid && g.drawVisibilityGrids)
 			g.drawFluxes = toggle
 			g.drawBlueTargets = toggle
 			g.drawRedTargets = toggle
 			g.drawDebugGrid = toggle
+			g.drawVisibilityGrids = toggle
 		},
 		g.developerToggleCooldown)
 	g.developerToggles["drawFlux"] = newToggle(
@@ -382,6 +384,10 @@ func main() {
 	g.developerToggles["drawDebugGrid"] = newToggle(
 		ebiten.KeyG,
 		func() { g.drawDebugGrid = !g.drawDebugGrid },
+		g.developerToggleCooldown)
+	g.developerToggles["drawVisibilityGrids"] = newToggle(
+		ebiten.KeyV,
+		func() { g.drawVisibilityGrids = !g.drawVisibilityGrids },
 		g.developerToggleCooldown)
 
 	g.restart()
