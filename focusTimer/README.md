@@ -14,4 +14,8 @@ launch a new timer once break is complete.
 
 ## TODO
 
-- Add optional terminal input to set time rather than force mouse wheel.
+- Add optional terminal input to set time rather than force mouse wheel.S
+- Determine if there is a bug with existing timer draw. if you have a 
+  log file with ~10% completion and 5 mins remaining. Then you 
+  set timer to 1 min. It should show 0% completed not 10%. I think
+  it is incorrelty loading the 10%.
