@@ -11,7 +11,7 @@ Is there a mobile equivalent for war/4x games?
 
 ## Top 3 Ranked Concerns : Risks
 
-1. Design and iterate on Local path finding and flux. -> Most unknown but fundamental game engine decision.
+1. Design and iterate on Local path finding (maybe flux) -> Most unknown but fundamental game engine decision.
 2. Faster iteration from better inspection and debugging tooling. -> Don't waste engineering effort due to poor prioritization.
 3. Playtesting MVP. -> Don't invest major engineering effort into wrong tasks.
 
@@ -26,10 +26,38 @@ Is there a mobile equivalent for war/4x games?
   - Might be worth making a library for this in c or zig for others to use and to practice
     programming.
 
-- Determine which local path finding algorithm to implment with hex linked list optimizatons
+- Add compile time flux toggle for quicker development
+
+- Implement and unit test edge intersections: 
+  - https://www.geeksforgeeks.org/dsa/check-if-two-given-line-segments-intersect
+  - Unit tests should be sparse and temporary because they are too lowlevel? 
+  - Ideally test level is given a unit X and grid setup of Y, this is the path it takes.
 
 - Add impassable grids (mountains) and update global path finding to avoid them
   - theta* / bresenham with visibility grids should be implemented.
+    - Implement edge intersection
+    - When first line of sight and edges intersect, determine what points are valid to avoid it via visiblity grids
+    - Can precompute visibility grids at setup time based on unit radius.
+    - May need to implement target arrays. Is this life long planning?
+  - step towards local path finding. Code can be reused. Should be simpler to implement.
+  - Long term:
+    - may need to use local collision avoidance with other units.
+    - may want to not use center of hexagon as target. 
+
+- Design and implement local path finding algorithm:
+  - theta star
+  - visiblility grids
+  - spat part
+  - etc
+
+- Determine if I need to implement separating axis theorem for collision other than (circle <-> circle)
+  - Right now node collision is hacky. It is just a circle that is smaller than the hexagon.
+  - Unpassable terrain e.g. water, high altitude mountains will probably require this for a* pathing.
+  - Nodes are hexagon. Determine if SAT is the simplest and most performant collision check for hexagons.
+  - Units like tank may need represented as a square. 
+
+- Determine if spatial partitiong node colliison optimization is needed.
+  - right now node collision naively checks all nodes.
 
 - Improve guided air missile
   - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.
@@ -46,40 +74,14 @@ Is there a mobile equivalent for war/4x games?
     - Unit must keep itself in sync
   - Determine if a different structure is better for Bresenham
 
-- Iterate on group and local pathfinding
-  - Figure out which CPU intensive path finding I can do. Probably theta* for local hexagon is  good start?
-  - Every hexagons can probably be used as nav meshes as well.
-  - Flux can be iterated and tuned a lot. I only implemented a basic solution.
-  - Flux resolution can be improved by changing flux grid size at compile time. 
-  - Flux grid can be changed at runtime as well but probably unneded complexity. 
-  - How units react to flux can depend on unit type or be the same for all units.
-  - How units contribute to flux can depend on unit type or be the same for all units.
-  - Determine better flux structure and contracts.
-  - Does a flat top hexagon grid perform better for flux? If yes, is it worth it for potentially
-    worse asethetics? I think flux can most likely be designed around this but the monitor display
-    limitation for wide resolution suggests left vs right pathing is more likely where as phone 
-    vertical display suggests top vs bottom pathing is more likely.
-
-- Determine how to handle flux for units that never had targets or units just produced. Lots of issues.
-  - Do you make flux never move the unit? This creates bimodal behavior where some units respect flux and others dont?
-  - Do you make the unit that was never moved by flux add more or less to flux magnitude?
-  - Not actually spawning the unit until a target is set might be a very simple solution but the
-    player experiencee might be terrible.
-  - How do you handle missiles blowing up from flux moving them.
-  - How do you handle missiles moving without target? Can players abuse this?
-
 - Determine path finding goals for individual units to decide on path finding algorithm:
+  - Determine what units I want to remove. i think most ground units are unneeded.
   - Unit -> player experience -> path finding algorithm
   - Infantry -> Form tight territory lines of a specific thickness -> 
-  - Sniper -> Clump with other snipers behind infantry line to allow other units pass ->
-  - unguidedGroundMissile ->
-  - guidedAirMissile ->
-  - mobile SAM ->
-  - tank -> 
-  - bomer -> 
-  - fighter ->
+  - etc 
 
 - Add more ground units for local path finding iteration
+  - Determine what units I want to remove. i think most ground units are unneeded.
   - tank (counters infantry, secondary mode to push unit?)
   - mobile SAM (counters missiles)
     - Ground missile exploding in air does no damage?
@@ -96,10 +98,6 @@ Is there a mobile equivalent for war/4x games?
       - Counter missile will either need to travel faster than tracked missile or anticipate movement?
     - Added guided missile variant will probably help but might be low priority?
 
-- Improve flux debugging
-  - Add flux square selection
-  - Add selected flux logging for detailed tracing
-
 - Improve computer
   - Update computer to be beatable by humans
   - Should computer units prioritize nodes or units?
@@ -115,26 +113,22 @@ Is there a mobile equivalent for war/4x games?
   - Easier way to select all nodes of same type with double click
   - Better automated targetting from units. e.g. units don't auto target nodes when they should.
 
-- Analyze and iterate on game design and game loop:
-  - Check design feasability 
-  - Improve game
-
-- clean up bugs and hacks:
-  - There are enough to cause bugs while testing game design and game loop
-
 - Set a deadline and plan for a polished MVP
   - This should be multiplayer playable by friends via browser.
   - A vertical slice of MVP features. 
   - If feedback is good, then I can work on adding more features.
   - If feedback is good, then I can work on polishing existing features.
 
-- Refactor for more idiomatic go code as I read learning Go.
+- Analyze and iterate on game design and game loop:
+  - Is game fun?
+  - Are you designing features to improve player experience? 
+  - Are you coding features to improve player experience?
+  - Are you priotizing and cutting features as needed?
 
-- Determine if I need to implement separating axis theorem for collision other than (circle <-> circle)
-  - Right now node collision is hacky. It is just a circle that is smaller than the hexagon.
-  - Unpassable terrain e.g. water, high altitude mountains will probably require this for a* pathing.
-  - Nodes are hexagon. Determine if SAT is the simplest and most performant collision check for hexagons.
-  - Units like tank may need represented as a square. 
+- clean up bugs and hacks:
+  - There are enough to cause bugs while testing game design and game loop
+
+- Refactor for more idiomatic go code as I read learning Go.
 
 ---
 
@@ -197,6 +191,31 @@ Is there a mobile equivalent for war/4x games?
 
 - local multiplayer:
   - Initial research shows webRTC is probably better but more complex than websockets
+
+- Determine if flux iteration is useful:
+  - Need to implement specific local path finding before flux iteration.
+  - Even if group behavior is needed, methods other than flux might be better to invest in.
+  - Flux resolution can be improved by changing flux grid size at compile time. 
+  - Flux grid can be changed at runtime as well but probably unneded complexity. 
+  - How units react to flux can depend on unit type or be the same for all units.
+  - How units contribute to flux can depend on unit type or be the same for all units.
+  - Determine better flux structure and contracts.
+  - Does a flat top hexagon grid perform better for flux? If yes, is it worth it for potentially
+    worse asethetics? I think flux can most likely be designed around this but the monitor display
+    limitation for wide resolution suggests left vs right pathing is more likely where as phone 
+    vertical display suggests top vs bottom pathing is more likely.
+
+- Determine how to handle flux for units that never had targets or units just produced. Lots of issues:
+  - Do you make flux never move the unit? This creates bimodal behavior where some units respect flux and others dont?
+  - Do you make the unit that was never moved by flux add more or less to flux magnitude?
+  - Not actually spawning the unit until a target is set might be a very simple solution but the
+    player experiencee might be terrible.
+  - How do you handle missiles blowing up from flux moving them.
+  - How do you handle missiles moving without target? Can players abuse this?
+
+- Improve flux debugging
+  - Add flux square selection
+  - Add selected flux logging for detailed tracing
 
 ---
 
