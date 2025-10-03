@@ -1,18 +1,18 @@
-// The hexagon configuration is relatively complex due to CPU optimizations, so it is given its own file.
+// The hexagon configuration is relatively complex. A look up table is implemented to optimize CPU usage.
 package main
 
 // This global should only be used for function signatures, structs, etc. It can
 // be calculated during runtime via hexConfig fields. It is calculated from hexagon width
-// * (hexagon height/4). The 4 is from the hexagon position context being 1/4 of the total
-// hexagon area.
-const hexagonPostitionContextPixelCount = 460
+// * (hexagon height/4). The 4 is from the hexagon look up table being 1/4 of the total
+// hexagon height.
+const hexLookUpTablePixelCount = 460
 
 type hexConfig struct {
-	hexPositionContext [hexagonPostitionContextPixelCount]hexagonTriangle
-	hexWidth           int
-	hexHeight          int
-	// These offsets define the top left point for the most top left hex position
-	// context pattern. It was chosen since both a positive x and y simplifies code.
+	lookUpTable [hexLookUpTablePixelCount]hexagonTriangle
+	hexWidth    int
+	hexHeight   int
+	// These offsets define the top left point for the most top left hex look up
+	// table pattern. It was chosen since both a positive x and y simplifies code.
 	xOffset      int
 	yOffset      int
 	windowWidth  int
@@ -22,13 +22,13 @@ type hexConfig struct {
 }
 
 func newHexConfig(windowWidth int, windowHeight int) hexConfig {
-	hexPositionContext := newHexPositionContext()
+	lookUpTable := newHexLookUpTable()
 	hexWidth := 46
 	hexHeight := 40
 	xIndexMax := windowWidth/hexWidth + 1
 	yIndexMax := windowHeight/(hexHeight/4*3) + 1
 	hc := hexConfig{
-		hexPositionContext: hexPositionContext,
+		lookUpTable: lookUpTable,
 		// For 1280p * 720p resolution, a hexagon height of 40p is ideally 80/sqrt(3) wide.
 		// 80/sqrt(3) is 46.188 which is approximately 46p.
 		hexWidth:     hexWidth,
@@ -43,7 +43,7 @@ func newHexConfig(windowWidth int, windowHeight int) hexConfig {
 	return hc
 }
 
-// The hexagon position context is a hardcoded mapping to aid with converting
+// The hexagon look up table is a hardcoded mapping to aid with converting
 // pixel position to hexagon grid position. It avoids the the need of CPU intensive math.
 // It helps CPU performance by removing the need for floating point or sqrt math logic.
 //
@@ -79,7 +79,7 @@ func newHexConfig(windowWidth int, windowHeight int) hexConfig {
 //   /   \**
 //  /     \*
 //
-// The hexagon position context is also used for another section of the hexagonal grid
+// The hexagon look up table is also used for another section of the hexagonal grid
 // that is repeated multiple times. It is usally referenced as "inverted"
 //
 //  \     /
@@ -117,8 +117,8 @@ func newHexConfig(windowWidth int, windowHeight int) hexConfig {
 //  */   \*
 //  /     \
 //
-// As shown above, the prior sections middile triangle is now converted into
-// this sections left and right triangle.
+// As shown above, the prior section's middle triangle is now converted into
+// this section's left and right triangle.
 
 type hexagonTriangle int
 
@@ -129,56 +129,56 @@ const (
 	rightHexTriangle
 )
 
-func newHexPositionContext() [hexagonPostitionContextPixelCount]hexagonTriangle {
-	var pc [hexagonPostitionContextPixelCount]hexagonTriangle
+func newHexLookUpTable() [hexLookUpTablePixelCount]hexagonTriangle {
+	var pc [hexLookUpTablePixelCount]hexagonTriangle
 
 	rowPixelCount := 46
 
 	// row 1
 	rowStart := 0
 	rowMiddleOffset := 1
-	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 	// row 2
 	rowStart = rowPixelCount
 	rowMiddleOffset = 3
-	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 	// row 3
 	rowStart = rowPixelCount * 2
 	rowMiddleOffset = 6
-	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 	// row 4
 	rowStart = rowPixelCount * 3
 	rowMiddleOffset = 8
-	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 	// row 5
 	rowStart = rowPixelCount * 4
 	rowMiddleOffset = 10
-	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 	// row 6
 	rowStart = rowPixelCount * 5
 	rowMiddleOffset = 13
-	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 	// row 7
 	rowStart = rowPixelCount * 6
 	rowMiddleOffset = 15
-	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 	// row 8
 	rowStart = rowPixelCount * 7
 	rowMiddleOffset = 17
-	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 	// row 9
 	rowStart = rowPixelCount * 8
 	rowMiddleOffset = 20
-	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 	// row 10
 	rowStart = rowPixelCount * 9
 	rowMiddleOffset = 22
-	setHexPositionContext(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 
 	return pc
 }
 
-func setHexPositionContext(pc *[hexagonPostitionContextPixelCount]hexagonTriangle, rowPixelCount int, rowStart int, rowMiddleOffset int) {
+func setHexLookUpTable(pc *[hexLookUpTablePixelCount]hexagonTriangle, rowPixelCount int, rowStart int, rowMiddleOffset int) {
 	pixelCount := rowPixelCount / 2
 
 	leftHexStart := rowStart

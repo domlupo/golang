@@ -150,9 +150,9 @@ func getPixelPosOutbounds(gridPos gridPosition, hexPoint hexPoint, hc *hexConfig
 		x -= (hc.hexWidth) / 2
 	}
 
-	// The values are found from the 1. hex position context defined in hexConfig.go
+	// The values are found from the 1. hex look up table defined in hexConfig.go
 	// and 2. arbitrary rule of hexagons sides are left inclusive and right exclusive.
-	// These offsets are found from the hex position context start point which is
+	// These offsets are found from the hex look up table start point which is
 	// located at (xOffset, yOffset).
 	switch hexPoint {
 	case center:
@@ -197,7 +197,7 @@ func getGridPos(pixelPos pixelPosition, hc *hexConfig) (gridPosition, bool) {
 
 	switch {
 	case innerY >= firstYSectionStart && innerY < secondYSectionStart:
-		triangle := hc.hexPositionContext[innerX+innerY*hc.hexWidth]
+		triangle := hc.lookUpTable[innerX+innerY*hc.hexWidth]
 		switch triangle {
 		case leftHexTriangle:
 			xIndexOffset = 0
@@ -213,15 +213,15 @@ func getGridPos(pixelPos pixelPosition, hc *hexConfig) (gridPosition, bool) {
 		xIndexOffset = 1
 		yIndexOffset = 2
 	case innerY >= thirdYSectionStart && innerY < fourthYSectionStart:
-		hexPositionContextYOffset := (hc.hexWidth * hc.hexHeight / 4) * 3
-		var hexPositionContextXOffset int
+		hexLookUpYOffset := (hc.hexWidth * hc.hexHeight / 4) * 3
+		var hexLookUpXOffset int
 		if innerX >= 0 && innerX < (hc.hexWidth/2) {
-			hexPositionContextXOffset = (hc.hexWidth / 2)
+			hexLookUpXOffset = (hc.hexWidth / 2)
 		} else {
-			hexPositionContextXOffset = -(hc.hexWidth / 2)
+			hexLookUpXOffset = -(hc.hexWidth / 2)
 		}
 
-		triangle := hc.hexPositionContext[innerX+(innerY*hc.hexWidth)+hexPositionContextXOffset-hexPositionContextYOffset]
+		triangle := hc.lookUpTable[innerX+(innerY*hc.hexWidth)+hexLookUpXOffset-hexLookUpYOffset]
 		switch {
 		case triangle == leftHexTriangle:
 			xIndexOffset = 1

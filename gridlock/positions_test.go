@@ -6,15 +6,15 @@ import (
 )
 
 func TestGetPixelPos(t *testing.T) {
-	hexPositionContext := newHexPositionContext()
+	lookUpTable := newHexLookUpTable()
 	hc := hexConfig{
-		hexPositionContext: hexPositionContext,
-		hexWidth:           46,
-		hexHeight:          40,
-		xOffset:            19,
-		yOffset:            10,
-		windowWidth:        1280,
-		windowHeight:       720,
+		lookUpTable:  lookUpTable,
+		hexWidth:     46,
+		hexHeight:    40,
+		xOffset:      19,
+		yOffset:      10,
+		windowWidth:  1280,
+		windowHeight: 720,
 	}
 
 	var tests = []struct {
@@ -130,15 +130,15 @@ func TestGetPixelPos(t *testing.T) {
 }
 
 func TestGetGridPos(t *testing.T) {
-	hexPositionContext := newHexPositionContext()
+	lookUpTable := newHexLookUpTable()
 	hc := hexConfig{
-		hexPositionContext: hexPositionContext,
-		hexWidth:           46,
-		hexHeight:          40,
-		xOffset:            19,
-		yOffset:            10,
-		windowWidth:        1280,
-		windowHeight:       720,
+		lookUpTable:  lookUpTable,
+		hexWidth:     46,
+		hexHeight:    40,
+		xOffset:      19,
+		yOffset:      10,
+		windowWidth:  1280,
+		windowHeight: 720,
 	}
 
 	var tests = []struct {
@@ -302,7 +302,7 @@ func TestGetGridPos(t *testing.T) {
 		{pixelPosition{1279, 720}, gridPosition{0, 0}, false},
 		{pixelPosition{1280, 720}, gridPosition{0, 0}, false},
 
-		// first hexagon y section (hexagon position context)
+		// first hexagon y section (hexagon look up table)
 		// between hexagons 0,0 1,1 and 1,0
 
 		// sanity checks
@@ -547,7 +547,7 @@ func TestGetGridPos(t *testing.T) {
 		{pixelPosition{66, 38}, gridPosition{2, 1}, true},
 		{pixelPosition{66, 39}, gridPosition{2, 1}, true},
 
-		// third hexagon y section (inverted hexagon position context)
+		// third hexagon y section (inverted hexagon look up table)
 		// between hexagons 0,2 1,1 and 1,2
 
 		// sanity checks

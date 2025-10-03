@@ -19,13 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Update notes for hex positional context:
-  - Refactor hex positional context notes to use the term look up table aka direct addressing.
-  - Note potential optimization to use compile time creation with static lookup vs 
-    initial runtime setup with heap allocated look up at runtime.
-  - Might be worth making a library for this in c or zig for others to use and to practice
-    programming.
-
 - Implement and unit test edge intersections: 
   - https://www.geeksforgeeks.org/dsa/check-if-two-given-line-segments-intersect
   - Unit tests should be sparse and temporary because they are too lowlevel? 
@@ -218,6 +211,9 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Punted Checkpoints
+
+- Check if hexagon look up table can be optimized with static aka compile time setup rather 
+  than runtime setup at game start and accessed during game time via heap allocated pointer.
 
 - Set FPS or add setting for low performance platforms e.g. mobile?
 
