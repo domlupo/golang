@@ -21,16 +21,37 @@ Is there a mobile equivalent for war/4x games?
 
 - Add impassable grids (mountains) and update global path finding to avoid them
   - theta* / bresenham with visibility grids should be implemented.
+    - High level idea:
+      - Use line of sight check to see if pathfinding is required. Unit size needs handled by below fix.
+      - where line intersects non walkable, get the clockwise and counter clockwise visibility points
+      - continually check if target is within sight if not
+      - walk clock wise, compare (pos + n) and (pos + n+1) take w/e is shorter.
+      - continue clockwise until target is within line of sight
+      - Do the same counter clockwise
+      - choose w/e path is shorter.
+      - This is probably not optimized, but very simple to understand and optimize later.
+      - Can store distances and next points during visibility grid setup.
+      - Can store what edge intersects are between what points cw and ccw as well.
+      - Does not handle case where multiple different impassasble terrains exist.
+        This needs to be handled eventually.
+    - Need to handle edge case where line of sight reaches target, but unit travel
+      collides with impassable terran due to unit radius. To solve this for circular units,
+      At game startup, store the distance of each pixelPos to nearest impassable terrain and
+      also the pixelPos of the impassable terrain. Then colliison can be easily checked.
+      Non circular collision can be handled at a later time.
+    - Can cache global path finding results... but need to then also clear results and deal
+      with storage + bimodal runtime. This is very likely the wrong approach but may be helpful.
+      The key would be similar to (unit, start, end target)
+    - Use Chebyshev Distance to get distance between two points since orthognal distance is 1.
     - Implement edge intersection
     - May need to implement target arrays. Is this life long planning?
     - Determine if high level unit tests should be added now or punted till later.
-    - Handle line of sight checks. I think unit size needs to be accounted for somehow. 
     - Handle setting up visiblity grids edge cases e.g. obstacle on border, etc
   - step towards local path finding. Code can be reused. Should be simpler to implement.
   - Long term:
     - May need to use local collision avoidance with other units since obstacles should funnel units together
     - May want to not use center of hexagon as target. 
-    - May want a way to setup single obstacles on grid, then a function determines how to group 
+    - May want a way to setup single obstacles on grid, then a setup function determines how to group
       obstacles together. Overall, it should probably be w/e is CPU efficient for state.go to process.
 
 - Design and implement local path finding algorithm:
