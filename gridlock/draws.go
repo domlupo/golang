@@ -274,20 +274,20 @@ func drawHex(dc drawContext, gridPos gridPosition, color drawTriangleColor, sele
 		nwY := float32(nw.y) * dc.windowMultiplier
 
 		ne := gridPos.getPixelPosOutbounds(northeastPoint, &dc.hexConfig)
-		neX := float32(ne.x) * dc.windowMultiplier
+		neX := float32(ne.x+1) * dc.windowMultiplier
 		neY := float32(ne.y) * dc.windowMultiplier
 
 		sw := gridPos.getPixelPosOutbounds(southwestPoint, &dc.hexConfig)
 		swX := float32(sw.x) * dc.windowMultiplier
-		swY := float32(sw.y) * dc.windowMultiplier
+		swY := float32(sw.y+1) * dc.windowMultiplier
 
 		se := gridPos.getPixelPosOutbounds(southeastPoint, &dc.hexConfig)
-		seX := float32(se.x) * dc.windowMultiplier
-		seY := float32(se.y) * dc.windowMultiplier
+		seX := float32(se.x+1) * dc.windowMultiplier
+		seY := float32(se.y+1) * dc.windowMultiplier
 
 		s := gridPos.getPixelPosOutbounds(southPoint, &dc.hexConfig)
 		sX := float32(s.x) * dc.windowMultiplier
-		sY := float32(s.y) * dc.windowMultiplier
+		sY := float32(s.y+1) * dc.windowMultiplier
 
 		vector.StrokeLine(
 			dc.screen,
