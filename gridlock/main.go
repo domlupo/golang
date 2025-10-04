@@ -101,10 +101,26 @@ func newGame() Game {
 
 func (g *Game) restart() {
 	// TODO: Need to restart timers, etc
-	g.gameState = *newState(&g.drawContext.hexConfig, g.enableFlux)
 	g.compOne = *newComputer(bluePlayer)
 	g.compTwo = *newComputer(redPlayer)
-	setupState(g.gameState, zoomHorizontalObstacles, &g.drawContext.hexConfig, g.initialNodeHealth)
+
+	// TODO: restructure game setup logic. Right now the structure
+	// between node and obstacle setup is not developer friendly.
+	// Also only a single connected obstacle is supported.
+	obstacles := make(obstacles)
+	gp := gridPosition{4, 2}
+	obstacles[gp] = &obstacle{gridPos: gp, kind: mountain}
+	gp = gridPosition{4, 3}
+	obstacles[gp] = &obstacle{gridPos: gp, kind: mountain}
+	gp = gridPosition{4, 4}
+	obstacles[gp] = &obstacle{gridPos: gp, kind: mountain}
+	gp = gridPosition{5, 4}
+	obstacles[gp] = &obstacle{gridPos: gp, kind: mountain}
+	pixelPathing := setupPixelPathing(obstacles, &g.drawContext.hexConfig)
+	obstacles.setupVisibilityGrid(pixelPathing, &g.drawContext.hexConfig)
+
+	g.gameState = *newState(obstacles, pixelPathing, &g.drawContext.hexConfig, g.enableFlux)
+	setupState(g.gameState, zoomHorizontal, &g.drawContext.hexConfig, g.initialNodeHealth)
 	g.updateComputerTargetNodes()
 }
 

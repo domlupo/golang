@@ -10,6 +10,7 @@ type state struct {
 	*hexConfig
 	// TODO: The next largest optimization might be to split hexagon linked list
 	// into respective layers.
+	pixelPathing       pixelPathing
 	hexagons           map[gridPosition]*hexagon
 	obstacles          map[gridPosition]*obstacle
 	nodes              map[gridPosition]*node
@@ -20,15 +21,16 @@ type state struct {
 	unitsDeletedTotal  int
 }
 
-func newState(hexConfig *hexConfig, enableFlux bool) *state {
+func newState(obstacles map[gridPosition]*obstacle, pixelPathing pixelPathing, hexConfig *hexConfig, enableFlux bool) *state {
 	s := state{
-		hexConfig:  hexConfig,
-		hexagons:   make(map[gridPosition]*hexagon),
-		obstacles:  make(map[gridPosition]*obstacle),
-		nodes:      make(map[gridPosition]*node),
-		fluxes:     make(map[gridPosition]*flux),
-		units:      make(map[position]*unit),
-		enableFlux: enableFlux,
+		hexConfig:    hexConfig,
+		obstacles:    obstacles,
+		pixelPathing: pixelPathing,
+		hexagons:     make(map[gridPosition]*hexagon),
+		nodes:        make(map[gridPosition]*node),
+		fluxes:       make(map[gridPosition]*flux),
+		units:        make(map[position]*unit),
+		enableFlux:   enableFlux,
 	}
 
 	for i := range s.hexConfig.xIndexMax {

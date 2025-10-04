@@ -21,8 +21,6 @@ const (
 	topVsBottomHorizontalOffset
 	zoomHorizontal
 	zoomVertical
-	zoomHorizontalObstacle
-	zoomHorizontalObstacles
 )
 
 func setupState(gameState state, s setup, hexConfig *hexConfig, initialNodeHealth int) {
@@ -283,31 +281,6 @@ func setupState(gameState state, s setup, hexConfig *hexConfig, initialNodeHealt
 	case zoomHorizontal:
 		gameState.addNode(newNode(bluePlayer, gridPosition{2, 2}, initialNodeHealth, hexConfig, infantryConfig))
 		gameState.addNode(newNode(redPlayer, gridPosition{6, 2}, initialNodeHealth, hexConfig, infantryConfig))
-	case zoomVertical:
-		gameState.addNode(newNode(bluePlayer, gridPosition{2, 2}, initialNodeHealth, hexConfig, infantryConfig))
-		gameState.addNode(newNode(redPlayer, gridPosition{2, 6}, initialNodeHealth, hexConfig, infantryConfig))
-	case zoomHorizontalObstacle:
-		gameState.addNode(newNode(bluePlayer, gridPosition{2, 2}, initialNodeHealth, hexConfig, infantryConfig))
-		gameState.addNode(newNode(redPlayer, gridPosition{6, 2}, initialNodeHealth, hexConfig, infantryConfig))
-		obstacles := obstacles{obstacle{gridPos: gridPosition{4, 2}, kind: mountain}}
-		obstacles.setupVisibilityGrid(hexConfig)
-		for _, o := range obstacles {
-			gameState.addObstacle(o)
-		}
-	case zoomHorizontalObstacles:
-		gameState.addNode(newNode(bluePlayer, gridPosition{2, 2}, initialNodeHealth, hexConfig, infantryConfig))
-		gameState.addNode(newNode(redPlayer, gridPosition{6, 2}, initialNodeHealth, hexConfig, infantryConfig))
-		obstacles := obstacles{
-			obstacle{gridPos: gridPosition{4, 2}, kind: mountain},
-			obstacle{gridPos: gridPosition{4, 3}, kind: mountain},
-			obstacle{gridPos: gridPosition{4, 4}, kind: mountain},
-			obstacle{gridPos: gridPosition{5, 4}, kind: mountain},
-		}
-		obstacles.setupVisibilityGrid(hexConfig)
-		for _, o := range obstacles {
-			gameState.addObstacle(o)
-		}
-
 	default:
 		panic("setup does not exist")
 	}

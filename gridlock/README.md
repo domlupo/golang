@@ -144,6 +144,10 @@ Is there a mobile equivalent for war/4x games?
 
 ### Future Checkpoints
 
+- Determine if for CPU reasons, I should not mix layers in the same map and always manage them by state.go
+
+- Refactor how state, setups, and pathing is initialized. The current structure is poor.
+
 - How can I use more unit tests? Or how can i write automated high level tests.
 
 - Do I need to think about layers more?
@@ -307,7 +311,7 @@ Is there a mobile equivalent for war/4x games?
    - Easier to design game/engine
    - Easier to test game/engine
    - Easier to debug game/engine
-4. Same cost Orgthogonal and Cardinal movement:
+4. Same cost Orgthogonal and Cardinal movement (Chebyshev distance):
    - Simplifies path finding
    - Lowers CPU cost
    - Lowers overall game time

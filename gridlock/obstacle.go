@@ -3,8 +3,33 @@
 package main
 
 import (
+	"math"
+
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
+
+type obstacles map[gridPosition]*obstacle
+
+type obstacle struct {
+	gridPos        gridPosition
+	kind           obstacleKind
+	visibilityGrid []obstacleTarget
+}
+
+type obstacleTarget struct {
+	pixelPosition
+	cw  *obstacleTarget
+	ccw *obstacleTarget
+}
+
+type pixelPathing map[pixelPosition]pathing
+
+type pathing struct {
+	walkable bool
+	// TODO: Implement in future to optimize and handle edge cases
+	nearestUnwalkwabledDistance int
+	nearestUnwalkwable          pixelPosition
+}
 
 type obstacleKind int
 
@@ -13,32 +38,162 @@ const (
 	mountain
 )
 
-type obstacle struct {
-	gridPos        gridPosition
-	kind           obstacleKind
-	visibilityGrid []pixelPosition
+func setupPixelPathing(os map[gridPosition]*obstacle, hc *hexConfig) pixelPathing {
+	pixelPathing := make(map[pixelPosition]pathing, hc.windowWidth*hc.windowHeight)
+
+	for x := range hc.windowWidth {
+		for y := range hc.windowHeight {
+			pixelPos := pixelPosition{x: x, y: y}
+			gridPos, ok := pixelPos.getGridPos(hc)
+			if !ok {
+				panic("Could not setup pixel path")
+			}
+			o := os[gridPos]
+			walkable := true
+			if o != nil && o.kind == mountain {
+				walkable = false
+			}
+			pixelPathing[pixelPos] = pathing{walkable: walkable}
+		}
+	}
+
+	return pixelPathing
 }
 
-func (o obstacle) drawObstacle(dc drawContext) {
-	drawHex(dc, o.gridPos, drawTriangleColor{red: 0.2, blue: 0.2, green: 0.2, alpha: 0.8}, false)
+// Returns if a point to point line of sight exists using Bresenham's algorithm
+func (pos pixelPosition) lineOfSight(otherPos pixelPosition, pathing pixelPathing) bool {
+	x0 := pos.x
+	y0 := pos.y
+	x1 := otherPos.x
+	y1 := otherPos.y
+
+	var sx int
+	var sy int
+	dx := x1 - x0
+	dy := y1 - y0
+	if dx < 0 {
+		dx = dx * -1
+	}
+	if dy > 0 {
+		dy = dy * -1
+	}
+	if x0 < x1 {
+		sx = 1
+	} else {
+		sx = -1
+	}
+	if y0 < y1 {
+		sy = 1
+	} else {
+		sy = -1
+	}
+	bresenhamError := dx + dy
+
+	for x0 != x1 && y0 != y1 {
+		if !pathing[pixelPosition{x: x0, y: y0}].walkable {
+			return false
+		}
+
+		doubleError := 2 * bresenhamError
+		if doubleError >= dy && x0 != x1 {
+			bresenhamError += dy
+			x0 += sx
+		}
+		if doubleError <= dx && y0 != y1 {
+			bresenhamError += dx
+			y0 += sy
+		}
+
+	}
+
+	return true
 }
 
-func (o obstacle) drawVisibilityGrid(dc drawContext) {
-	for _, pos := range o.visibilityGrid {
-		vector.DrawFilledCircle(
-			dc.screen,
-			float32(pos.x)*dc.windowMultiplier,
-			float32(pos.y)*dc.windowMultiplier,
-			3*dc.windowMultiplier,
-			dc.highlightColor,
-			false)
+func (os obstacles) setupVisibilityGrid(pathing pixelPathing, hc *hexConfig) {
+	targets := os.setupObstacleTargets(hc)
+
+	for _, ot := range targets {
+		for _, otherOt := range targets {
+			if ot.x == otherOt.x && ot.y == otherOt.y {
+				continue
+			}
+
+			// remove unneeded positions. Very hacky approach is to remove
+			// any positions that collides with a radius of 5.
+			// TODO: Don't hard code 5 and don't hack
+			xDelta := ot.x - otherOt.x
+			yDelta := ot.y - otherOt.y
+			rSum := 5 + 5
+			if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
+				if ot.cw != nil {
+					ot.cw.ccw = nil
+				}
+				if ot.ccw != nil {
+					ot.ccw.cw = nil
+				}
+				if otherOt.cw != nil {
+					otherOt.cw.ccw = nil
+				}
+				if otherOt.ccw != nil {
+					otherOt.ccw.cw = nil
+				}
+				delete(targets, pixelPosition{x: ot.x, y: ot.y})
+				delete(targets, pixelPosition{x: otherOt.x, y: otherOt.y})
+			}
+		}
+	}
+
+	var nilCWTargets []*obstacleTarget
+	var nilCCWTargets []*obstacleTarget
+	for _, ot := range targets {
+		if ot.cw == nil {
+			nilCWTargets = append(nilCWTargets, ot)
+		}
+		if ot.ccw == nil {
+			nilCCWTargets = append(nilCCWTargets, ot)
+		}
+	}
+
+	for _, cw := range nilCWTargets {
+		shortestDistance := math.MaxInt64
+		var cwFix *obstacleTarget
+		for _, ccw := range nilCCWTargets {
+			if cw.x == ccw.x && cw.y == ccw.y {
+				continue
+			}
+
+			if cw.cw != nil || ccw.ccw != nil {
+				continue
+			}
+
+			if cw.ccw == ccw || ccw.cw == cw {
+				continue
+			}
+
+			distance := cw.chebyshevDistance(ccw.pixelPosition)
+			lineOfSight := cw.lineOfSight(ccw.pixelPosition, pathing)
+			if distance < shortestDistance && lineOfSight {
+				shortestDistance = distance
+				cwFix = ccw
+			} else if distance == shortestDistance && lineOfSight {
+				panic("Handle visibility grid setup when points are equal. This will probably be rare or impossible")
+			}
+		}
+		cw.cw = cwFix
+		cwFix.ccw = cw
+	}
+
+	var grid []obstacleTarget
+	for _, ot := range targets {
+		grid = append(grid, *ot)
+	}
+	for i := range os {
+		os[i].visibilityGrid = grid
 	}
 }
 
-type obstacles []obstacle
-
-func (os obstacles) setupVisibilityGrid(hc *hexConfig) {
-	positions := make(map[pixelPosition]struct{})
+func (os obstacles) setupObstacleTargets(hc *hexConfig) map[pixelPosition]*obstacleTarget {
+	targets := make(map[pixelPosition]*obstacleTarget)
 
 	// TODO: don't hardcode offset values for infantry unit with radius of 3
 	nOffset := pixelPosition{0, -4}
@@ -49,6 +204,26 @@ func (os obstacles) setupVisibilityGrid(hc *hexConfig) {
 	nwOffset := pixelPosition{-4, -2}
 
 	for _, o := range os {
+		nObstacleTarget := &obstacleTarget{}
+		neObstacleTarget := &obstacleTarget{}
+		seObstacleTarget := &obstacleTarget{}
+		sObstacleTarget := &obstacleTarget{}
+		swObstacleTarget := &obstacleTarget{}
+		nwObstacleTarget := &obstacleTarget{}
+
+		nObstacleTarget.cw = neObstacleTarget
+		nObstacleTarget.ccw = nwObstacleTarget
+		neObstacleTarget.cw = seObstacleTarget
+		neObstacleTarget.ccw = nObstacleTarget
+		seObstacleTarget.cw = sObstacleTarget
+		seObstacleTarget.ccw = neObstacleTarget
+		sObstacleTarget.cw = swObstacleTarget
+		sObstacleTarget.ccw = seObstacleTarget
+		swObstacleTarget.cw = nwObstacleTarget
+		swObstacleTarget.ccw = sObstacleTarget
+		nwObstacleTarget.cw = nObstacleTarget
+		nwObstacleTarget.ccw = swObstacleTarget
+
 		n := o.gridPos.getPixelPosOutbounds(northPoint, hc)
 		ne := o.gridPos.getPixelPosOutbounds(northeastPoint, hc)
 		se := o.gridPos.getPixelPosOutbounds(southeastPoint, hc)
@@ -56,52 +231,73 @@ func (os obstacles) setupVisibilityGrid(hc *hexConfig) {
 		sw := o.gridPos.getPixelPosOutbounds(southwestPoint, hc)
 		nw := o.gridPos.getPixelPosOutbounds(northwestPoint, hc)
 
-		if nOffset, ok := n.add(nOffset, hc); ok {
-			positions[nOffset] = struct{}{}
+		if nTarget, ok := n.add(nOffset, hc); ok {
+			nObstacleTarget.pixelPosition = nTarget
+			targets[nTarget] = nObstacleTarget
+		} else {
+			nObstacleTarget.ccw.cw = nObstacleTarget.cw
+			nObstacleTarget.cw.ccw = nObstacleTarget.ccw
 		}
-		if neOffset, ok := ne.add(neOffset, hc); ok {
-			positions[neOffset] = struct{}{}
+		if neTarget, ok := ne.add(neOffset, hc); ok {
+			neObstacleTarget.pixelPosition = neTarget
+			targets[neTarget] = neObstacleTarget
+		} else {
+			neObstacleTarget.ccw.cw = neObstacleTarget.cw
+			neObstacleTarget.cw.ccw = neObstacleTarget.ccw
 		}
-		if seOffset, ok := se.add(seOffset, hc); ok {
-			positions[seOffset] = struct{}{}
+		if seTarget, ok := se.add(seOffset, hc); ok {
+			seObstacleTarget.pixelPosition = seTarget
+			targets[seTarget] = seObstacleTarget
+		} else {
+			seObstacleTarget.ccw.cw = seObstacleTarget.cw
+			seObstacleTarget.cw.ccw = seObstacleTarget.ccw
 		}
-		if sOffset, ok := s.add(sOffset, hc); ok {
-			positions[sOffset] = struct{}{}
+		if sTarget, ok := s.add(sOffset, hc); ok {
+			sObstacleTarget.pixelPosition = sTarget
+			targets[sTarget] = sObstacleTarget
+		} else {
+			sObstacleTarget.ccw.cw = sObstacleTarget.cw
+			sObstacleTarget.cw.ccw = sObstacleTarget.ccw
 		}
-		if swOffset, ok := sw.add(swOffset, hc); ok {
-			positions[swOffset] = struct{}{}
+		if swTarget, ok := sw.add(swOffset, hc); ok {
+			swObstacleTarget.pixelPosition = swTarget
+			targets[swTarget] = swObstacleTarget
+		} else {
+			swObstacleTarget.ccw.cw = swObstacleTarget.cw
+			swObstacleTarget.cw.ccw = swObstacleTarget.ccw
 		}
-		if nwOffset, ok := nw.add(nwOffset, hc); ok {
-			positions[nwOffset] = struct{}{}
+		if nwTarget, ok := nw.add(nwOffset, hc); ok {
+			nwObstacleTarget.pixelPosition = nwTarget
+			targets[nwTarget] = nwObstacleTarget
+		} else {
+			nwObstacleTarget.ccw.cw = nwObstacleTarget.cw
+			nwObstacleTarget.cw.ccw = nwObstacleTarget.ccw
 		}
 	}
+	return targets
+}
 
-	for pos := range positions {
-		for otherPos := range positions {
-			if pos.x == otherPos.x && pos.y == otherPos.y {
-				continue
-			}
+func (o obstacle) drawObstacle(dc drawContext) {
+	drawHex(dc, o.gridPos, drawTriangleColor{red: 0.2, blue: 0.2, green: 0.2, alpha: 0.8}, false)
+}
 
-			// remove unneeded positions. Very hacky approach is to remove
-			// any positions that collides with a radius of 5.
-			// TODO: Don't hard code 5 and don't hack
-			xDelta := pos.x - otherPos.x
-			yDelta := pos.y - otherPos.y
-			rSum := 5 + 5
-			if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
-				delete(positions, pos)
-				delete(positions, otherPos)
-			}
-		}
+func (o obstacle) drawVisibilityGrid(dc drawContext) {
+	for _, ot := range o.visibilityGrid {
+		vector.DrawFilledCircle(
+			dc.screen,
+			float32(ot.x)*dc.windowMultiplier,
+			float32(ot.y)*dc.windowMultiplier,
+			3*dc.windowMultiplier,
+			dc.highlightColor,
+			false)
+		vector.StrokeLine(
+			dc.screen,
+			float32(ot.x)*dc.windowMultiplier,
+			float32(ot.y)*dc.windowMultiplier,
+			float32(ot.cw.x)*dc.windowMultiplier,
+			float32(ot.cw.y)*dc.windowMultiplier,
+			float32(dc.visibilityGridLineWidth)*dc.windowMultiplier,
+			dc.highlightColor,
+			false)
 	}
-
-	var grid []pixelPosition
-	for pos := range positions {
-		grid = append(grid, pos)
-	}
-
-	for i := range os {
-		os[i].visibilityGrid = grid
-	}
-
 }

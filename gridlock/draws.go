@@ -29,6 +29,7 @@ type drawContext struct {
 	fluxLineWidth                 int
 	fluxDirectionRadius           int
 	targetNodeLineWidth           int
+	visibilityGridLineWidth       int
 	backgroundColor               color.RGBA
 	highlightColor                color.RGBA
 	unitHealthColor               color.RGBA
@@ -63,6 +64,7 @@ func newDrawContext() *drawContext {
 		fluxLineWidth:                 2,
 		fluxDirectionRadius:           3,
 		targetNodeLineWidth:           1,
+		visibilityGridLineWidth:       1,
 		backgroundColor:               color.RGBA{200, 200, 200, 255},
 		highlightColor:                highlightColor,
 		unitHealthColor:               highlightColor,

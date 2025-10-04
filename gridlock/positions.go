@@ -87,6 +87,18 @@ func (pixelPos pixelPosition) log() []slog.Attr {
 	return a
 }
 
+func (pos pixelPosition) chebyshevDistance(otherPos pixelPosition) int {
+	xDelta := pos.x - otherPos.x
+	if xDelta < 0 {
+		xDelta *= -1
+	}
+	yDelta := pos.y - otherPos.y
+	if yDelta < 0 {
+		yDelta *= -1
+	}
+	return max(xDelta, yDelta)
+}
+
 func (pos gridPosition) adjacent(side hexSide, hc *hexConfig) (gridPosition, bool) {
 	x := pos.x
 	y := pos.y
