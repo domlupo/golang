@@ -111,7 +111,7 @@ func TestGetPixelPos(t *testing.T) {
 			sWantedOk)
 
 		t.Run(testname, func(t *testing.T) {
-			pos, ok := getPixelPos(tt.gridPos, tt.hexPoint, &hc)
+			pos, ok := tt.gridPos.getPixelPos(tt.hexPoint, &hc)
 			if ok != tt.wantedOk {
 				t.Errorf("Wanted pixel position to %s", sWantedOk)
 			}
@@ -875,7 +875,7 @@ func TestGetGridPos(t *testing.T) {
 			sWantedOk)
 
 		t.Run(testname, func(t *testing.T) {
-			pos, ok := getGridPos(tt.pixelPos, &hc)
+			pos, ok := tt.pixelPos.getGridPos(&hc)
 			if ok != tt.wantedOk {
 				t.Errorf("Wanted pixel position to %s", sWantedOk)
 			}
@@ -933,7 +933,7 @@ func TestIntersects(t *testing.T) {
 	for _, tt := range tests {
 		testname := "low level test to be replaced"
 		t.Run(testname, func(t *testing.T) {
-			intersects := intersects(tt.l1, tt.l2)
+			intersects := tt.l1.intersects(tt.l2)
 			if intersects != tt.wantedIntersects {
 				t.Errorf("low level test failed")
 			}

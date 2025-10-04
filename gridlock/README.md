@@ -19,8 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Refactor positions.go functions into methods if more readable
-
 - Add impassable grids (mountains) and update global path finding to avoid them
   - theta* / bresenham with visibility grids should be implemented.
     - Implement edge intersection

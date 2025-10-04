@@ -61,7 +61,7 @@ func (s *state) refresh() {
 		u.refresh()
 
 		if !u.movedLastTurn {
-			gridPos, _ := getGridPos(u.pixelPosition, s.hexConfig)
+			gridPos, _ := u.pixelPosition.getGridPos(s.hexConfig)
 			s.fluxes[gridPos].staticUnits++
 		}
 	}
@@ -78,7 +78,7 @@ func (s *state) analyzeTargets() {
 		}
 
 		if s.enableFlux && u.fluxTurnCount > u.fluxTurnCountDelay {
-			gridPos, _ := getGridPos(u.pixelPosition, s.hexConfig)
+			gridPos, _ := u.pixelPosition.getGridPos(s.hexConfig)
 			fluxDelta := s.fluxes[gridPos].getFluxDelta(u.fluxMagnitude)
 			u.updateTarget(fluxTarget, position{ground, pixelPosition{u.x + fluxDelta.x, u.y + fluxDelta.y}})
 		}
@@ -172,8 +172,8 @@ func (s *state) moveUnits() {
 			unitsMovedCount++
 			s.units[newPos] = s.units[position{u.layer, pixelPosition{u.x, u.y}}]
 
-			oldGridPos, _ := getGridPos(u.pixelPosition, s.hexConfig)
-			newGridPos, _ := getGridPos(newPos.pixelPosition, s.hexConfig)
+			oldGridPos, _ := u.pixelPosition.getGridPos(s.hexConfig)
+			newGridPos, _ := newPos.pixelPosition.getGridPos(s.hexConfig)
 			if oldGridPos.x != newGridPos.x || oldGridPos.y != newGridPos.y {
 				oldHex := s.hexagons[oldGridPos]
 				newHex := s.hexagons[newGridPos]
@@ -244,7 +244,7 @@ func (s *state) collidesWithNode(pos position, u unit, unitCollisionRadius int, 
 			continue
 		}
 
-		nPixelPos, ok := getPixelPos(n.gridPos, center, s.hexConfig)
+		nPixelPos, ok := n.gridPos.getPixelPos(center, s.hexConfig)
 		if !ok {
 			panic("could not get pixel pos for collide with node")
 		}
@@ -261,7 +261,7 @@ func (s *state) collidesWithNode(pos position, u unit, unitCollisionRadius int, 
 			var globalTargetGridPos gridPosition
 			var globalTargetGridPosOk bool
 			if !u.globalTarget.isZero() {
-				globalTargetGridPos, globalTargetGridPosOk = getGridPos(u.globalTarget.pixelPosition, s.hexConfig)
+				globalTargetGridPos, globalTargetGridPosOk = u.globalTarget.pixelPosition.getGridPos(s.hexConfig)
 			}
 			collidesWithTargetNode := globalTargetGridPosOk && globalTargetGridPos.x == n.gridPos.x && globalTargetGridPos.y == n.gridPos.y
 			return *n, collidesWithTargetNode, true
@@ -295,11 +295,11 @@ func (s *state) explode(pos position, blastRadius int, units map[position]*unit)
 	}
 }
 
-func (s *state) nearestUnitWithinVision(unit unit) (position, bool) {
-	x1 := unit.position.x + unit.radius
-	y1 := unit.position.y + unit.radius
+func (s *state) nearestUnitWithinVision(u unit) (position, bool) {
+	x1 := u.position.x + u.radius
+	y1 := u.position.y + u.radius
 
-	gridPos, _ := getGridPos(unit.pixelPosition, s.hexConfig)
+	gridPos, _ := u.pixelPosition.getGridPos(s.hexConfig)
 	hex := s.hexagons[gridPos]
 	var neHex, eHex, seHex, swHex, wHex, nwHex *hexagon
 
@@ -334,7 +334,7 @@ func (s *state) nearestUnitWithinVision(unit unit) (position, bool) {
 
 		linkedList := hex.linkedList
 
-		if linkedList == nil || (linkedList.id == unit.id && linkedList == linkedList.next) {
+		if linkedList == nil || (linkedList.id == u.id && linkedList == linkedList.next) {
 			continue
 		}
 
@@ -350,21 +350,21 @@ func (s *state) nearestUnitWithinVision(unit unit) (position, bool) {
 				break
 			}
 
-			if current.id == unit.id {
+			if current.id == u.id {
 				current = current.next
 				continue
 			}
 
 			checkOccurred = true
 
-			if unit.player == current.player {
+			if u.player == current.player {
 				current = current.next
 				continue
 			}
 
-			if !unit.attacksGround && current.layer == ground ||
-				!unit.attacksLowAltitude && current.layer == lowAltitude ||
-				!unit.attacksHighAltitude && current.layer == highAltitude {
+			if !u.attacksGround && current.layer == ground ||
+				!u.attacksLowAltitude && current.layer == lowAltitude ||
+				!u.attacksHighAltitude && current.layer == highAltitude {
 				current = current.next
 				continue
 			}
@@ -375,7 +375,7 @@ func (s *state) nearestUnitWithinVision(unit unit) (position, bool) {
 			xDelta := x2 - x1
 			yDelta := y2 - y1
 			distance := xDelta*xDelta + yDelta*yDelta
-			if distance < shortestDistance && distance <= unit.vision*unit.vision {
+			if distance < shortestDistance && distance <= u.vision*u.vision {
 				shortestDistance = distance
 				nearestUnitPos = current.position
 			}
@@ -395,7 +395,7 @@ func (s *state) collidesWithUnit(newPos position, unit unit) (position, bool) {
 	y1 := newPos.y + unit.radius
 	r1 := unit.radius
 
-	gridPos, _ := getGridPos(newPos.pixelPosition, s.hexConfig)
+	gridPos, _ := newPos.pixelPosition.getGridPos(s.hexConfig)
 	hex := s.hexagons[gridPos]
 	var neHex, eHex, seHex, swHex, wHex, nwHex *hexagon
 
@@ -533,7 +533,7 @@ func (s *state) attackUnits() {
 	for _, u := range s.units {
 		if u.health <= 0 {
 
-			gridPos, _ := getGridPos(u.pixelPosition, s.hexConfig)
+			gridPos, _ := u.pixelPosition.getGridPos(s.hexConfig)
 			hex := s.hexagons[gridPos]
 			hex.unitCount--
 			if hex.linkedList.id == u.id && u.next.id != u.id {
@@ -633,8 +633,8 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 		bottomRightPixelPos = pixelPosition{releasePosition.x, clickPosition.y}
 	}
 
-	topLeftGridPos, _ := getGridPos(topLeftPixelPos, s.hexConfig)
-	bottomRightGridPos, _ := getGridPos(bottomRightPixelPos, s.hexConfig)
+	topLeftGridPos, _ := topLeftPixelPos.getGridPos(s.hexConfig)
+	bottomRightGridPos, _ := bottomRightPixelPos.getGridPos(s.hexConfig)
 
 	for _, n := range s.nodes {
 		if (topLeftGridPos.x < n.gridPos.x) &&
@@ -698,7 +698,7 @@ func (s *state) produceUnits() {
 		}
 
 		// TODO: determine behavior for producing units during collision
-		pixelPos, ok := getPixelPos(n.gridPos, center, s.hexConfig)
+		pixelPos, ok := n.gridPos.getPixelPos(center, s.hexConfig)
 		if !ok {
 			panic("could not get pixel pos for produce units")
 		}

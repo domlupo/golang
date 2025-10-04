@@ -157,8 +157,8 @@ func (pos pixelPosition) add(other pixelPosition, hc *hexConfig) (pixelPosition,
 	}
 }
 
-func getPixelPos(gridPos gridPosition, hexPoint hexPoint, hc *hexConfig) (pixelPosition, bool) {
-	pixelPos := getPixelPosOutbounds(gridPos, hexPoint, hc)
+func (gridPos gridPosition) getPixelPos(hexPoint hexPoint, hc *hexConfig) (pixelPosition, bool) {
+	pixelPos := gridPos.getPixelPosOutbounds(hexPoint, hc)
 	x, y := pixelPos.x, pixelPos.y
 
 	if x < 0 || x >= hc.windowWidth || y < 0 || y >= hc.windowHeight {
@@ -168,7 +168,7 @@ func getPixelPos(gridPos gridPosition, hexPoint hexPoint, hc *hexConfig) (pixelP
 	}
 }
 
-func getPixelPosOutbounds(gridPos gridPosition, hexPoint hexPoint, hc *hexConfig) pixelPosition {
+func (gridPos gridPosition) getPixelPosOutbounds(hexPoint hexPoint, hc *hexConfig) pixelPosition {
 	x := gridPos.x * hc.hexWidth
 	y := gridPos.y * (hc.hexHeight / 4 * 3)
 	if gridPos.y%2 == 1 {
@@ -203,7 +203,7 @@ func getPixelPosOutbounds(gridPos gridPosition, hexPoint hexPoint, hc *hexConfig
 	return pixelPosition{x + hc.xOffset, y + hc.yOffset}
 }
 
-func getGridPos(pixelPos pixelPosition, hc *hexConfig) (gridPosition, bool) {
+func (pixelPos pixelPosition) getGridPos(hc *hexConfig) (gridPosition, bool) {
 	if pixelPos.x < 0 || pixelPos.x > hc.windowWidth-1 || pixelPos.y < 0 || pixelPos.y > hc.windowHeight-1 {
 		return gridPosition{}, false
 	}
@@ -295,7 +295,7 @@ func onSegment(p pixelPosition, q pixelPosition, r pixelPosition) bool {
 	return q.x <= max(p.x, r.x) && q.x >= min(p.x, r.x) && q.y <= max(p.y, r.y) && q.y >= min(p.y, r.y)
 }
 
-func intersects(l1 line, l2 line) bool {
+func (l1 line) intersects(l2 line) bool {
 	o1 := orientation(l1.start, l1.end, l2.start)
 	o2 := orientation(l1.start, l1.end, l2.end)
 	o3 := orientation(l2.start, l2.end, l1.start)

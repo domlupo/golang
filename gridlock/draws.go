@@ -161,19 +161,19 @@ func drawDebug(dc drawContext, drawDebugGrid bool) {
 			lineWidth := float32(dc.debugGridWidth) * dc.windowMultiplier
 			pos := gridPosition{i, j}
 
-			n := getPixelPosOutbounds(pos, northPoint, &dc.hexConfig)
+			n := pos.getPixelPosOutbounds(northPoint, &dc.hexConfig)
 			nX := float32(n.x) * dc.windowMultiplier
 			nY := float32(n.y) * dc.windowMultiplier
 
-			nw := getPixelPosOutbounds(pos, northwestPoint, &dc.hexConfig)
+			nw := pos.getPixelPosOutbounds(northwestPoint, &dc.hexConfig)
 			nwX := float32(nw.x) * dc.windowMultiplier
 			nwY := float32(nw.y) * dc.windowMultiplier
 
-			ne := getPixelPosOutbounds(pos, northeastPoint, &dc.hexConfig)
+			ne := pos.getPixelPosOutbounds(northeastPoint, &dc.hexConfig)
 			neX := float32(ne.x+1) * dc.windowMultiplier
 			neY := float32(ne.y) * dc.windowMultiplier
 
-			sw := getPixelPosOutbounds(pos, southwestPoint, &dc.hexConfig)
+			sw := pos.getPixelPosOutbounds(southwestPoint, &dc.hexConfig)
 			swX := float32(sw.x) * dc.windowMultiplier
 			swY := float32(sw.y+1) * dc.windowMultiplier
 
@@ -231,13 +231,13 @@ type drawTriangleColor struct {
 }
 
 func drawHex(dc drawContext, gridPos gridPosition, color drawTriangleColor, selected bool) {
-	center := getPixelPosOutbounds(gridPos, center, &dc.hexConfig)
-	north := getPixelPosOutbounds(gridPos, northPoint, &dc.hexConfig)
-	northeast := getPixelPosOutbounds(gridPos, northeastPoint, &dc.hexConfig)
-	southeast := getPixelPosOutbounds(gridPos, southeastPoint, &dc.hexConfig)
-	southwest := getPixelPosOutbounds(gridPos, southwestPoint, &dc.hexConfig)
-	south := getPixelPosOutbounds(gridPos, southPoint, &dc.hexConfig)
-	northwest := getPixelPosOutbounds(gridPos, northwestPoint, &dc.hexConfig)
+	center := gridPos.getPixelPosOutbounds(center, &dc.hexConfig)
+	north := gridPos.getPixelPosOutbounds(northPoint, &dc.hexConfig)
+	northeast := gridPos.getPixelPosOutbounds(northeastPoint, &dc.hexConfig)
+	southeast := gridPos.getPixelPosOutbounds(southeastPoint, &dc.hexConfig)
+	southwest := gridPos.getPixelPosOutbounds(southwestPoint, &dc.hexConfig)
+	south := gridPos.getPixelPosOutbounds(southPoint, &dc.hexConfig)
+	northwest := gridPos.getPixelPosOutbounds(northwestPoint, &dc.hexConfig)
 
 	// The one pixel offsets for inclusive or exclusive hex points are handled at the game logic layer.
 	// The window multiplier offsets are handled here since window multiplier is a draw concept.
@@ -265,27 +265,27 @@ func drawHex(dc drawContext, gridPos gridPosition, color drawTriangleColor, sele
 	if selected {
 		lineWidth := float32(dc.debugGridWidth) * dc.windowMultiplier
 
-		north := getPixelPosOutbounds(gridPos, northPoint, &dc.hexConfig)
+		north := gridPos.getPixelPosOutbounds(northPoint, &dc.hexConfig)
 		nX := float32(north.x) * dc.windowMultiplier
 		nY := float32(north.y) * dc.windowMultiplier
 
-		nw := getPixelPosOutbounds(gridPos, northwestPoint, &dc.hexConfig)
+		nw := gridPos.getPixelPosOutbounds(northwestPoint, &dc.hexConfig)
 		nwX := float32(nw.x) * dc.windowMultiplier
 		nwY := float32(nw.y) * dc.windowMultiplier
 
-		ne := getPixelPosOutbounds(gridPos, northeastPoint, &dc.hexConfig)
+		ne := gridPos.getPixelPosOutbounds(northeastPoint, &dc.hexConfig)
 		neX := float32(ne.x) * dc.windowMultiplier
 		neY := float32(ne.y) * dc.windowMultiplier
 
-		sw := getPixelPosOutbounds(gridPos, southwestPoint, &dc.hexConfig)
+		sw := gridPos.getPixelPosOutbounds(southwestPoint, &dc.hexConfig)
 		swX := float32(sw.x) * dc.windowMultiplier
 		swY := float32(sw.y) * dc.windowMultiplier
 
-		se := getPixelPosOutbounds(gridPos, southeastPoint, &dc.hexConfig)
+		se := gridPos.getPixelPosOutbounds(southeastPoint, &dc.hexConfig)
 		seX := float32(se.x) * dc.windowMultiplier
 		seY := float32(se.y) * dc.windowMultiplier
 
-		s := getPixelPosOutbounds(gridPos, southPoint, &dc.hexConfig)
+		s := gridPos.getPixelPosOutbounds(southPoint, &dc.hexConfig)
 		sX := float32(s.x) * dc.windowMultiplier
 		sY := float32(s.y) * dc.windowMultiplier
 

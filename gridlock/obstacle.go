@@ -49,12 +49,12 @@ func (os obstacles) setupVisibilityGrid(hc *hexConfig) {
 	nwOffset := pixelPosition{-4, -2}
 
 	for _, o := range os {
-		n := getPixelPosOutbounds(o.gridPos, northPoint, hc)
-		ne := getPixelPosOutbounds(o.gridPos, northeastPoint, hc)
-		se := getPixelPosOutbounds(o.gridPos, southeastPoint, hc)
-		s := getPixelPosOutbounds(o.gridPos, southPoint, hc)
-		sw := getPixelPosOutbounds(o.gridPos, southwestPoint, hc)
-		nw := getPixelPosOutbounds(o.gridPos, northwestPoint, hc)
+		n := o.gridPos.getPixelPosOutbounds(northPoint, hc)
+		ne := o.gridPos.getPixelPosOutbounds(northeastPoint, hc)
+		se := o.gridPos.getPixelPosOutbounds(southeastPoint, hc)
+		s := o.gridPos.getPixelPosOutbounds(southPoint, hc)
+		sw := o.gridPos.getPixelPosOutbounds(southwestPoint, hc)
+		nw := o.gridPos.getPixelPosOutbounds(northwestPoint, hc)
 
 		if nOffset, ok := n.add(nOffset, hc); ok {
 			positions[nOffset] = struct{}{}

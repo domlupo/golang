@@ -77,7 +77,7 @@ func (n *node) drawNode(dc drawContext) {
 
 	drawHex(dc, n.gridPos, drawTriangleColor{red: red, blue: blue, green: green, alpha: alpha}, n.selected)
 
-	c := getPixelPosOutbounds(n.gridPos, center, &dc.hexConfig)
+	c := n.gridPos.getPixelPosOutbounds(center, &dc.hexConfig)
 
 	if n.currentHealth != n.maxHealth {
 		var healthLineLength = (float32(n.currentHealth) / float32(n.maxHealth)) * float32(n.radius*2)
@@ -107,7 +107,7 @@ func (n *node) drawTargets(dc drawContext, drawBlueTargets bool, drawRedTargets 
 	}
 
 	if !n.target.isZero() && ((n.player == bluePlayer && drawBlueTargets) || (n.player == redPlayer && drawRedTargets)) {
-		var center, ok = getPixelPos(n.gridPos, center, &dc.hexConfig)
+		var center, ok = n.gridPos.getPixelPos(center, &dc.hexConfig)
 		if !ok {
 			panic("could not get pixel pos for node draw targets")
 		}
