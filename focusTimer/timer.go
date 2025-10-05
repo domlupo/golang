@@ -40,6 +40,7 @@ type Game struct {
 	logMinutePadding            int
 	minuteTicker                time.Ticker
 	progressPercent             float64
+	progressPercentStart        float64
 	progressPercentReadFromLog  float64
 	intProgressPercent          int
 	file                        *os.File
@@ -79,6 +80,7 @@ func (g *Game) Update() error {
 			ebiten.IsMouseButtonPressed(ebiten.MouseButton1) ||
 			ebiten.IsMouseButtonPressed(ebiten.MouseButton2) {
 			if !g.progressLoadedFromLogFile || g.intDurationStart != g.intDurationStartReadFromLog {
+				g.progressPercentStart = 0
 				g.file, g.err = os.Create(g.logFileName)
 				if g.err != nil {
 					log.Fatal(g.err)
@@ -102,7 +104,7 @@ func (g *Game) Update() error {
 
 		if g.intProgressPercent != int(g.progressPercent) {
 			g.intProgressPercent = int(g.progressPercent)
-			loggedProgressPercent := int((float64(g.intProgressPercent) * (float64(maxPercentage) - g.progressPercentReadFromLog) / maxPercentage) + g.progressPercentReadFromLog)
+			loggedProgressPercent := int((float64(g.intProgressPercent) * (float64(maxPercentage) - g.progressPercentStart) / maxPercentage) + g.progressPercentStart)
 			_, g.err = g.file.WriteString(fmt.Sprintf(
 				"%*d%% %s %*d minutes remaining\n",
 				g.logPercentPadding,
@@ -120,7 +122,7 @@ func (g *Game) Update() error {
 				select {
 				case <-g.minuteTicker.C:
 					g.intDurationCount = g.intDurationCount - 1
-					loggedProgressPercent := (g.progressPercent * (float64(maxPercentage) - g.progressPercentReadFromLog) / maxPercentage) + g.progressPercentReadFromLog
+					loggedProgressPercent := (g.progressPercent * (float64(maxPercentage) - g.progressPercentStart) / maxPercentage) + g.progressPercentStart
 					if g.intDurationStart > g.logMinsElapsedThresholdMins {
 						_, g.err = g.file.WriteString(fmt.Sprintf(
 							"%*.1f%% %s %*d minutes remaining\n",
@@ -150,8 +152,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	} else {
 		screen.Fill(g.backgroundColor)
 		// Use int not percent read from log for prior timer progress since timer has 1 minute granularity.
-		priorTimerProgress := g.progressPercentReadFromLog / 100
-		currentTimerProgess := (g.progressPercent * (maxPercentage - g.progressPercentReadFromLog) / maxPercentage) / 100
+		priorTimerProgress := g.progressPercentStart / 100
+		currentTimerProgess := (g.progressPercent * (maxPercentage - g.progressPercentStart) / maxPercentage) / 100
 		vector.DrawFilledRect(
 			screen,
 			0,
@@ -221,8 +223,9 @@ func main() {
 
 	if g.intDurationStartReadFromLog > 0 && g.progressPercentReadFromLog < 100 {
 		g.progressLoadedFromLogFile = true
-		g.intDurationStart = g.intDurationStartReadFromLog
 		g.file = file
+		g.progressPercentStart = g.progressPercentReadFromLog
+		g.intDurationStart = g.intDurationStartReadFromLog
 	} else {
 		g.progressPercentReadFromLog = 0
 		g.intDurationStartReadFromLog = 0
