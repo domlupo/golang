@@ -27,8 +27,8 @@ type pixelPathing map[pixelPosition]pathing
 type pathing struct {
 	walkable bool
 	// TODO: Implement in future to optimize and handle edge cases
-	nearestUnwalkwabledDistance int
-	nearestUnwalkwable          pixelPosition
+	nearestUnwalkabledDistance int
+	nearestUnwalkable          pixelPosition
 }
 
 type obstacleKind int

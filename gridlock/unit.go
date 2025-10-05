@@ -107,7 +107,7 @@ const (
 	noTarget unitTarget = iota
 	currentTarget
 	fluxTarget
-	localTarget
+	enemyTarget
 	globalTarget
 )
 
@@ -181,7 +181,7 @@ type unit struct {
 	player             player
 	currentTarget      position
 	fluxTarget         position
-	localTarget        position
+	enemyTarget        position
 	globalTarget       position
 	fluxTurnCount      int
 	atTerminalPosition bool
@@ -212,7 +212,7 @@ func newUnit(p player, globalTarget position, uc unitConfig, pos position, produ
 		player:             p,
 		currentTarget:      position{},
 		fluxTarget:         position{},
-		localTarget:        position{},
+		enemyTarget:        position{},
 		globalTarget:       globalTarget,
 		fluxTurnCount:      0,
 		atTerminalPosition: false,
@@ -259,8 +259,8 @@ func (u *unit) analyzeTargets() {
 			u.fluxTarget = position{}
 			u.fluxExpireCount = u.fluxExpireMax
 		}
-	} else if !u.localTarget.isZero() {
-		u.updateTarget(currentTarget, u.localTarget)
+	} else if !u.enemyTarget.isZero() {
+		u.updateTarget(currentTarget, u.enemyTarget)
 	} else if !u.globalTarget.isZero() {
 		u.updateTarget(currentTarget, u.globalTarget)
 	} else {
@@ -340,9 +340,9 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 		u.fluxTarget = target
 		u.fluxTurnCount = 0
 		unitTarget = "fluxTarget"
-	case localTarget:
-		u.localTarget = target
-		unitTarget = "localTarget"
+	case enemyTarget:
+		u.enemyTarget = target
+		unitTarget = "unitTarget"
 	case globalTarget:
 		u.globalTarget = target
 		unitTarget = "globalTarget"
@@ -395,10 +395,10 @@ func (u unit) log() []slog.Attr {
 	} else {
 		a = append(a, slog.String("fluxTarget", "nil"))
 	}
-	if !u.localTarget.isZero() {
-		a = append(a, slog.Any("localTarget", u.localTarget.log()))
+	if !u.enemyTarget.isZero() {
+		a = append(a, slog.Any("enemylTarget", u.enemyTarget.log()))
 	} else {
-		a = append(a, slog.String("localTarget", "nil"))
+		a = append(a, slog.String("enemyTarget", "nil"))
 	}
 	if !u.globalTarget.isZero() {
 		a = append(a, slog.Any("globalTarget", u.globalTarget.log()))

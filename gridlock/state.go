@@ -50,10 +50,6 @@ func (s *state) addNode(n node) {
 	s.nodes[n.gridPos] = &n
 }
 
-func (s *state) addObstacle(o obstacle) {
-	s.obstacles[o.gridPos] = &o
-}
-
 func (s *state) refresh() {
 	for _, flux := range s.fluxes {
 		flux.refresh()
@@ -97,7 +93,7 @@ func (s *state) analyzeTargets() {
 
 		nearest, _ := s.nearestUnitWithinVision(*u)
 
-		u.updateTarget(localTarget, nearest)
+		u.updateTarget(enemyTarget, nearest)
 		u.analyzeTargets()
 	}
 }
@@ -501,12 +497,12 @@ func (s *state) attackUnits() {
 		// TODO: This may be wrong behavior but I am not sure if the issue is occurring
 		// e.g. the target was killed by another unit this unit should probably find a potential new target.
 		// Then attack that rather than not attack for a turn
-		if u.localTarget.isZero() {
+		if u.enemyTarget.isZero() {
 			continue
 		}
 
-		xTargetPixelPos := u.localTarget.x
-		yTargetPixelPos := u.localTarget.y
+		xTargetPixelPos := u.enemyTarget.x
+		yTargetPixelPos := u.enemyTarget.y
 
 		var xDelta int
 		var yDelta int
@@ -521,13 +517,13 @@ func (s *state) attackUnits() {
 			yDelta = u.y - yTargetPixelPos
 		}
 
-		var nearestVisibleUnit = s.units[u.localTarget]
+		var nearestVisibleUnit = s.units[u.enemyTarget]
 		var rSum = u.reach + nearestVisibleUnit.radius
 		if rSum*rSum >= xDelta*xDelta+yDelta*yDelta {
 			nearestVisibleUnit.health = nearestVisibleUnit.health - u.attack
 			u.attackedThisTurn = true
 			unitAttackedOtherUnitCount++
-			s.units[u.localTarget] = nearestVisibleUnit
+			s.units[u.enemyTarget] = nearestVisibleUnit
 			s.units[u.position] = u
 		}
 	}
