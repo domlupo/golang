@@ -4,6 +4,7 @@ package main
 import (
 	"image/color"
 	"log/slog"
+	"math"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -184,6 +185,7 @@ type unit struct {
 	fluxTarget         position
 	enemyTarget        position
 	localTarget        position
+	localTargets       []position
 	globalTarget       position
 	fluxTurnCount      int
 	atTerminalPosition bool
@@ -216,6 +218,7 @@ func newUnit(p player, globalTarget position, uc unitConfig, pos position, produ
 		fluxTarget:         position{},
 		enemyTarget:        position{},
 		localTarget:        position{},
+		localTargets:       []position{},
 		globalTarget:       globalTarget,
 		fluxTurnCount:      0,
 		atTerminalPosition: false,
@@ -256,6 +259,7 @@ func (u *unit) refresh() {
 
 func (u *unit) analyzeTargets() {
 	if !u.fluxTarget.isZero() {
+		u.localTargets = []position{}
 		u.fluxExpireCount = max(u.fluxExpireCount-1, 0)
 		u.updateTarget(currentTarget, u.fluxTarget)
 		if u.fluxExpireCount == 0 {
@@ -263,10 +267,12 @@ func (u *unit) analyzeTargets() {
 			u.fluxExpireCount = u.fluxExpireMax
 		}
 	} else if !u.enemyTarget.isZero() {
+		u.localTargets = []position{}
 		u.updateTarget(currentTarget, u.enemyTarget)
 	} else if !u.localTarget.isZero() {
 		u.updateTarget(currentTarget, u.localTarget)
 	} else {
+		u.localTargets = []position{}
 		u.updateTarget(currentTarget, position{})
 	}
 }
@@ -334,6 +340,7 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 	switch ut {
 	case currentTarget:
 		if target.isZero() || u.currentTarget.isZero() {
+			// TODO: Determine if bresenham needs zeroed more often.
 			u.bresenhamError = nil
 			u.nextBresenhamError = nil
 		}
@@ -363,6 +370,69 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 		targetLog = target.log()
 	}
 	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "updateTarget", "unitTarget", unitTarget, "target", targetLog)
+}
+
+func (u *unit) updateLocalTarget(visibilityGrid []obstacleTarget, pixelPathing pixelPathing) {
+	obstaclePixelPos, los := u.globalTarget.pixelPosition.lineOfSight(u.pixelPosition, pixelPathing)
+	switch {
+	case len(u.localTargets) > 0 && u.atTerminalPosition:
+		u.updateTarget(localTarget, u.localTargets[len(u.localTargets)-1])
+		u.localTargets = u.localTargets[:len(u.localTargets)-1]
+	case len(u.localTargets) == 0 && los:
+		u.updateTarget(localTarget, u.globalTarget)
+	case len(u.localTargets) == 0 && !los:
+		nearest := math.MaxInt64
+		var current *obstacleTarget
+		for _, ot := range visibilityGrid {
+			distance := obstaclePixelPos.chebyshevDistance(ot.pixelPosition)
+			if distance < nearest {
+				nearest = distance
+				current = &ot
+			}
+		}
+
+		// TODO: Fix incorrect behavior. Right now cw and ccw pathing assumes that every visibility grid point
+		// should be visited until a line of sight is reached. This assumption is not always true. For example,
+		// if an obstacle layout is similar to an H where the middle crevice has multiple points, * -> H ->*
+		// the unit will incorrectly go into the crevice rather than skip those points. I don't think
+		// it is as simple as comparing n and n+ 1, but this needs determined.
+		var cwPath []position
+		cwPathDistance := nearest
+		end := current.ccw
+		for current != end {
+			cwPathDistance += current.cwDistance
+			cwPath = append(cwPath, position{layer: u.layer, pixelPosition: current.pixelPosition})
+			_, los := current.lineOfSight(u.pixelPosition, pixelPathing)
+			if los {
+				break
+			}
+			current = current.cw
+		}
+		cwPathDistance += u.chebyshevDistance(cwPath[len(cwPath)-1].pixelPosition)
+
+		var ccwPath []position
+		ccwPathDistance := nearest
+		end = current.cw
+		for current != end {
+			ccwPathDistance += current.ccwDistance
+			ccwPath = append(ccwPath, position{layer: u.layer, pixelPosition: current.pixelPosition})
+			_, los := current.lineOfSight(u.pixelPosition, pixelPathing)
+			if los {
+				break
+			}
+			current = current.ccw
+		}
+		ccwPathDistance += u.chebyshevDistance(ccwPath[len(ccwPath)-1].pixelPosition)
+
+		shortestPath := cwPath
+		if ccwPathDistance < cwPathDistance {
+			shortestPath = ccwPath
+		}
+
+		u.localTargets = shortestPath
+		u.updateTarget(localTarget, shortestPath[len(shortestPath)-1])
+
+	}
 }
 
 func (u *unit) completeMove(pos position) {

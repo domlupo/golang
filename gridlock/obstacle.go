@@ -18,8 +18,10 @@ type obstacle struct {
 
 type obstacleTarget struct {
 	pixelPosition
-	cw  *obstacleTarget
-	ccw *obstacleTarget
+	cw          *obstacleTarget
+	cwDistance  int
+	ccw         *obstacleTarget
+	ccwDistance int
 }
 
 type pixelPathing map[pixelPosition]pathing
@@ -61,7 +63,7 @@ func setupPixelPathing(os map[gridPosition]*obstacle, hc *hexConfig) pixelPathin
 }
 
 // Returns if a point to point line of sight exists using Bresenham's algorithm
-func (pos pixelPosition) lineOfSight(otherPos pixelPosition, pathing pixelPathing) bool {
+func (pos pixelPosition) lineOfSight(otherPos pixelPosition, pathing pixelPathing) (pixelPosition, bool) {
 	x0 := pos.x
 	y0 := pos.y
 	x1 := otherPos.x
@@ -90,8 +92,9 @@ func (pos pixelPosition) lineOfSight(otherPos pixelPosition, pathing pixelPathin
 	bresenhamError := dx + dy
 
 	for x0 != x1 || y0 != y1 {
-		if !pathing[pixelPosition{x: x0, y: y0}].walkable {
-			return false
+		pathPos := pixelPosition{x: x0, y: y0}
+		if !pathing[pathPos].walkable {
+			return pathPos, false
 		}
 
 		doubleError := 2 * bresenhamError
@@ -106,7 +109,7 @@ func (pos pixelPosition) lineOfSight(otherPos pixelPosition, pathing pixelPathin
 
 	}
 
-	return true
+	return pixelPosition{}, true
 }
 
 func (os obstacles) setupVisibilityGrid(pathing pixelPathing, hc *hexConfig) {
@@ -171,7 +174,7 @@ func (os obstacles) setupVisibilityGrid(pathing pixelPathing, hc *hexConfig) {
 			}
 
 			distance := cw.chebyshevDistance(ccw.pixelPosition)
-			lineOfSight := cw.lineOfSight(ccw.pixelPosition, pathing)
+			_, lineOfSight := cw.lineOfSight(ccw.pixelPosition, pathing)
 			if distance < shortestDistance && lineOfSight {
 				shortestDistance = distance
 				cwFix = ccw
@@ -185,6 +188,8 @@ func (os obstacles) setupVisibilityGrid(pathing pixelPathing, hc *hexConfig) {
 
 	var grid []obstacleTarget
 	for _, ot := range targets {
+		ot.cwDistance = ot.chebyshevDistance(ot.cw.pixelPosition)
+		ot.ccwDistance = ot.chebyshevDistance(ot.ccw.pixelPosition)
 		grid = append(grid, *ot)
 	}
 	for i := range os {

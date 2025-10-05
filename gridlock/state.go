@@ -95,9 +95,13 @@ func (s *state) analyzeTargets() {
 
 		u.updateTarget(enemyTarget, nearest)
 
-		if u.lineOfSight(u.globalTarget.pixelPosition, s.pixelPathing) {
-			u.updateTarget(localTarget, u.globalTarget)
+		obstaclePixelPos, los := u.globalTarget.pixelPosition.lineOfSight(u.pixelPosition, s.pixelPathing)
+		var visibilityGrid []obstacleTarget
+		if !los {
+			gridPos, _ := obstaclePixelPos.getGridPos(s.hexConfig)
+			visibilityGrid = s.obstacles[gridPos].visibilityGrid
 		}
+		u.updateLocalTarget(visibilityGrid, s.pixelPathing)
 
 		u.analyzeTargets()
 	}
