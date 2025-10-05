@@ -13,7 +13,7 @@ import (
 var infantryConfig = unitConfig{
 	name:                 infantry,
 	radius:               3,
-	maxHealth:            2000,
+	maxHealth:            100,
 	attack:               1,
 	vision:               30,
 	reach:                4,
@@ -108,6 +108,7 @@ const (
 	currentTarget
 	fluxTarget
 	enemyTarget
+	localTarget
 	globalTarget
 )
 
@@ -182,6 +183,7 @@ type unit struct {
 	currentTarget      position
 	fluxTarget         position
 	enemyTarget        position
+	localTarget        position
 	globalTarget       position
 	fluxTurnCount      int
 	atTerminalPosition bool
@@ -213,6 +215,7 @@ func newUnit(p player, globalTarget position, uc unitConfig, pos position, produ
 		currentTarget:      position{},
 		fluxTarget:         position{},
 		enemyTarget:        position{},
+		localTarget:        position{},
 		globalTarget:       globalTarget,
 		fluxTurnCount:      0,
 		atTerminalPosition: false,
@@ -261,8 +264,8 @@ func (u *unit) analyzeTargets() {
 		}
 	} else if !u.enemyTarget.isZero() {
 		u.updateTarget(currentTarget, u.enemyTarget)
-	} else if !u.globalTarget.isZero() {
-		u.updateTarget(currentTarget, u.globalTarget)
+	} else if !u.localTarget.isZero() {
+		u.updateTarget(currentTarget, u.localTarget)
 	} else {
 		u.updateTarget(currentTarget, position{})
 	}
@@ -342,7 +345,10 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 		unitTarget = "fluxTarget"
 	case enemyTarget:
 		u.enemyTarget = target
-		unitTarget = "unitTarget"
+		unitTarget = "enemyTarget"
+	case localTarget:
+		u.localTarget = target
+		unitTarget = "localTarget"
 	case globalTarget:
 		u.globalTarget = target
 		unitTarget = "globalTarget"
@@ -396,9 +402,14 @@ func (u unit) log() []slog.Attr {
 		a = append(a, slog.String("fluxTarget", "nil"))
 	}
 	if !u.enemyTarget.isZero() {
-		a = append(a, slog.Any("enemylTarget", u.enemyTarget.log()))
+		a = append(a, slog.Any("enemyTarget", u.enemyTarget.log()))
 	} else {
 		a = append(a, slog.String("enemyTarget", "nil"))
+	}
+	if !u.localTarget.isZero() {
+		a = append(a, slog.Any("localTarget", u.localTarget.log()))
+	} else {
+		a = append(a, slog.String("localTarget", "nil"))
 	}
 	if !u.globalTarget.isZero() {
 		a = append(a, slog.Any("globalTarget", u.globalTarget.log()))

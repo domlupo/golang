@@ -94,6 +94,11 @@ func (s *state) analyzeTargets() {
 		nearest, _ := s.nearestUnitWithinVision(*u)
 
 		u.updateTarget(enemyTarget, nearest)
+
+		if u.lineOfSight(u.globalTarget.pixelPosition, s.pixelPathing) {
+			u.updateTarget(localTarget, u.globalTarget)
+		}
+
 		u.analyzeTargets()
 	}
 }
@@ -106,6 +111,7 @@ func (s *state) moveUnits() {
 	var unitsWithoutTarget int
 	var unitsAtTargetNode int
 	var unitsAtNonTargetNode int
+	var unitsAtFinalPosition int
 	var unitsCollideCount int
 	var unitsBorderCollideCount int
 
@@ -129,6 +135,7 @@ func (s *state) moveUnits() {
 		}
 
 		if u.x == newPos.x && u.y == newPos.y {
+			unitsAtFinalPosition++
 			continue
 		}
 
@@ -208,6 +215,7 @@ func (s *state) moveUnits() {
 		"units at non target node", unitsAtNonTargetNode,
 		"units collided", unitsCollideCount,
 		"units already attacked", unitsAlreadyAttacked,
+		"unit at final position", unitsAtFinalPosition,
 	)
 }
 

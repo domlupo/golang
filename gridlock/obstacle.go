@@ -89,7 +89,7 @@ func (pos pixelPosition) lineOfSight(otherPos pixelPosition, pathing pixelPathin
 	}
 	bresenhamError := dx + dy
 
-	for x0 != x1 && y0 != y1 {
+	for x0 != x1 || y0 != y1 {
 		if !pathing[pixelPosition{x: x0, y: y0}].walkable {
 			return false
 		}

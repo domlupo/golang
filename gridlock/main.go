@@ -120,7 +120,7 @@ func (g *Game) restart() {
 	obstacles.setupVisibilityGrid(pixelPathing, &g.drawContext.hexConfig)
 
 	g.gameState = *newState(obstacles, pixelPathing, &g.drawContext.hexConfig, g.enableFlux)
-	setupState(g.gameState, zoomHorizontal, &g.drawContext.hexConfig, g.initialNodeHealth)
+	setupState(g.gameState, leftVsRightVerticalOffset, &g.drawContext.hexConfig, g.initialNodeHealth)
 	g.updateComputerTargetNodes()
 }
 
