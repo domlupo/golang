@@ -14,7 +14,7 @@ import (
 var infantryConfig = unitConfig{
 	name:                 infantry,
 	radius:               3,
-	maxHealth:            100,
+	maxHealth:            2000,
 	attack:               1,
 	vision:               30,
 	reach:                4,
@@ -187,6 +187,7 @@ type unit struct {
 	localTarget        position
 	localTargets       []position
 	globalTarget       position
+	pathGlobalTarget   bool
 	fluxTurnCount      int
 	atTerminalPosition bool
 	bresenhamError     *int
@@ -220,6 +221,7 @@ func newUnit(p player, globalTarget position, uc unitConfig, pos position, produ
 		localTarget:        position{},
 		localTargets:       []position{},
 		globalTarget:       globalTarget,
+		pathGlobalTarget:   true,
 		fluxTurnCount:      0,
 		atTerminalPosition: false,
 		bresenhamError:     nil,
@@ -358,6 +360,7 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 		unitTarget = "localTarget"
 	case globalTarget:
 		u.globalTarget = target
+		u.pathGlobalTarget = true
 		unitTarget = "globalTarget"
 	default:
 		panic("Need to set a unit target")
@@ -372,22 +375,19 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "updateTarget", "unitTarget", unitTarget, "target", targetLog)
 }
 
-func (u *unit) updateLocalTarget(visibilityGrid []obstacleTarget, pixelPathing pixelPathing) {
+func (u *unit) pathfindGlobalTarget(visibilityGrid []obstacleTarget, pixelPathing pixelPathing) {
 	obstaclePixelPos, los := u.globalTarget.pixelPosition.lineOfSight(u.pixelPosition, pixelPathing)
-	switch {
-	case len(u.localTargets) > 0 && u.atTerminalPosition:
-		u.updateTarget(localTarget, u.localTargets[len(u.localTargets)-1])
-		u.localTargets = u.localTargets[:len(u.localTargets)-1]
-	case len(u.localTargets) == 0 && los:
+	switch los {
+	case true:
 		u.updateTarget(localTarget, u.globalTarget)
-	case len(u.localTargets) == 0 && !los:
+	case false:
 		nearest := math.MaxInt64
-		var current *obstacleTarget
-		for _, ot := range visibilityGrid {
+		var nearestIndex int
+		for index, ot := range visibilityGrid {
 			distance := obstaclePixelPos.chebyshevDistance(ot.pixelPosition)
 			if distance < nearest {
 				nearest = distance
-				current = &ot
+				nearestIndex = index
 			}
 		}
 
@@ -396,31 +396,33 @@ func (u *unit) updateLocalTarget(visibilityGrid []obstacleTarget, pixelPathing p
 		// if an obstacle layout is similar to an H where the middle crevice has multiple points, * -> H ->*
 		// the unit will incorrectly go into the crevice rather than skip those points. I don't think
 		// it is as simple as comparing n and n+ 1, but this needs determined.
-		var cwPath []position
-		cwPathDistance := nearest
+		current := visibilityGrid[nearestIndex]
+		cwPath := []position{u.globalTarget}
+		cwPathDistance := current.pixelPosition.chebyshevDistance(u.globalTarget.pixelPosition)
 		end := current.ccw
-		for current != end {
-			cwPathDistance += current.cwDistance
+		for &current != end {
 			cwPath = append(cwPath, position{layer: u.layer, pixelPosition: current.pixelPosition})
 			_, los := current.lineOfSight(u.pixelPosition, pixelPathing)
 			if los {
 				break
 			}
-			current = current.cw
+			current = *current.cw
+			cwPathDistance += current.ccwDistance
 		}
 		cwPathDistance += u.chebyshevDistance(cwPath[len(cwPath)-1].pixelPosition)
 
-		var ccwPath []position
-		ccwPathDistance := nearest
+		current = visibilityGrid[nearestIndex]
+		ccwPath := []position{u.globalTarget}
+		ccwPathDistance := current.pixelPosition.chebyshevDistance(u.globalTarget.pixelPosition)
 		end = current.cw
-		for current != end {
-			ccwPathDistance += current.ccwDistance
+		for &current != end {
 			ccwPath = append(ccwPath, position{layer: u.layer, pixelPosition: current.pixelPosition})
 			_, los := current.lineOfSight(u.pixelPosition, pixelPathing)
 			if los {
 				break
 			}
-			current = current.ccw
+			current = *current.ccw
+			ccwPathDistance += current.cwDistance
 		}
 		ccwPathDistance += u.chebyshevDistance(ccwPath[len(ccwPath)-1].pixelPosition)
 
@@ -430,8 +432,8 @@ func (u *unit) updateLocalTarget(visibilityGrid []obstacleTarget, pixelPathing p
 		}
 
 		u.localTargets = shortestPath
+		u.pathGlobalTarget = false
 		u.updateTarget(localTarget, shortestPath[len(shortestPath)-1])
-
 	}
 }
 

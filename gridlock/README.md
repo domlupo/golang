@@ -42,6 +42,12 @@ Is there a mobile equivalent for war/4x games?
     - May want a way to setup single obstacles on grid, then a setup function determines how to group
       obstacles together. Overall, it should probably be w/e is CPU efficient for state.go to process.
 
+- Determine if LOS algorithm should be updated from bresenham to check obstacle line intersects
+  - line intersect check will be probably be much more performant
+  - line intersect check will probably be much better than switching from map to array for cache locality.
+  - current CPU profiling shows map access during lineOfSight checks are taking up significant CPU
+  - can reduce number of line checks at game start e.g. 2 hexagons connecetd only have 10 sides, not 12.
+
 - Design and implement local path finding algorithm:
   - theta star
   - visiblility grids
