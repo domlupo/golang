@@ -104,7 +104,7 @@ func (g *Game) restart() {
 	g.compOne = *newComputer(bluePlayer)
 	g.compTwo = *newComputer(redPlayer)
 	nodes := setupNodes(leftVsRightVerticalOffset, &g.drawContext.hexConfig, g.initialNodeHealth)
-	obstacles, pixelPathing := setupObstacles(singleObstacle, &g.drawContext.hexConfig)
+	obstacles, pixelPathing := setupObstacles(doubleObstacle, &g.drawContext.hexConfig)
 
 	for nPos := range nodes {
 		for oPos := range obstacles {

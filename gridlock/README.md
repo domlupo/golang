@@ -19,11 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Update obstacle setups to be easier to use
-  - Either obstacles or player nodes should take priority
-  - Easily match obstacles weith node setups
-  - Easily match combined setups e.g. single obstacle test, multi obstacte test, etc
-
 - Fix bug causing hangs
 
 - Handle Ctrl+C signal when terminating. It should write *.prof files.
@@ -146,6 +141,9 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Future Checkpoints
+
+
+- Update game setups where nodes and obstacles are combined
 
 - Determine if for CPU reasons, I should not mix layers in the same map and always manage them by state.go
 

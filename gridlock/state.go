@@ -46,10 +46,6 @@ func newState(nodes map[gridPosition]*node, obstacles map[gridPosition]*obstacle
 	return &s
 }
 
-func (s *state) addNode(n node) {
-	s.nodes[n.gridPos] = &n
-}
-
 func (s *state) refresh() {
 	for _, flux := range s.fluxes {
 		flux.refresh()
@@ -100,7 +96,7 @@ func (s *state) analyzeTargets() {
 			var visibilityGrid []obstacleTarget
 			if !los {
 				gridPos, _ := obstaclePixelPos.getGridPos(s.hexConfig)
-				visibilityGrid = s.obstacles[gridPos].visibilityGrid
+				visibilityGrid = *s.obstacles[gridPos].visibilityGrid
 			}
 			u.pathfindGlobalTarget(visibilityGrid, s.pixelPathing)
 		} else if len(u.localTargets) > 0 && u.atTerminalPosition {

@@ -6,6 +6,7 @@ type obstacelSetup int
 const (
 	noObstacle obstacelSetup = iota
 	singleObstacle
+	doubleObstacle
 )
 
 func setupObstacles(s obstacelSetup, hc *hexConfig) (obstacles, pixelPathing) {
@@ -15,10 +16,73 @@ func setupObstacles(s obstacelSetup, hc *hexConfig) (obstacles, pixelPathing) {
 	case noObstacle:
 	case singleObstacle:
 		gridPositions = []gridPosition{
-			{4, 2},
 			{4, 3},
 			{4, 4},
-			{5, 4},
+			{4, 5},
+			{4, 6},
+			{4, 7},
+			{4, 8},
+			{4, 9},
+			{4, 10},
+			{4, 11},
+			{4, 12},
+			{4, 13},
+			{4, 14},
+			{4, 15},
+			{4, 16},
+			{4, 17},
+			{4, 18},
+			{4, 19},
+			{4, 20},
+			{4, 21},
+			{4, 22},
+			{4, 23},
+		}
+	case doubleObstacle:
+		gridPositions = []gridPosition{
+			{4, 3},
+			{4, 4},
+			{4, 5},
+			{4, 6},
+			{4, 7},
+			{4, 8},
+			{4, 9},
+			{4, 10},
+			{4, 11},
+			{4, 12},
+			{4, 13},
+			{4, 14},
+			{4, 15},
+			{4, 16},
+			{4, 17},
+			{4, 18},
+			{4, 19},
+			{4, 20},
+			{4, 21},
+			{4, 22},
+			{4, 23},
+
+			{19, 3},
+			{19, 4},
+			{19, 5},
+			{19, 6},
+			{19, 7},
+			{19, 8},
+			{19, 9},
+			{19, 10},
+			{19, 11},
+			{19, 12},
+			{19, 13},
+			{19, 14},
+			{19, 15},
+			{19, 16},
+			{19, 17},
+			{19, 18},
+			{19, 19},
+			{19, 20},
+			{19, 21},
+			{19, 22},
+			{19, 23},
 		}
 	default:
 		panic("obstacle setup does not exist")
@@ -29,8 +93,7 @@ func setupObstacles(s obstacelSetup, hc *hexConfig) (obstacles, pixelPathing) {
 		obstacles[pos] = &obstacle{gridPos: pos, kind: mountain}
 	}
 
-	pixelPathing := setupPixelPathing(obstacles, hc)
-	obstacles.setupVisibilityGrid(pixelPathing, hc)
+	pixelPathing := obstacles.setup(hc)
 
 	return obstacles, pixelPathing
 }

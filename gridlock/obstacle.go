@@ -13,7 +13,7 @@ type obstacles map[gridPosition]*obstacle
 type obstacle struct {
 	gridPos        gridPosition
 	kind           obstacleKind
-	visibilityGrid []obstacleTarget
+	visibilityGrid *[]obstacleTarget
 }
 
 type obstacleTarget struct {
@@ -40,7 +40,16 @@ const (
 	mountain
 )
 
-func setupPixelPathing(os map[gridPosition]*obstacle, hc *hexConfig) pixelPathing {
+func (os obstacles) setup(hc *hexConfig) pixelPathing {
+	pixelPathing := os.setupPixelPathing(hc)
+	groups := os.getGroups(hc)
+	for _, group := range groups {
+		group.setupVisibilityGrid(hc, pixelPathing)
+	}
+	return pixelPathing
+}
+
+func (os obstacles) setupPixelPathing(hc *hexConfig) pixelPathing {
 	pixelPathing := make(map[pixelPosition]pathing, hc.windowWidth*hc.windowHeight)
 
 	for x := range hc.windowWidth {
@@ -60,6 +69,62 @@ func setupPixelPathing(os map[gridPosition]*obstacle, hc *hexConfig) pixelPathin
 	}
 
 	return pixelPathing
+}
+
+func (os obstacles) getGroups(hc *hexConfig) []obstacles {
+	needsGrouped := make(map[gridPosition]bool)
+	for k := range os {
+		needsGrouped[k] = true
+	}
+
+	var groups []obstacles
+
+	for k := range os {
+		if !needsGrouped[k] {
+			continue
+		}
+
+		group := make(obstacles)
+		queue := []gridPosition{k}
+		for len(queue) != 0 {
+			current := queue[0]
+			queue = queue[1:]
+			group[current] = os[current]
+
+			ne, neOk := current.adjacent(northeastSide, hc)
+			if neOk && needsGrouped[ne] {
+				needsGrouped[ne] = false
+				queue = append(queue, ne)
+			}
+			e, eOk := current.adjacent(eastSide, hc)
+			if eOk && needsGrouped[e] {
+				needsGrouped[e] = false
+				queue = append(queue, e)
+			}
+			se, seOk := current.adjacent(southeastSide, hc)
+			if seOk && needsGrouped[se] {
+				needsGrouped[se] = false
+				queue = append(queue, se)
+			}
+			sw, swOk := current.adjacent(southwestSide, hc)
+			if swOk && needsGrouped[sw] {
+				needsGrouped[sw] = false
+				queue = append(queue, sw)
+			}
+			w, wOk := current.adjacent(westSide, hc)
+			if wOk && needsGrouped[w] {
+				needsGrouped[w] = false
+				queue = append(queue, w)
+			}
+			nw, nwOk := current.adjacent(northwestSide, hc)
+			if nwOk && needsGrouped[nw] {
+				needsGrouped[nw] = false
+				queue = append(queue, nw)
+			}
+		}
+		groups = append(groups, group)
+	}
+	return groups
 }
 
 // Returns if a point to point line of sight exists using Bresenham's algorithm
@@ -112,7 +177,7 @@ func (pos pixelPosition) lineOfSight(otherPos pixelPosition, pathing pixelPathin
 	return pixelPosition{}, true
 }
 
-func (os obstacles) setupVisibilityGrid(pathing pixelPathing, hc *hexConfig) {
+func (os obstacles) setupVisibilityGrid(hc *hexConfig, pathing pixelPathing) {
 	targets := os.setupObstacleTargets(hc)
 
 	for _, ot := range targets {
@@ -193,7 +258,7 @@ func (os obstacles) setupVisibilityGrid(pathing pixelPathing, hc *hexConfig) {
 		grid = append(grid, *ot)
 	}
 	for i := range os {
-		os[i].visibilityGrid = grid
+		os[i].visibilityGrid = &grid
 	}
 }
 
@@ -287,7 +352,7 @@ func (o obstacle) drawObstacle(dc drawContext) {
 }
 
 func (o obstacle) drawVisibilityGrid(dc drawContext) {
-	for _, ot := range o.visibilityGrid {
+	for _, ot := range *o.visibilityGrid {
 		vector.DrawFilledCircle(
 			dc.screen,
 			float32(ot.x)*dc.windowMultiplier,
