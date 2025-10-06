@@ -19,8 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Fix bug causing hangs
-
 - Handle Ctrl+C signal when terminating. It should write *.prof files.
 
 - Add impassable grids (mountains) and update global path finding to avoid them

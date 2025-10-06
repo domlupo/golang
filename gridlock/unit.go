@@ -400,7 +400,7 @@ func (u *unit) pathfindGlobalTarget(visibilityGrid []obstacleTarget, pixelPathin
 		cwPath := []position{u.globalTarget}
 		cwPathDistance := current.pixelPosition.chebyshevDistance(u.globalTarget.pixelPosition)
 		end := current.ccw
-		for &current != end {
+		for current != *end {
 			cwPath = append(cwPath, position{layer: u.layer, pixelPosition: current.pixelPosition})
 			_, los := current.lineOfSight(u.pixelPosition, pixelPathing)
 			if los {
@@ -415,7 +415,7 @@ func (u *unit) pathfindGlobalTarget(visibilityGrid []obstacleTarget, pixelPathin
 		ccwPath := []position{u.globalTarget}
 		ccwPathDistance := current.pixelPosition.chebyshevDistance(u.globalTarget.pixelPosition)
 		end = current.cw
-		for &current != end {
+		for current != *end {
 			ccwPath = append(ccwPath, position{layer: u.layer, pixelPosition: current.pixelPosition})
 			_, los := current.lineOfSight(u.pixelPosition, pixelPathing)
 			if los {
