@@ -21,13 +21,13 @@ type state struct {
 	unitsDeletedTotal  int
 }
 
-func newState(obstacles map[gridPosition]*obstacle, pixelPathing pixelPathing, hexConfig *hexConfig, enableFlux bool) *state {
+func newState(nodes map[gridPosition]*node, obstacles map[gridPosition]*obstacle, pixelPathing pixelPathing, hexConfig *hexConfig, enableFlux bool) *state {
 	s := state{
 		hexConfig:    hexConfig,
 		obstacles:    obstacles,
 		pixelPathing: pixelPathing,
 		hexagons:     make(map[gridPosition]*hexagon),
-		nodes:        make(map[gridPosition]*node),
+		nodes:        nodes,
 		fluxes:       make(map[gridPosition]*flux),
 		units:        make(map[position]*unit),
 		enableFlux:   enableFlux,

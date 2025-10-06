@@ -56,7 +56,7 @@ type Game struct {
 	currentSelectedY         float32
 	compOne                  computer
 	compTwo                  computer
-	gameState                state
+	gameState                *state
 	developerToggles         map[string]*toggle
 	developerToggleCooldown  time.Duration
 	initialNodeHealth        int
@@ -103,6 +103,7 @@ func (g *Game) restart() {
 	// TODO: Need to restart timers, etc
 	g.compOne = *newComputer(bluePlayer)
 	g.compTwo = *newComputer(redPlayer)
+	nodes := setupNodes(leftVsRightVerticalOffset, &g.drawContext.hexConfig, g.initialNodeHealth)
 
 	// TODO: restructure game setup logic. Right now the structure
 	// between node and obstacle setup is not developer friendly.
@@ -119,8 +120,7 @@ func (g *Game) restart() {
 	pixelPathing := setupPixelPathing(obstacles, &g.drawContext.hexConfig)
 	obstacles.setupVisibilityGrid(pixelPathing, &g.drawContext.hexConfig)
 
-	g.gameState = *newState(obstacles, pixelPathing, &g.drawContext.hexConfig, g.enableFlux)
-	setupState(g.gameState, leftVsRightVerticalOffset, &g.drawContext.hexConfig, g.initialNodeHealth)
+	g.gameState = newState(nodes, obstacles, pixelPathing, &g.drawContext.hexConfig, g.enableFlux)
 	g.updateComputerTargetNodes()
 }
 
@@ -259,10 +259,10 @@ func (g *Game) Update() error {
 
 func (g *Game) updateComputerTargetNodes() {
 	if g.blueComputerActive {
-		g.compOne.updateTargetNodes(g.gameState)
+		g.compOne.updateTargetNodes(*g.gameState)
 	}
 	if g.redComputerActive {
-		g.compTwo.updateTargetNodes(g.gameState)
+		g.compTwo.updateTargetNodes(*g.gameState)
 	}
 }
 
