@@ -142,8 +142,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Future Checkpoints
 
-- Handle Ctrl+C signal when terminating. It should write *.prof files.
-
 - Update game setups where nodes and obstacles are combined
 
 - Determine if for CPU reasons, I should not mix layers in the same map and always manage them by state.go

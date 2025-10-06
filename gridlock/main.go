@@ -4,9 +4,9 @@ package main
 import (
 	"errors"
 	"image/color"
-	"log"
 	"log/slog"
 	"os"
+	"os/signal"
 	"runtime"
 	"runtime/pprof"
 	"time"
@@ -400,20 +400,31 @@ func main() {
 		func() { g.drawVisibilityGrids = !g.drawVisibilityGrids },
 		g.developerToggleCooldown)
 
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func(g Game) {
+		for range c {
+			logger.log(warnLevel, mainLogType, "received interrupt signal")
+			g.forceCleanup()
+		}
+	}(g)
+
 	g.restart()
 
 	if err := ebiten.RunGame(&g); err != nil {
-		log.Fatal(err)
+		logger.log(errorLevel, mainLogType, err.Error())
 	}
 
-	if g.cpuProfilerOn {
-		pprof.StopCPUProfile()
-		g.cpuProfilerFile.Close()
+	g.forceCleanup()
+}
+
+func (g Game) forceCleanup() {
+	pprof.StopCPUProfile()
+	g.cpuProfilerFile.Close()
+	logger.log(warnLevel, mainLogType, "force closed cpu profiler file")
+	if err := pprof.WriteHeapProfile(g.memoryProfilerFile); err != nil {
+		logger.log(errorLevel, alwaysLogType, "Could not write heap profile.")
 	}
-	if g.memoryProfilerOn {
-		if err := pprof.WriteHeapProfile(g.memoryProfilerFile); err != nil {
-			logger.log(errorLevel, alwaysLogType, "Could not write heap profile.")
-		}
-		g.memoryProfilerFile.Close()
-	}
+	g.memoryProfilerFile.Close()
+	logger.log(warnLevel, mainLogType, "force closed memory profiler file")
 }
