@@ -1,6 +1,40 @@
 // hard coded test setups which help manual testing
 package main
 
+type obstacelSetup int
+
+const (
+	noObstacle obstacelSetup = iota
+	singleObstacle
+)
+
+func setupObstacles(s obstacelSetup, hc *hexConfig) (obstacles, pixelPathing) {
+	var gridPositions []gridPosition
+
+	switch s {
+	case noObstacle:
+	case singleObstacle:
+		gridPositions = []gridPosition{
+			{4, 2},
+			{4, 3},
+			{4, 4},
+			{5, 4},
+		}
+	default:
+		panic("obstacle setup does not exist")
+	}
+
+	obstacles := make(obstacles)
+	for _, pos := range gridPositions {
+		obstacles[pos] = &obstacle{gridPos: pos, kind: mountain}
+	}
+
+	pixelPathing := setupPixelPathing(obstacles, hc)
+	obstacles.setupVisibilityGrid(pixelPathing, hc)
+
+	return obstacles, pixelPathing
+}
+
 type nodeSetup int
 
 const (
@@ -323,7 +357,7 @@ func setupNodes(s nodeSetup, hc *hexConfig, initialNodeHealth int) map[gridPosit
 			{gridPosition{6, 2}, redPlayer, infantryConfig},
 		}
 	default:
-		panic("setup does not exist")
+		panic("node setup does not exist")
 	}
 
 	for _, ni := range nodeInfos {

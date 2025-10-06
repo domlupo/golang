@@ -104,21 +104,15 @@ func (g *Game) restart() {
 	g.compOne = *newComputer(bluePlayer)
 	g.compTwo = *newComputer(redPlayer)
 	nodes := setupNodes(leftVsRightVerticalOffset, &g.drawContext.hexConfig, g.initialNodeHealth)
+	obstacles, pixelPathing := setupObstacles(singleObstacle, &g.drawContext.hexConfig)
 
-	// TODO: restructure game setup logic. Right now the structure
-	// between node and obstacle setup is not developer friendly.
-	// Also only a single connected obstacle is supported.
-	obstacles := make(obstacles)
-	gp := gridPosition{4, 2}
-	obstacles[gp] = &obstacle{gridPos: gp, kind: mountain}
-	gp = gridPosition{4, 3}
-	obstacles[gp] = &obstacle{gridPos: gp, kind: mountain}
-	gp = gridPosition{4, 4}
-	obstacles[gp] = &obstacle{gridPos: gp, kind: mountain}
-	gp = gridPosition{5, 4}
-	obstacles[gp] = &obstacle{gridPos: gp, kind: mountain}
-	pixelPathing := setupPixelPathing(obstacles, &g.drawContext.hexConfig)
-	obstacles.setupVisibilityGrid(pixelPathing, &g.drawContext.hexConfig)
+	for nPos := range nodes {
+		for oPos := range obstacles {
+			if nPos.x == oPos.x && nPos.y == oPos.y {
+				panic("grid position conflict between node and obstacle")
+			}
+		}
+	}
 
 	g.gameState = newState(nodes, obstacles, pixelPathing, &g.drawContext.hexConfig, g.enableFlux)
 	g.updateComputerTargetNodes()
