@@ -19,10 +19,17 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Handle Ctrl+C signal when terminating. It should write *.prof files.
+- Improve unit visual target debugging
+  - pathfinding is more complex
+  - should show global target
+  - should show arrows between local target list
 
 - Add impassable grids (mountains) and update global path finding to avoid them
+  - Need to design and think through how units handle multiple obstacle pathing.
   - theta* / bresenham with visibility grids should be implemented.
+    - if I do hexagon edge detection for LOS instead of Bresenham. Two potential optimizations:
+      - remove internal obstacle edges
+      - combine external edges that form straight lines
     - Can store what edge intersects are between what points cw and ccw as well but right now
       this is done at runtime. I think it is a bit too complex to optimize ahead of time.
     - Does not handle case where multiple different impassasble terrains exist.
@@ -140,6 +147,7 @@ Is there a mobile equivalent for war/4x games?
 
 ### Future Checkpoints
 
+- Handle Ctrl+C signal when terminating. It should write *.prof files.
 
 - Update game setups where nodes and obstacles are combined
 
