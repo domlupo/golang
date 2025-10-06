@@ -19,11 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Improve unit visual target debugging
-  - pathfinding is more complex
-  - should show global target
-  - should show arrows between local target list
-
 - Add impassable grids (mountains) and update global path finding to avoid them
   - Need to design and think through how units handle multiple obstacle pathing.
   - theta* / bresenham with visibility grids should be implemented.

@@ -554,6 +554,19 @@ func (u *unit) draw(dc drawContext, selected bool) {
 			false,
 		)
 
+		for _, lt := range u.localTargets {
+			vector.StrokeLine(
+				dc.screen,
+				float32(u.x)*dc.windowMultiplier,
+				float32(u.y)*dc.windowMultiplier,
+				float32(lt.x)*dc.windowMultiplier,
+				float32(lt.y)*dc.windowMultiplier,
+				float32(dc.targetNodeLineWidth)*dc.windowMultiplier,
+				dc.highlightColor,
+				false,
+			)
+		}
+
 		if u.unitConfig.name == unguidedGroundMissile {
 			vector.StrokeCircle(
 				dc.screen,
