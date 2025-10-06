@@ -19,6 +19,15 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Update obstacle setups to be easier to use
+  - Either obstacles or player nodes should take priority
+  - Easily match obstacles weith node setups
+  - Easily match combined setups e.g. single obstacle test, multi obstacte test, etc
+
+- Fix bug causing hangs
+
+- Handle Ctrl+C signal when terminating. It should write *.prof files.
+
 - Add impassable grids (mountains) and update global path finding to avoid them
   - theta* / bresenham with visibility grids should be implemented.
     - Can store what edge intersects are between what points cw and ccw as well but right now
