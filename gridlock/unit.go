@@ -4,7 +4,6 @@ package main
 import (
 	"image/color"
 	"log/slog"
-	"math"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -379,24 +378,14 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "updateTarget", "unitTarget", unitTarget, "target", targetLog)
 }
 
-func (u *unit) pathfindGlobalTarget(visibilityGrid []obstacleTarget, pixelPathing pixelPathing) {
-	obstaclePixelPos, los := u.globalTarget.pixelPosition.lineOfSight(u.pixelPosition, pixelPathing)
+func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathing, hc *hexConfig) {
+	obstacleTarget, los := u.globalTarget.pixelPosition.obstacleTarget(u.pixelPosition, pixelPathing, obstacles, hc)
 	switch los {
 	case true:
 		u.updateTarget(localTarget, u.globalTarget)
 	case false:
-		nearest := math.MaxInt64
-		var nearestIndex int
-		for index, ot := range visibilityGrid {
-			distance := obstaclePixelPos.chebyshevDistance(ot.pixelPosition)
-			if distance < nearest {
-				nearest = distance
-				nearestIndex = index
-			}
-		}
-
-		cwPath, cwPathDistance := u.getPath(visibilityGrid[nearestIndex], cw, pixelPathing)
-		ccwPath, ccwPathDistance := u.getPath(visibilityGrid[nearestIndex], ccw, pixelPathing)
+		cwPath, cwPathDistance := u.getPath(obstacleTarget, cw, pixelPathing)
+		ccwPath, ccwPathDistance := u.getPath(obstacleTarget, ccw, pixelPathing)
 
 		shortestPath := cwPath
 		if ccwPathDistance < cwPathDistance {

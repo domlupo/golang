@@ -92,13 +92,7 @@ func (s *state) analyzeTargets() {
 		u.updateTarget(enemyTarget, nearest)
 
 		if u.pathGlobalTarget {
-			obstaclePixelPos, los := u.globalTarget.pixelPosition.lineOfSight(u.pixelPosition, s.pixelPathing)
-			var visibilityGrid []obstacleTarget
-			if !los {
-				gridPos, _ := obstaclePixelPos.getGridPos(s.hexConfig)
-				visibilityGrid = *s.obstacles[gridPos].visibilityGrid
-			}
-			u.pathfindGlobalTarget(visibilityGrid, s.pixelPathing)
+			u.pathfindGlobalTarget(s.obstacles, s.pixelPathing, s.hexConfig)
 		} else if len(u.localTargets) > 0 && u.atTerminalPosition {
 			u.updateTarget(localTarget, u.localTargets[len(u.localTargets)-1])
 			u.localTargets = u.localTargets[:len(u.localTargets)-1]

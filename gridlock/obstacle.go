@@ -127,7 +127,7 @@ func (os obstacles) getGroups(hc *hexConfig) []obstacles {
 	return groups
 }
 
-// Returns if a point to point line of sight exists using Bresenham's algorithm
+// Returns true if a point to point line of sight exists using Bresenham's algorithm
 func (pos pixelPosition) lineOfSight(otherPos pixelPosition, pathing pixelPathing) (pixelPosition, bool) {
 	x0 := pos.x
 	y0 := pos.y
@@ -175,6 +175,32 @@ func (pos pixelPosition) lineOfSight(otherPos pixelPosition, pathing pixelPathin
 	}
 
 	return pixelPosition{}, true
+}
+
+// returns the obstacle target nearest to the start position for the obstacle blocking the line of sight between start and end
+func (start pixelPosition) obstacleTarget(end pixelPosition, pathing pixelPathing, obstacles obstacles, hc *hexConfig) (obstacleTarget, bool) {
+	obstaclePixelPos, los := start.lineOfSight(end, pathing)
+
+	if los {
+		return obstacleTarget{}, los
+	}
+
+	nearest := math.MaxInt64
+	var nearestIndex int
+	gridPos, ok := obstaclePixelPos.getGridPos(hc)
+	if !ok {
+		panic("expected obstacle grid position to exist")
+	}
+	visibilityGrid := *obstacles[gridPos].visibilityGrid
+	for index, ot := range visibilityGrid {
+		distance := start.chebyshevDistance(ot.pixelPosition)
+		if distance < nearest {
+			nearest = distance
+			nearestIndex = index
+		}
+	}
+
+	return visibilityGrid[nearestIndex], los
 }
 
 func (os obstacles) setupVisibilityGrid(hc *hexConfig, pathing pixelPathing) {
