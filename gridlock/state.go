@@ -77,15 +77,7 @@ func (s *state) analyzeTargets() {
 			u.updateTarget(fluxTarget, position{ground, pixelPosition{u.x + fluxDelta.x, u.y + fluxDelta.y}})
 		}
 
-		var node, isTargetNode, _ = s.collidesWithNode(
-			u.position,
-			*u,
-			u.reach,
-			s.nodes)
-
-		if isTargetNode {
-			u.canReachTargetNode = node
-		}
+		u.reachesNodes(s.nodes, s.hexConfig)
 
 		nearest, _ := s.nearestUnitWithinVision(*u)
 
@@ -108,8 +100,7 @@ func (s *state) moveUnits() {
 	var unitsMovedCount int
 	var unitsAlreadyAttacked int
 	var unitsWithoutTarget int
-	var unitsAtTargetNode int
-	var unitsAtNonTargetNode int
+	var unitsAtNode int
 	var unitsAtFinalPosition int
 	var unitsCollideCount int
 	var unitsBorderCollideCount int
@@ -144,12 +135,6 @@ func (s *state) moveUnits() {
 			newPos,
 			*u)
 
-		var _, isTargetNode, collidesWithNode = s.collidesWithNode(
-			newPos,
-			*u,
-			u.radius,
-			s.nodes)
-
 		if collidesWithBorder && collidesWithUnit {
 			// TODO: Low priority but eventually need to handle air collision here.
 			// Most likely can refactor to avoid updating this code directly.
@@ -166,12 +151,8 @@ func (s *state) moveUnits() {
 				u.health = 0
 				s.units[u.position] = s.units[position{u.layer, pixelPosition{u.x, u.y}}]
 			}
-		} else if collidesWithNode {
-			if isTargetNode {
-				unitsAtTargetNode++
-			} else {
-				logger.log(errorLevel, alwaysLogType, "high priority fix. This should be a panic because it unsyncs critical state")
-			}
+		} else if !u.canReachNode.isZero() {
+			unitsAtNode++
 		} else {
 			unitsMovedCount++
 			s.units[newPos] = s.units[position{u.layer, pixelPosition{u.x, u.y}}]
@@ -210,8 +191,7 @@ func (s *state) moveUnits() {
 		"moveUnits",
 		"units moved", unitsMovedCount,
 		"units without target", unitsWithoutTarget,
-		"units at target node", unitsAtTargetNode,
-		"units at non target node", unitsAtNonTargetNode,
+		"units at node", unitsAtNode,
 		"units collided", unitsCollideCount,
 		"units already attacked", unitsAlreadyAttacked,
 		"unit at final position", unitsAtFinalPosition,
@@ -230,13 +210,11 @@ func updatePointers(h *hexagon, u *unit) {
 	h.linkedList.prior = u
 }
 
-// TODO: This does not handle a unit colliding with multiple nodes which will probably occur in the future.
-func (s *state) collidesWithNode(pos position, u unit, unitCollisionRadius int, nodes map[gridPosition]*node) (node, bool, bool) {
+func (s *state) collidesWithNode(pos position, u unit, unitCollisionRadius int, nodes map[gridPosition]*node) (node, bool) {
 	if pos.layer == lowAltitude || pos.layer == highAltitude {
-		return node{}, false, false
+		return node{}, false
 	}
 
-	var collidesWithTargetNode bool
 	x1 := pos.x
 	y1 := pos.y
 	r1 := unitCollisionRadius
@@ -263,17 +241,11 @@ func (s *state) collidesWithNode(pos position, u unit, unitCollisionRadius int, 
 		rSum := r1 + r2
 
 		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
-			var globalTargetGridPos gridPosition
-			var globalTargetGridPosOk bool
-			if !u.globalTarget.isZero() {
-				globalTargetGridPos, globalTargetGridPosOk = u.globalTarget.pixelPosition.getGridPos(s.hexConfig)
-			}
-			collidesWithTargetNode := globalTargetGridPosOk && globalTargetGridPos.x == n.gridPos.x && globalTargetGridPos.y == n.gridPos.y
-			return *n, collidesWithTargetNode, true
+			return *n, true
 		}
 	}
 
-	return node{}, collidesWithTargetNode, false
+	return node{}, false
 }
 
 func (s *state) explode(pos position, blastRadius int, units map[position]*unit) {
@@ -581,13 +553,13 @@ func (s *state) attackNodes() {
 			continue
 		}
 
-		if !u.canReachTargetNode.isZero() {
+		if !u.canReachNode.isZero() {
 			attackedNodeThisTurnCount++
-			targetNode := s.nodes[u.canReachTargetNode.gridPos]
-			targetNode.currentHealth = max(targetNode.currentHealth-u.attack, 0)
+			n := s.nodes[u.canReachNode.gridPos]
+			n.currentHealth = max(n.currentHealth-u.attack, 0)
 			u.attackedThisTurn = true
-			if targetNode.currentHealth == 0 {
-				targetNode.capturedBy = u.player
+			if n.currentHealth == 0 {
+				n.capturedBy = u.player
 			}
 		} else {
 			cannotReachNodeCount++

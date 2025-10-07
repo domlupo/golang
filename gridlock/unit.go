@@ -200,17 +200,17 @@ type unit struct {
 	bresenhamError     *int
 	nextBresenhamError *int
 	unitConfig
-	health             int
-	movedLastTurn      bool
-	movedThisTurn      bool
-	attackedLastTurn   bool
-	attackedThisTurn   bool
-	canReachTargetNode node
-	selected           bool
-	fluxExpireCount    int
-	prior              *unit
-	next               *unit
-	producedAt         int
+	health           int
+	movedLastTurn    bool
+	movedThisTurn    bool
+	attackedLastTurn bool
+	attackedThisTurn bool
+	canReachNode     node
+	selected         bool
+	fluxExpireCount  int
+	prior            *unit
+	next             *unit
+	producedAt       int
 }
 
 func newUnit(p player, globalTarget position, uc unitConfig, pos position, producedOrder int) unit {
@@ -239,7 +239,7 @@ func newUnit(p player, globalTarget position, uc unitConfig, pos position, produ
 		movedThisTurn:      false,
 		attackedLastTurn:   false,
 		attackedThisTurn:   false,
-		canReachTargetNode: node{},
+		canReachNode:       node{},
 		selected:           false,
 		fluxExpireCount:    uc.fluxExpireMax,
 		producedAt:         producedOrder,
@@ -259,7 +259,7 @@ func (u *unit) refresh() {
 	u.movedThisTurn = false
 	u.attackedLastTurn = u.attackedThisTurn
 	u.attackedThisTurn = false
-	u.canReachTargetNode = node{}
+	u.canReachNode = node{}
 }
 
 func (u *unit) analyzeTargets() {
@@ -280,6 +280,51 @@ func (u *unit) analyzeTargets() {
 		u.localTargets = []position{}
 		u.updateTarget(currentTarget, position{})
 	}
+}
+
+func (u *unit) reachesNodes(nodes map[gridPosition]*node, hc *hexConfig) (node, bool) {
+	if u.layer == lowAltitude || u.layer == highAltitude {
+		return node{}, false
+	}
+
+	var nodeReached node
+
+	x1 := u.x
+	y1 := u.y
+	r1 := u.reach
+
+	for _, n := range nodes {
+		if u.player == n.player {
+			// unit cannot collide with own nodes
+			// HACK: This will probably change in the future, and it will most likely break attackNodes logic
+			// since it assumes a unit never collides with its own node
+			continue
+		}
+
+		nPixelPos, ok := n.gridPos.getPixelPos(center, hc)
+		if !ok {
+			panic("could not get pixel pos for collide with node")
+		}
+
+		x2 := nPixelPos.x
+		y2 := nPixelPos.y
+		r2 := n.radius
+
+		xDelta := x2 - x1
+		yDelta := y2 - y1
+		rSum := r1 + r2
+
+		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
+			if !nodeReached.isZero() {
+				logger.log(infoLevel, undecidedBehavior, "unit reaches multiple nodes, randomly selected last iterated node")
+			}
+			nodeReached = *n
+			u.canReachNode = nodeReached
+			return nodeReached, !nodeReached.isZero()
+		}
+	}
+
+	return nodeReached, !nodeReached.isZero()
 }
 
 // Uses Bresenham's line algorithm https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
@@ -531,7 +576,7 @@ func (u unit) log() []slog.Attr {
 	a = append(a, slog.Bool("attackedLastTurn", u.attackedLastTurn))
 	a = append(a, slog.Bool("attackedThisTurn", u.attackedThisTurn))
 	a = append(a, slog.Int("fluxTurnCount", u.fluxTurnCount))
-	a = append(a, slog.Any("canReachTargetNode", u.canReachTargetNode))
+	a = append(a, slog.Any("canReachtNode", u.canReachNode))
 	a = append(a, slog.Bool("selected", u.selected))
 	return a
 }

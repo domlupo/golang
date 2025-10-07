@@ -19,6 +19,7 @@ const (
 const (
 	noLogType logType = iota
 	alwaysLogType
+	undecidedBehavior
 	mainLogType
 	stateLogType
 	selectedUnitLogType
@@ -28,6 +29,7 @@ type loggerConfig struct {
 	initialLogLevel            slog.Level
 	filterTimeAndLevelFromLogs bool
 	logLoggerLogs              bool
+	logUndecidedBehavior       bool
 	logMainLogs                bool
 	logStateLogs               bool
 	logSelectedUnitLogs        bool
@@ -59,6 +61,7 @@ func newLogger(lc loggerConfig) l {
 		LevelVar: levelVar,
 		enabledLogTypes: map[logType]bool{
 			alwaysLogType:       lc.logLoggerLogs,
+			undecidedBehavior:   lc.logUndecidedBehavior,
 			mainLogType:         lc.logMainLogs,
 			stateLogType:        lc.logStateLogs,
 			selectedUnitLogType: lc.logSelectedUnitLogs},
