@@ -21,10 +21,21 @@ Is there a mobile equivalent for war/4x games?
 
 - Add impassable grids (mountains) and update global path finding to avoid them
   - Need to design and think through how units handle multiple obstacle pathing.
+      - 0 -> go to gobal target
+      - 1 -> go around target (cw or ccw) and break once in los
+      - >1 -> go around target and break once in los of target or obstacle
+
   - theta* / bresenham with visibility grids should be implemented.
     - if I do hexagon edge detection for LOS instead of Bresenham. Two potential optimizations:
       - remove internal obstacle edges
       - combine external edges that form straight lines
+      - I can reduce the number of edges checked by doing a high pass then a low pass. e.g performance 
+        4 edge checks per obstacle boxed by 90 degree angles. If I hit conservtive box then do a deep
+        check for any boxs hit.
+      - I am very unsure about this optimization, but for single obstacle, I can maybe reduce the number 
+        of visiblity grid points checked  by doing a greedy apporach and jumping as far as possible. Then
+        expanding as needed but it seems very complex. This also might be worst in some cases e.g. if the 
+        target is within the obstacle and the jump missed.
     - Can store what edge intersects are between what points cw and ccw as well but right now
       this is done at runtime. I think it is a bit too complex to optimize ahead of time.
     - Does not handle case where multiple different impassasble terrains exist.
@@ -34,17 +45,16 @@ Is there a mobile equivalent for war/4x games?
       At game startup, store the distance of each pixelPos to nearest impassable terrain and
       also the pixelPos of the impassable terrain. Then colliison can be easily checked.
       Non circular collision can be handled at a later time.
-    - Can cache global path finding results... but need to then also clear results and deal
-      with storage + bimodal runtime. This is very likely the wrong approach but may be helpful.
-      The key would be similar to (unit, start, end target)
+    - I think caching at startup is going to be the best speed up for global targeting. If I can 
+      verify what visbiltiy grids a unit should take when targetting a pixel pos with a given grid 
+      position, I can then only calculate the final path. If obstacles and nodes are not dynamic this 
+      will probably be easy. Essentially, avoid cache invalidation.
     - Current localTargets array might be life long planning since it is storing values. Not sure.
     - Determine if high level unit tests should be added now or punted till later.
     - Handle setting up visiblity grids edge cases e.g. obstacle on border, etc
   - Long term:
     - May need to use local collision avoidance with other units since obstacles should funnel units together
     - May want to not use center of hexagon as target. 
-    - May want a way to setup single obstacles on grid, then a setup function determines how to group
-      obstacles together. Overall, it should probably be w/e is CPU efficient for state.go to process.
 
 - Determine if LOS algorithm should be updated from bresenham to check obstacle line intersects
   - line intersect check will be probably be much more performant
