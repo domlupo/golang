@@ -86,7 +86,7 @@ func newGame() Game {
 		memoryProfilerOn:        false,
 		developerToggles:        make(map[string]*toggle),
 		developerToggleCooldown: 300 * time.Millisecond,
-		initialNodeHealth:       100,
+		initialNodeHealth:       5000,
 		loggerConfig: loggerConfig{
 			initialLogLevel:            slog.LevelDebug,
 			filterTimeAndLevelFromLogs: true,

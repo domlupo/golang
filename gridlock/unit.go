@@ -10,6 +10,14 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+type pathDirection int
+
+const (
+	noPathDirection pathDirection = iota
+	cw
+	ccw
+)
+
 // Note: unit radius set to an odd number is better for testing due to division bugs
 var infantryConfig = unitConfig{
 	name:                 infantry,
@@ -391,40 +399,8 @@ func (u *unit) pathfindGlobalTarget(visibilityGrid []obstacleTarget, pixelPathin
 			}
 		}
 
-		// TODO: Fix incorrect behavior. Right now cw and ccw pathing assumes that every visibility grid point
-		// should be visited until a line of sight is reached. This assumption is not always true. For example,
-		// if an obstacle layout is similar to an H where the middle crevice has multiple points, * -> H ->*
-		// the unit will incorrectly go into the crevice rather than skip those points. I don't think
-		// it is as simple as comparing n and n+ 1, but this needs determined.
-		current := visibilityGrid[nearestIndex]
-		cwPath := []position{u.globalTarget}
-		cwPathDistance := current.pixelPosition.chebyshevDistance(u.globalTarget.pixelPosition)
-		end := current.ccw
-		for current != *end {
-			cwPath = append(cwPath, position{layer: u.layer, pixelPosition: current.pixelPosition})
-			_, los := current.lineOfSight(u.pixelPosition, pixelPathing)
-			if los {
-				break
-			}
-			current = *current.cw
-			cwPathDistance += current.ccwDistance
-		}
-		cwPathDistance += u.chebyshevDistance(cwPath[len(cwPath)-1].pixelPosition)
-
-		current = visibilityGrid[nearestIndex]
-		ccwPath := []position{u.globalTarget}
-		ccwPathDistance := current.pixelPosition.chebyshevDistance(u.globalTarget.pixelPosition)
-		end = current.cw
-		for current != *end {
-			ccwPath = append(ccwPath, position{layer: u.layer, pixelPosition: current.pixelPosition})
-			_, los := current.lineOfSight(u.pixelPosition, pixelPathing)
-			if los {
-				break
-			}
-			current = *current.ccw
-			ccwPathDistance += current.cwDistance
-		}
-		ccwPathDistance += u.chebyshevDistance(ccwPath[len(ccwPath)-1].pixelPosition)
+		cwPath, cwPathDistance := u.getPath(visibilityGrid[nearestIndex], cw, pixelPathing)
+		ccwPath, ccwPathDistance := u.getPath(visibilityGrid[nearestIndex], ccw, pixelPathing)
 
 		shortestPath := cwPath
 		if ccwPathDistance < cwPathDistance {
@@ -435,6 +411,52 @@ func (u *unit) pathfindGlobalTarget(visibilityGrid []obstacleTarget, pixelPathin
 		u.pathGlobalTarget = false
 		u.updateTarget(localTarget, shortestPath[len(shortestPath)-1])
 	}
+}
+
+func (u *unit) getPath(current obstacleTarget, direction pathDirection, pixelPathing pixelPathing) ([]position, int) {
+	path := []position{u.globalTarget}
+
+	var end obstacleTarget
+	switch direction {
+	case cw:
+		end = *current.ccw
+	case ccw:
+		end = *current.cw
+	default:
+		panic("To set end, path direction must be clockwise or counter clockwise")
+	}
+	for current != end {
+		for trimIndex, prior := range path[:len(path)-1] {
+			_, los := current.lineOfSight(prior.pixelPosition, pixelPathing)
+			if los {
+				path = path[:trimIndex+1]
+				break
+			}
+		}
+		path = append(path, position{layer: u.layer, pixelPosition: current.pixelPosition})
+		_, los := current.lineOfSight(u.pixelPosition, pixelPathing)
+		if los {
+			break
+		}
+
+		switch direction {
+		case cw:
+			current = *current.cw
+		case ccw:
+			current = *current.ccw
+		default:
+			panic("To travel, path direction must be clockwise or counter clockwise")
+		}
+	}
+
+	pathDistance := 0
+	priorPos := u.globalTarget.pixelPosition
+	for _, pos := range path {
+		pathDistance += pos.chebyshevDistance(priorPos)
+	}
+	pathDistance += u.chebyshevDistance(path[len(path)-1].pixelPosition)
+
+	return path, pathDistance
 }
 
 func (u *unit) completeMove(pos position) {
