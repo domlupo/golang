@@ -5,19 +5,23 @@ package main
 import (
 	"math"
 
+	"github.com/gofrs/uuid/v5"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 type obstacles map[gridPosition]*obstacle
 
 type obstacle struct {
-	gridPos        gridPosition
-	kind           obstacleKind
+	gridPos gridPosition
+	groupId uuid.UUID
+	kind    obstacleKind
+	// TODO: determine if I should remove this. It seems a bit hacky. groupId probably works better.
 	visibilityGrid *[]obstacleTarget
 }
 
 type obstacleTarget struct {
 	pixelPosition
+	groupId     uuid.UUID
 	cw          *obstacleTarget
 	cwDistance  int
 	ccw         *obstacleTarget
@@ -84,11 +88,16 @@ func (os obstacles) getGroups(hc *hexConfig) []obstacles {
 			continue
 		}
 
+		id, err := uuid.NewV4()
+		if err != nil {
+			logger.log(errorLevel, noLogType, "getGroups", "failed to generate UUID", err)
+		}
 		group := make(obstacles)
 		queue := []gridPosition{k}
 		for len(queue) != 0 {
 			current := queue[0]
 			queue = queue[1:]
+			os[current].groupId = id
 			group[current] = os[current]
 
 			ne, neOk := current.adjacent(northeastSide, hc)
@@ -277,10 +286,18 @@ func (os obstacles) setupVisibilityGrid(hc *hexConfig, pathing pixelPathing) {
 		cwFix.ccw = cw
 	}
 
+	// TOODO: check if there is a better way to do this
+	var id uuid.UUID
+	for _, v := range os {
+		id = v.groupId
+		break
+	}
+
 	var grid []obstacleTarget
 	for _, ot := range targets {
 		ot.cwDistance = ot.chebyshevDistance(ot.cw.pixelPosition)
 		ot.ccwDistance = ot.chebyshevDistance(ot.ccw.pixelPosition)
+		ot.groupId = id
 		grid = append(grid, *ot)
 	}
 	for i := range os {

@@ -7,7 +7,7 @@ const (
 	noObstacle obstacleSetup = iota
 	singleObstacle
 	doubleObstacle
-	doubleLeftObstacle
+	multiObstacle
 )
 
 func setupObstacles(s obstacleSetup, hc *hexConfig) (obstacles, pixelPathing) {
@@ -97,7 +97,7 @@ func setupObstacles(s obstacleSetup, hc *hexConfig) (obstacles, pixelPathing) {
 			{19, 22},
 			{19, 23},
 		}
-	case doubleLeftObstacle:
+	case multiObstacle:
 		gridPositions = []gridPosition{
 			{1, 3},
 			{1, 4},
@@ -122,10 +122,11 @@ func setupObstacles(s obstacleSetup, hc *hexConfig) (obstacles, pixelPathing) {
 			{3, 17},
 			{3, 18},
 			{3, 19},
-			{3, 20},
-			{3, 21},
-			{3, 22},
-			{3, 23},
+
+			{7, 2},
+
+			{11, 3},
+			{12, 3},
 
 			{9, 3},
 			{9, 4},
@@ -148,6 +149,26 @@ func setupObstacles(s obstacleSetup, hc *hexConfig) (obstacles, pixelPathing) {
 			{9, 21},
 			{9, 22},
 			{9, 23},
+
+			{13, 4},
+			{13, 5},
+			{13, 6},
+			{13, 7},
+			{13, 8},
+			{13, 9},
+			{13, 10},
+			{13, 11},
+			{13, 12},
+			{13, 13},
+			{13, 14},
+			{13, 15},
+			{13, 16},
+			{13, 17},
+			{13, 18},
+			{13, 19},
+			{13, 20},
+			{13, 21},
+			{13, 22},
 		}
 	default:
 		panic("obstacle setup does not exist")

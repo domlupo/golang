@@ -393,8 +393,10 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathi
 			break
 		}
 
-		cwPath, cwPathDistance := u.getPath(current, obstacleTarget, cw, pixelPathing)
-		ccwPath, ccwPathDistance := u.getPath(current, obstacleTarget, ccw, pixelPathing)
+		// TODO: verify distance is properly computed and shortest distance is found. I doubt
+		// this works correctly.
+		cwPath, cwPathDistance := u.getPath(current, obstacleTarget, cw, pixelPathing, obstacles, hc)
+		ccwPath, ccwPathDistance := u.getPath(current, obstacleTarget, ccw, pixelPathing, obstacles, hc)
 
 		shortestPath := cwPath
 		if ccwPathDistance < cwPathDistance {
@@ -408,7 +410,14 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathi
 	u.next.updateTarget(localTarget, path[len(path)-1])
 }
 
-func (u *unit) getPath(start position, current obstacleTarget, direction pathDirection, pixelPathing pixelPathing) ([]position, int) {
+func (u *unit) getPath(
+	start position,
+	current obstacleTarget,
+	direction pathDirection,
+	pixelPathing pixelPathing,
+	obstacles obstacles,
+	hc *hexConfig) ([]position, int) {
+
 	path := []position{start}
 
 	var end obstacleTarget
@@ -422,6 +431,8 @@ func (u *unit) getPath(start position, current obstacleTarget, direction pathDir
 	}
 	for current != end {
 		for trimIndex, prior := range path[:len(path)-1] {
+			// TOOD: think through trim more. Should this stay LOS or convert to an obstacle target check
+			// that breaks on obstacle logic?
 			_, los := current.lineOfSight(prior.pixelPosition, pixelPathing)
 			if los {
 				path = path[:trimIndex+1]
@@ -429,8 +440,8 @@ func (u *unit) getPath(start position, current obstacleTarget, direction pathDir
 			}
 		}
 		path = append(path, position{layer: u.layer, pixelPosition: current.pixelPosition})
-		_, los := current.lineOfSight(u.pixelPosition, pixelPathing)
-		if los {
+		obstacleTarget, los := current.obstacleTarget(u.pixelPosition, pixelPathing, obstacles, hc)
+		if los || current.groupId != obstacleTarget.groupId {
 			break
 		}
 

@@ -170,7 +170,7 @@ func (s *state) moveUnits() {
 			if isTargetNode {
 				unitsAtTargetNode++
 			} else {
-				panic("This path doesn't really happen yet. Handle it when it starts to occur if it ever does...")
+				logger.log(errorLevel, alwaysLogType, "high priority fix. This should be a panic because it unsyncs critical state")
 			}
 		} else {
 			unitsMovedCount++
