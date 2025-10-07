@@ -379,27 +379,37 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 }
 
 func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathing, hc *hexConfig) {
-	obstacleTarget, los := u.globalTarget.pixelPosition.obstacleTarget(u.pixelPosition, pixelPathing, obstacles, hc)
-	switch los {
-	case true:
-		u.updateTarget(localTarget, u.globalTarget)
-	case false:
-		cwPath, cwPathDistance := u.getPath(obstacleTarget, cw, pixelPathing)
-		ccwPath, ccwPathDistance := u.getPath(obstacleTarget, ccw, pixelPathing)
+	path := []position{u.globalTarget}
+	for {
+		current := path[len(path)-1]
+		obstacleTarget, los := current.obstacleTarget(u.pixelPosition, pixelPathing, obstacles, hc)
+
+		// TODO: Fix hack for units getting stuck in unwakable terrain
+		if !pixelPathing[u.pixelPosition].walkable {
+			los = true
+		}
+
+		if los {
+			break
+		}
+
+		cwPath, cwPathDistance := u.getPath(current, obstacleTarget, cw, pixelPathing)
+		ccwPath, ccwPathDistance := u.getPath(current, obstacleTarget, ccw, pixelPathing)
 
 		shortestPath := cwPath
 		if ccwPathDistance < cwPathDistance {
 			shortestPath = ccwPath
 		}
-
-		u.localTargets = shortestPath
-		u.pathGlobalTarget = false
-		u.updateTarget(localTarget, shortestPath[len(shortestPath)-1])
+		path = append(path, shortestPath...)
 	}
+
+	u.pathGlobalTarget = false
+	u.localTargets = path
+	u.next.updateTarget(localTarget, path[len(path)-1])
 }
 
-func (u *unit) getPath(current obstacleTarget, direction pathDirection, pixelPathing pixelPathing) ([]position, int) {
-	path := []position{u.globalTarget}
+func (u *unit) getPath(start position, current obstacleTarget, direction pathDirection, pixelPathing pixelPathing) ([]position, int) {
+	path := []position{start}
 
 	var end obstacleTarget
 	switch direction {
@@ -435,13 +445,10 @@ func (u *unit) getPath(current obstacleTarget, direction pathDirection, pixelPat
 	}
 
 	pathDistance := 0
-	priorPos := u.globalTarget.pixelPosition
-	for _, pos := range path {
-		pathDistance += pos.chebyshevDistance(priorPos)
+	for i, pos := range path[1:] {
+		pathDistance += pos.chebyshevDistance(path[i].pixelPosition)
 	}
-	pathDistance += u.chebyshevDistance(path[len(path)-1].pixelPosition)
-
-	return path, pathDistance
+	return path[1:], pathDistance
 }
 
 func (u *unit) completeMove(pos position) {
