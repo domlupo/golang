@@ -250,8 +250,6 @@ func newUnit(p player, globalTarget position, uc unitConfig, pos position, produ
 }
 
 func (u *unit) refresh() {
-	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "beforeRefresh", "unit", u.log())
-
 	if !u.attackedLastTurn && !u.movedLastTurn {
 		u.fluxTurnCount += 1
 	} else {
@@ -263,8 +261,6 @@ func (u *unit) refresh() {
 	u.attackedLastTurn = u.attackedThisTurn
 	u.attackedThisTurn = false
 	u.canReachTargetNode = node{}
-
-	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "afterRefresh", "unit", u.log())
 }
 
 func (u *unit) analyzeTargets() {
