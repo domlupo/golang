@@ -19,9 +19,19 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Fix HACKS added during multi obstacle implementation and squash existing bugs.
+- Add logs for type undecided behavior to existing code paths with undecided behavior.
 
-- Polish multi unit obstacle pathing
+- Fix HACKS added during multi obstacle implementation.
+  - Determine if high level unit tests should be added now or punted till later.
+  - Units are getting stuck on visbility grid points and thier current targets are incorrect.
+  - Handle setting up visiblity grids edge cases e.g. obstacle on border, etc
+
+- Optimize multi obstacle pathing:
+  - Long term:
+    - May need to use local collision avoidance with other units since obstacles should funnel units together
+    - May want to not use center of hexagon as target. 
+  - Investigate life long planning more. I think this is technically what I am doing since
+    targets are stored and I have not read much about this.
   - If I do hex edge detection for LOS instead of Bresenham. multiple optimizations are possible:
     - remove internal obstacle edges
     - combine external edges that form straight lines
@@ -43,12 +53,6 @@ Is there a mobile equivalent for war/4x games?
     verify what visbiltiy grids a unit should take when targetting a pixel pos with a given grid 
     position, I can then only calculate the final path. If obstacles and nodes are not dynamic this 
     will probably be easy. Essentially, avoid cache invalidation.
-  - Current localTargets array might be life long planning since it is storing values. Not sure.
-  - Determine if high level unit tests should be added now or punted till later.
-  - Handle setting up visiblity grids edge cases e.g. obstacle on border, etc
-  - Long term:
-    - May need to use local collision avoidance with other units since obstacles should funnel units together
-    - May want to not use center of hexagon as target. 
 
 - Determine if LOS algorithm should be updated from bresenham to check obstacle line intersects
   - line intersect check will be probably be much more performant
