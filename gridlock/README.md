@@ -19,6 +19,9 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Update logger to be strongly typed by using logAttrs isntead of log any()
+  - There are several logging helpers that are buggy as well. I should fix these issues.
+
 - Add logs for type undecided behavior to existing code paths with undecided behavior.
 
 - Fix HACKS added during multi obstacle implementation.
