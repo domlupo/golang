@@ -83,14 +83,13 @@ func (s *state) analyzeTargets() {
 
 		u.updateTarget(enemyTarget, nearest)
 
-		if u.pathGlobalTarget {
+		if !u.globalTarget.isZero() && u.pathGlobalTarget {
 			u.pathfindGlobalTarget(s.obstacles, s.pixelPathing, s.hexConfig)
 		} else if len(u.localTargets) > 0 && u.atTerminalPosition {
-			u.updateTarget(localTarget, u.localTargets[len(u.localTargets)-1])
 			u.localTargets = u.localTargets[:len(u.localTargets)-1]
 		}
 
-		u.analyzeTargets()
+		u.prioritizeTargets()
 	}
 }
 

@@ -23,7 +23,6 @@ Is there a mobile equivalent for war/4x games?
 
 - Fix HACKS added during multi obstacle implementation.
   - Determine if high level unit tests should be added now or punted till later.
-  - Units are getting stuck on visbility grid points and thier current targets are incorrect.
   - Handle setting up visiblity grids edge cases e.g. obstacle on border, etc
 
 - Optimize multi obstacle pathing:

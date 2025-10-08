@@ -266,7 +266,7 @@ func (u *unit) refresh() {
 	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "afterRefresh", "unit", u.log())
 }
 
-func (u *unit) analyzeTargets() {
+func (u *unit) prioritizeTargets() {
 	if !u.fluxTarget.isZero() {
 		u.localTargets = []position{}
 		u.fluxExpireCount = max(u.fluxExpireCount-1, 0)
@@ -278,11 +278,14 @@ func (u *unit) analyzeTargets() {
 	} else if !u.enemyTarget.isZero() {
 		u.localTargets = []position{}
 		u.updateTarget(currentTarget, u.enemyTarget)
-	} else if !u.localTarget.isZero() {
-		u.updateTarget(currentTarget, u.localTarget)
+	} else if len(u.localTargets) > 0 {
+		u.updateTarget(currentTarget, u.localTargets[len(u.localTargets)-1])
 	} else {
-		u.localTargets = []position{}
-		u.updateTarget(currentTarget, position{})
+		// TODO: determine behavior. Right now this path may occur for multiple reasons or only one.
+		// The reason I am sure of is it occurs after a targeted unit dies off since there is no path
+		// for the unit to continue. The issue is that that this might cause units to pause for an entire
+		// turn since no target is set which seems wrong.
+		u.pathGlobalTarget = true
 	}
 }
 
@@ -457,7 +460,6 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathi
 
 	u.pathGlobalTarget = false
 	u.localTargets = path
-	u.next.updateTarget(localTarget, path[len(path)-1])
 }
 
 func (u *unit) getPath(
@@ -481,7 +483,7 @@ func (u *unit) getPath(
 	}
 	for current != end {
 		for trimIndex, prior := range path[:len(path)-1] {
-			// TOOD: think through trim more. Should this stay LOS or convert to an obstacle target check
+			// TODO: think through trim more. Should this stay LOS or convert to an obstacle target check
 			// that breaks on obstacle logic?
 			_, los := current.lineOfSight(prior.pixelPosition, pixelPathing)
 			if los {
