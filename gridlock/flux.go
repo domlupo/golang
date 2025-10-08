@@ -108,7 +108,10 @@ func (f *flux) draw(dc drawContext, fluxPos gridPosition) {
 	}
 
 	// TODO: handle ok here. It does not always exists
-	center, _ := fluxPos.getPixelPos(center, &dc.hexConfig)
+	center, ok := fluxPos.getPixelPos(center, &dc.hexConfig)
+	if !ok {
+		return
+	}
 	xEnd := center.x
 	yEnd := center.y
 

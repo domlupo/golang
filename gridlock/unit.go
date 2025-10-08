@@ -218,6 +218,7 @@ func newUnit(p player, globalTarget position, uc unitConfig, pos position, produ
 	id, err := uuid.NewV4()
 	if err != nil {
 		logger.log(errorLevel, selectedUnitLogType, "newUnit", "failed to generate UUID", err)
+		panic("cannot newUnit since uuid generation failed")
 	}
 	u := unit{
 		id:                 id,
@@ -583,7 +584,7 @@ func (u unit) log() []slog.Attr {
 	a = append(a, slog.Bool("attackedLastTurn", u.attackedLastTurn))
 	a = append(a, slog.Bool("attackedThisTurn", u.attackedThisTurn))
 	a = append(a, slog.Int("fluxTurnCount", u.fluxTurnCount))
-	a = append(a, slog.Any("canReachtNode", u.canReachNode))
+	a = append(a, slog.Any("canReachNode", u.canReachNode))
 	a = append(a, slog.Bool("selected", u.selected))
 	a = append(a, slog.Bool("debugFlag", u.debugFlag))
 	return a

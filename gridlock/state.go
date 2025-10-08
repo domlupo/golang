@@ -114,9 +114,6 @@ func (s *state) moveUnits() {
 			continue
 		}
 
-		// TODO: Consider refactoring this function into a separate moveUnit. Can use named
-		// returns to defer completeMove call on successful moves. Punting this because
-		// the function will probably change a lot in the future and the refactor can happen then.
 		newPos, completeMove := u.getNewPos()
 
 		if u.currentTarget.isZero() {
@@ -207,44 +204,6 @@ func updatePointers(h *hexagon, u *unit) {
 	u.prior = h.linkedList.prior
 	h.linkedList.prior.next = u
 	h.linkedList.prior = u
-}
-
-func (s *state) collidesWithNode(pos position, u unit, unitCollisionRadius int, nodes map[gridPosition]*node) (node, bool) {
-	if pos.layer == lowAltitude || pos.layer == highAltitude {
-		return node{}, false
-	}
-
-	x1 := pos.x
-	y1 := pos.y
-	r1 := unitCollisionRadius
-
-	for _, n := range nodes {
-		if u.player == n.player {
-			// unit cannot collide with own nodes
-			// HACK: This will probably change in the future, and it will most likely break attackNodes logic
-			// since it assumes a unit never collides with its own node
-			continue
-		}
-
-		nPixelPos, ok := n.gridPos.getPixelPos(center, s.hexConfig)
-		if !ok {
-			panic("could not get pixel pos for collide with node")
-		}
-
-		x2 := nPixelPos.x
-		y2 := nPixelPos.y
-		r2 := n.radius
-
-		xDelta := x2 - x1
-		yDelta := y2 - y1
-		rSum := r1 + r2
-
-		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
-			return *n, true
-		}
-	}
-
-	return node{}, false
 }
 
 func (s *state) explode(pos position, blastRadius int, units map[position]*unit) {

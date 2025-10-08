@@ -10,16 +10,11 @@ import (
 
 type drawContext struct {
 	screen *ebiten.Image
-	// windowMultipler must only be used for drawing images and windows.
+	// windowMultiplier must only be used for drawing images and windows.
 	// Never use for game logic. float32 rather than idiomatic float64
 	// because alot of Ebiten draw APIs use float32
 	windowMultiplier float32
 	hexConfig
-	// The debug grid helps debugging display issues. Usually only altering
-	// offset is needed, width can remain 1.
-	// Offset values should only be 0 - 20 (half of grid size without window multipler)
-	// Some helpful values are: 0, 0.5, 1, 19, 19.5, 20
-	debugGridOffset               int
 	debugGridWidth                int
 	debugGridIndexCount           int
 	debugGridColor                color.Color
@@ -55,7 +50,6 @@ func newDrawContext() *drawContext {
 		windowMultiplier: 2.5,
 		// aspect ratio config (16:9 aspect ratio)
 		hexConfig:                     newHexConfig(1280, 720),
-		debugGridOffset:               0,
 		debugGridWidth:                1,
 		debugGridIndexCount:           32,
 		debugGridColor:                color.Black,

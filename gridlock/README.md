@@ -22,8 +22,6 @@ Is there a mobile equivalent for war/4x games?
 - Update logger to be strongly typed by using logAttrs isntead of log any()
   - There are several logging helpers that are buggy as well. I should fix these issues.
 
-- Add logs for type undecided behavior to existing code paths with undecided behavior.
-
 - Fix HACKS added during multi obstacle implementation.
   - Determine if high level unit tests should be added now or punted till later.
   - Handle setting up visiblity grids edge cases e.g. obstacle on border, etc
@@ -55,6 +53,9 @@ Is there a mobile equivalent for war/4x games?
     verify what visbiltiy grids a unit should take when targetting a pixel pos with a given grid 
     position, I can then only calculate the final path. If obstacles and nodes are not dynamic this 
     will probably be easy. Essentially, avoid cache invalidation.
+  - For pixel pathing may optimize by adding two fields:
+    - nearestUnwalkabledDistance int
+    - nearestUnwalkable pixelPosition
 
 - Determine if LOS algorithm should be updated from bresenham to check obstacle line intersects
   - line intersect check will be probably be much more performant

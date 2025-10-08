@@ -33,9 +33,6 @@ type pixelPathing map[pixelPosition]pathing
 
 type pathing struct {
 	walkable bool
-	// TODO: Implement in future to optimize and handle edge cases
-	nearestUnwalkabledDistance int
-	nearestUnwalkable          pixelPosition
 }
 
 type obstacleKind int
@@ -92,7 +89,9 @@ func (os obstacles) getGroups(hc *hexConfig) []obstacles {
 		id, err := uuid.NewV4()
 		if err != nil {
 			logger.log(errorLevel, noLogType, "getGroups", "failed to generate UUID", err)
+			panic("cannot getGroups since uuid generation failed")
 		}
+
 		group := make(obstacles)
 		queue := []gridPosition{k}
 		for len(queue) != 0 {
