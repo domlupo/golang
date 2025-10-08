@@ -39,6 +39,7 @@ type Game struct {
 	redComputerActive        bool
 	enableFlux               bool
 	drawFluxes               bool
+	drawPixelPathing         bool
 	hotRestart               bool
 	drawBlueTargets          bool
 	drawRedTargets           bool
@@ -268,7 +269,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	screen.Fill(g.drawContext.backgroundColor)
 	drawDebug(*g.drawContext, g.drawDebugGrid)
-	g.gameState.draw(*g.drawContext, g.drawBlueTargets, g.drawRedTargets, g.drawFluxes, g.drawVisibilityGrids)
+	g.gameState.draw(*g.drawContext, g.drawBlueTargets, g.drawRedTargets, g.drawFluxes, g.drawVisibilityGrids, g.drawPixelPathing)
 
 	if g.leftMouseHeld {
 		drawUnfilledBoxFloat32(

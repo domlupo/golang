@@ -706,7 +706,7 @@ func (s *state) collidesWithBorder(pos position, offset int) bool {
 	}
 }
 
-func (s *state) draw(dc drawContext, drawBlueTargets bool, drawRedTargets, drawFluxes bool, drawVisibilityGrids bool) {
+func (s *state) draw(dc drawContext, drawBlueTargets bool, drawRedTargets, drawFluxes bool, drawVisibilityGrids bool, drawPixelPathing bool) {
 	for _, o := range s.obstacles {
 		o.drawObstacle(dc)
 		if drawVisibilityGrids {
@@ -739,5 +739,8 @@ func (s *state) draw(dc drawContext, drawBlueTargets bool, drawRedTargets, drawF
 		for fPos, flux := range s.fluxes {
 			flux.draw(dc, fPos)
 		}
+	}
+	if drawPixelPathing {
+		s.pixelPathing.draw(dc)
 	}
 }

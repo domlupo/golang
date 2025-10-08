@@ -3,6 +3,7 @@
 package main
 
 import (
+	"image/color"
 	"math"
 
 	"github.com/gofrs/uuid/v5"
@@ -412,5 +413,20 @@ func (o obstacle) drawVisibilityGrid(dc drawContext) {
 			float32(dc.visibilityGridLineWidth)*dc.windowMultiplier,
 			dc.highlightColor,
 			false)
+	}
+}
+
+func (pp pixelPathing) draw(dc drawContext) {
+	for pixelPos, pathing := range pp {
+		if !pathing.walkable {
+			vector.DrawFilledRect(
+				dc.screen,
+				float32(pixelPos.x)*dc.windowMultiplier,
+				float32(pixelPos.y)*dc.windowMultiplier,
+				1*dc.windowMultiplier,
+				1*dc.windowMultiplier,
+				color.Black,
+				false)
+		}
 	}
 }
