@@ -610,7 +610,7 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 	}
 
 	topLeftGridPos, _ := topLeftPixelPos.getGridPos(s.hexConfig)
-	bottomRightGridPos, _ := bottomRightPixelPos.getGridPos(s.hexConfig)
+	bottomRightGridPos, _ := bottomRightPixelPos.getGridPosOutbounds(s.hexConfig)
 
 	for _, n := range s.nodes {
 		if (topLeftGridPos.x < n.gridPos.x) &&
