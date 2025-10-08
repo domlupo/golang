@@ -30,6 +30,7 @@ type drawContext struct {
 	fluxDirectionRadius           int
 	targetNodeLineWidth           int
 	visibilityGridLineWidth       int
+	roygbivColors                 []color.RGBA
 	backgroundColor               color.RGBA
 	highlightColor                color.RGBA
 	unitHealthColor               color.RGBA
@@ -63,7 +64,7 @@ func newDrawContext() *drawContext {
 		healthLineWidth:               2,
 		fluxLineWidth:                 2,
 		fluxDirectionRadius:           3,
-		targetNodeLineWidth:           1,
+		targetNodeLineWidth:           2,
 		visibilityGridLineWidth:       1,
 		backgroundColor:               color.RGBA{200, 200, 200, 255},
 		highlightColor:                highlightColor,
@@ -76,6 +77,15 @@ func newDrawContext() *drawContext {
 		redPlayerUnitColor:            color.RGBA{255, 0, 0, 100},
 		neutralNodeColor:              color.RGBA{100, 60, 100, 200},
 		drawTriangleDefaultImage:      drawTriangleDefaultImage,
+		roygbivColors: []color.RGBA{
+			{200, 0, 0, 255},
+			{250, 150, 0, 255},
+			{250, 200, 0, 255},
+			{0, 200, 150, 255},
+			{0, 0, 250, 255},
+			{0, 0, 150, 255},
+			{150, 150, 250, 255},
+		},
 	}
 	return &dc
 }

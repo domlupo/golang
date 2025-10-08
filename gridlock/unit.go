@@ -21,10 +21,10 @@ const (
 var infantryConfig = unitConfig{
 	name:                 infantry,
 	radius:               3,
-	maxHealth:            2000,
+	maxHealth:            50,
 	attack:               1,
 	vision:               30,
-	reach:                4,
+	reach:                5,
 	produceLayer:         ground,
 	staticTarget:         false,
 	attacksGround:        true,
@@ -211,6 +211,7 @@ type unit struct {
 	prior            *unit
 	next             *unit
 	producedAt       int
+	debugFlag        bool
 }
 
 func newUnit(p player, globalTarget position, uc unitConfig, pos position, producedOrder int) unit {
@@ -249,6 +250,7 @@ func newUnit(p player, globalTarget position, uc unitConfig, pos position, produ
 }
 
 func (u *unit) refresh() {
+	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "beforeRefresh", "unit", u.log())
 	if !u.attackedLastTurn && !u.movedLastTurn {
 		u.fluxTurnCount += 1
 	} else {
@@ -260,6 +262,8 @@ func (u *unit) refresh() {
 	u.attackedLastTurn = u.attackedThisTurn
 	u.attackedThisTurn = false
 	u.canReachNode = node{}
+
+	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "afterRefresh", "unit", u.log())
 }
 
 func (u *unit) analyzeTargets() {
@@ -431,6 +435,7 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathi
 
 		// TODO: Fix hack for units getting stuck in unwakable terrain
 		if !pixelPathing[u.pixelPosition].walkable {
+			u.debugFlag = true
 			los = true
 		}
 
@@ -578,6 +583,7 @@ func (u unit) log() []slog.Attr {
 	a = append(a, slog.Int("fluxTurnCount", u.fluxTurnCount))
 	a = append(a, slog.Any("canReachtNode", u.canReachNode))
 	a = append(a, slog.Bool("selected", u.selected))
+	a = append(a, slog.Bool("debugFlag", u.debugFlag))
 	return a
 }
 
@@ -620,11 +626,15 @@ func (u *unit) draw(dc drawContext, selected bool) {
 			float32(u.currentTarget.x)*dc.windowMultiplier,
 			float32(u.currentTarget.y)*dc.windowMultiplier,
 			float32(dc.targetNodeLineWidth)*dc.windowMultiplier,
-			dc.highlightColor,
+			color.Black,
 			false,
 		)
 
-		for _, lt := range u.localTargets {
+		j := 0
+		for i := len(u.localTargets) - 1; i >= 0; i-- {
+			lt := u.localTargets[i]
+			color := dc.roygbivColors[j]
+
 			vector.StrokeLine(
 				dc.screen,
 				float32(u.x)*dc.windowMultiplier,
@@ -632,9 +642,14 @@ func (u *unit) draw(dc drawContext, selected bool) {
 				float32(lt.x)*dc.windowMultiplier,
 				float32(lt.y)*dc.windowMultiplier,
 				float32(dc.targetNodeLineWidth)*dc.windowMultiplier,
-				dc.highlightColor,
+				color,
 				false,
 			)
+
+			j += 1
+			if j == len(dc.roygbivColors) {
+				j = 0
+			}
 		}
 
 		if u.unitConfig.name == unguidedGroundMissile {
