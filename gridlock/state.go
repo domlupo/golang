@@ -639,7 +639,7 @@ func (s *state) produceUnits() {
 			panic("could not get pixel pos for produce units")
 		}
 		uPos := position{n.unitConfig.produceLayer, pixelPos}
-		newUnit := newUnit(n.player, n.target, n.unitConfig, uPos, s.unitsProducedTotal)
+		newUnit := newUnit(n.player, n.target, n.unitConfig, uPos, s.unitsProducedTotal, n.selected)
 		if _, collides := s.collidesWithUnit(uPos, newUnit); !collides {
 			hex := s.hexagons[n.gridPos]
 			if hex.linkedList == nil && hex.unitCount != 0 {

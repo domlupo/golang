@@ -214,7 +214,7 @@ type unit struct {
 	debugFlag        bool
 }
 
-func newUnit(p player, globalTarget position, uc unitConfig, pos position, producedOrder int) unit {
+func newUnit(p player, globalTarget position, uc unitConfig, pos position, producedOrder int, selected bool) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
 		logger.log(errorLevel, selectedUnitLogType, "newUnit", slog.String("failed to generate UUID", err.Error()))
@@ -242,7 +242,7 @@ func newUnit(p player, globalTarget position, uc unitConfig, pos position, produ
 		attackedLastTurn:   false,
 		attackedThisTurn:   false,
 		canReachNode:       node{},
-		selected:           false,
+		selected:           selected,
 		fluxExpireCount:    uc.fluxExpireMax,
 		producedAt:         producedOrder,
 	}
