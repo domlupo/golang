@@ -2,6 +2,8 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log/slog"
 	"os"
 )
@@ -86,31 +88,54 @@ func (logger l) toggleLevel() {
 	}
 }
 
-func (logger l) toggleType(logType logType) {
-	enabled := logger.enabledLogTypes[logType]
-	// TODO: Should I WARN log what log type is enabled and disabled?
-	logger.enabledLogTypes[logType] = !enabled
-}
+func (logger l) toggleType(lt logType) {
+	enabled := logger.enabledLogTypes[lt]
+	logger.enabledLogTypes[lt] = !enabled
 
-func (logger l) logSelected(selected bool, level level, logType logType, msg string, args ...any) {
-	if selected {
-		logger.log(level, logType, msg, args...)
+	var ltName string
+	switch lt {
+	case noLogType:
+		ltName = "noLogType"
+	case alwaysLogType:
+		ltName = "alwaysLogType"
+	case undecidedBehavior:
+		ltName = "undecidedBehavior"
+	case mainLogType:
+		ltName = "mainLog"
+	case stateLogType:
+		ltName = "stateLog"
+	case selectedUnitLogType:
+		ltName = "selectedUnitLog"
+	default:
+		logger.log(errorLevel, alwaysLogType, "Did not find a matching log type name")
+	}
+
+	if ltName != "" && enabled {
+		logger.log(errorLevel, alwaysLogType, fmt.Sprintf("toggled log type off: %s", ltName))
+	} else if ltName != "" && !enabled {
+		logger.log(errorLevel, alwaysLogType, fmt.Sprintf("toggled log type on: %s", ltName))
 	}
 }
 
-func (logger l) log(level level, logType logType, msg string, args ...any) {
+func (logger l) logSelected(selected bool, level level, logType logType, msg string, attrs ...slog.Attr) {
+	if selected {
+		logger.log(level, logType, msg, attrs...)
+	}
+}
+
+func (logger l) log(level level, logType logType, msg string, attrs ...slog.Attr) {
 	if !logger.enabledLogTypes[logType] {
 		return
 	}
 
 	switch level {
 	case debugLevel:
-		logger.Debug(msg, args...)
+		logger.LogAttrs(context.TODO(), slog.LevelDebug, msg, attrs...)
 	case infoLevel:
-		logger.Info(msg, args...)
+		logger.LogAttrs(context.TODO(), slog.LevelInfo, msg, attrs...)
 	case warnLevel:
-		logger.Warn(msg, args...)
+		logger.LogAttrs(context.TODO(), slog.LevelWarn, msg, attrs...)
 	case errorLevel:
-		logger.Error(msg, args...)
+		logger.LogAttrs(context.TODO(), slog.LevelError, msg, attrs...)
 	}
 }

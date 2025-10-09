@@ -217,7 +217,7 @@ type unit struct {
 func newUnit(p player, globalTarget position, uc unitConfig, pos position, producedOrder int) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
-		logger.log(errorLevel, selectedUnitLogType, "newUnit", "failed to generate UUID", err)
+		logger.log(errorLevel, selectedUnitLogType, "newUnit", slog.String("failed to generate UUID", err.Error()))
 		panic("cannot newUnit since uuid generation failed")
 	}
 	u := unit{
@@ -251,7 +251,7 @@ func newUnit(p player, globalTarget position, uc unitConfig, pos position, produ
 }
 
 func (u *unit) refresh() {
-	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "beforeRefresh", "unit", u.log())
+	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "beforeRefresh", u.log()...)
 	if !u.attackedLastTurn && !u.movedLastTurn {
 		u.fluxTurnCount += 1
 	} else {
@@ -264,7 +264,7 @@ func (u *unit) refresh() {
 	u.attackedThisTurn = false
 	u.canReachNode = node{}
 
-	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "afterRefresh", "unit", u.log())
+	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "afterRefresh", u.log()...)
 }
 
 func (u *unit) prioritizeTargets() {
@@ -339,7 +339,7 @@ func (u *unit) reachesNodes(nodes map[gridPosition]*node, hc *hexConfig) (node, 
 // Specifically, the integer incremental error form where error is stored over mulitple moves
 // This algorithm prioritizes straight line movement. It is not guaranteed the final position is reached.
 func (u *unit) getNewPos() (position, func()) {
-	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "getNewPos", "currentPos", u.position.log())
+	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "getNewPos", u.position.log()...)
 
 	if u.currentTarget.isZero() {
 		return u.position, func() {}
@@ -422,13 +422,11 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 		panic("Need to set a unit target")
 	}
 
-	var targetLog []slog.Attr
-	if target.isZero() {
-		targetLog = nil
-	} else {
-		targetLog = target.log()
+	var targetLog = []slog.Attr{slog.String("unit target", unitTarget)}
+	if !target.isZero() {
+		targetLog = append(targetLog, target.log()...)
 	}
-	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "updateTarget", "unitTarget", unitTarget, "target", targetLog)
+	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "updateTarget", targetLog...)
 }
 
 func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathing, hc *hexConfig) {

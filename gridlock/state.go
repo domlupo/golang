@@ -2,6 +2,7 @@
 package main
 
 import (
+	"log/slog"
 	"math"
 )
 
@@ -94,7 +95,7 @@ func (s *state) analyzeTargets() {
 }
 
 func (s *state) moveUnits() {
-	logger.log(infoLevel, stateLogType, "moveUnits", "unitCount", len(s.units))
+	logger.log(infoLevel, stateLogType, "moveUnits", slog.Int("unitCount", len(s.units)))
 
 	var unitsMovedCount int
 	var unitsAlreadyAttacked int
@@ -185,12 +186,12 @@ func (s *state) moveUnits() {
 		debugLevel,
 		stateLogType,
 		"moveUnits",
-		"units moved", unitsMovedCount,
-		"units without target", unitsWithoutTarget,
-		"units at node", unitsAtNode,
-		"units collided", unitsCollideCount,
-		"units already attacked", unitsAlreadyAttacked,
-		"unit at final position", unitsAtFinalPosition,
+		slog.Int("units moved", unitsMovedCount),
+		slog.Int("units without target", unitsWithoutTarget),
+		slog.Int("units at node", unitsAtNode),
+		slog.Int("units collided", unitsCollideCount),
+		slog.Int("untis already attacked", unitsAlreadyAttacked),
+		slog.Int("units at final position", unitsAtFinalPosition),
 	)
 }
 
@@ -489,8 +490,8 @@ func (s *state) attackUnits() {
 		debugLevel,
 		stateLogType,
 		"attackUnits",
-		"units attacked", unitAttackedOtherUnitCount,
-		"units deleted", unitsDeletedCount,
+		slog.Int("units attacked", unitAttackedOtherUnitCount),
+		slog.Int("units deleted", unitsDeletedCount),
 	)
 }
 
@@ -528,10 +529,10 @@ func (s *state) attackNodes() {
 		debugLevel,
 		stateLogType,
 		"attackNodes",
-		"no target node", noTargetNodeCount,
-		"attacked unit this turn", attackedUnitThisTurnCount,
-		"attacked node this turn", attackedNodeThisTurnCount,
-		"cannot reach node", cannotReachNodeCount,
+		slog.Int("no target node", noTargetNodeCount),
+		slog.Int("attacked unit this turn", attackedNodeThisTurnCount),
+		slog.Int("attacked node this turn", attackedNodeThisTurnCount),
+		slog.Int("cannot reach node", cannotReachNodeCount),
 	)
 }
 

@@ -4,6 +4,7 @@ package main
 
 import (
 	"image/color"
+	"log/slog"
 	"math"
 
 	"github.com/gofrs/uuid/v5"
@@ -88,7 +89,7 @@ func (os obstacles) getGroups(hc *hexConfig) []obstacles {
 
 		id, err := uuid.NewV4()
 		if err != nil {
-			logger.log(errorLevel, noLogType, "getGroups", "failed to generate UUID", err)
+			logger.log(errorLevel, noLogType, "getGroups", slog.String("failed to generate UUID", err.Error()))
 			panic("cannot getGroups since uuid generation failed")
 		}
 

@@ -19,9 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Update logger to be strongly typed by using logAttrs isntead of log any()
-  - There are several logging helpers that are buggy as well. I should fix these issues.
-
 - Fix HACKS added during multi obstacle implementation.
   - Determine if high level unit tests should be added now or punted till later.
   - Handle setting up visiblity grids edge cases e.g. obstacle on border, etc
