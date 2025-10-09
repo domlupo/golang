@@ -25,38 +25,35 @@ Is there a mobile equivalent for war/4x games?
     for multiple I can switch pathind mode based on number of nearby units (current hex, 7 hex, etc)
   - How can I take advantage of spatial partitioning
   - How do obstacles affect this?
-  - What is current FLUX implementaiton most similar? The largest issue with current flux implementation is that it is a 
-    bit random. If I use noticeable CPU I need to guarantee it makes the global and local situation better. I also need
-    to make sure it is deterministic and helps the player experience. I don't want unknown experience in the game when
-    this can be prevented.
-  - Think through desired player experience
+  - If I use noticeable CPU I need to guarantee it makes the global and local situation better. I also need
+    to make sure it is deterministic and helps the player experience. I don't want unknown experience in the game.
+    I would prefer less total unit count with deterministic pathfinding than more unknown unit pathing.
+  - Desired player experiences:
+    -  Don't allow two units to get stuck around obstacle causing a backup of units
+    -  Units apporaching other units attacking, path around to form infantry lines. 
+    -  When the gap is fully blocked, units pack in. 
+  - Don't need to always repathfind theta* when movement change is small. 
   - What are common issues I will face?
     - bottle necks where units need to fill in around obstacles since too much production is occuring
     - Should units be able to realize a path is blocked and go another other way? This seems bad player
       experience because then player target location is just a suggestion
   - What are long term issues I will face?
     - bigger units getting stuck?
-    - tank being able to affect other units?
   - Can use various stats to switch pathing mode:
     - hex unit count 
     - is unit blocked on another unit?
     - how long has unit been blocked.
     - los checks
     - etc
-  - Evalualte likely options
-  - Likely Options so far:
+  - Start with simple methods that may have more future uses:
+    - flow fields
+    - flocking behaviors
+    - steering
+  - More complex methods can be looked into later if needed:
     - CBS (a* or theta* probably possible)
     - Enhanced Conflict Based Search (Not optimal, but faster computation) https://www.ijcai.org/Proceedings/15/Papers/110.pdf
     - Meta agent conflict based search (optimization for units which collide frequently with eachother)
     - Geometric MAPF or MAPF for large agents (LAMAPF) https://ojs.aaai.org/index.php/AAAI/article/view/4756 
-    - flow fields
-    - flocking behaviors
-    - steering
-    - dynamic obstacle avoidance
-    - continuum crowds
-    - visiblity grids?
-    - anonymous (Two units are conflicting, once one is unstuck the other can proceed. Order doesn't matter)
-    - If randomness is desired, Rapidly-exploring random tree can be used.
 
 - Fix units and unwalkable terrain issues:
   - what is the best way to avoid this? Should I explcitly use CPU for checks or keep state in sync?
@@ -95,6 +92,7 @@ Is there a mobile equivalent for war/4x games?
     verify what visbiltiy grids a unit should take when targetting a pixel pos with a given grid 
     position, I can then only calculate the final path. If obstacles and nodes are not dynamic this 
     will probably be easy. Essentially, avoid cache invalidation.
+  - Current theta* implementation is not finding shortest path for multi obstacle. 
   - For pixel pathing may optimize by adding two fields:
     - nearestUnwalkabledDistance int
     - nearestUnwalkable pixelPosition
@@ -614,8 +612,10 @@ Pathfinding algorithm types:
 
 Other considerations:
 
-- Anonymous Multi-agent pathfinding: Set of targets to reach but specific agent does not matter
-- Can use nav meshes to optimize or simplify searches
+- Anonymous Multi-agent pathfinding: 
+  - Set of targets to reach but specific agent does not matter
+  - Might be useful for infantry collide together on front lines
+- Nav mesh is being used via free movement hexagons vs obstacle hexagon.
 - Use window searches aka use smaller searches to lower CPU usage
 - If randomness is desired, Rapidly-exploring random tree can be used.
 
@@ -626,6 +626,7 @@ Probably don't want:
   - LPA* Life long planning A*
   - LPCBS Lifelong planning conflict-based search
 - ICT seems way too complex for minimal gains over a* (https://www.sciencedirect.com/science/article/pii/S0004370212001543)
+- Continuum crowds. Large crowds moving alot seems rare e.g. missile blowing up a lot of units.
  
 CBS in depth notes: https://www.sciencedirect.com/science/article/pii/S0004370214001386
 
@@ -669,6 +670,34 @@ CBS in depth notes: https://www.sciencedirect.com/science/article/pii/S000437021
 - CBS behavors poorly for strongly coupled units aka high rate of internal conflicts.
 - MA-CBS tries to overcome this by merging agents into a meta agent.
 - A* can sometimes outperform CBS. CBS sometimes outperforms A*. Generally CBS is worst when a lot of conflicts occur.
+
+- Idea to limit CPU usage. What about token bucket and units have a priority queue.
+  Only allow so much complex pathing to occur over a span of time.
+
+- Flow fields
+  - Using pixel pathing struct, I can check the 9 adjacent squares to find the direction of the nearest obstacle.
+  - Can add flow fields based on nearby obstacles and sum thier fluxes to get a single final directon.
+  - longer obstacles can have stronger fluxs so units don't start don't long path.
+- Flocking
+  - Three main types:
+    - separation
+    - alignment
+    - cohesion
+  - There are several other types available.
+  - Can sum points for units within a hexagon or units within the nearest 7 hexagons
+    - can sum units in different groups e.g. not moving since attacking, not moivng since blocked, etc
+    - units can move towards or away from this point
+- Streering
+  - Can use spheres around non spherical objects for object avoidance e.g. hexagon has a sphere, if a unit
+    collides with the sphere push it away. I could also create a sphere that grows bigger when X units
+    are withn a hexagon. Object avoidance is different than collision detection.
+  - Can use a sphere in front of a units direction to test for object avoidance
+  - This includes path following and unaligned collision avoidance which may be needed for airplanes.
+  - Can use steering behaviors to make infantry avoids tanks
+  - Can prioritze steering behaviors e.g. do X unless 0. do Y if X is 0 and Y is not 0. Do Z if X and Y are 0.
+  - Can merge streering behavior together to get combined direction and velocity.
+- dynamic obstacle avoidance
+  - can be used for non infantry units. It is probably CPU intensive.
 
 Have read through several college publications and game ai pro articles not linked above:
 
