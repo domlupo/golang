@@ -102,7 +102,7 @@ func (f *flux) refresh() {
 	f.hexSide = noSide
 }
 
-func (f *flux) draw(dc drawContext, fluxPos gridPosition) {
+func (f *flux) draw(dc drawConfig, fluxPos gridPosition) {
 	if f.magnitude == 0 {
 		return
 	}

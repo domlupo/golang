@@ -8,7 +8,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-type drawContext struct {
+type drawConfig struct {
 	screen *ebiten.Image
 	// windowMultiplier must only be used for drawing images and windows.
 	// Never use for game logic. float32 rather than idiomatic float64
@@ -39,13 +39,13 @@ type drawContext struct {
 	drawTriangleDefaultImage      *ebiten.Image
 }
 
-func newDrawContext() *drawContext {
+func newDrawConfig() *drawConfig {
 	// TODO: check if this should use a subimage if final game uses draw triangle.
 	// Not investigating now since draw triangle may not be used in final game.
 	drawTriangleDefaultImage := ebiten.NewImage(1, 1)
 	drawTriangleDefaultImage.Fill(color.White)
 	highlightColor := color.RGBA{70, 255, 0, 200}
-	dc := drawContext{
+	dc := drawConfig{
 		screen:           nil,
 		windowMultiplier: 2.5,
 		// aspect ratio config (16:9 aspect ratio)
@@ -84,7 +84,7 @@ func newDrawContext() *drawContext {
 	return &dc
 }
 
-func drawUnfilledBoxFloat32(dc drawContext, color color.Color, initialX float32, initialY float32, finalX float32, finalY float32) {
+func drawUnfilledBoxFloat32(dc drawConfig, color color.Color, initialX float32, initialY float32, finalX float32, finalY float32) {
 	initialXGraphical := float32(initialX) * dc.windowMultiplier
 	initialYGraphical := float32(initialY) * dc.windowMultiplier
 	finalXGraphical := float32(finalX) * dc.windowMultiplier
@@ -137,11 +137,11 @@ func drawUnfilledBoxFloat32(dc drawContext, color color.Color, initialX float32,
 	)
 }
 
-func drawUnfilledBoxInt(dc drawContext, color color.Color, initialX int, initialY int, finalX int, finalY int) {
+func drawUnfilledBoxInt(dc drawConfig, color color.Color, initialX int, initialY int, finalX int, finalY int) {
 	drawUnfilledBoxFloat32(dc, color, float32(initialX), float32(initialY), float32(finalX), float32(finalY))
 }
 
-func drawDebug(dc drawContext, drawDebugGrid bool) {
+func drawDebug(dc drawConfig, drawDebugGrid bool) {
 	if !drawDebugGrid {
 		return
 	}
@@ -236,7 +236,7 @@ type drawTriangleColor struct {
 	alpha float32
 }
 
-func drawHex(dc drawContext, gridPos gridPosition, color drawTriangleColor, selected bool) {
+func drawHex(dc drawConfig, gridPos gridPosition, color drawTriangleColor, selected bool) {
 	center := gridPos.getPixelPosOutbounds(center, &dc.hexConfig)
 	north := gridPos.getPixelPosOutbounds(northPoint, &dc.hexConfig)
 	northeast := gridPos.getPixelPosOutbounds(northeastPoint, &dc.hexConfig)

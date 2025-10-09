@@ -588,7 +588,7 @@ func (u unit) log() []slog.Attr {
 	return a
 }
 
-func (u *unit) draw(dc drawContext, selected bool) {
+func (u *unit) draw(dc drawConfig, selected bool) {
 	var unitColor color.Color
 	switch u.player {
 	case bluePlayer:

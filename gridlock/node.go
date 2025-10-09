@@ -50,7 +50,7 @@ func (n node) isZero() bool {
 	return n.player == noPlayer && n.gridPos.x == 0 && n.gridPos.y == 0 && n.target.layer == noLayer
 }
 
-func (n *node) drawNode(dc drawContext) {
+func (n *node) drawNode(dc drawConfig) {
 	var red float32
 	var blue float32
 	var green float32
@@ -93,7 +93,7 @@ func (n *node) drawNode(dc drawContext) {
 	}
 }
 
-func (n *node) drawTargets(dc drawContext, drawBlueTargets bool, drawRedTargets bool) {
+func (n *node) drawTargets(dc drawConfig, drawBlueTargets bool, drawRedTargets bool) {
 	var nodeColor color.Color
 	switch n.player {
 	case bluePlayer:

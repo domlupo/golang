@@ -391,11 +391,11 @@ func (os obstacles) setupObstacleTargets(hc *hexConfig) map[pixelPosition]*obsta
 	return targets
 }
 
-func (o obstacle) drawObstacle(dc drawContext) {
+func (o obstacle) drawObstacle(dc drawConfig) {
 	drawHex(dc, o.gridPos, drawTriangleColor{red: 0.2, blue: 0.2, green: 0.2, alpha: 0.8}, false)
 }
 
-func (o obstacle) drawVisibilityGrid(dc drawContext) {
+func (o obstacle) drawVisibilityGrid(dc drawConfig) {
 	for _, ot := range *o.visibilityGrid {
 		vector.DrawFilledCircle(
 			dc.screen,
@@ -416,7 +416,7 @@ func (o obstacle) drawVisibilityGrid(dc drawContext) {
 	}
 }
 
-func (pp pixelPathing) draw(dc drawContext) {
+func (pp pixelPathing) draw(dc drawConfig) {
 	for pixelPos, pathing := range pp {
 		if !pathing.walkable {
 			vector.DrawFilledRect(

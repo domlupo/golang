@@ -20,7 +20,7 @@ import (
 var logger l
 
 type Game struct {
-	*drawContext
+	*drawConfig
 	backgroundColor          color.RGBA
 	produceWait              time.Duration
 	produceInterval          time.Duration
@@ -66,7 +66,7 @@ type Game struct {
 
 func newGame() Game {
 	g := Game{
-		drawContext:             newDrawContext(),
+		drawConfig:              newDrawConfig(),
 		backgroundColor:         color.RGBA{200, 200, 200, 255},
 		produceWait:             1_000_000 * time.Second,
 		produceInterval:         3 * time.Second,
@@ -105,8 +105,8 @@ func (g *Game) restart() {
 	// TODO: Need to restart timers, etc
 	g.compOne = *newComputer(bluePlayer)
 	g.compTwo = *newComputer(redPlayer)
-	nodes := setupNodes(leftVsRightVerticalOffset, &g.drawContext.hexConfig, g.initialNodeHealth)
-	obstacles, pixelPathing := setupObstacles(multiObstacle, &g.drawContext.hexConfig)
+	nodes := setupNodes(leftVsRightVerticalOffset, &g.drawConfig.hexConfig, g.initialNodeHealth)
+	obstacles, pixelPathing := setupObstacles(multiObstacle, &g.drawConfig.hexConfig)
 
 	for nPos := range nodes {
 		for oPos := range obstacles {
@@ -116,7 +116,7 @@ func (g *Game) restart() {
 		}
 	}
 
-	g.gameState = newState(nodes, obstacles, pixelPathing, &g.drawContext.hexConfig, g.enableFlux)
+	g.gameState = newState(nodes, obstacles, pixelPathing, &g.drawConfig.hexConfig, g.enableFlux)
 	g.updateComputerTargetNodes()
 }
 
@@ -268,18 +268,18 @@ func (g *Game) updateComputerTargetNodes() {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	if g.drawContext.screen == nil {
-		g.drawContext.screen = screen
+	if g.drawConfig.screen == nil {
+		g.drawConfig.screen = screen
 	}
 
-	screen.Fill(g.drawContext.backgroundColor)
-	drawDebug(*g.drawContext, g.drawDebugGrid)
-	g.gameState.draw(*g.drawContext, g.drawBlueTargets, g.drawRedTargets, g.drawFluxes, g.drawVisibilityGrids, g.drawPixelPathing)
+	screen.Fill(g.drawConfig.backgroundColor)
+	drawDebug(*g.drawConfig, g.drawDebugGrid)
+	g.gameState.draw(*g.drawConfig, g.drawBlueTargets, g.drawRedTargets, g.drawFluxes, g.drawVisibilityGrids, g.drawPixelPathing)
 
 	if g.leftMouseHeld {
 		drawUnfilledBoxFloat32(
-			*g.drawContext,
-			g.drawContext.highlightColor,
+			*g.drawConfig,
+			g.drawConfig.highlightColor,
 			g.initialSelectedX,
 			g.initialSelectedY,
 			g.currentSelectedX,
