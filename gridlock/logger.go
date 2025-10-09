@@ -130,12 +130,12 @@ func (logger l) log(level level, logType logType, msg string, attrs ...slog.Attr
 
 	switch level {
 	case debugLevel:
-		logger.LogAttrs(context.TODO(), slog.LevelDebug, msg, attrs...)
+		logger.LogAttrs(context.Background(), slog.LevelDebug, msg, attrs...)
 	case infoLevel:
-		logger.LogAttrs(context.TODO(), slog.LevelInfo, msg, attrs...)
+		logger.LogAttrs(context.Background(), slog.LevelInfo, msg, attrs...)
 	case warnLevel:
-		logger.LogAttrs(context.TODO(), slog.LevelWarn, msg, attrs...)
+		logger.LogAttrs(context.Background(), slog.LevelWarn, msg, attrs...)
 	case errorLevel:
-		logger.LogAttrs(context.TODO(), slog.LevelError, msg, attrs...)
+		logger.LogAttrs(context.Background(), slog.LevelError, msg, attrs...)
 	}
 }
