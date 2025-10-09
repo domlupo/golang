@@ -19,6 +19,51 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Investigate local path finding solutions:
+  - Start simple. This is probably going to be one of the most complex parts to implement. It will require iteration.
+  - It is fine to only find a solution that solves a few unit collisions. In the future if this is too CPU intensive
+    for multiple I can switch pathind mode based on number of nearby units (current hex, 7 hex, etc)
+  - How can I take advantage of spatial partitioning
+  - How do obstacles affect this?
+  - What is current FLUX implementaiton most similar? The largest issue with current flux implementation is that it is a 
+    bit random. If I use noticeable CPU I need to guarantee it makes the global and local situation better. I also need
+    to make sure it is deterministic and helps the player experience. I don't want unknown experience in the game when
+    this can be prevented.
+  - Think through desired player experience
+  - What are common issues I will face?
+    - bottle necks where units need to fill in around obstacles since too much production is occuring
+    - Should units be able to realize a path is blocked and go another other way? This seems bad player
+      experience because then player target location is just a suggestion
+  - What are long term issues I will face?
+    - bigger units getting stuck?
+    - tank being able to affect other units?
+  - Can use various stats to switch pathing mode:
+    - hex unit count 
+    - is unit blocked on another unit?
+    - how long has unit been blocked.
+    - los checks
+    - etc
+  - Evalualte likely options
+  - Likely Options so far:
+    - CBS (a* or theta* probably possible)
+    - Enhanced Conflict Based Search (Not optimal, but faster computation) https://www.ijcai.org/Proceedings/15/Papers/110.pdf
+    - Meta agent conflict based search (optimization for units which collide frequently with eachother)
+    - Geometric MAPF or MAPF for large agents (LAMAPF) https://ojs.aaai.org/index.php/AAAI/article/view/4756 
+    - flow fields
+    - flocking behaviors
+    - steering
+    - dynamic obstacle avoidance
+    - continuum crowds
+    - visiblity grids?
+    - anonymous (Two units are conflicting, once one is unstuck the other can proceed. Order doesn't matter)
+    - If randomness is desired, Rapidly-exploring random tree can be used.
+
+- Fix units and unwalkable terrain issues:
+  - what is the best way to avoid this? Should I explcitly use CPU for checks or keep state in sync?
+  - How can i avoid performing HACK for LOS override when units end up in walkable terrain
+  - Does pixelPathing need used? I might be able to not use pixelPathing and use caching since
+    unwalkable terrain lifetime is static over an entire game.
+
 - Fix HACKS added during multi obstacle implementation.
   - Determine if high level unit tests should be added now or punted till later.
   - Handle setting up visiblity grids edge cases e.g. obstacle on border, etc
@@ -59,13 +104,6 @@ Is there a mobile equivalent for war/4x games?
   - line intersect check will probably be much better than switching from map to array for cache locality.
   - current CPU profiling shows map access during lineOfSight checks are taking up significant CPU
   - can reduce number of line checks at game start e.g. 2 hexagons connecetd only have 10 sides, not 12.
-
-- Design and implement nearby unit path finding algorithm:
-  - theta star
-  - visiblility grids
-  - spat part
-  - steering, flocking, etc
-  - etc
 
 - Determine if I need to implement separating axis theorem for collision other than (circle <-> circle)
   - Right now node collision is hacky. It is just a circle that is smaller than the hexagon.
@@ -115,21 +153,6 @@ Is there a mobile equivalent for war/4x games?
       - Counter missile will either need to travel faster than tracked missile or anticipate movement?
     - Added guided missile variant will probably help but might be low priority?
 
-- Improve computer
-  - Update computer to be beatable by humans
-  - Should computer units prioritize nodes or units?
-  - Investigate, there may be a bug where when a node is captured by a computer player, unit targets incorrectly become node
-    when a local target is already acquired.
-
-- Create more node setup test scenarios
-  - Able to easily reproduce and test precise setups for edge case issues
-  - Able to randomly generated setups to find hidden edge case issues
-
-- Polish UI
-  - Currently it is very hard to fight computer due to clunky UI
-  - Easier way to select all nodes of same type with double click
-  - Better automated targetting from units. e.g. units don't auto target nodes when they should.
-
 - Set a deadline and plan for a polished MVP
   - This should be multiplayer playable by friends via browser.
   - A vertical slice of MVP features. 
@@ -158,6 +181,21 @@ Is there a mobile equivalent for war/4x games?
 - Refactor how state, setups, and pathing is initialized. The current structure is poor.
 
 - How can I use more unit tests? Or how can i write automated high level tests.
+
+- Improve computer
+  - Update computer to be beatable by humans
+  - Should computer units prioritize nodes or units?
+  - Investigate, there may be a bug where when a node is captured by a computer player, unit targets incorrectly become node
+    when a local target is already acquired.
+
+- Create more node setup test scenarios
+  - Able to easily reproduce and test precise setups for edge case issues
+  - Able to randomly generated setups to find hidden edge case issues
+
+- Polish UI
+  - Currently it is very hard to fight computer due to clunky UI
+  - Easier way to select all nodes of same type with double click
+  - Better automated targetting from units. e.g. units don't auto target nodes when they should.
 
 - Do I need to think about layers more?
   - Right now I think this decision can only be known far in the future and it should be 
@@ -580,6 +618,7 @@ Pathfinding algorithm types:
 - Group:
   - flow fields
   - flocking behaviors
+  - steering
   - dynamic obstacle avoidance
   - continuum crowds
 
