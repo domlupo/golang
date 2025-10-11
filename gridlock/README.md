@@ -333,20 +333,6 @@ Is there a mobile equivalent for war/4x games?
 
 ---
 
-## Commands
-
-```find . -type f -name "*.go" -exec wc -l {} +```
-
-```go tool pprof -http=:6060 cpu.prof```
-
-```go tool pprof -http=:6060 mem.prof```
-
-```go test -v -cover -coverprofile=c.out```
-
-```go tool cover -html=c.out```
-
----
-
 ## Closed Decisions
 
 1. No worker unit or resource collection
