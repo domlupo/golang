@@ -6,6 +6,7 @@ import (
 )
 
 func TestGetPixelPos(t *testing.T) {
+	t.Parallel()
 	lookUpTable := newHexLookUpTable()
 	hc := hexConfig{
 		lookUpTable:  lookUpTable,
@@ -130,6 +131,7 @@ func TestGetPixelPos(t *testing.T) {
 }
 
 func TestGetGridPos(t *testing.T) {
+	t.Parallel()
 	lookUpTable := newHexLookUpTable()
 	hc := hexConfig{
 		lookUpTable:  lookUpTable,
@@ -893,7 +895,7 @@ func TestGetGridPos(t *testing.T) {
 
 // TODO: write higher level tests with more cases once more source code is implemented, these are too low level and sparse.
 func TestIntersects(t *testing.T) {
-
+	t.Parallel()
 	var tests = []struct {
 		l1               line
 		l2               line
