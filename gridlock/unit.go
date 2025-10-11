@@ -435,12 +435,6 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathi
 		current := path[len(path)-1]
 		obstacleTarget, los := current.obstacleTarget(u.pixelPosition, pixelPathing, obstacles, hc)
 
-		// TODO: Fix hack for units getting stuck in unwakable terrain
-		if !pixelPathing[u.pixelPosition].walkable {
-			u.debugFlag = true
-			los = true
-		}
-
 		if los {
 			break
 		}

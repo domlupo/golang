@@ -100,6 +100,7 @@ func (s *state) moveUnits() {
 	var unitsMovedCount int
 	var unitsAlreadyAttacked int
 	var unitsWithoutTarget int
+	var unitsAtUnwalkable int
 	var unitsAtNode int
 	var unitsAtFinalPosition int
 	var unitsCollideCount int
@@ -123,6 +124,11 @@ func (s *state) moveUnits() {
 
 		if u.x == newPos.x && u.y == newPos.y {
 			unitsAtFinalPosition++
+			continue
+		}
+
+		if !s.pixelPathing[newPos.pixelPosition].walkable {
+			unitsAtUnwalkable++
 			continue
 		}
 
@@ -188,6 +194,7 @@ func (s *state) moveUnits() {
 		"moveUnits",
 		slog.Int("units moved", unitsMovedCount),
 		slog.Int("units without target", unitsWithoutTarget),
+		slog.Int("units at unwalkable", unitsAtUnwalkable),
 		slog.Int("units at node", unitsAtNode),
 		slog.Int("units collided", unitsCollideCount),
 		slog.Int("untis already attacked", unitsAlreadyAttacked),

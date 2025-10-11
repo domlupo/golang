@@ -55,11 +55,9 @@ Is there a mobile equivalent for war/4x games?
     - Meta agent conflict based search (optimization for units which collide frequently with eachother)
     - Geometric MAPF or MAPF for large agents (LAMAPF) https://ojs.aaai.org/index.php/AAAI/article/view/4756 
 
-- Fix units and unwalkable terrain issues:
-  - what is the best way to avoid this? Should I explcitly use CPU for checks or keep state in sync?
-  - How can i avoid performing HACK for LOS override when units end up in walkable terrain
-  - Does pixelPathing need used? I might be able to not use pixelPathing and use caching since
-    unwalkable terrain lifetime is static over an entire game.
+- Fix units colliding into hexagon obstacles:
+  - Can add collision detection for hexagon obstacles. Probl need spat partitioning
+  - Can make hexagon obstacles visually smaller
 
 - Fix HACKS added during multi obstacle implementation.
   - Determine if high level unit tests should be added now or punted till later.
