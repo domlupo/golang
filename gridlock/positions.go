@@ -6,11 +6,6 @@ import (
 	"log/slog"
 )
 
-type hexagon struct {
-	linkedList *unit
-	unitCount  int
-}
-
 // developer readable low resolution position used for grid items e.g. nodes
 type gridPosition struct {
 	x int

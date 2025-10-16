@@ -36,6 +36,8 @@ type drawConfig struct {
 	redPlayerNodeColor            color.RGBA
 	redPlayerUnitColor            color.RGBA
 	neutralNodeColor              color.RGBA
+	avgUnitPosRadius              int
+	avgUnitPosColor               color.Color
 	drawTriangleDefaultImage      *ebiten.Image
 }
 
@@ -70,6 +72,8 @@ func newDrawConfig() *drawConfig {
 		redPlayerNodeColor:            color.RGBA{255, 0, 0, 100},
 		redPlayerUnitColor:            color.RGBA{255, 0, 0, 100},
 		neutralNodeColor:              color.RGBA{100, 60, 100, 200},
+		avgUnitPosRadius:              1,
+		avgUnitPosColor:               color.Black,
 		drawTriangleDefaultImage:      drawTriangleDefaultImage,
 		roygbivColors: []color.RGBA{
 			{200, 0, 0, 255},

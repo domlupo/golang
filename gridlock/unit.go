@@ -32,9 +32,6 @@ var infantryConfig = unitConfig{
 	attacksHighAltitude:  false,
 	attacksPosition:      false,
 	explodeAtTerminalPos: false,
-	fluxTurnCountDelay:   10,
-	fluxMagnitude:        5,
-	fluxExpireMax:        5,
 	explodeRadius:        0,
 }
 var sniperConfig = unitConfig{
@@ -51,9 +48,6 @@ var sniperConfig = unitConfig{
 	attacksHighAltitude:  false,
 	attacksPosition:      false,
 	explodeAtTerminalPos: false,
-	fluxTurnCountDelay:   10,
-	fluxMagnitude:        10,
-	fluxExpireMax:        10,
 	explodeRadius:        0,
 }
 
@@ -73,9 +67,6 @@ var unguidedGroundMissileConfig = unitConfig{
 	attacksHighAltitude:  false,
 	attacksPosition:      true,
 	explodeAtTerminalPos: true,
-	fluxTurnCountDelay:   10,
-	fluxMagnitude:        10,
-	fluxExpireMax:        10,
 	explodeRadius:        100,
 }
 var guidedAirMissileConfig = unitConfig{
@@ -92,9 +83,6 @@ var guidedAirMissileConfig = unitConfig{
 	attacksHighAltitude:  true,
 	attacksPosition:      false,
 	explodeAtTerminalPos: true,
-	fluxTurnCountDelay:   10,
-	fluxMagnitude:        10,
-	fluxExpireMax:        10,
 	explodeRadius:        100,
 }
 
@@ -134,11 +122,7 @@ type unitConfig struct {
 	attacksHighAltitude  bool
 	attacksPosition      bool
 	explodeAtTerminalPos bool
-	// TODO: Figure out better flux names
-	fluxTurnCountDelay int
-	fluxMagnitude      int
-	fluxExpireMax      int
-	explodeRadius      int
+	explodeRadius        int
 }
 
 func (uc unitConfig) log() []slog.Attr {
@@ -187,27 +171,31 @@ func (uc unitConfig) log() []slog.Attr {
 type unit struct {
 	id uuid.UUID
 	position
-	player             player
-	currentTarget      position
-	fluxTarget         position
-	enemyTarget        position
-	localTarget        position
-	localTargets       []position
-	globalTarget       position
-	pathGlobalTarget   bool
-	fluxTurnCount      int
-	atTerminalPosition bool
-	bresenhamError     *int
-	nextBresenhamError *int
+	player              player
+	currentTarget       position
+	fluxTarget          position
+	enemyTarget         position
+	localTarget         position
+	localTargets        []position
+	globalTarget        position
+	pathGlobalTarget    bool
+	fluxTurnCount       int
+	fluxTurnCountLimit  int
+	fluxTurnCooldown    int
+	fluxTurnCooldownMax int
+	fluxMagnitude       int
+	fluxCollisionLimit  int
+	atTerminalPosition  bool
+	bresenhamError      *int
+	nextBresenhamError  *int
 	unitConfig
 	health           int
-	movedLastTurn    bool
 	movedThisTurn    bool
-	attackedLastTurn bool
 	attackedThisTurn bool
+	AtUnwalkable     bool
+	AtCollision      bool
 	canReachNode     node
 	selected         bool
-	fluxExpireCount  int
 	prior            *unit
 	next             *unit
 	producedAt       int
@@ -221,30 +209,19 @@ func newUnit(p player, globalTarget position, uc unitConfig, pos position, produ
 		panic("cannot newUnit since uuid generation failed")
 	}
 	u := unit{
-		id:                 id,
-		position:           pos,
-		player:             p,
-		currentTarget:      position{},
-		fluxTarget:         position{},
-		enemyTarget:        position{},
-		localTarget:        position{},
-		localTargets:       []position{},
-		globalTarget:       globalTarget,
-		pathGlobalTarget:   true,
-		fluxTurnCount:      0,
-		atTerminalPosition: false,
-		bresenhamError:     nil,
-		nextBresenhamError: nil,
-		unitConfig:         uc,
-		health:             uc.maxHealth,
-		movedLastTurn:      false,
-		movedThisTurn:      false,
-		attackedLastTurn:   false,
-		attackedThisTurn:   false,
-		canReachNode:       node{},
-		selected:           selected,
-		fluxExpireCount:    uc.fluxExpireMax,
-		producedAt:         producedOrder,
+		id:                  id,
+		position:            pos,
+		player:              p,
+		globalTarget:        globalTarget,
+		pathGlobalTarget:    true,
+		fluxTurnCooldownMax: 10,
+		fluxTurnCountLimit:  10,
+		fluxMagnitude:       10,
+		fluxCollisionLimit:  2,
+		unitConfig:          uc,
+		health:              uc.maxHealth,
+		selected:            selected,
+		producedAt:          producedOrder,
 	}
 
 	return u
@@ -252,36 +229,32 @@ func newUnit(p player, globalTarget position, uc unitConfig, pos position, produ
 
 func (u *unit) refresh() {
 	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "beforeRefresh", u.log()...)
-	if !u.attackedLastTurn && !u.movedLastTurn {
-		u.fluxTurnCount += 1
-	} else {
-		u.fluxTurnCount = 0
+	if u.fluxTurnCooldown != 0 {
+		u.fluxTurnCooldown--
 	}
-
-	u.movedLastTurn = u.movedThisTurn
 	u.movedThisTurn = false
-	u.attackedLastTurn = u.attackedThisTurn
 	u.attackedThisTurn = false
-	u.canReachNode = node{}
-
-	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "afterRefresh", u.log()...)
+	u.AtUnwalkable = false
+	u.AtCollision = false
 }
 
 func (u *unit) prioritizeTargets() {
-	if !u.fluxTarget.isZero() {
+	if !u.fluxTarget.isZero() && u.fluxTurnCount < u.fluxTurnCountLimit {
 		u.localTargets = []position{}
-		u.fluxExpireCount = max(u.fluxExpireCount-1, 0)
 		u.updateTarget(currentTarget, u.fluxTarget)
-		if u.fluxExpireCount == 0 {
-			u.fluxTarget = position{}
-			u.fluxExpireCount = u.fluxExpireMax
-		}
+		u.fluxTurnCount++
 	} else if !u.enemyTarget.isZero() {
+		u.fluxTurnCount = 0
+		u.fluxTarget = position{}
 		u.localTargets = []position{}
 		u.updateTarget(currentTarget, u.enemyTarget)
 	} else if len(u.localTargets) > 0 {
+		u.fluxTurnCount = 0
+		u.fluxTarget = position{}
 		u.updateTarget(currentTarget, u.localTargets[len(u.localTargets)-1])
 	} else {
+		u.fluxTurnCount = 0
+		u.fluxTarget = position{}
 		// TODO: determine behavior. Right now this path may occur for multiple reasons or only one.
 		// The reason I am sure of is it occurs after a targeted unit dies off since there is no path
 		// for the unit to continue. The issue is that that this might cause units to pause for an entire
@@ -290,12 +263,12 @@ func (u *unit) prioritizeTargets() {
 	}
 }
 
-func (u *unit) reachesNodes(nodes map[gridPosition]*node, hc *hexConfig) (node, bool) {
-	if u.layer == lowAltitude || u.layer == highAltitude {
-		return node{}, false
-	}
+func (u *unit) reachesNodes(nodes map[gridPosition]*node, hc *hexConfig) {
+	u.canReachNode = node{}
 
-	var nodeReached node
+	if u.layer == lowAltitude || u.layer == highAltitude {
+		return
+	}
 
 	x1 := u.x
 	y1 := u.y
@@ -323,16 +296,13 @@ func (u *unit) reachesNodes(nodes map[gridPosition]*node, hc *hexConfig) (node, 
 		rSum := r1 + r2
 
 		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
-			if !nodeReached.isZero() {
+			if !u.canReachNode.isZero() {
 				logger.log(infoLevel, undecidedBehavior, "unit reaches multiple nodes, randomly selected last iterated node")
 			}
-			nodeReached = *n
-			u.canReachNode = nodeReached
-			return nodeReached, !nodeReached.isZero()
+			u.canReachNode = *n
 		}
 	}
 
-	return nodeReached, !nodeReached.isZero()
 }
 
 // Uses Bresenham's line algorithm https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
@@ -393,6 +363,70 @@ func (u *unit) getNewPos() (position, func()) {
 	return newPos, func() { u.completeMove(newPos) }
 }
 
+func (u *unit) getFlux(hex *hexagon, hc *hexConfig) (position, bool) {
+	if u.fluxTurnCooldown != 0 {
+		return position{}, false
+	}
+
+	moveAwayFromUnits := u.AtCollision &&
+		(u.player == bluePlayer && hex.blueUnitsColliding >= u.fluxCollisionLimit) ||
+		(u.player == redPlayer && hex.redUnitsColliding >= u.fluxCollisionLimit)
+
+	moveTowardsHexCenter := u.AtUnwalkable ||
+		(u.AtCollision && (u.player == bluePlayer && hex.blueUnitsAttacking == 0 && hex.blueUnitsColliding >= u.fluxCollisionLimit) ||
+			(u.player == redPlayer && hex.redUnitsAttacking == 0 && hex.redUnitsColliding >= u.fluxCollisionLimit))
+
+	var xDelta int
+	var yDelta int
+	hexCenter, _ := hex.gridPosition.getPixelPos(center, hc)
+
+	if moveAwayFromUnits {
+		switch {
+		case hex.avgUnit.x > u.x:
+			xDelta = -u.fluxMagnitude
+		case hex.avgUnit.x < u.x:
+			xDelta = u.fluxMagnitude
+		case hexCenter.x > u.x:
+			xDelta = u.fluxMagnitude
+		case hexCenter.x < u.x:
+			xDelta = -u.fluxMagnitude
+		default:
+			xDelta = u.fluxMagnitude
+		}
+		switch {
+		case hex.avgUnit.y > u.y:
+			yDelta = -u.fluxMagnitude
+		case hex.avgUnit.y < u.y:
+			yDelta = u.fluxMagnitude
+		case hexCenter.y > u.y:
+			yDelta = -u.fluxMagnitude
+		case hexCenter.y < u.y:
+			yDelta = u.fluxMagnitude
+		default:
+			yDelta = u.fluxMagnitude
+		}
+		return position{layer: u.layer, pixelPosition: pixelPosition{x: u.x + xDelta, y: u.y + yDelta}}, true
+	}
+
+	if moveTowardsHexCenter {
+		switch {
+		case hexCenter.x > u.x:
+			xDelta = u.fluxMagnitude
+		case hexCenter.x < u.x:
+			xDelta = -u.fluxMagnitude
+		}
+		switch {
+		case hexCenter.y > u.y:
+			yDelta = u.fluxMagnitude
+		case hexCenter.y < u.y:
+			yDelta = -u.fluxMagnitude
+		}
+		return position{layer: u.layer, pixelPosition: pixelPosition{x: u.x + xDelta, y: u.y + yDelta}}, true
+	}
+
+	return position{}, false
+}
+
 func (u *unit) updateTarget(ut unitTarget, target position) {
 	var unitTarget string
 	switch ut {
@@ -406,7 +440,6 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 		unitTarget = "currentTarget"
 	case fluxTarget:
 		u.fluxTarget = target
-		u.fluxTurnCount = 0
 		unitTarget = "fluxTarget"
 	case enemyTarget:
 		u.enemyTarget = target
@@ -510,6 +543,7 @@ func (u *unit) getPath(
 func (u *unit) completeMove(pos position) {
 	u.position = pos
 	u.movedThisTurn = true
+	u.fluxTurnCooldown = u.fluxTurnCooldownMax
 	intCopy := &u.nextBresenhamError
 	u.bresenhamError = *intCopy
 }
@@ -571,9 +605,7 @@ func (u unit) log() []slog.Attr {
 	}
 	a = append(a, u.unitConfig.log()...)
 	a = append(a, slog.Int("health", u.health))
-	a = append(a, slog.Bool("movedLastTurn", u.movedLastTurn))
-	a = append(a, slog.Bool("movedLastTurn", u.movedLastTurn))
-	a = append(a, slog.Bool("attackedLastTurn", u.attackedLastTurn))
+	a = append(a, slog.Bool("movedThisTurn", u.movedThisTurn))
 	a = append(a, slog.Bool("attackedThisTurn", u.attackedThisTurn))
 	a = append(a, slog.Int("fluxTurnCount", u.fluxTurnCount))
 	a = append(a, slog.Any("canReachNode", u.canReachNode))

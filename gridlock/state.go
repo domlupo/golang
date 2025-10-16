@@ -15,7 +15,6 @@ type state struct {
 	hexagons           map[gridPosition]*hexagon
 	obstacles          map[gridPosition]*obstacle
 	nodes              map[gridPosition]*node
-	fluxes             map[gridPosition]*flux
 	units              map[position]*unit
 	enableFlux         bool
 	unitsProducedTotal int
@@ -27,42 +26,22 @@ func newState(nodes map[gridPosition]*node, obstacles map[gridPosition]*obstacle
 		hexConfig:    hexConfig,
 		obstacles:    obstacles,
 		pixelPathing: pixelPathing,
-		hexagons:     make(map[gridPosition]*hexagon),
+		hexagons:     setupHexagons(hexConfig),
 		nodes:        nodes,
-		fluxes:       make(map[gridPosition]*flux),
 		units:        make(map[position]*unit),
 		enableFlux:   enableFlux,
-	}
-
-	for i := range s.hexConfig.xIndexMax {
-		for j := range s.hexConfig.yIndexMax {
-			gridPos := gridPosition{i, j}
-			flux := newFlux(gridPos)
-			s.fluxes[gridPos] = &flux
-			hexagon := hexagon{}
-			s.hexagons[gridPos] = &hexagon
-		}
 	}
 
 	return &s
 }
 
 func (s *state) refresh() {
-	for _, flux := range s.fluxes {
-		flux.refresh()
-	}
-
 	for _, u := range s.units {
 		u.refresh()
-
-		if !u.movedLastTurn {
-			gridPos, _ := u.pixelPosition.getGridPos(s.hexConfig)
-			s.fluxes[gridPos].staticUnits++
-		}
 	}
 
-	for _, flux := range s.fluxes {
-		flux.setFluxVector(s)
+	for _, h := range s.hexagons {
+		h.refresh(s.hexConfig)
 	}
 }
 
@@ -72,16 +51,18 @@ func (s *state) analyzeTargets() {
 			continue
 		}
 
-		if s.enableFlux && u.fluxTurnCount > u.fluxTurnCountDelay {
-			gridPos, _ := u.pixelPosition.getGridPos(s.hexConfig)
-			fluxDelta := s.fluxes[gridPos].getFluxDelta(u.fluxMagnitude)
-			u.updateTarget(fluxTarget, position{ground, pixelPosition{u.x + fluxDelta.x, u.y + fluxDelta.y}})
+		uGridPos, uGridPosOk := u.getGridPos(s.hexConfig)
+		if !uGridPosOk {
+			panic("unit grid position must exist")
+		}
+		hex := s.hexagons[uGridPos]
+		if flux, fluxOk := u.getFlux(hex, s.hexConfig); fluxOk {
+			u.updateTarget(fluxTarget, flux)
 		}
 
 		u.reachesNodes(s.nodes, s.hexConfig)
 
 		nearest, _ := s.nearestUnitWithinVision(*u)
-
 		u.updateTarget(enemyTarget, nearest)
 
 		if !u.globalTarget.isZero() && u.pathGlobalTarget {
@@ -91,6 +72,14 @@ func (s *state) analyzeTargets() {
 		}
 
 		u.prioritizeTargets()
+	}
+}
+
+func (s *state) analyzeMoves() {
+	for _, h := range s.hexagons {
+		if h.unitCount != 0 {
+			h.avgUnit = pixelPosition{h.sumUnitX / h.unitCount, h.sumUnitY / h.unitCount}
+		}
 	}
 }
 
@@ -111,6 +100,13 @@ func (s *state) moveUnits() {
 			continue
 		}
 
+		gridPos, _ := u.getGridPos(s.hexConfig)
+		hex := s.hexagons[gridPos]
+
+		// TODO: fix this isn't accurate since it assumes the unit does not move
+		hex.sumUnitX += u.x
+		hex.sumUnitY += u.y
+
 		if u.attackedThisTurn {
 			unitsAlreadyAttacked++
 			continue
@@ -129,6 +125,13 @@ func (s *state) moveUnits() {
 
 		if !s.pixelPathing[newPos.pixelPosition].walkable {
 			unitsAtUnwalkable++
+			u.AtUnwalkable = true
+			switch u.player {
+			case bluePlayer:
+				hex.blueUnitsUnwalkable++
+			case redPlayer:
+				hex.redUnitsUnwalkable++
+			}
 			continue
 		}
 
@@ -137,6 +140,15 @@ func (s *state) moveUnits() {
 		var collidedUnitPos, collidesWithUnit = s.collidesWithUnit(
 			newPos,
 			*u)
+
+		switch {
+		case collidesWithUnit && u.player == bluePlayer:
+			u.AtCollision = true
+			hex.blueUnitsColliding++
+		case collidesWithUnit && u.player == redPlayer:
+			u.AtCollision = true
+			hex.redUnitsColliding++
+		}
 
 		if collidesWithBorder && collidesWithUnit {
 			// TODO: Low priority but eventually need to handle air collision here.
@@ -470,6 +482,20 @@ func (s *state) attackUnits() {
 			unitAttackedOtherUnitCount++
 			s.units[u.enemyTarget] = nearestVisibleUnit
 			s.units[u.position] = u
+
+			gridPos, ok := u.pixelPosition.getGridPos(s.hexConfig)
+			if !ok {
+				panic("expected grid position to exist")
+			}
+			hex := s.hexagons[gridPos]
+			switch u.player {
+			case bluePlayer:
+				hex.blueUnitsAttacking++
+			case redPlayer:
+				hex.redUnitsAttacking++
+			default:
+				panic("expected blue or red player")
+			}
 		}
 	}
 
@@ -703,8 +729,8 @@ func (s *state) draw(dc drawConfig, drawBlueTargets bool, drawRedTargets, drawFl
 		}
 	}
 	if drawFluxes {
-		for fPos, flux := range s.fluxes {
-			flux.draw(dc, fPos)
+		for _, h := range s.hexagons {
+			h.drawFlux(dc)
 		}
 	}
 	if drawPixelPathing {

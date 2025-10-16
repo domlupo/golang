@@ -145,12 +145,13 @@ func (g *Game) Update() error {
 		}
 		g.slowTickTime = time.Now()
 
-		g.gameState.refresh()
 		g.gameState.analyzeTargets()
 		g.gameState.processTerminalPositions()
+		g.gameState.refresh()
 		g.gameState.attackUnits()
 		g.gameState.attackNodes()
 		g.gameState.moveUnits()
+		g.gameState.analyzeMoves()
 
 		if g.produceWait < g.produceInterval {
 			g.produceWait = g.produceWait + g.currentTime.Sub(g.priorTime)

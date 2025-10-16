@@ -19,44 +19,8 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Investigate local path finding solutions:
-  - Start simple. This is probably going to be one of the most complex parts to implement. It will require iteration.
-  - It is fine to only find a solution that solves a few unit collisions. In the future if this is too CPU intensive
-    for multiple I can switch pathind mode based on number of nearby units (current hex, 7 hex, etc)
-  - How can I take advantage of spatial partitioning
-  - How do obstacles affect this?
-  - If I use noticeable CPU I need to guarantee it makes the global and local situation better. I also need
-    to make sure it is deterministic and helps the player experience. I don't want unknown experience in the game.
-    I would prefer less total unit count with deterministic pathfinding than more unknown unit pathing.
-  - Desired player experiences:
-    -  Don't allow two units to get stuck around obstacle causing a backup of units
-    -  Units apporaching other units attacking, path around to form infantry lines. 
-    -  When the gap is fully blocked, units pack in. 
-  - Don't need to always repathfind theta* when movement change is small. 
-  - What are common issues I will face?
-    - bottle necks where units need to fill in around obstacles since too much production is occuring
-    - Should units be able to realize a path is blocked and go another other way? This seems bad player
-      experience because then player target location is just a suggestion
-  - What are long term issues I will face?
-    - bigger units getting stuck?
-  - Can use various stats to switch pathing mode:
-    - hex unit count 
-    - is unit blocked on another unit?
-    - how long has unit been blocked.
-    - los checks
-    - etc
-  - Start with simple methods that may have more future uses:
-    - flow fields
-    - flocking behaviors
-    - steering
-  - More complex methods can be looked into later if needed:
-    - CBS (a* or theta* probably possible)
-    - Enhanced Conflict Based Search (Not optimal, but faster computation) https://www.ijcai.org/Proceedings/15/Papers/110.pdf
-    - Meta agent conflict based search (optimization for units which collide frequently with eachother)
-    - Geometric MAPF or MAPF for large agents (LAMAPF) https://ojs.aaai.org/index.php/AAAI/article/view/4756 
-
 - Fix units colliding into hexagon obstacles:
-  - Can add collision detection for hexagon obstacles. Probl need spat partitioning
+  - Can add collision detection for hexagon obstacles. Probably need spat partitioning
   - Can make hexagon obstacles visually smaller
 
 - Fix HACKS added during multi obstacle implementation.
@@ -169,6 +133,24 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Future Checkpoints
+
+- Iterate on local path finding solutions:
+  - If I use noticeable CPU I need to guarantee it makes the global and local situation better. I also need
+    to make sure it is deterministic and helps the player experience. I don't want unknown experience in the game.
+    I would prefer less total unit count with deterministic pathfinding than more unknown unit pathing.
+  - Desired player experiences:
+    - Don't allow full blockages
+    - When the gap is fully blocked, units pack in. 
+    - Units apporaching other units attacking, path around to form infantry lines. 
+  - Start with simple methods that may have more future uses:
+    - flow fields
+    - flocking behaviors
+    - steering
+  - More complex methods can be looked into later if needed:
+    - CBS (a* or theta* probably possible)
+    - Enhanced Conflict Based Search (Not optimal, but faster computation) https://www.ijcai.org/Proceedings/15/Papers/110.pdf
+    - Meta agent conflict based search (optimization for units which collide frequently with eachother)
+    - Geometric MAPF or MAPF for large agents (LAMAPF) https://ojs.aaai.org/index.php/AAAI/article/view/4756 
 
 - Update game setups where nodes and obstacles are combined
 
