@@ -118,7 +118,7 @@ func (s *state) moveUnits() {
 			unitsWithoutTarget++
 		}
 
-		if u.x == newPos.x && u.y == newPos.y {
+		if u.equals(newPos.pixelPosition) {
 			unitsAtFinalPosition++
 			continue
 		}
@@ -174,7 +174,7 @@ func (s *state) moveUnits() {
 
 			oldGridPos, _ := u.pixelPosition.getGridPos(s.hexConfig)
 			newGridPos, _ := newPos.pixelPosition.getGridPos(s.hexConfig)
-			if oldGridPos.x != newGridPos.x || oldGridPos.y != newGridPos.y {
+			if !oldGridPos.equals(newGridPos) {
 				oldHex := s.hexagons[oldGridPos]
 				newHex := s.hexagons[newGridPos]
 				oldHex.unitCount--
@@ -709,18 +709,17 @@ func (s *state) collidesWithBorder(pos position, offset int) bool {
 }
 
 func (s *state) draw(dc drawConfig, drawBlueTargets bool, drawRedTargets, drawFluxes bool, drawVisibilityGrids bool, drawPixelPathing bool) {
-	for _, o := range s.obstacles {
-		o.drawObstacle(dc)
-		if drawVisibilityGrids {
-			o.drawVisibilityGrid(dc)
-		}
-	}
-
 	for _, n := range s.nodes {
 		n.drawNode(dc)
 	}
 	for _, n := range s.nodes {
 		n.drawTargets(dc, drawBlueTargets, drawRedTargets)
+	}
+	for _, o := range s.obstacles {
+		o.drawObstacle(dc)
+		if drawVisibilityGrids {
+			o.drawVisibilityGrid(dc)
+		}
 	}
 	for _, u := range s.units {
 		if u.layer == highAltitude {

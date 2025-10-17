@@ -219,7 +219,7 @@ func (os obstacles) setupVisibilityGrid(hc *hexConfig, pathing pixelPathing) {
 
 	for _, ot := range targets {
 		for _, otherOt := range targets {
-			if ot.x == otherOt.x && ot.y == otherOt.y {
+			if ot.equals(otherOt.pixelPosition) {
 				continue
 			}
 
@@ -263,7 +263,7 @@ func (os obstacles) setupVisibilityGrid(hc *hexConfig, pathing pixelPathing) {
 		shortestDistance := math.MaxInt64
 		var cwFix *obstacleTarget
 		for _, ccw := range nilCCWTargets {
-			if cw.x == ccw.x && cw.y == ccw.y {
+			if cw == ccw {
 				continue
 			}
 

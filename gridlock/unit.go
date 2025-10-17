@@ -75,7 +75,6 @@ type name int
 const (
 	noName name = iota
 	infantry
-	sniper
 	unguidedGroundMissile
 	guidedAirMissile
 	mobileSAM
@@ -117,8 +116,6 @@ func (uc unitConfig) log() []slog.Attr {
 		name = "no name"
 	case infantry:
 		name = "infantry"
-	case sniper:
-		name = "sniper"
 	case unguidedGroundMissile:
 		name = "unguidedGroundMissile"
 	case guidedAirMissile:

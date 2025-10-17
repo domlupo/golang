@@ -19,8 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Refactor code base to use new equal methods in positions.go
-
 - Add sparse low level unit tests for grid pos adjacent
 
 - Fix units colliding into hexagon obstacles:

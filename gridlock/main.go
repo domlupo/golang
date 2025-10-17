@@ -112,7 +112,7 @@ func (g *Game) restart() {
 
 	for nPos := range nodes {
 		for oPos := range obstacles {
-			if nPos.x == oPos.x && nPos.y == oPos.y {
+			if nPos.equals(oPos) {
 				panic("grid position conflict between node and obstacle")
 			}
 		}
@@ -210,7 +210,6 @@ func (g *Game) Update() error {
 	}
 
 	var infantryCount int
-	var sniperCount int
 	var unguidedGroundMissileCount int
 	var guidedAirMissileCount int
 	var unknownCount int
@@ -218,8 +217,6 @@ func (g *Game) Update() error {
 		switch u.name {
 		case infantry:
 			infantryCount++
-		case sniper:
-			sniperCount++
 		case unguidedGroundMissile:
 			unguidedGroundMissileCount++
 		case guidedAirMissile:
@@ -231,7 +228,6 @@ func (g *Game) Update() error {
 	}
 	logger.log(infoLevel, mainLogType, "game_state", slog.Int("total_units", len(g.gameState.units)))
 	logger.log(infoLevel, mainLogType, "game_state", slog.Int("infantryCount", infantryCount))
-	logger.log(infoLevel, mainLogType, "game_state", slog.Int("sniperCount", sniperCount))
 	logger.log(infoLevel, mainLogType, "game_state", slog.Int("unguidedGroundMissile", unguidedGroundMissileCount))
 	logger.log(infoLevel, mainLogType, "game_state", slog.Int("guidedAirMissile", guidedAirMissileCount))
 	logger.log(infoLevel, mainLogType, "game_state", slog.Int("unknownCount", unknownCount))
