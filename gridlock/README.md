@@ -134,6 +134,8 @@ Is there a mobile equivalent for war/4x games?
 
 ### Future Checkpoints
 
+-  TODO: Fix bad UI behavior when cursor ends off screen
+
 - While game is paused, node targets can be updated. Determine if this behavior is correct. Fix if needed.
 
 - Iterate on local path finding solutions:

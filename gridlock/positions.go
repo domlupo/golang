@@ -228,8 +228,6 @@ func (pixelPos pixelPosition) getGridPos(hc *hexConfig) (gridPosition, bool) {
 func (pixelPos pixelPosition) getGridPosOutbounds(hc *hexConfig) (gridPosition, bool) {
 	xIndex := (pixelPos.x+hc.hexWidth-hc.xOffset)/hc.hexWidth - 1
 	yIndex := (pixelPos.y+(hc.hexHeight/4*3)-hc.yOffset)/(hc.hexHeight/4*3) - 2
-	var xIndexOffset int
-	var yIndexOffset int
 	innerX := (pixelPos.x + hc.hexWidth - hc.xOffset) % hc.hexWidth
 	innerY := (pixelPos.y + (hc.hexHeight * 3 / 2) - hc.yOffset) % (hc.hexHeight * 3 / 2)
 
@@ -238,6 +236,8 @@ func (pixelPos pixelPosition) getGridPosOutbounds(hc *hexConfig) (gridPosition, 
 	thirdYSectionStart := secondYSectionStart + hc.hexHeight/2
 	fourthYSectionStart := thirdYSectionStart + hc.hexHeight/4
 
+	var xIndexOffset int
+	var yIndexOffset int
 	switch {
 	case innerY >= firstYSectionStart && innerY < secondYSectionStart:
 		triangle := hc.lookUpTable[innerX+innerY*hc.hexWidth]

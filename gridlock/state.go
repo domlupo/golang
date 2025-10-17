@@ -603,6 +603,12 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 		bottomRightPixelPos = pixelPosition{releasePosition.x, clickPosition.y}
 	}
 
+	// TODO: Fix bad UI behavior when cursor ends off screen. Right now, when a cursor
+	// ends off screen the behavior differs based on which side it ends. If the cursor
+	// ends left or above window, the position is incorrectly set to {0, 0} which
+	// usually causes too much selection to occur. The behavior is correct when
+	// the cursor ends right or below window. It is tricky and error prone to fix this
+	// due to hexagon lookup repetition, so I am punting it.
 	topLeftGridPos, _ := topLeftPixelPos.getGridPos(s.hexConfig)
 	bottomRightGridPos, _ := bottomRightPixelPos.getGridPosOutbounds(s.hexConfig)
 
