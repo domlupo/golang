@@ -166,7 +166,7 @@ func drawDebug(dc drawConfig, drawDebugGrid bool) {
 	//   |   |
 	//   |   |
 
-	for i := 0; i < dc.xIndexMax+1; i++ {
+	for i := 0; i < dc.xIndexMax; i++ {
 		for j := 0; j < dc.yIndexMax; j++ {
 			lineWidth := float32(dc.debugGridWidth) * dc.windowMultiplier
 			pos := gridPosition{i, j}

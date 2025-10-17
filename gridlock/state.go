@@ -13,21 +13,21 @@ type state struct {
 	// into respective layers.
 	pixelPathing       pixelPathing
 	hexagons           map[gridPosition]*hexagon
-	obstacles          map[gridPosition]*obstacle
-	nodes              map[gridPosition]*node
+	obstacles          obstacles
+	nodes              nodes
 	units              map[position]*unit
 	enableFlux         bool
 	unitsProducedTotal int
 	unitsDeletedTotal  int
 }
 
-func newState(nodes map[gridPosition]*node, obstacles map[gridPosition]*obstacle, pixelPathing pixelPathing, hexConfig *hexConfig, enableFlux bool) *state {
+func newState(n nodes, o obstacles, h hexagons, pixelPathing pixelPathing, hexConfig *hexConfig, enableFlux bool) *state {
 	s := state{
 		hexConfig:    hexConfig,
-		obstacles:    obstacles,
+		obstacles:    o,
 		pixelPathing: pixelPathing,
-		hexagons:     setupHexagons(hexConfig),
-		nodes:        nodes,
+		hexagons:     h,
+		nodes:        n,
 		units:        make(map[position]*unit),
 		enableFlux:   enableFlux,
 	}
@@ -575,6 +575,7 @@ func (s *state) updateNodeOwnership() bool {
 	for _, n := range s.nodes {
 		if n.currentHealth == 0 {
 			newNode := newNode(n.capturedBy, n.gridPos, n.maxHealth, s.hexConfig, n.unitConfig)
+			newNode.control = s.nodes[n.gridPos].control
 			s.nodes[n.gridPos] = &newNode
 			nodeOwnershipChanged = true
 		}
@@ -644,19 +645,27 @@ func (s *state) updateTargets(target position, blueComputerActive bool, redCompu
 
 		if n.selected {
 			n.target = target
+			for _, h := range n.control {
+				end := h.linkedList
+				current := h.linkedList
+				var checkOccurred bool
+				for {
+					if current == nil {
+						break
+					}
+
+					if current.id == end.id && checkOccurred {
+						break
+					}
+
+					checkOccurred = true
+					current.updateTarget(globalTarget, target)
+					current = current.next
+				}
+			}
+
 		}
 		s.nodes[n.gridPos] = n
-	}
-	for _, u := range s.units {
-		if u.player == bluePlayer && blueComputerActive {
-			continue
-		} else if u.player == redPlayer && redComputerActive {
-			continue
-		}
-
-		if u.selected {
-			u.updateTarget(globalTarget, target)
-		}
 	}
 }
 

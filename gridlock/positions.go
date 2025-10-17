@@ -94,6 +94,14 @@ func (pos pixelPosition) chebyshevDistance(otherPos pixelPosition) int {
 	return max(xDelta, yDelta)
 }
 
+func (gridPos gridPosition) equals(other gridPosition) bool {
+	return gridPos.x == other.x && gridPos.y == other.y
+}
+
+func (pixelPos pixelPosition) equals(other pixelPosition) bool {
+	return pixelPos.x == other.x && pixelPos.y == other.y
+}
+
 func (pos gridPosition) adjacent(side hexSide, hc *hexConfig) (gridPosition, bool) {
 	x := pos.x
 	y := pos.y

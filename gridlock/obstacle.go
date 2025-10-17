@@ -199,6 +199,7 @@ func (start pixelPosition) obstacleTarget(end pixelPosition, pathing pixelPathin
 	var nearestIndex int
 	gridPos, ok := obstaclePixelPos.getGridPos(hc)
 	if !ok {
+		// TODO: Fix, this occurs when a human player selects a node + unit, click and holds a pixel then drags off screen
 		panic("expected obstacle grid position to exist")
 	}
 	visibilityGrid := *obstacles[gridPos].visibilityGrid

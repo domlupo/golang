@@ -105,8 +105,10 @@ func (g *Game) restart() {
 	// TODO: Need to restart timers, etc
 	g.compOne = *newComputer(bluePlayer)
 	g.compTwo = *newComputer(redPlayer)
-	nodes := setupNodes(leftVsRightVerticalOffset, &g.drawConfig.hexConfig, g.initialNodeHealth)
+
+	hexagons := setupHexagons(&g.drawConfig.hexConfig)
 	obstacles, pixelPathing := setupObstacles(multiObstacle, &g.drawConfig.hexConfig)
+	nodes := setupNodes(leftVsRightVerticalOffset, &g.drawConfig.hexConfig, g.initialNodeHealth, obstacles, hexagons)
 
 	for nPos := range nodes {
 		for oPos := range obstacles {
@@ -116,7 +118,7 @@ func (g *Game) restart() {
 		}
 	}
 
-	g.gameState = newState(nodes, obstacles, pixelPathing, &g.drawConfig.hexConfig, g.enableFlux)
+	g.gameState = newState(nodes, obstacles, hexagons, pixelPathing, &g.drawConfig.hexConfig, g.enableFlux)
 	g.updateComputerTargetNodes()
 }
 

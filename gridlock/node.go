@@ -7,18 +7,12 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-type player int
-
-const (
-	noPlayer player = iota
-	bluePlayer
-	redPlayer
-	neutralPlayer
-)
+type nodes map[gridPosition]*node
 
 type node struct {
 	player        player
 	gridPos       gridPosition
+	control       []*hexagon
 	radius        int
 	selected      bool
 	maxHealth     int
@@ -32,14 +26,13 @@ func newNode(p player, gridPos gridPosition, initialNodeHealth int, hexConfig *h
 	n := node{
 		player:  p,
 		gridPos: gridPos,
+		control: []*hexagon{},
 		// HACK: "/ 9 * 2 is temporarily set until hexagon collision is implemented
 		// This value was chosen since it is large but still fully within hexagon.
 		radius:        (hexConfig.hexHeight + hexConfig.hexWidth) / 9 * 2,
-		selected:      false,
 		maxHealth:     initialNodeHealth,
 		currentHealth: initialNodeHealth,
 		capturedBy:    noPlayer,
-		target:        position{},
 		unitConfig:    uc,
 	}
 	return n
@@ -48,6 +41,56 @@ func newNode(p player, gridPos gridPosition, initialNodeHealth int, hexConfig *h
 func (n node) isZero() bool {
 	// TODO: fix implementation
 	return n.player == noPlayer && n.gridPos.x == 0 && n.gridPos.y == 0 && n.target.layer == noLayer
+}
+
+func (nodes nodes) setupControl(hc *hexConfig, hexagons hexagons, obstacles obstacles) {
+	for _, h := range hexagons {
+		queue := []gridPosition{h.gridPos}
+		for len(queue) > 0 {
+			current := queue[0]
+			queue = queue[1:]
+
+			if _, obstacle := obstacles[current]; obstacle {
+				continue
+			}
+
+			if ne, ok := current.adjacent(northeastSide, hc); ok {
+				queue = append(queue, ne)
+			}
+			if e, ok := current.adjacent(eastSide, hc); ok {
+				queue = append(queue, e)
+			}
+			if se, ok := current.adjacent(southeastSide, hc); ok {
+				queue = append(queue, se)
+			}
+			if sw, ok := current.adjacent(southwestSide, hc); ok {
+				queue = append(queue, sw)
+			}
+			if w, ok := current.adjacent(westSide, hc); ok {
+				queue = append(queue, w)
+			}
+			if nw, ok := current.adjacent(northwestSide, hc); ok {
+				queue = append(queue, nw)
+			}
+
+			n, nOk := nodes[current]
+			if !nOk {
+				continue
+			}
+
+			switch n.player {
+			case redPlayer, bluePlayer, neutralPlayer:
+				n.control = append(n.control, h)
+				// TODO: Need to determine behavior for same depth conflicts.
+				// Currently, code selects first enountered node which is not correct.
+				queue = []gridPosition{}
+			case noPlayer:
+				continue
+			default:
+				panic("cannot setup hex control. Unknown player")
+			}
+		}
+	}
 }
 
 func (n *node) drawNode(dc drawConfig) {
@@ -90,6 +133,15 @@ func (n *node) drawNode(dc drawConfig) {
 			float32(dc.healthLineWidth)*dc.windowMultiplier,
 			dc.nodeHealthColor,
 			false)
+	}
+
+	if n.selected {
+		for _, h := range n.control {
+			if !n.gridPos.equals(h.gridPos) {
+				drawHex(dc, h.gridPos, drawTriangleColor{red: 0.7, blue: 0.7, green: 0.7, alpha: alpha}, n.selected)
+			}
+		}
+
 	}
 }
 

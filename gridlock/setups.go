@@ -212,8 +212,14 @@ type nodeInfo struct {
 	unitConfig unitConfig
 }
 
-func setupNodes(s nodeSetup, hc *hexConfig, initialNodeHealth int) map[gridPosition]*node {
-	nodes := make(map[gridPosition]*node)
+func setupNodes(s nodeSetup, hc *hexConfig, initialNodeHealth int, o obstacles, h hexagons) nodes {
+	nodes := make(nodes)
+	nodes.setupPositions(s, hc, initialNodeHealth)
+	nodes.setupControl(hc, h, o)
+	return nodes
+}
+
+func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth int) {
 	var nodeInfos []nodeInfo
 
 	switch s {
@@ -513,6 +519,4 @@ func setupNodes(s nodeSetup, hc *hexConfig, initialNodeHealth int) map[gridPosit
 		node := newNode(ni.player, ni.gridPos, initialNodeHealth, hc, ni.unitConfig)
 		nodes[ni.gridPos] = &node
 	}
-
-	return nodes
 }

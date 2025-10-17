@@ -6,8 +6,10 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+type hexagons map[gridPosition]*hexagon
+
 type hexagon struct {
-	gridPosition        gridPosition
+	gridPos             gridPosition
 	linkedList          *unit
 	unitCount           int
 	sumUnitX            int
@@ -26,7 +28,7 @@ func setupHexagons(hc *hexConfig) map[gridPosition]*hexagon {
 	for i := range hc.xIndexMax {
 		for j := range hc.yIndexMax {
 			gridPos := gridPosition{i, j}
-			hexagons[gridPos] = &hexagon{gridPosition: gridPos}
+			hexagons[gridPos] = &hexagon{gridPos: gridPos}
 		}
 	}
 	return hexagons
@@ -41,7 +43,7 @@ func (h *hexagon) refresh(hc *hexConfig) {
 	h.redUnitsUnwalkable = 0
 	h.redUnitsColliding = 0
 	h.redUnitsAttacking = 0
-	if pos, ok := h.gridPosition.getPixelPos(center, hc); ok {
+	if pos, ok := h.gridPos.getPixelPos(center, hc); ok {
 		h.avgUnit = pos
 	}
 }

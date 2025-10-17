@@ -362,7 +362,7 @@ func (u *unit) getFlux(hex *hexagon, hc *hexConfig) (position, bool) {
 
 	var xDelta int
 	var yDelta int
-	hexCenter, _ := hex.gridPosition.getPixelPos(center, hc)
+	hexCenter, _ := hex.gridPos.getPixelPos(center, hc)
 
 	if moveAwayFromUnits {
 		switch {

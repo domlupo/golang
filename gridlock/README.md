@@ -19,6 +19,10 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Refactor code base to use new equal methods in positions.go
+
+- Add sparse low level unit tests for grid pos adjacent
+
 - Fix units colliding into hexagon obstacles:
   - Can add collision detection for hexagon obstacles. Probably need spat partitioning
   - Can make hexagon obstacles visually smaller
@@ -133,6 +137,8 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Future Checkpoints
+
+- While game is paused, node targets can be updated. Determine if this behavior is correct. Fix if needed.
 
 - Iterate on local path finding solutions:
   - If I use noticeable CPU I need to guarantee it makes the global and local situation better. I also need

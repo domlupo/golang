@@ -25,7 +25,7 @@ func newHexConfig(windowWidth int, windowHeight int) hexConfig {
 	lookUpTable := newHexLookUpTable()
 	hexWidth := 46
 	hexHeight := 40
-	xIndexMax := windowWidth/hexWidth + 1
+	xIndexMax := windowWidth/hexWidth + 2
 	yIndexMax := windowHeight/(hexHeight/4*3) + 1
 	hc := hexConfig{
 		lookUpTable: lookUpTable,
