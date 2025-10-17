@@ -17,19 +17,21 @@ type state struct {
 	nodes              nodes
 	units              map[position]*unit
 	enableFlux         bool
+	developerMode      bool
 	unitsProducedTotal int
 	unitsDeletedTotal  int
 }
 
-func newState(n nodes, o obstacles, h hexagons, pixelPathing pixelPathing, hexConfig *hexConfig, enableFlux bool) *state {
+func newState(n nodes, o obstacles, h hexagons, pixelPathing pixelPathing, hexConfig *hexConfig, enableFlux bool, developerMode bool) *state {
 	s := state{
-		hexConfig:    hexConfig,
-		obstacles:    o,
-		pixelPathing: pixelPathing,
-		hexagons:     h,
-		nodes:        n,
-		units:        make(map[position]*unit),
-		enableFlux:   enableFlux,
+		hexConfig:     hexConfig,
+		obstacles:     o,
+		pixelPathing:  pixelPathing,
+		hexagons:      h,
+		nodes:         n,
+		units:         make(map[position]*unit),
+		enableFlux:    enableFlux,
+		developerMode: developerMode,
 	}
 
 	return &s
@@ -56,7 +58,7 @@ func (s *state) analyzeTargets() {
 			panic("unit grid position must exist")
 		}
 		hex := s.hexagons[uGridPos]
-		if flux, fluxOk := u.getFlux(hex, s.hexConfig); fluxOk {
+		if flux, fluxOk := u.getFlux(hex, s.hexConfig); fluxOk && s.enableFlux {
 			u.updateTarget(fluxTarget, flux)
 		}
 
@@ -576,6 +578,7 @@ func (s *state) updateNodeOwnership() bool {
 		if n.currentHealth == 0 {
 			newNode := newNode(n.capturedBy, n.gridPos, n.maxHealth, s.hexConfig, n.unitConfig)
 			newNode.control = s.nodes[n.gridPos].control
+			newNode.selected = s.nodes[n.gridPos].selected
 			s.nodes[n.gridPos] = &newNode
 			nodeOwnershipChanged = true
 		}
@@ -624,16 +627,18 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 		s.nodes[n.gridPos] = n
 	}
 
-	for _, u := range s.units {
-		if (topLeftPixelPos.x < u.x) &&
-			(u.x < bottomRightPixelPos.x) &&
-			(topLeftPixelPos.y < u.y) &&
-			(u.y < bottomRightPixelPos.y) {
-			u.selected = true
-		} else {
-			u.selected = false
+	if s.developerMode {
+		for _, u := range s.units {
+			if (topLeftPixelPos.x < u.x) &&
+				(u.x < bottomRightPixelPos.x) &&
+				(topLeftPixelPos.y < u.y) &&
+				(u.y < bottomRightPixelPos.y) {
+				u.selected = true
+			} else {
+				u.selected = false
+			}
+			s.units[u.position] = u
 		}
-		s.units[u.position] = u
 	}
 
 }
@@ -687,7 +692,7 @@ func (s *state) produceUnits() {
 			panic("could not get pixel pos for produce units")
 		}
 		uPos := position{n.unitConfig.produceLayer, pixelPos}
-		newUnit := newUnit(n.player, n.target, n.unitConfig, uPos, s.unitsProducedTotal, n.selected)
+		newUnit := newUnit(n.player, n.target, n.unitConfig, uPos, s.unitsProducedTotal, n.selected && s.developerMode)
 		if _, collides := s.collidesWithUnit(uPos, newUnit); !collides {
 			hex := s.hexagons[n.gridPos]
 			if hex.linkedList == nil && hex.unitCount != 0 {

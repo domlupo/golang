@@ -58,6 +58,7 @@ type Game struct {
 	compOne                  computer
 	compTwo                  computer
 	gameState                *state
+	developerMode            bool
 	developerToggles         map[string]*toggle
 	developerToggleCooldown  time.Duration
 	initialNodeHealth        int
@@ -80,11 +81,12 @@ func newGame() Game {
 		currentSelectedY:        float32(-1.0),
 		blueComputerActive:      true,
 		redComputerActive:       true,
-		enableFlux:              false,
+		enableFlux:              true,
 		produceUnits:            true,
 		hotRestart:              true,
 		cpuProfilerOn:           false,
 		memoryProfilerOn:        false,
+		developerMode:           true,
 		developerToggles:        make(map[string]*toggle),
 		developerToggleCooldown: 300 * time.Millisecond,
 		initialNodeHealth:       100,
@@ -118,7 +120,7 @@ func (g *Game) restart() {
 		}
 	}
 
-	g.gameState = newState(nodes, obstacles, hexagons, pixelPathing, &g.drawConfig.hexConfig, g.enableFlux)
+	g.gameState = newState(nodes, obstacles, hexagons, pixelPathing, &g.drawConfig.hexConfig, g.enableFlux, g.developerMode)
 	g.updateComputerTargetNodes()
 }
 
@@ -405,6 +407,10 @@ func main() {
 		ebiten.KeyV,
 		func() { g.drawVisibilityGrids = !g.drawVisibilityGrids },
 		g.developerToggleCooldown)
+
+	if !g.developerMode {
+		g.developerToggles = make(map[string]*toggle)
+	}
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
