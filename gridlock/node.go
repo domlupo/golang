@@ -14,7 +14,8 @@ type node struct {
 	gridPos       gridPosition
 	control       []*hexagon
 	radius        int
-	selected      bool
+	singleSelect  bool
+	multiSelect   bool
 	maxHealth     int
 	currentHealth int
 	capturedBy    player
@@ -41,6 +42,10 @@ func newNode(p player, gridPos gridPosition, initialNodeHealth int, hexConfig *h
 func (n node) isZero() bool {
 	// TODO: fix implementation
 	return n.player == noPlayer && n.gridPos.x == 0 && n.gridPos.y == 0 && n.target.layer == noLayer
+}
+
+func (n node) selected() bool {
+	return n.singleSelect || n.multiSelect
 }
 
 func (nodes nodes) setupControl(hc *hexConfig, hexagons hexagons, obstacles obstacles) {
@@ -118,7 +123,7 @@ func (n *node) drawNode(dc drawConfig) {
 		panic("unknown player cannot drawNode")
 	}
 
-	drawHex(dc, n.gridPos, drawTriangleColor{red: red, blue: blue, green: green, alpha: alpha}, n.selected)
+	drawHex(dc, n.gridPos, drawTriangleColor{red: red, blue: blue, green: green, alpha: alpha}, n.multiSelect)
 
 	c := n.gridPos.getPixelPosOutbounds(center, &dc.hexConfig)
 
@@ -135,10 +140,10 @@ func (n *node) drawNode(dc drawConfig) {
 			false)
 	}
 
-	if n.selected {
+	if n.singleSelect {
 		for _, h := range n.control {
 			if !n.gridPos.equals(h.gridPos) {
-				drawHex(dc, h.gridPos, drawTriangleColor{red: 0.7, blue: 0.7, green: 0.7, alpha: alpha}, n.selected)
+				drawHex(dc, h.gridPos, drawTriangleColor{red: 0.7, blue: 0.7, green: 0.7, alpha: alpha}, false)
 			}
 		}
 

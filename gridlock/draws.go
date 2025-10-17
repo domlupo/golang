@@ -24,6 +24,7 @@ type drawConfig struct {
 	fluxLineWidth                 int
 	fluxDirectionRadius           int
 	targetNodeLineWidth           int
+	hexLineWidth                  int
 	visibilityGridLineWidth       int
 	roygbivColors                 []color.RGBA
 	backgroundColor               color.RGBA
@@ -61,6 +62,7 @@ func newDrawConfig() *drawConfig {
 		fluxLineWidth:                 2,
 		fluxDirectionRadius:           3,
 		targetNodeLineWidth:           2,
+		hexLineWidth:                  2,
 		visibilityGridLineWidth:       1,
 		backgroundColor:               color.RGBA{200, 200, 200, 255},
 		highlightColor:                highlightColor,
@@ -277,7 +279,7 @@ func drawHex(dc drawConfig, gridPos gridPosition, color drawTriangleColor, selec
 	dc.screen.DrawTriangles(vertices, indices, dc.drawTriangleDefaultImage, &ebiten.DrawTrianglesOptions{})
 
 	if selected {
-		lineWidth := float32(dc.debugGridWidth) * dc.windowMultiplier
+		lineWidth := float32(dc.hexLineWidth) * dc.windowMultiplier
 
 		north := gridPos.getPixelPosOutbounds(northPoint, &dc.hexConfig)
 		nX := float32(north.x) * dc.windowMultiplier

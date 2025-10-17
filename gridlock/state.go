@@ -578,7 +578,8 @@ func (s *state) updateNodeOwnership() bool {
 		if n.currentHealth == 0 {
 			newNode := newNode(n.capturedBy, n.gridPos, n.maxHealth, s.hexConfig, n.unitConfig)
 			newNode.control = s.nodes[n.gridPos].control
-			newNode.selected = s.nodes[n.gridPos].selected
+			newNode.singleSelect = s.nodes[n.gridPos].singleSelect
+			newNode.multiSelect = s.nodes[n.gridPos].multiSelect
 			s.nodes[n.gridPos] = &newNode
 			nodeOwnershipChanged = true
 		}
@@ -588,6 +589,29 @@ func (s *state) updateNodeOwnership() bool {
 }
 
 func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixelPosition) {
+	var priorSingleSelect gridPosition
+	for _, n := range s.nodes {
+		if n.singleSelect {
+			priorSingleSelect = n.gridPos
+		}
+		n.singleSelect = false
+		n.multiSelect = false
+	}
+
+	clickedGridPos, _ := clickPosition.getGridPos(s.hexConfig)
+	clickedNode, nodeClicked := s.nodes[clickedGridPos]
+	if nodeClicked && clickPosition.equals(releasePosition) && clickedGridPos.equals(priorSingleSelect) {
+		for _, n := range s.nodes {
+			if n.player == clickedNode.player {
+				n.multiSelect = true
+			}
+		}
+		return
+	} else if nodeClicked && clickPosition.equals(releasePosition) {
+		clickedNode.singleSelect = true
+		return
+	}
+
 	var topLeftPixelPos pixelPosition
 	var bottomRightPixelPos pixelPosition
 
@@ -615,16 +639,23 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 	topLeftGridPos, _ := topLeftPixelPos.getGridPos(s.hexConfig)
 	bottomRightGridPos, _ := bottomRightPixelPos.getGridPosOutbounds(s.hexConfig)
 
+	var firstSelectedNode *node
 	for _, n := range s.nodes {
 		if (topLeftGridPos.x < n.gridPos.x) &&
 			(n.gridPos.x < bottomRightGridPos.x) &&
 			(topLeftGridPos.y < n.gridPos.y) &&
 			(n.gridPos.y < bottomRightGridPos.y) {
-			n.selected = true
-		} else {
-			n.selected = false
+
+			if firstSelectedNode == nil {
+				firstSelectedNode = n
+				firstSelectedNode.singleSelect = true
+				firstSelectedNode.multiSelect = false
+			} else {
+				firstSelectedNode.singleSelect = false
+				firstSelectedNode.multiSelect = true
+				n.multiSelect = true
+			}
 		}
-		s.nodes[n.gridPos] = n
 	}
 
 	if s.developerMode {
@@ -654,11 +685,14 @@ func (s *state) updateTargets(target position, blueComputerActive bool, redCompu
 			continue
 		}
 
-		if n.selected {
+		if n.selected() {
 			n.target = target
+		}
+
+		if n.singleSelect {
 			for _, h := range n.control {
 				end := h.linkedList
-				current := h.linkedList
+				current := end
 				var checkOccurred bool
 				for {
 					if current == nil {
@@ -674,9 +708,28 @@ func (s *state) updateTargets(target position, blueComputerActive bool, redCompu
 					current = current.next
 				}
 			}
+		} else if n.multiSelect {
+			end := s.hexagons[n.gridPos].linkedList
+			current := end
+			var checkOccurred bool
+			for {
+				if current == nil {
+					break
+				}
 
+				if current.id == end.id && checkOccurred {
+					break
+				}
+
+				checkOccurred = true
+
+				if !current.movedThisTurn {
+					current.updateTarget(globalTarget, target)
+				}
+
+				current = current.next
+			}
 		}
-		s.nodes[n.gridPos] = n
 	}
 }
 
@@ -692,7 +745,7 @@ func (s *state) produceUnits() {
 			panic("could not get pixel pos for produce units")
 		}
 		uPos := position{n.unitConfig.produceLayer, pixelPos}
-		newUnit := newUnit(n.player, n.target, n.unitConfig, uPos, s.unitsProducedTotal, n.selected && s.developerMode)
+		newUnit := newUnit(n.player, n.target, n.unitConfig, uPos, s.unitsProducedTotal, n.selected() && s.developerMode)
 		if _, collides := s.collidesWithUnit(uPos, newUnit); !collides {
 			hex := s.hexagons[n.gridPos]
 			if hex.linkedList == nil && hex.unitCount != 0 {
