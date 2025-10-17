@@ -367,6 +367,11 @@ Is there a mobile equivalent for war/4x games?
 12. Use {19,10} as initial hexagon offsets. These offsets greatly simplify getGridPos but makes getPixelPos
     slightly more complex. If hexagon configuration changes in the future, probably should prioritze
     simplifying getGridPos over getPixelPos.
+13. Infantry is only simple ground unit. Less artwork, less animations, less design decisions.
+    If needed, infantry can have upgrades which can helps tech tree idea.
+  - sniper -> range upgrade
+  - anti tank infantry -> anti tank ammunition
+  - marine -> cross shallow water
 
 ---
 
@@ -714,14 +719,11 @@ Have read through several college publications and game ai pro articles not link
   - Land:
     - Done:
       - infantry
-      - sniper
     - High Priority:
       - tank
       - mobile SAM (shoots missile in low altitude or high altitude)
     - Low Priority:
       - mobile artillery / rocket artillery (thought is low priority because SAM pathing more complex. Could be wrong)
-      - marine (cross water)
-      - anti tank infantry
       - troop transport
       - cargo truck (can transfer production between nodes?)
       - unit to change targets

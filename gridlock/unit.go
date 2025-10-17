@@ -34,22 +34,6 @@ var infantryConfig = unitConfig{
 	explodeAtTerminalPos: false,
 	explodeRadius:        0,
 }
-var sniperConfig = unitConfig{
-	name:                 sniper,
-	radius:               7,
-	maxHealth:            5,
-	attack:               1,
-	vision:               100,
-	reach:                100,
-	produceLayer:         ground,
-	staticTarget:         false,
-	attacksGround:        true,
-	attacksLowAltitude:   false,
-	attacksHighAltitude:  false,
-	attacksPosition:      false,
-	explodeAtTerminalPos: false,
-	explodeRadius:        0,
-}
 
 // TODO: Figure out better naming for various missiles
 // TODO: Figure out better attack conventions e.g. direct, vs explosion, etc
