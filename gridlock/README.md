@@ -19,8 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Add sparse low level unit tests for grid pos adjacent
-
 - Fix units colliding into hexagon obstacles:
   - Can add collision detection for hexagon obstacles. Probably need spat partitioning
   - Can make hexagon obstacles visually smaller

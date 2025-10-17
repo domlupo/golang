@@ -51,7 +51,7 @@ func newDrawConfig() *drawConfig {
 		screen:           nil,
 		windowMultiplier: 2.5,
 		// aspect ratio config (16:9 aspect ratio)
-		hexConfig:                     newHexConfig(1280, 720),
+		hexConfig:                     newHexConfig(1280, 720, 46, 40, 19, 10),
 		debugGridWidth:                1,
 		debugGridIndexCount:           32,
 		debugGridColor:                color.Black,
@@ -168,6 +168,10 @@ func drawDebug(dc drawConfig, drawDebugGrid bool) {
 
 	for i := 0; i < dc.xIndexMax; i++ {
 		for j := 0; j < dc.yIndexMax; j++ {
+			if j%2 == 0 && i == dc.xIndexMax-1 {
+				continue
+			}
+
 			lineWidth := float32(dc.debugGridWidth) * dc.windowMultiplier
 			pos := gridPosition{i, j}
 

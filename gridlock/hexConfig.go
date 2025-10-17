@@ -21,10 +21,8 @@ type hexConfig struct {
 	yIndexMax    int
 }
 
-func newHexConfig(windowWidth int, windowHeight int) hexConfig {
-	lookUpTable := newHexLookUpTable()
-	hexWidth := 46
-	hexHeight := 40
+func newHexConfig(windowWidth int, windowHeight int, hexWidth int, hexHeight int, xOffset int, yOffset int) hexConfig {
+	lookUpTable := newHexLookUpTable(hexWidth)
 	xIndexMax := windowWidth/hexWidth + 2
 	yIndexMax := windowHeight/(hexHeight/4*3) + 1
 	hc := hexConfig{
@@ -33,8 +31,8 @@ func newHexConfig(windowWidth int, windowHeight int) hexConfig {
 		// 80/sqrt(3) is 46.188 which is approximately 46p.
 		hexWidth:     hexWidth,
 		hexHeight:    hexHeight,
-		xOffset:      19,
-		yOffset:      10,
+		xOffset:      xOffset,
+		yOffset:      yOffset,
 		windowWidth:  windowWidth,
 		windowHeight: windowHeight,
 		xIndexMax:    xIndexMax,
@@ -129,10 +127,8 @@ const (
 	rightHexTriangle
 )
 
-func newHexLookUpTable() [hexLookUpTablePixelCount]hexagonTriangle {
+func newHexLookUpTable(rowPixelCount int) [hexLookUpTablePixelCount]hexagonTriangle {
 	var pc [hexLookUpTablePixelCount]hexagonTriangle
-
-	rowPixelCount := 46
 
 	// row 1
 	rowStart := 0

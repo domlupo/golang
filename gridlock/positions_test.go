@@ -7,16 +7,7 @@ import (
 
 func TestGetPixelPos(t *testing.T) {
 	t.Parallel()
-	lookUpTable := newHexLookUpTable()
-	hc := hexConfig{
-		lookUpTable:  lookUpTable,
-		hexWidth:     46,
-		hexHeight:    40,
-		xOffset:      19,
-		yOffset:      10,
-		windowWidth:  1280,
-		windowHeight: 720,
-	}
+	hc := newHexConfig(1280, 720, 46, 40, 19, 10)
 
 	var tests = []struct {
 		gridPos        gridPosition
@@ -116,7 +107,7 @@ func TestGetPixelPos(t *testing.T) {
 			if ok != tt.wantedOk {
 				t.Errorf("Wanted pixel position to %s", sWantedOk)
 			}
-			if pos.x != tt.wantedPixelPos.x || pos.y != tt.wantedPixelPos.y {
+			if !pos.equals(tt.wantedPixelPos) {
 				t.Errorf("For grid pos {%d,%d} and hex point %d  Wanted grid position {%d,%d} but it was {%d,%d}",
 					tt.gridPos.x,
 					tt.gridPos.y,
@@ -132,16 +123,7 @@ func TestGetPixelPos(t *testing.T) {
 
 func TestGetGridPos(t *testing.T) {
 	t.Parallel()
-	lookUpTable := newHexLookUpTable()
-	hc := hexConfig{
-		lookUpTable:  lookUpTable,
-		hexWidth:     46,
-		hexHeight:    40,
-		xOffset:      19,
-		yOffset:      10,
-		windowWidth:  1280,
-		windowHeight: 720,
-	}
+	hc := newHexConfig(1280, 720, 46, 40, 19, 10)
 
 	var tests = []struct {
 		pixelPos  pixelPosition
@@ -337,7 +319,7 @@ func TestGetGridPos(t *testing.T) {
 		{pixelPosition{38, 11}, gridPosition{0, 0}, true},
 		{pixelPosition{39, 10}, gridPosition{0, 0}, true},
 		{pixelPosition{40, 10}, gridPosition{0, 0}, true},
-		//{pixelPosition{41, 9}, gridPosition{0, 0}, true}, // prob bug
+		{pixelPosition{41, 9}, gridPosition{0, 0}, true},
 
 		// 1, 1 hexagon slope check between itself and 0, 0 hexagon
 		{pixelPosition{19, 20}, gridPosition{1, 1}, true},
@@ -365,7 +347,7 @@ func TestGetGridPos(t *testing.T) {
 		{pixelPosition{41, 10}, gridPosition{1, 1}, true},
 
 		// 1,0 hexagon slope check between itself and 1, 1 hexagon
-		//{pixelPosition{42, 9}, gridPosition{1, 0}, true}, prob bug
+		{pixelPosition{42, 9}, gridPosition{1, 0}, true},
 		{pixelPosition{43, 10}, gridPosition{1, 0}, true},
 		{pixelPosition{44, 10}, gridPosition{1, 0}, true},
 		{pixelPosition{45, 11}, gridPosition{1, 0}, true},
@@ -816,7 +798,7 @@ func TestGetGridPos(t *testing.T) {
 		{pixelPosition{64, 68}, gridPosition{1, 2}, true},
 		{pixelPosition{64, 69}, gridPosition{1, 2}, true},
 
-		// cotinue right side of hexagon 1,2
+		// continue right side of hexagon 1,2
 		{pixelPosition{65, 50}, gridPosition{1, 2}, true},
 		{pixelPosition{65, 51}, gridPosition{1, 2}, true},
 		{pixelPosition{65, 52}, gridPosition{1, 2}, true},
@@ -881,7 +863,7 @@ func TestGetGridPos(t *testing.T) {
 			if ok != tt.wantedOk {
 				t.Errorf("Wanted pixel position to %s", sWantedOk)
 			}
-			if pos.x != tt.wantedPos.x || pos.y != tt.wantedPos.y {
+			if !pos.equals(tt.wantedPos) {
 				t.Errorf("For pixel position %s, Wanted grid position {%d,%d} but it was {%d,%d}",
 					tt.pixelPos.log(),
 					tt.wantedPos.x,
@@ -891,6 +873,150 @@ func TestGetGridPos(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGridPosAdjacent(t *testing.T) {
+	t.Parallel()
+	hc := newHexConfig(1280, 720, 46, 40, 19, 10)
+
+	var tests = []struct {
+		gridPos       gridPosition
+		hexSide       hexSide
+		wantedGridPos gridPosition
+		wantedOk      bool
+	}{
+		// check top left hexagon {0,0}
+		{gridPosition{0, 0}, northeastSide, gridPosition{0, 0}, false},
+		{gridPosition{0, 0}, eastSide, gridPosition{1, 0}, true},
+		{gridPosition{0, 0}, southeastSide, gridPosition{1, 1}, true},
+		{gridPosition{0, 0}, southwestSide, gridPosition{0, 1}, true},
+		{gridPosition{0, 0}, westSide, gridPosition{0, 0}, false},
+		{gridPosition{0, 0}, northwestSide, gridPosition{0, 0}, false},
+
+		// check top left hexagon {1, 0}
+		{gridPosition{1, 0}, northeastSide, gridPosition{0, 0}, false},
+		{gridPosition{1, 0}, eastSide, gridPosition{2, 0}, true},
+		{gridPosition{1, 0}, southeastSide, gridPosition{2, 1}, true},
+		{gridPosition{1, 0}, southwestSide, gridPosition{1, 1}, true},
+		{gridPosition{1, 0}, westSide, gridPosition{0, 0}, true},
+		{gridPosition{1, 0}, northwestSide, gridPosition{0, 0}, false},
+
+		// check top left hexagon {0, 1}
+		{gridPosition{0, 1}, northeastSide, gridPosition{0, 0}, true},
+		{gridPosition{0, 1}, eastSide, gridPosition{1, 1}, true},
+		{gridPosition{0, 1}, southeastSide, gridPosition{0, 2}, true},
+		{gridPosition{0, 1}, southwestSide, gridPosition{0, 0}, false},
+		{gridPosition{0, 1}, westSide, gridPosition{0, 0}, false},
+		{gridPosition{0, 1}, northwestSide, gridPosition{0, 0}, false},
+
+		// check bottom left hexagon {0,24}
+		{gridPosition{0, 24}, northeastSide, gridPosition{1, 23}, true},
+		{gridPosition{0, 24}, eastSide, gridPosition{1, 24}, true},
+		{gridPosition{0, 24}, southeastSide, gridPosition{0, 0}, false},
+		{gridPosition{0, 24}, southwestSide, gridPosition{0, 0}, false},
+		{gridPosition{0, 24}, westSide, gridPosition{0, 0}, false},
+		{gridPosition{0, 24}, northwestSide, gridPosition{0, 23}, true},
+
+		// check bottom left hexagon {1,24}
+		{gridPosition{1, 24}, northeastSide, gridPosition{2, 23}, true},
+		{gridPosition{1, 24}, eastSide, gridPosition{2, 24}, true},
+		{gridPosition{1, 24}, southeastSide, gridPosition{0, 0}, false},
+		{gridPosition{1, 24}, southwestSide, gridPosition{0, 0}, false},
+		{gridPosition{1, 24}, westSide, gridPosition{0, 24}, true},
+		{gridPosition{1, 24}, northwestSide, gridPosition{1, 23}, true},
+
+		// check bottom left hexagon {0,23}
+		{gridPosition{0, 23}, northeastSide, gridPosition{0, 22}, true},
+		{gridPosition{0, 23}, eastSide, gridPosition{1, 23}, true},
+		{gridPosition{0, 23}, southeastSide, gridPosition{0, 24}, true},
+		{gridPosition{0, 23}, southwestSide, gridPosition{0, 0}, false},
+		{gridPosition{0, 23}, westSide, gridPosition{0, 0}, false},
+		{gridPosition{0, 23}, northwestSide, gridPosition{0, 0}, false},
+
+		// check top right hexagon {27,0}
+		{gridPosition{27, 0}, northeastSide, gridPosition{0, 0}, false},
+		{gridPosition{27, 0}, eastSide, gridPosition{0, 0}, false},
+		{gridPosition{27, 0}, southeastSide, gridPosition{28, 1}, true},
+		{gridPosition{27, 0}, southwestSide, gridPosition{27, 1}, true},
+		{gridPosition{27, 0}, westSide, gridPosition{26, 0}, true},
+		{gridPosition{27, 0}, northwestSide, gridPosition{0, 0}, false},
+
+		// check top right hexagon {28,1}
+		{gridPosition{28, 1}, northeastSide, gridPosition{0, 0}, false},
+		{gridPosition{28, 1}, eastSide, gridPosition{0, 0}, false},
+		{gridPosition{28, 1}, southeastSide, gridPosition{0, 0}, false},
+		{gridPosition{28, 1}, southwestSide, gridPosition{27, 2}, true},
+		{gridPosition{28, 1}, westSide, gridPosition{27, 1}, true},
+		{gridPosition{28, 1}, northwestSide, gridPosition{27, 0}, true},
+
+		// check top right hexagon {26,0}
+		{gridPosition{26, 0}, northeastSide, gridPosition{0, 0}, false},
+		{gridPosition{26, 0}, eastSide, gridPosition{27, 0}, true},
+		{gridPosition{26, 0}, southeastSide, gridPosition{27, 1}, true},
+		{gridPosition{26, 0}, southwestSide, gridPosition{26, 1}, true},
+		{gridPosition{26, 0}, westSide, gridPosition{25, 0}, true},
+		{gridPosition{26, 0}, northwestSide, gridPosition{0, 0}, false},
+
+		// check bottom right hexagon {27, 24}
+		{gridPosition{27, 24}, northeastSide, gridPosition{28, 23}, true},
+		{gridPosition{27, 24}, eastSide, gridPosition{0, 0}, false},
+		{gridPosition{27, 24}, southeastSide, gridPosition{0, 0}, false},
+		{gridPosition{27, 24}, southwestSide, gridPosition{0, 0}, false},
+		{gridPosition{27, 24}, westSide, gridPosition{26, 24}, true},
+		{gridPosition{27, 24}, northwestSide, gridPosition{27, 23}, true},
+
+		// check bottom right hexagon {26, 24}
+		{gridPosition{26, 24}, northeastSide, gridPosition{27, 23}, true},
+		{gridPosition{26, 24}, eastSide, gridPosition{27, 24}, true},
+		{gridPosition{26, 24}, southeastSide, gridPosition{0, 0}, false},
+		{gridPosition{26, 24}, southwestSide, gridPosition{0, 0}, false},
+		{gridPosition{26, 24}, westSide, gridPosition{25, 24}, true},
+		{gridPosition{26, 24}, northwestSide, gridPosition{26, 23}, true},
+
+		// check bottom right hexagon {28, 23}
+		{gridPosition{28, 23}, northeastSide, gridPosition{0, 0}, false},
+		{gridPosition{28, 23}, eastSide, gridPosition{0, 0}, false},
+		{gridPosition{28, 23}, southeastSide, gridPosition{0, 0}, false},
+		{gridPosition{28, 23}, southwestSide, gridPosition{27, 24}, true},
+		{gridPosition{28, 23}, westSide, gridPosition{27, 23}, true},
+		{gridPosition{28, 23}, northwestSide, gridPosition{27, 22}, true},
+	}
+
+	for _, tt := range tests {
+		var sWantedOk string
+		if tt.wantedOk {
+			sWantedOk = "exist"
+		} else {
+			sWantedOk = "not exist"
+		}
+
+		testname := fmt.Sprintf(
+			"gridPos:{%d,%d} and hex side %d has adjacent position {%d,%d} and want it to %s",
+			tt.gridPos.x,
+			tt.gridPos.y,
+			tt.hexSide,
+			tt.wantedGridPos.x,
+			tt.wantedGridPos.y,
+			sWantedOk)
+
+		t.Run(testname, func(t *testing.T) {
+			pos, ok := tt.gridPos.adjacent(tt.hexSide, &hc)
+			if ok != tt.wantedOk {
+				t.Errorf("Wanted pixel position to %s", sWantedOk)
+			}
+			if !pos.equals(tt.wantedGridPos) {
+				t.Errorf("For grid pos {%d,%d} and hex side %d Wanted grid position {%d,%d} but it was {%d,%d}",
+					tt.gridPos.x,
+					tt.gridPos.y,
+					tt.hexSide,
+					tt.wantedGridPos.x,
+					tt.wantedGridPos.y,
+					pos.x,
+					pos.y)
+			}
+		})
+	}
+
 }
 
 // TODO: write higher level tests with more cases once more source code is implemented, these are too low level and sparse.

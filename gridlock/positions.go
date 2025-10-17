@@ -133,10 +133,10 @@ func (pos gridPosition) adjacent(side hexSide, hc *hexConfig) (gridPosition, boo
 			x--
 		}
 	default:
-		panic("No adjacent")
+		panic("Cannot find adjacent grid position. Unknown hex side.")
 	}
 
-	if x < 0 || x >= hc.xIndexMax || y < 0 || y >= hc.yIndexMax {
+	if x < 0 || y < 0 || y >= hc.yIndexMax || (y%2 == 0 && x >= hc.xIndexMax-1) || (y%2 == 1 && x >= hc.xIndexMax) {
 		return gridPosition{}, false
 	} else {
 		return gridPosition{x, y}, true
