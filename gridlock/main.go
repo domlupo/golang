@@ -49,6 +49,7 @@ type Game struct {
 	cpuProfilerOn            bool
 	memoryProfilerOn         bool
 	produceUnits             bool
+	moveUnits                bool
 	cpuProfilerFile          *os.File
 	memoryProfilerFile       *os.File
 	initialSelectedX         float32
@@ -83,6 +84,7 @@ func newGame() Game {
 		redComputerActive:       true,
 		enableFlux:              true,
 		produceUnits:            true,
+		moveUnits:               true,
 		hotRestart:              true,
 		cpuProfilerOn:           false,
 		memoryProfilerOn:        false,
@@ -109,7 +111,7 @@ func (g *Game) restart() {
 	g.compTwo = *newComputer(redPlayer)
 
 	hexagons := setupHexagons(&g.drawConfig.hexConfig)
-	obstacles, pixelPathing := setupObstacles(doubleObstacle, &g.drawConfig.hexConfig)
+	obstacles, pixelPathing := setupObstacles(multiObstacle, &g.drawConfig.hexConfig)
 	nodes := setupNodes(leftVsRightVerticalOffset, &g.drawConfig.hexConfig, g.initialNodeHealth, obstacles, hexagons)
 
 	for nPos := range nodes {
@@ -154,7 +156,9 @@ func (g *Game) Update() error {
 		g.gameState.refresh()
 		g.gameState.attackUnits()
 		g.gameState.attackNodes()
-		g.gameState.moveUnits()
+		if g.moveUnits {
+			g.gameState.moveUnits()
+		}
 		g.gameState.analyzeMoves()
 
 		if g.produceWait < g.produceInterval {

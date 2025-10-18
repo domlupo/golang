@@ -689,12 +689,19 @@ func (s *state) updateTargets(target position, blueComputerActive bool, redCompu
 			n.target = target
 		}
 
-		if n.singleSelect {
+		if s.developerMode {
+			for _, u := range s.units {
+				if u.selected {
+					u.updateTarget(globalTarget, target)
+				}
+			}
+		} else if n.singleSelect {
 			for _, h := range n.control {
 				end := h.linkedList
 				current := end
 				var checkOccurred bool
 				for {
+
 					if current == nil {
 						break
 					}

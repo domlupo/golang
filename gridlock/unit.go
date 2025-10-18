@@ -4,6 +4,8 @@ package main
 import (
 	"image/color"
 	"log/slog"
+	"math"
+	"slices"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -444,30 +446,46 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 }
 
 func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathing, hc *hexConfig) {
-	path := []position{u.globalTarget}
-	for {
-		// TODO: Fix bug. This may be occuring because distance is not calculated correctly.
-		current := path[len(path)-1]
-		obstaclePoint, los := current.obstaclePoint(u.pixelPosition, pixelPathing, obstacles, hc)
+	var foundPath bool
+	paths := [][]position{{u.globalTarget}}
+	newPaths := [][]position{}
 
-		if los {
-			break
+	for !foundPath {
+		for _, path := range paths {
+			start := path[len(path)-1]
+			obstaclePoint, los := start.obstaclePoint(u.pixelPosition, pixelPathing, obstacles, hc)
+
+			if los {
+				foundPath = true
+				newPaths = append(newPaths, path)
+				continue
+			}
+
+			cwPath := u.getPath(start, obstaclePoint, cw, pixelPathing, obstacles, hc)
+			ccwPath := u.getPath(start, obstaclePoint, ccw, pixelPathing, obstacles, hc)
+
+			newPaths = append(newPaths, slices.Concat(path, cwPath))
+			newPaths = append(newPaths, slices.Concat(path, ccwPath))
 		}
+		paths = newPaths
+		newPaths = [][]position{}
+	}
 
-		// TODO: verify distance is properly computed and shortest distance is found. I doubt
-		// this works correctly.
-		cwPath, cwPathDistance := u.getPath(current, obstaclePoint, cw, pixelPathing, obstacles, hc)
-		ccwPath, ccwPathDistance := u.getPath(current, obstaclePoint, ccw, pixelPathing, obstacles, hc)
-
-		shortestPath := cwPath
-		if ccwPathDistance < cwPathDistance {
-			shortestPath = ccwPath
+	shortestDistance := math.MaxInt64
+	shortestPath := 0
+	for i, path := range paths {
+		distance := u.chebyshevDistance(path[len(path)-1].pixelPosition)
+		for i := 0; i < len(path)-1; i++ {
+			distance += path[i].chebyshevDistance(path[i+1].pixelPosition)
 		}
-		path = append(path, shortestPath...)
+		if distance < shortestDistance {
+			shortestDistance = distance
+			shortestPath = i
+		}
 	}
 
 	u.pathGlobalTarget = false
-	u.localTargets = path
+	u.localTargets = paths[shortestPath]
 }
 
 func (u *unit) getPath(
@@ -476,7 +494,7 @@ func (u *unit) getPath(
 	direction pathDirection,
 	pixelPathing pixelPathing,
 	obstacles obstacles,
-	hc *hexConfig) ([]position, int) {
+	hc *hexConfig) []position {
 
 	path := []position{start}
 
@@ -515,11 +533,7 @@ func (u *unit) getPath(
 		}
 	}
 
-	pathDistance := 0
-	for i, pos := range path[1:] {
-		pathDistance += pos.chebyshevDistance(path[i].pixelPosition)
-	}
-	return path[1:], pathDistance
+	return path[1:]
 }
 
 func (u *unit) completeMove(pos position) {

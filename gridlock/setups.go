@@ -7,7 +7,9 @@ const (
 	noObstacle obstacleSetup = iota
 	singleObstacle
 	doubleObstacle
+	tripleObstacle
 	multiObstacle
+	borderObstacle
 	horizontalObstacle
 )
 
@@ -205,26 +207,42 @@ func (os obstacles) setupInterior(setup obstacleSetup, hc *hexConfig) {
 			{5, 21},
 			{5, 22},
 
-			{19, 3},
-			{19, 4},
-			{19, 5},
-			{19, 6},
-			{19, 7},
-			{19, 8},
-			{19, 9},
-			{19, 10},
-			{19, 11},
-			{19, 12},
-			{19, 13},
-			{19, 14},
-			{19, 15},
-			{19, 16},
-			{19, 17},
-			{19, 18},
-			{19, 19},
-			{19, 20},
-			{19, 21},
-			{19, 22},
+			{10, 3},
+			{10, 4},
+			{10, 5},
+			{10, 6},
+			{10, 7},
+			{10, 8},
+			{10, 9},
+			{10, 10},
+			{10, 11},
+			{10, 12},
+			{10, 13},
+			{10, 14},
+			{10, 15},
+			{10, 16},
+			{10, 17},
+			{10, 18},
+			{10, 19},
+			{10, 20},
+			{10, 21},
+			{10, 22},
+		}
+	case tripleObstacle:
+		gridPositions = []gridPosition{
+			{8, 6},
+			{8, 7},
+
+			{10, 1},
+			{10, 2},
+			{10, 3},
+			{10, 4},
+			{10, 5},
+			{10, 6},
+			{10, 7},
+
+			{12, 6},
+			{12, 7},
 		}
 	case multiObstacle:
 		gridPositions = []gridPosition{
@@ -296,6 +314,32 @@ func (os obstacles) setupInterior(setup obstacleSetup, hc *hexConfig) {
 			{13, 20},
 			{13, 21},
 			{13, 22},
+		}
+	case borderObstacle:
+		gridPositions = []gridPosition{
+			{22, 2},
+
+			{9, 3},
+			{9, 4},
+			{9, 5},
+			{9, 6},
+			{9, 7},
+			{9, 8},
+			{9, 9},
+			{9, 10},
+			{9, 11},
+			{9, 12},
+			{9, 13},
+			{9, 14},
+			{9, 15},
+			{9, 16},
+			{9, 17},
+			{9, 18},
+			{9, 19},
+			{9, 20},
+			{9, 21},
+			{9, 22},
+			{9, 23},
 		}
 	case horizontalObstacle:
 		gridPositions = []gridPosition{
