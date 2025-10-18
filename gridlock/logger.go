@@ -22,19 +22,20 @@ const (
 	noLogType logType = iota
 	alwaysLogType
 	undecidedBehavior
-	mainLogType
-	stateLogType
-	selectedUnitLogType
+	mainLogic
+	stateLogic
+	selectedUnit
+	devTool
 )
 
 type loggerConfig struct {
 	initialLogLevel            slog.Level
 	filterTimeAndLevelFromLogs bool
-	logLoggerLogs              bool
 	logUndecidedBehavior       bool
-	logMainLogs                bool
-	logStateLogs               bool
-	logSelectedUnitLogs        bool
+	logMainLogic               bool
+	logStateLogic              bool
+	logSelectedUnit            bool
+	logDevTool                 bool
 }
 
 type l struct {
@@ -62,14 +63,24 @@ func newLogger(lc loggerConfig) l {
 		Logger:   logger,
 		LevelVar: levelVar,
 		enabledLogTypes: map[logType]bool{
-			alwaysLogType:       lc.logLoggerLogs,
-			undecidedBehavior:   lc.logUndecidedBehavior,
-			mainLogType:         lc.logMainLogs,
-			stateLogType:        lc.logStateLogs,
-			selectedUnitLogType: lc.logSelectedUnitLogs},
+			alwaysLogType:     true,
+			undecidedBehavior: lc.logUndecidedBehavior,
+			mainLogic:         lc.logMainLogic,
+			stateLogic:        lc.logStateLogic,
+			selectedUnit:      lc.logSelectedUnit,
+			devTool:           lc.logDevTool,
+		},
 	}
 
 	return l
+}
+
+func (logger l) onlyEnable(logType logType) {
+	for k := range logger.enabledLogTypes {
+		logger.enabledLogTypes[k] = false
+	}
+	logger.enabledLogTypes[alwaysLogType] = true
+	logger.enabledLogTypes[logType] = true
 }
 
 func (logger l) toggleLevel() {
@@ -89,26 +100,27 @@ func (logger l) toggleLevel() {
 }
 
 func (logger l) toggleType(lt logType) {
-	enabled := logger.enabledLogTypes[lt]
-	logger.enabledLogTypes[lt] = !enabled
-
 	var ltName string
 	switch lt {
 	case noLogType:
 		ltName = "noLogType"
 	case alwaysLogType:
-		ltName = "alwaysLogType"
+		logger.log(errorLevel, alwaysLogType, "Cannot toggle always log type")
+		return
 	case undecidedBehavior:
 		ltName = "undecidedBehavior"
-	case mainLogType:
-		ltName = "mainLog"
-	case stateLogType:
-		ltName = "stateLog"
-	case selectedUnitLogType:
-		ltName = "selectedUnitLog"
+	case mainLogic:
+		ltName = "mainLogic"
+	case stateLogic:
+		ltName = "stateLogic"
+	case selectedUnit:
+		ltName = "selectedUnit"
 	default:
 		logger.log(errorLevel, alwaysLogType, "Did not find a matching log type name")
 	}
+
+	enabled := logger.enabledLogTypes[lt]
+	logger.enabledLogTypes[lt] = !enabled
 
 	if ltName != "" && enabled {
 		logger.log(errorLevel, alwaysLogType, fmt.Sprintf("toggled log type off: %s", ltName))

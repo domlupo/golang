@@ -188,7 +188,7 @@ type unit struct {
 func newUnit(p player, globalTarget position, uc unitConfig, pos position, producedOrder int, selected bool) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
-		logger.log(errorLevel, selectedUnitLogType, "newUnit", slog.String("failed to generate UUID", err.Error()))
+		logger.log(errorLevel, selectedUnit, "newUnit", slog.String("failed to generate UUID", err.Error()))
 		panic("cannot newUnit since uuid generation failed")
 	}
 	u := unit{
@@ -211,7 +211,7 @@ func newUnit(p player, globalTarget position, uc unitConfig, pos position, produ
 }
 
 func (u *unit) refresh() {
-	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "beforeRefresh", u.log()...)
+	logger.logSelected(u.selected, infoLevel, selectedUnit, "beforeRefresh", u.log()...)
 	if u.fluxTurnCooldown != 0 {
 		u.fluxTurnCooldown--
 	}
@@ -292,7 +292,7 @@ func (u *unit) reachesNodes(nodes map[gridPosition]*node, hc *hexConfig) {
 // Specifically, the integer incremental error form where error is stored over mulitple moves
 // This algorithm prioritizes straight line movement. It is not guaranteed the final position is reached.
 func (u *unit) getNewPos() (position, func()) {
-	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "getNewPos", u.position.log()...)
+	logger.logSelected(u.selected, infoLevel, selectedUnit, "getNewPos", u.position.log()...)
 
 	if u.currentTarget.isZero() {
 		return u.position, func() {}
@@ -442,10 +442,10 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 	if !target.isZero() {
 		targetLog = append(targetLog, target.log()...)
 	}
-	logger.logSelected(u.selected, infoLevel, selectedUnitLogType, "updateTarget", targetLog...)
+	logger.logSelected(u.selected, infoLevel, selectedUnit, "updateTarget", targetLog...)
 }
 
-func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathing, hc *hexConfig) {
+func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathing, hc *hexConfig) int {
 	var foundPath bool
 	paths := [][]position{{u.globalTarget}}
 	newPaths := [][]position{}
@@ -486,6 +486,7 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathi
 
 	u.pathGlobalTarget = false
 	u.localTargets = paths[shortestPath]
+	return shortestDistance
 }
 
 func (u *unit) getPath(

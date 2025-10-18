@@ -2,8 +2,11 @@
 package main
 
 import (
+	"image/color"
 	"log/slog"
 	"math"
+
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 // not enforced but must be a singleton
@@ -20,6 +23,7 @@ type state struct {
 	developerMode      bool
 	unitsProducedTotal int
 	unitsDeletedTotal  int
+	heatmap            map[pixelPosition]int
 }
 
 func newState(n nodes, o obstacles, h hexagons, pixelPathing pixelPathing, hexConfig *hexConfig, enableFlux bool, developerMode bool) *state {
@@ -32,6 +36,7 @@ func newState(n nodes, o obstacles, h hexagons, pixelPathing pixelPathing, hexCo
 		units:         make(map[position]*unit),
 		enableFlux:    enableFlux,
 		developerMode: developerMode,
+		heatmap:       make(map[pixelPosition]int),
 	}
 
 	return &s
@@ -86,7 +91,7 @@ func (s *state) analyzeMoves() {
 }
 
 func (s *state) moveUnits() {
-	logger.log(infoLevel, stateLogType, "moveUnits", slog.Int("unitCount", len(s.units)))
+	logger.log(infoLevel, stateLogic, "moveUnits", slog.Int("unitCount", len(s.units)))
 
 	var unitsMovedCount int
 	var unitsAlreadyAttacked int
@@ -204,7 +209,7 @@ func (s *state) moveUnits() {
 
 	logger.log(
 		debugLevel,
-		stateLogType,
+		stateLogic,
 		"moveUnits",
 		slog.Int("units moved", unitsMovedCount),
 		slog.Int("units without target", unitsWithoutTarget),
@@ -523,7 +528,7 @@ func (s *state) attackUnits() {
 
 	logger.log(
 		debugLevel,
-		stateLogType,
+		stateLogic,
 		"attackUnits",
 		slog.Int("units attacked", unitAttackedOtherUnitCount),
 		slog.Int("units deleted", unitsDeletedCount),
@@ -562,7 +567,7 @@ func (s *state) attackNodes() {
 
 	logger.log(
 		debugLevel,
-		stateLogType,
+		stateLogic,
 		"attackNodes",
 		slog.Int("no target node", noTargetNodeCount),
 		slog.Int("attacked unit this turn", attackedNodeThisTurnCount),
@@ -779,6 +784,49 @@ func (s *state) collidesWithBorder(pos position, offset int) bool {
 	}
 }
 
+func (s *state) createPathfindHeatmap() {
+	logger.onlyEnable(devTool)
+
+	if len(s.heatmap) != 0 {
+		logger.log(infoLevel, devTool, "cannot create heatmap since it is already created")
+		return
+	}
+
+	logger.log(infoLevel, devTool, "start creating pathfinding heatmap")
+
+	var unit *unit
+	for _, u := range s.units {
+		if u.selected && unit != nil {
+			logger.log(infoLevel, devTool, "can only select one unit when creating heatmap")
+			return
+		} else if u.selected {
+			unit = u
+		}
+	}
+
+	if unit == nil {
+		logger.log(infoLevel, devTool, "must select one unit when creating heat map")
+		return
+	}
+
+	pixelCount := 0
+	for pixelPos, pathing := range s.pixelPathing {
+		pixelCount++
+		if pixelCount%(s.windowWidth*s.windowHeight/100) == 0 {
+			percentProgess := pixelCount / (s.windowWidth * s.windowHeight / 100)
+			logger.log(infoLevel, devTool, "pathfind heatmap", slog.Int("pixel positions percent progress", percentProgess))
+		}
+
+		if pathing.walkable {
+			unit.updateTarget(globalTarget, position{layer: unit.layer, pixelPosition: pixelPos})
+			distance := unit.pathfindGlobalTarget(s.obstacles, s.pixelPathing, s.hexConfig)
+			s.heatmap[pixelPos] = distance
+		}
+
+	}
+	logger.log(infoLevel, devTool, "done creating pathfinding heatmap")
+}
+
 func (s *state) draw(dc drawConfig, drawBlueTargets bool, drawRedTargets, drawFluxes bool, drawVisibilityGrids bool, drawPixelPathing bool) {
 	for _, n := range s.nodes {
 		n.drawNode(dc)
@@ -814,5 +862,26 @@ func (s *state) draw(dc drawConfig, drawBlueTargets bool, drawRedTargets, drawFl
 	}
 	if drawPixelPathing {
 		s.pixelPathing.draw(dc)
+	}
+
+	if len(s.heatmap) != 0 {
+		max := 0
+		for _, distance := range s.heatmap {
+			if distance > max {
+				max = distance
+			}
+		}
+
+		for pixelPos, distance := range s.heatmap {
+			color := color.RGBA{0, 0, 0, uint8(float64(distance) / float64(max) * 255)}
+			vector.DrawFilledRect(
+				dc.screen,
+				float32(pixelPos.x)*dc.windowMultiplier,
+				float32(pixelPos.y)*dc.windowMultiplier,
+				1*dc.windowMultiplier,
+				1*dc.windowMultiplier,
+				color,
+				false)
+		}
 	}
 }

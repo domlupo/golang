@@ -95,11 +95,9 @@ func newGame() Game {
 		loggerConfig: loggerConfig{
 			initialLogLevel:            slog.LevelDebug,
 			filterTimeAndLevelFromLogs: true,
-			logLoggerLogs:              true,
 			logUndecidedBehavior:       true,
-			logMainLogs:                false,
-			logStateLogs:               false,
-			logSelectedUnitLogs:        true,
+			logSelectedUnit:            true,
+			logDevTool:                 true,
 		},
 	}
 	return g
@@ -131,7 +129,7 @@ func (g *Game) Update() error {
 	g.currentTime = time.Now()
 	logger.log(
 		infoLevel,
-		mainLogType,
+		mainLogic,
 		"game performance",
 		slog.Float64("fps", ebiten.ActualFPS()), slog.Float64("tps", ebiten.ActualTPS()),
 	)
@@ -147,7 +145,7 @@ func (g *Game) Update() error {
 	// update game state prior to player actions
 	if !g.paused && !(g.slowTick && (g.currentTime.Sub(g.slowTickTime) < g.slowTickInterval)) {
 		if g.slowTick {
-			logger.log(infoLevel, alwaysLogType, "slowTick")
+			logger.log(infoLevel, devTool, "slowTick")
 		}
 		g.slowTickTime = time.Now()
 
@@ -192,8 +190,9 @@ func (g *Game) Update() error {
 	}
 	if g.developerMode && g.middleMouseScrollClicked {
 		if gridPos, ok := pixelPos.getGridPos(&g.hexConfig); ok {
-			logger.log(infoLevel, mainLogType, "gridPos", slog.Int("x", gridPos.x), slog.Int("y", gridPos.y))
+			logger.log(infoLevel, devTool, "gridPos", slog.Int("x", gridPos.x), slog.Int("y", gridPos.y))
 		}
+		g.gameState.createPathfindHeatmap()
 	}
 	if g.rightMouseClicked {
 		// TODO: Determine behavior. Should player choose which layer they target or handle it via game logic?
@@ -213,7 +212,7 @@ func (g *Game) Update() error {
 	// than the same game state being sent to each one before a final update occurs.
 	// This is a hack, but will probably be fine for awhile.
 	if nodeOwnershipChanged {
-		logger.log(infoLevel, mainLogType, "nodeOwnershipChanged")
+		logger.log(infoLevel, mainLogic, "nodeOwnershipChanged")
 		g.updateComputerTargetNodes()
 	}
 
@@ -232,13 +231,14 @@ func (g *Game) Update() error {
 		default:
 			unknownCount++
 		}
-
 	}
-	logger.log(infoLevel, mainLogType, "game_state", slog.Int("total_units", len(g.gameState.units)))
-	logger.log(infoLevel, mainLogType, "game_state", slog.Int("infantryCount", infantryCount))
-	logger.log(infoLevel, mainLogType, "game_state", slog.Int("unguidedGroundMissile", unguidedGroundMissileCount))
-	logger.log(infoLevel, mainLogType, "game_state", slog.Int("guidedAirMissile", guidedAirMissileCount))
-	logger.log(infoLevel, mainLogType, "game_state", slog.Int("unknownCount", unknownCount))
+	logger.log(infoLevel, mainLogic, "unit counts",
+		slog.Int("total_units", len(g.gameState.units)),
+		slog.Int("infantryCount", infantryCount),
+		slog.Int("unguidedGroundMissile", unguidedGroundMissileCount),
+		slog.Int("guidedAirMissile", guidedAirMissileCount),
+		slog.Int("unknownCount", unknownCount),
+	)
 
 	var blueNodeCount int
 	var redNodeCount int
@@ -254,7 +254,7 @@ func (g *Game) Update() error {
 
 	if blueNodeCount == 0 || redNodeCount == 0 {
 		if g.hotRestart {
-			logger.log(infoLevel, mainLogType, "restartGame")
+			logger.log(infoLevel, mainLogic, "restartGame")
 
 			g.restart()
 		} else {
@@ -319,18 +319,18 @@ func main() {
 		ebiten.KeyC,
 		func() {
 			if g.cpuProfilerOn {
-				logger.log(infoLevel, alwaysLogType, "Stopping CPU profiler.")
+				logger.log(infoLevel, devTool, "Stopping CPU profiler.")
 				pprof.StopCPUProfile()
 				g.cpuProfilerFile.Close()
 			} else {
-				logger.log(infoLevel, alwaysLogType, "Starting CPU profiler.")
+				logger.log(infoLevel, devTool, "Starting CPU profiler.")
 				f, err := os.Create("cpu.prof")
 				if err != nil {
-					logger.log(errorLevel, alwaysLogType, "Could not create CPU profiler file.")
+					logger.log(errorLevel, devTool, "Could not create CPU profiler file.")
 				}
 				g.cpuProfilerFile = f
 				if err := pprof.StartCPUProfile(f); err != nil {
-					logger.log(errorLevel, alwaysLogType, "Could not start CPU profiler.")
+					logger.log(errorLevel, devTool, "Could not start CPU profiler.")
 				}
 			}
 			g.cpuProfilerOn = !g.cpuProfilerOn
@@ -340,17 +340,17 @@ func main() {
 		ebiten.KeyX,
 		func() {
 			if g.memoryProfilerOn {
-				logger.log(infoLevel, alwaysLogType, "Stopping memory profiler.")
+				logger.log(infoLevel, devTool, "Stopping memory profiler.")
 
 				if err := pprof.WriteHeapProfile(g.memoryProfilerFile); err != nil {
-					logger.log(errorLevel, alwaysLogType, "Could not write heap profile.")
+					logger.log(errorLevel, devTool, "Could not write heap profile.")
 				}
 				g.memoryProfilerFile.Close()
 			} else {
-				logger.log(infoLevel, alwaysLogType, "Starting memory profiler.")
+				logger.log(infoLevel, devTool, "Starting memory profiler.")
 				f, err := os.Create("mem.prof")
 				if err != nil {
-					logger.log(errorLevel, alwaysLogType, "Could not create memory profiler file.")
+					logger.log(errorLevel, devTool, "Could not create memory profiler file.")
 				}
 				g.memoryProfilerFile = f
 				runtime.GC()
@@ -372,15 +372,15 @@ func main() {
 		g.developerToggleCooldown)
 	g.developerToggles["mainLogType"] = newToggle(
 		ebiten.KeyM,
-		func() { logger.toggleType(mainLogType) },
+		func() { logger.toggleType(mainLogic) },
 		g.developerToggleCooldown)
 	g.developerToggles["stateLogType"] = newToggle(
 		ebiten.KeyS,
-		func() { logger.toggleType(stateLogType) },
+		func() { logger.toggleType(stateLogic) },
 		g.developerToggleCooldown)
 	g.developerToggles["selectedUnitLogType"] = newToggle(
 		ebiten.KeyU,
-		func() { logger.toggleType(selectedUnitLogType) },
+		func() { logger.toggleType(selectedUnit) },
 		g.developerToggleCooldown)
 	g.developerToggles["drawAll"] = newToggle(
 		ebiten.KeyA,
@@ -422,7 +422,7 @@ func main() {
 	signal.Notify(c, os.Interrupt)
 	go func(g Game) {
 		for range c {
-			logger.log(warnLevel, mainLogType, "received interrupt signal")
+			logger.log(warnLevel, mainLogic, "received interrupt signal")
 			g.forceCleanup()
 		}
 	}(g)
@@ -430,7 +430,7 @@ func main() {
 	g.restart()
 
 	if err := ebiten.RunGame(&g); err != nil {
-		logger.log(errorLevel, mainLogType, err.Error())
+		logger.log(errorLevel, mainLogic, err.Error())
 	}
 
 	g.forceCleanup()
@@ -439,10 +439,10 @@ func main() {
 func (g Game) forceCleanup() {
 	pprof.StopCPUProfile()
 	g.cpuProfilerFile.Close()
-	logger.log(warnLevel, mainLogType, "force closed cpu profiler file")
+	logger.log(warnLevel, devTool, "force closed cpu profiler file")
 	if err := pprof.WriteHeapProfile(g.memoryProfilerFile); err != nil {
-		logger.log(errorLevel, alwaysLogType, "Could not write heap profile.")
+		logger.log(errorLevel, devTool, "Could not write heap profile.")
 	}
 	g.memoryProfilerFile.Close()
-	logger.log(warnLevel, mainLogType, "force closed memory profiler file")
+	logger.log(warnLevel, devTool, "force closed memory profiler file")
 }
