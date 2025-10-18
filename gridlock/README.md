@@ -19,13 +19,113 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Add obstacle border and update setups
+   - Handle setting up visiblity grids edge cases e.g. obstacle on border, etc 
+
+- Improve guided air missile
+  - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.
+  - Fix bug where ground missile (not air missile) is not moving for computer player
+  - auto despawns for non computer players. This is probably wrong behavior.
+  - Determine target locking behavior for human player and computer player.
+
+- Add more ground units for local path finding iteration
+  - Determine what units I want to remove. i think most ground units are unneeded.
+  - tank (counters infantry, secondary mode to push unit?)
+  - mobile SAM (counters missiles)
+    - Ground missile exploding in air does no damage?
+    - Should air missile exploding in air do damage?
+    - Should air missile only get one retarget on missle? An upgrade could allow multiple retargets besides the first?
+    - Units may need different pathing algorithm or reactions to flux? 
+      - How to avoid this?
+      - How to simplify this?
+      - How to make this CPU performant?
+    - Targets different layer than it moves
+    - How will AI handle placement? 
+      - An easy implementation might be to be near node.
+      - An easy implementation might be to stay away from infantry
+      - Counter missile will either need to travel faster than tracked missile or anticipate movement?
+    - Added guided missile variant will probably help but might be low priority?
+
 - Fix units colliding into hexagon obstacles:
   - Can add collision detection for hexagon obstacles. Probably need spat partitioning
   - Can make hexagon obstacles visually smaller
 
-- Fix HACKS added during multi obstacle implementation.
-  - Determine if high level unit tests should be added now or punted till later.
-  - Handle setting up visiblity grids edge cases e.g. obstacle on border, etc
+- Determine if I need to implement separating axis theorem for collision other than (circle <-> circle)
+  - Right now node collision is hacky. It is just a circle that is smaller than the hexagon.
+  - Unpassable terrain e.g. water, high altitude mountains will probably require this for a* pathing.
+  - Nodes are hexagon. Determine if SAT is the simplest and most performant collision check for hexagons.
+  - Units like tank may need represented as a square. 
+
+- Fix Bresenham's algorithm edge cases:
+  - Bresenham error needs to reset itself for several reasons. I still need to handle:
+    - Determine if the target moving is handled. There may be an elegant solution here.
+    - If it is not handled determine how to fix. Structure may need updated.
+  - A potentially good contract:
+    - Multiple sources (state, computer, etc) update units various targets (flux, local, global, etc)
+    - Unit must keep itself in sync
+  - Determine if a different structure is better for Bresenham
+
+- Determine path finding goals for individual units to decide on path finding algorithm:
+  - Determine what units I want to remove. i think most ground units are unneeded.
+  - Unit -> player experience -> path finding algorithm
+  - Infantry -> Form tight territory lines of a specific thickness -> 
+  - etc 
+
+- Set a deadline and plan for a polished MVP
+  - This should be multiplayer playable by friends via browser.
+  - A vertical slice of MVP features. 
+  - If feedback is good, then I can work on adding more features.
+  - If feedback is good, then I can work on polishing existing features.
+
+- Analyze and iterate on game design and game loop:
+  - Is game fun?
+  - Are you designing features to improve player experience? 
+  - Are you coding features to improve player experience?
+  - Are you priotizing and cutting features as needed?
+
+- clean up bugs and hacks:
+  - There are enough to cause bugs while testing game design and game loop
+
+- Polish UI
+  - Currently it is very hard to fight computer due to clunky UI
+  - Easier way to select all nodes of same type with double click
+  - Better automated targetting from units. e.g. units don't auto target nodes when they should.
+
+- save file: 
+  - Will expose constraints
+  - Will expose platform concerns
+  - May expose issues with work so far 
+  - Can start menu structure
+
+- Release to web:
+  - learn how to deploy
+  - easier to share with friends
+  - test web based issues rather than only mac
+
+- local multiplayer:
+  - Initial research shows webRTC is probably better but more complex than websockets
+
+- Improve computer
+  - Update computer to be beatable by humans
+  - Should computer units prioritize nodes or units?
+  - Investigate, there may be a bug where when a node is captured by a computer player, unit targets incorrectly become node
+    when a local target is already acquired.
+
+---
+
+### Future Checkpoints
+
+- Determine if spatial partitiong node colliison optimization is needed.
+  - right now node collision naively checks all nodes.
+
+- Determine if spatial partitiong node colliison optimization is needed.
+  - right now node collision naively checks all nodes.
+
+- Determine if LOS algorithm should be updated from bresenham to check obstacle line intersects
+  - line intersect check will be probably be much more performant
+  - line intersect check will probably be much better than switching from map to array for cache locality.
+  - current CPU profiling shows map access during lineOfSight checks are taking up significant CPU
+  - can reduce number of line checks at game start e.g. 2 hexagons connecetd only have 10 sides, not 12.
 
 - Optimize multi obstacle pathing:
   - Long term:
@@ -59,82 +159,7 @@ Is there a mobile equivalent for war/4x games?
     - nearestUnwalkabledDistance int
     - nearestUnwalkable pixelPosition
 
-- Determine if LOS algorithm should be updated from bresenham to check obstacle line intersects
-  - line intersect check will be probably be much more performant
-  - line intersect check will probably be much better than switching from map to array for cache locality.
-  - current CPU profiling shows map access during lineOfSight checks are taking up significant CPU
-  - can reduce number of line checks at game start e.g. 2 hexagons connecetd only have 10 sides, not 12.
-
-- Determine if I need to implement separating axis theorem for collision other than (circle <-> circle)
-  - Right now node collision is hacky. It is just a circle that is smaller than the hexagon.
-  - Unpassable terrain e.g. water, high altitude mountains will probably require this for a* pathing.
-  - Nodes are hexagon. Determine if SAT is the simplest and most performant collision check for hexagons.
-  - Units like tank may need represented as a square. 
-
-- Determine if spatial partitiong node colliison optimization is needed.
-  - right now node collision naively checks all nodes.
-
-- Improve guided air missile
-  - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.
-  - Fix bug where ground missile (not air missile) is not moving for computer player
-  - auto despawns for non computer players. This is probably wrong behavior.
-  - Determine target locking behavior for human player and computer player.
-
-- Fix Bresenham's algorithm edge cases:
-  - Bresenham error needs to reset itself for several reasons. I still need to handle:
-    - Determine if the target moving is handled. There may be an elegant solution here.
-    - If it is not handled determine how to fix. Structure may need updated.
-  - A potentially good contract:
-    - Multiple sources (state, computer, etc) update units various targets (flux, local, global, etc)
-    - Unit must keep itself in sync
-  - Determine if a different structure is better for Bresenham
-
-- Determine path finding goals for individual units to decide on path finding algorithm:
-  - Determine what units I want to remove. i think most ground units are unneeded.
-  - Unit -> player experience -> path finding algorithm
-  - Infantry -> Form tight territory lines of a specific thickness -> 
-  - etc 
-
-- Add more ground units for local path finding iteration
-  - Determine what units I want to remove. i think most ground units are unneeded.
-  - tank (counters infantry, secondary mode to push unit?)
-  - mobile SAM (counters missiles)
-    - Ground missile exploding in air does no damage?
-    - Should air missile exploding in air do damage?
-    - Should air missile only get one retarget on missle? An upgrade could allow multiple retargets besides the first?
-    - Units may need different pathing algorithm or reactions to flux? 
-      - How to avoid this?
-      - How to simplify this?
-      - How to make this CPU performant?
-    - Targets different layer than it moves
-    - How will AI handle placement? 
-      - An easy implementation might be to be near node.
-      - An easy implementation might be to stay away from infantry
-      - Counter missile will either need to travel faster than tracked missile or anticipate movement?
-    - Added guided missile variant will probably help but might be low priority?
-
-- Set a deadline and plan for a polished MVP
-  - This should be multiplayer playable by friends via browser.
-  - A vertical slice of MVP features. 
-  - If feedback is good, then I can work on adding more features.
-  - If feedback is good, then I can work on polishing existing features.
-
-- Analyze and iterate on game design and game loop:
-  - Is game fun?
-  - Are you designing features to improve player experience? 
-  - Are you coding features to improve player experience?
-  - Are you priotizing and cutting features as needed?
-
-- clean up bugs and hacks:
-  - There are enough to cause bugs while testing game design and game loop
-
-- Refactor for more idiomatic go code as I read learning Go.
-
----
-
-### Future Checkpoints
-
--  TODO: Fix bad UI behavior when cursor ends off screen
+- TODO: Fix bad UI behavior when cursor ends off screen
 
 - While game is paused, node targets can be updated. Determine if this behavior is correct. Fix if needed.
 
@@ -160,24 +185,12 @@ Is there a mobile equivalent for war/4x games?
 
 - Determine if for CPU reasons, I should not mix layers in the same map and always manage them by state.go
 
-- Refactor how state, setups, and pathing is initialized. The current structure is poor.
-
-- How can I use more unit tests? Or how can i write automated high level tests.
-
-- Improve computer
-  - Update computer to be beatable by humans
-  - Should computer units prioritize nodes or units?
-  - Investigate, there may be a bug where when a node is captured by a computer player, unit targets incorrectly become node
-    when a local target is already acquired.
+- When is the write time to write high level tests?
+  - how can i write automated high level tests? basic unit test? simulation? 
 
 - Create more node setup test scenarios
   - Able to easily reproduce and test precise setups for edge case issues
   - Able to randomly generated setups to find hidden edge case issues
-
-- Polish UI
-  - Currently it is very hard to fight computer due to clunky UI
-  - Easier way to select all nodes of same type with double click
-  - Better automated targetting from units. e.g. units don't auto target nodes when they should.
 
 - Do I need to think about layers more?
   - Right now I think this decision can only be known far in the future and it should be 
@@ -189,12 +202,6 @@ Is there a mobile equivalent for war/4x games?
 
 - Deterministic seeds and deterministic game engine:
   - I can easily run simulations to analyze game balance
-
-- Determine if a node should be a type of unit rather than a separate struct
-  - I am leaning towards overall it would be better to just make a node a unit
-  - Other units will probably produce units e.g. plane create flare, plane create paratrooper, etc
-  - if node count stays static there is probably some benefits to stay separate 
-  - if nodes do not move there is probably some benefit to stay separate
 
 - Determine if unit collision not occuring for static units is correct behavior.
   - This behavior probably redcues CPU usage
@@ -218,22 +225,9 @@ Is there a mobile equivalent for war/4x games?
 - Tool / CLI which launches multiple windows at once to test multiple scenarios
   - Faster test loop
 
-- save file: 
-  - Will expose constraints
-  - Will expose platform concerns
-  - May expose issues with work so far 
-
-- Release to web:
-  - learn how to deploy
-  - easier to share with friends
-  - test web based issues rather than only mac
-
 - Release to phone: 
   - check phone controls
   - check resolution
-
-- local multiplayer:
-  - Initial research shows webRTC is probably better but more complex than websockets
 
 - Determine if flux iteration is useful:
   - Need to implement specific local path finding before flux iteration.
