@@ -508,6 +508,7 @@ func (u *unit) getPath(
 	default:
 		panic("To set end, path direction must be clockwise or counter clockwise")
 	}
+
 	for current != end {
 		for trimIndex, prior := range path[:len(path)-1] {
 			// TODO: think through trim more. Should this stay LOS or convert to an obstacle target check

@@ -200,7 +200,7 @@ func (pos pixelPosition) lineOfSight(otherPos pixelPosition, pathing pixelPathin
 	return pixelPosition{}, true
 }
 
-// returns the obstacle target nearest to the start position for the obstacle blocking the line of sight between start and end
+// returns the obstacle point nearest to the line of sight block from start to end
 func (start pixelPosition) obstaclePoint(end pixelPosition, pathing pixelPathing, obstacles obstacles, hc *hexConfig) (obstaclePoint, bool) {
 	obstaclePixelPos, los := start.lineOfSight(end, pathing)
 
@@ -217,7 +217,7 @@ func (start pixelPosition) obstaclePoint(end pixelPosition, pathing pixelPathing
 	}
 	visibilityGrid := *obstacles[gridPos].visibilityGrid
 	for index, op := range visibilityGrid {
-		distance := start.chebyshevDistance(op.pixelPosition)
+		distance := obstaclePixelPos.chebyshevDistance(op.pixelPosition)
 		if distance < nearest {
 			nearest = distance
 			nearestIndex = index
