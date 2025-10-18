@@ -19,8 +19,7 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Add obstacle border and update setups
-   - Handle setting up visiblity grids edge cases e.g. obstacle on border, etc 
+- Fix global path find hang bug
 
 - Improve guided air missile
   - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.

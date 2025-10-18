@@ -102,34 +102,34 @@ func (pixelPos pixelPosition) equals(other pixelPosition) bool {
 	return pixelPos.x == other.x && pixelPos.y == other.y
 }
 
-func (pos gridPosition) adjacent(side hexSide, hc *hexConfig) (gridPosition, bool) {
-	x := pos.x
-	y := pos.y
+func (gridPos gridPosition) adjacent(side hexSide, hc *hexConfig) (gridPosition, bool) {
+	x := gridPos.x
+	y := gridPos.y
 	switch side {
 	case noSide:
 		panic("need a direction to find adjacent grid position")
 	case northeastSide:
 		y--
-		if pos.y%2 == 0 {
+		if gridPos.y%2 == 0 {
 			x++
 		}
 	case eastSide:
 		x++
 	case southeastSide:
 		y++
-		if pos.y%2 == 0 {
+		if gridPos.y%2 == 0 {
 			x++
 		}
 	case westSide:
 		x--
 	case southwestSide:
 		y++
-		if pos.y%2 == 1 {
+		if gridPos.y%2 == 1 {
 			x--
 		}
 	case northwestSide:
 		y--
-		if pos.y%2 == 1 {
+		if gridPos.y%2 == 1 {
 			x--
 		}
 	default:
@@ -141,6 +141,22 @@ func (pos gridPosition) adjacent(side hexSide, hc *hexConfig) (gridPosition, boo
 	} else {
 		return gridPosition{x, y}, true
 	}
+}
+
+func (gridPos gridPosition) isAdjacent(other gridPosition, hc *hexConfig) bool {
+	ne, neOk := gridPos.adjacent(northeastSide, hc)
+	e, eOk := gridPos.adjacent(eastSide, hc)
+	se, seOk := gridPos.adjacent(southeastSide, hc)
+	sw, swOk := gridPos.adjacent(southwestSide, hc)
+	w, wOk := gridPos.adjacent(westSide, hc)
+	nw, nwOk := gridPos.adjacent(northwestSide, hc)
+
+	return (neOk && ne.equals(other)) ||
+		(eOk && e.equals(other)) ||
+		(seOk && se.equals(other)) ||
+		(swOk && sw.equals(other)) ||
+		(wOk && w.equals(other)) ||
+		(nwOk && nw.equals(other))
 }
 
 func (pos position) log() []slog.Attr {

@@ -446,8 +446,9 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathing, hc *hexConfig) {
 	path := []position{u.globalTarget}
 	for {
+		// TODO: Fix bug. This may be occuring because distance is not calculated correctly.
 		current := path[len(path)-1]
-		obstacleTarget, los := current.obstacleTarget(u.pixelPosition, pixelPathing, obstacles, hc)
+		obstaclePoint, los := current.obstaclePoint(u.pixelPosition, pixelPathing, obstacles, hc)
 
 		if los {
 			break
@@ -455,8 +456,8 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathi
 
 		// TODO: verify distance is properly computed and shortest distance is found. I doubt
 		// this works correctly.
-		cwPath, cwPathDistance := u.getPath(current, obstacleTarget, cw, pixelPathing, obstacles, hc)
-		ccwPath, ccwPathDistance := u.getPath(current, obstacleTarget, ccw, pixelPathing, obstacles, hc)
+		cwPath, cwPathDistance := u.getPath(current, obstaclePoint, cw, pixelPathing, obstacles, hc)
+		ccwPath, ccwPathDistance := u.getPath(current, obstaclePoint, ccw, pixelPathing, obstacles, hc)
 
 		shortestPath := cwPath
 		if ccwPathDistance < cwPathDistance {
@@ -471,7 +472,7 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathi
 
 func (u *unit) getPath(
 	start position,
-	current obstacleTarget,
+	current obstaclePoint,
 	direction pathDirection,
 	pixelPathing pixelPathing,
 	obstacles obstacles,
@@ -479,7 +480,7 @@ func (u *unit) getPath(
 
 	path := []position{start}
 
-	var end obstacleTarget
+	var end obstaclePoint
 	switch direction {
 	case cw:
 		end = *current.ccw
@@ -499,8 +500,8 @@ func (u *unit) getPath(
 			}
 		}
 		path = append(path, position{layer: u.layer, pixelPosition: current.pixelPosition})
-		obstacleTarget, los := current.obstacleTarget(u.pixelPosition, pixelPathing, obstacles, hc)
-		if los || current.groupId != obstacleTarget.groupId {
+		obstaclePoint, los := current.obstaclePoint(u.pixelPosition, pixelPathing, obstacles, hc)
+		if los || current.visibilityGridId != obstaclePoint.visibilityGridId {
 			break
 		}
 

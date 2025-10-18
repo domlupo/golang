@@ -109,7 +109,7 @@ func (g *Game) restart() {
 	g.compTwo = *newComputer(redPlayer)
 
 	hexagons := setupHexagons(&g.drawConfig.hexConfig)
-	obstacles, pixelPathing := setupObstacles(multiObstacle, &g.drawConfig.hexConfig)
+	obstacles, pixelPathing := setupObstacles(doubleObstacle, &g.drawConfig.hexConfig)
 	nodes := setupNodes(leftVsRightVerticalOffset, &g.drawConfig.hexConfig, g.initialNodeHealth, obstacles, hexagons)
 
 	for nPos := range nodes {
@@ -186,8 +186,10 @@ func (g *Game) Update() error {
 	} else if g.leftMouseClicked {
 		g.leftMouseHeld = true
 	}
-	if g.middleMouseScrollClicked {
-		logger.log(infoLevel, mainLogType, "middle click")
+	if g.developerMode && g.middleMouseScrollClicked {
+		if gridPos, ok := pixelPos.getGridPos(&g.hexConfig); ok {
+			logger.log(infoLevel, mainLogType, "gridPos", slog.Int("x", gridPos.x), slog.Int("y", gridPos.y))
+		}
 	}
 	if g.rightMouseClicked {
 		// TODO: Determine behavior. Should player choose which layer they target or handle it via game logic?

@@ -8,72 +8,202 @@ const (
 	singleObstacle
 	doubleObstacle
 	multiObstacle
+	horizontalObstacle
 )
 
-func setupObstacles(s obstacleSetup, hc *hexConfig) (obstacles, pixelPathing) {
+func setupObstacles(setup obstacleSetup, hc *hexConfig) (obstacles, pixelPathing) {
+	obstacles := make(obstacles)
+	obstacles.setupBorder()
+	obstacles.setupInterior(setup, hc)
+	pixelPathing := obstacles.setup(hc)
+	return obstacles, pixelPathing
+}
+
+func (os obstacles) setupBorder() {
+	gridPositions := []gridPosition{
+		// north west corner
+		{0, 0},
+		{1, 1},
+		// north
+		{1, 0},
+		{2, 0},
+		{3, 0},
+		{4, 0},
+		{5, 0},
+		{6, 0},
+		{7, 0},
+		{8, 0},
+		{9, 0},
+		{10, 0},
+		{11, 0},
+		{12, 0},
+		{13, 0},
+		{14, 0},
+		{15, 0},
+		{16, 0},
+		{17, 0},
+		{18, 0},
+		{19, 0},
+		{20, 0},
+		{21, 0},
+		{22, 0},
+		{23, 0},
+		{24, 0},
+		{25, 0},
+		{26, 0},
+		// north east corner
+		{27, 0},
+		{27, 1},
+		// east
+		{28, 1},
+		{27, 2},
+		{28, 3},
+		{27, 4},
+		{28, 5},
+		{27, 6},
+		{28, 7},
+		{27, 8},
+		{28, 9},
+		{27, 10},
+		{28, 11},
+		{27, 12},
+		{28, 13},
+		{27, 14},
+		{28, 15},
+		{27, 16},
+		{28, 17},
+		{27, 18},
+		{28, 19},
+		{27, 20},
+		{28, 21},
+		{27, 22},
+		{28, 23},
+		// south east corner
+		{27, 24},
+		{27, 23},
+		// south west corner
+		{0, 24},
+		{1, 23},
+		// south
+		{1, 24},
+		{2, 24},
+		{3, 24},
+		{4, 24},
+		{5, 24},
+		{6, 24},
+		{7, 24},
+		{8, 24},
+		{9, 24},
+		{10, 24},
+		{11, 24},
+		{12, 24},
+		{13, 24},
+		{14, 24},
+		{15, 24},
+		{16, 24},
+		{17, 24},
+		{18, 24},
+		{19, 24},
+		{20, 24},
+		{21, 24},
+		{22, 24},
+		{23, 24},
+		{24, 24},
+		{25, 24},
+		{26, 24},
+		// west
+		{0, 1},
+		{0, 2},
+		{0, 3},
+		{0, 4},
+		{0, 5},
+		{0, 6},
+		{0, 7},
+		{0, 8},
+		{0, 9},
+		{0, 10},
+		{0, 11},
+		{0, 12},
+		{0, 13},
+		{0, 14},
+		{0, 15},
+		{0, 16},
+		{0, 17},
+		{0, 18},
+		{0, 19},
+		{0, 20},
+		{0, 21},
+		{0, 22},
+		{0, 23},
+	}
+
+	for _, pos := range gridPositions {
+		os.insert(pos, &obstacle{gridPos: pos, kind: highMountain})
+	}
+}
+
+func (os obstacles) setupInterior(setup obstacleSetup, hc *hexConfig) {
 	var gridPositions []gridPosition
 
-	switch s {
+	switch setup {
 	case noObstacle:
 	case singleObstacle:
 		gridPositions = []gridPosition{
-			{1, 3},
-			{1, 4},
-			{2, 4},
 			{3, 3},
 			{3, 4},
 			{4, 4},
+			{5, 3},
 			{5, 4},
-			{6, 3},
-			{3, 5},
-			{3, 6},
-			{3, 7},
-			{3, 8},
-			{3, 9},
-			{3, 10},
-			{3, 11},
-			{3, 12},
-			{3, 13},
-			{3, 14},
-			{3, 15},
-			{3, 16},
-			{3, 17},
-			{3, 18},
-			{3, 19},
-			{3, 20},
-			{3, 21},
-			{3, 22},
-			{3, 23},
+			{6, 4},
+			{7, 4},
+			{8, 3},
+			{5, 5},
+			{5, 6},
+			{5, 7},
+			{5, 8},
+			{5, 9},
+			{5, 10},
+			{5, 11},
+			{5, 12},
+			{5, 13},
+			{5, 14},
+			{5, 15},
+			{5, 16},
+			{5, 17},
+			{5, 18},
+			{5, 19},
+			{5, 20},
+			{5, 21},
+			{5, 22},
 		}
 	case doubleObstacle:
 		gridPositions = []gridPosition{
-			{1, 3},
-			{1, 4},
-			{2, 4},
 			{3, 3},
 			{3, 4},
 			{4, 4},
+			{5, 3},
 			{5, 4},
-			{6, 3},
-			{3, 5},
-			{3, 6},
-			{3, 7},
-			{3, 8},
-			{3, 9},
-			{3, 10},
-			{3, 11},
-			{3, 12},
-			{3, 13},
-			{3, 14},
-			{3, 15},
-			{3, 16},
-			{3, 17},
-			{3, 18},
-			{3, 19},
-			{3, 20},
-			{3, 21},
-			{3, 22},
-			{3, 23},
+			{6, 4},
+			{7, 4},
+			{8, 3},
+			{5, 5},
+			{5, 6},
+			{5, 7},
+			{5, 8},
+			{5, 9},
+			{5, 10},
+			{5, 11},
+			{5, 12},
+			{5, 13},
+			{5, 14},
+			{5, 15},
+			{5, 16},
+			{5, 17},
+			{5, 18},
+			{5, 19},
+			{5, 20},
+			{5, 21},
+			{5, 22},
 
 			{19, 3},
 			{19, 4},
@@ -95,12 +225,9 @@ func setupObstacles(s obstacleSetup, hc *hexConfig) (obstacles, pixelPathing) {
 			{19, 20},
 			{19, 21},
 			{19, 22},
-			{19, 23},
 		}
 	case multiObstacle:
 		gridPositions = []gridPosition{
-			{1, 3},
-			{1, 4},
 			{2, 4},
 			{3, 3},
 			{3, 4},
@@ -170,18 +297,27 @@ func setupObstacles(s obstacleSetup, hc *hexConfig) (obstacles, pixelPathing) {
 			{13, 21},
 			{13, 22},
 		}
+	case horizontalObstacle:
+		gridPositions = []gridPosition{
+			{1, 3},
+			{2, 3},
+			{3, 3},
+			{4, 3},
+			{5, 3},
+			{6, 3},
+			{7, 3},
+			{8, 3},
+			{9, 3},
+			{10, 3},
+			{10, 4},
+		}
 	default:
 		panic("obstacle setup does not exist")
 	}
 
-	obstacles := make(obstacles)
 	for _, pos := range gridPositions {
-		obstacles[pos] = &obstacle{gridPos: pos, kind: mountain}
+		os.insert(pos, &obstacle{gridPos: pos, kind: lowMountain})
 	}
-
-	pixelPathing := obstacles.setup(hc)
-
-	return obstacles, pixelPathing
 }
 
 type nodeSetup int
@@ -189,8 +325,7 @@ type nodeSetup int
 const (
 	noNodes nodeSetup = iota
 	nodeSurrounded
-	zeroZero
-	oneOne
+	northWest
 	horizontal
 	horizontalMissile
 	vertical
@@ -236,13 +371,9 @@ func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth 
 			{gridPosition{3, 3}, player, unitConfig},
 			{gridPosition{4, 3}, player, unitConfig},
 		}
-	case zeroZero:
+	case northWest:
 		nodeInfos = []nodeInfo{
-			{gridPosition{0, 0}, bluePlayer, infantryConfig},
-		}
-	case oneOne:
-		nodeInfos = []nodeInfo{
-			{gridPosition{1, 1}, bluePlayer, infantryConfig},
+			{gridPosition{2, 2}, bluePlayer, infantryConfig},
 		}
 	case horizontal:
 		nodeInfos = []nodeInfo{
@@ -261,19 +392,19 @@ func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth 
 		}
 	case diagonal:
 		nodeInfos = []nodeInfo{
-			{gridPosition{1, 1}, bluePlayer, infantryConfig},
+			{gridPosition{2, 2}, bluePlayer, infantryConfig},
 			{gridPosition{5, 5}, redPlayer, infantryConfig},
 		}
 	case lowNodeCount:
 		nodeInfos = []nodeInfo{
-			{gridPosition{1, 1}, bluePlayer, infantryConfig},
+			{gridPosition{2, 2}, bluePlayer, infantryConfig},
 			{gridPosition{2, 5}, bluePlayer, infantryConfig},
 			{gridPosition{20, 5}, redPlayer, infantryConfig},
 		}
 	case noNeutral:
 		unitConfig := infantryConfig
 		nodeInfos = []nodeInfo{
-			{gridPosition{1, 1}, bluePlayer, unitConfig},
+			{gridPosition{2, 2}, bluePlayer, unitConfig},
 			{gridPosition{6, 1}, bluePlayer, unitConfig},
 			{gridPosition{11, 1}, bluePlayer, unitConfig},
 			{gridPosition{15, 1}, bluePlayer, unitConfig},
@@ -312,7 +443,7 @@ func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth 
 	case leftVsRight:
 		unitConfig := infantryConfig
 		nodeInfos = []nodeInfo{
-			{gridPosition{1, 1}, bluePlayer, unitConfig},
+			{gridPosition{2, 2}, bluePlayer, unitConfig},
 			{gridPosition{6, 1}, bluePlayer, unitConfig},
 			{gridPosition{11, 1}, neutralPlayer, unitConfig},
 			{gridPosition{15, 1}, neutralPlayer, unitConfig},
@@ -350,7 +481,7 @@ func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth 
 	case leftVsRightHorizontalOffset:
 		unitConfig := infantryConfig
 		nodeInfos = []nodeInfo{
-			{gridPosition{1, 1}, bluePlayer, unitConfig},
+			{gridPosition{2, 2}, bluePlayer, unitConfig},
 			{gridPosition{6, 1}, bluePlayer, unitConfig},
 			{gridPosition{11, 1}, neutralPlayer, unitConfig},
 			{gridPosition{16, 1}, neutralPlayer, unitConfig},
@@ -388,7 +519,7 @@ func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth 
 	case leftVsRightVerticalOffset:
 		unitConfig := infantryConfig
 		nodeInfos = []nodeInfo{
-			{gridPosition{1, 1}, bluePlayer, unitConfig},
+			{gridPosition{2, 2}, bluePlayer, unitConfig},
 			{gridPosition{6, 1}, bluePlayer, unitConfig},
 			{gridPosition{11, 2}, neutralPlayer, unitConfig},
 			{gridPosition{16, 4}, neutralPlayer, unitConfig},
@@ -426,7 +557,7 @@ func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth 
 	case topVsBottom:
 		unitConfig := infantryConfig
 		nodeInfos = []nodeInfo{
-			{gridPosition{1, 1}, bluePlayer, unitConfig},
+			{gridPosition{2, 2}, bluePlayer, unitConfig},
 			{gridPosition{6, 1}, bluePlayer, unitConfig},
 			{gridPosition{11, 1}, bluePlayer, unitConfig},
 			{gridPosition{16, 1}, bluePlayer, unitConfig},
@@ -471,7 +602,7 @@ func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth 
 	case topVsBottomHorizontalOffset:
 		unitConfig := infantryConfig
 		nodeInfos = []nodeInfo{
-			{gridPosition{1, 1}, bluePlayer, unitConfig},
+			{gridPosition{2, 2}, bluePlayer, unitConfig},
 			{gridPosition{6, 1}, bluePlayer, unitConfig},
 			{gridPosition{11, 1}, bluePlayer, unitConfig},
 			{gridPosition{16, 1}, bluePlayer, unitConfig},
