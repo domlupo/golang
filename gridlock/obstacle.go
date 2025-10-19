@@ -17,10 +17,8 @@ type obstacles map[gridPosition]*obstacle
 type obstaclePoints map[pixelPosition]*obstaclePoint
 
 type obstacle struct {
-	gridPos gridPosition
-	groupId uuid.UUID
-	kind    obstacleKind
-	// TODO: determine if I should remove this. It seems a bit hacky. groupId probably works better
+	gridPos        gridPosition
+	kind           obstacleKind
 	visibilityGrid *[]obstaclePoint
 }
 
@@ -104,18 +102,11 @@ func (os obstacles) getGroups(hc *hexConfig) []obstacles {
 			continue
 		}
 
-		id, err := uuid.NewV4()
-		if err != nil {
-			logger.log(errorLevel, noLogType, "getGroups", slog.String("failed to generate UUID", err.Error()))
-			panic("cannot getGroups since uuid generation failed")
-		}
-
 		group := make(obstacles)
 		queue := []gridPosition{k}
 		for len(queue) != 0 {
 			current := queue[0]
 			queue = queue[1:]
-			os[current].groupId = id
 			group[current] = os[current]
 
 			ne, neOk := current.adjacent(northeastSide, hc)
@@ -237,11 +228,10 @@ func (os obstacles) setupVisibilityGrid(pathing pixelPathing, hc *hexConfig) {
 	points.removeDuplicatePoints()
 	points.connectPoints(pathing, hc)
 
-	// TODO: check if there is a better way to do this
-	var id uuid.UUID
-	for _, v := range os {
-		id = v.groupId
-		break
+	id, err := uuid.NewV4()
+	if err != nil {
+		logger.log(errorLevel, noLogType, "getGroups", slog.String("failed to generate UUID", err.Error()))
+		panic("cannot getGroups since uuid generation failed")
 	}
 
 	var grid []obstaclePoint
