@@ -160,8 +160,6 @@ Is there a mobile equivalent for war/4x games?
     - nearestUnwalkabledDistance int
     - nearestUnwalkable pixelPosition
 
-- TODO: Fix bad UI behavior when cursor ends off screen
-
 - While game is paused, node targets can be updated. Determine if this behavior is correct. Fix if needed.
 
 - Iterate on local path finding solutions:
@@ -251,10 +249,6 @@ Is there a mobile equivalent for war/4x games?
   - How do you handle missiles blowing up from flux moving them.
   - How do you handle missiles moving without target? Can players abuse this?
 
-- Improve flux debugging
-  - Add flux square selection
-  - Add selected flux logging for detailed tracing
-
 ---
 
 ### Punted Checkpoints
@@ -271,13 +265,6 @@ Is there a mobile equivalent for war/4x games?
 - Should I add a yaml, toml or json config file that is loaded at runtime?
   - Toggles are already allowing runtime updates, rather than manually updating a text file.
 
-- Invest in a visual debugger:
-  - First feature would most likely be it can auto select/highlight a specific unit when it spawns
-  - Other much lower priority improvements that can be added when needed:
-    - It can can ping the pixel pos where the bug is occurring.
-    - It can ping differently based on layer.
-    - It can also do something like log unit and pause game so I can read logs?
-
 - Logging affects game performance. Especially hot loop logs e.g. unit refresh
   - Can I use build tags for a development vs release build?
   - Can I conditionally compile?
@@ -285,7 +272,6 @@ Is there a mobile equivalent for war/4x games?
 - Polish logger
   - Improve always log logic. Right now it is a bit confusing if always log surpasses logging level. I should
     make this more clear probably through simplifying rather than adding more complexity.
-  - Add logs throughout (global path, local path, attack, move, collision, etc)
   - Add runtime dynamic log sampling rates. Is this even possible? Are the benefits worth it?
   - Paused debugging? e.g. Updating unit during state.go execution can log state at game level.
 
