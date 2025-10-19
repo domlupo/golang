@@ -2,9 +2,12 @@
 package main
 
 import (
+	"context"
 	"image/color"
 	"log/slog"
 	"math"
+	"os"
+	"os/signal"
 
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
@@ -24,6 +27,7 @@ type state struct {
 	unitsProducedTotal int
 	unitsDeletedTotal  int
 	heatmap            map[pixelPosition]int
+	heatmapComplete    bool
 }
 
 func newState(n nodes, o obstacles, h hexagons, pixelPathing pixelPathing, hexConfig *hexConfig, enableFlux bool, developerMode bool) *state {
@@ -788,7 +792,7 @@ func (s *state) createPathfindHeatmap() {
 	logger.onlyEnable(devTool)
 
 	if len(s.heatmap) != 0 {
-		logger.log(infoLevel, devTool, "cannot create heatmap since it is already created")
+		logger.log(infoLevel, devTool, "cannot create heatmap since it was already attempted")
 		return
 	}
 
@@ -809,21 +813,30 @@ func (s *state) createPathfindHeatmap() {
 		return
 	}
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
 	pixelCount := 0
 	for pixelPos, pathing := range s.pixelPathing {
-		pixelCount++
-		if pixelCount%(s.windowWidth*s.windowHeight/100) == 0 {
-			percentProgess := pixelCount / (s.windowWidth * s.windowHeight / 100)
-			logger.log(infoLevel, devTool, "pathfind heatmap", slog.Int("pixel positions percent progress", percentProgess))
-		}
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			pixelCount++
+			if pixelCount%(s.windowWidth*s.windowHeight/100) == 0 {
+				percentProgess := pixelCount / (s.windowWidth * s.windowHeight / 100)
+				logger.log(infoLevel, devTool, "pathfind heatmap", slog.Int("pixel positions percent progress", percentProgess))
+			}
 
-		if pathing.walkable {
-			unit.updateTarget(globalTarget, position{layer: unit.layer, pixelPosition: pixelPos})
-			distance := unit.pathfindGlobalTarget(s.obstacles, s.pixelPathing, s.hexConfig)
-			s.heatmap[pixelPos] = distance
+			if pathing.walkable {
+				unit.updateTarget(globalTarget, position{layer: unit.layer, pixelPosition: pixelPos})
+				distance := unit.pathfindGlobalTarget(s.obstacles, s.pixelPathing, s.hexConfig)
+				s.heatmap[pixelPos] = distance
+			}
 		}
-
 	}
+
+	s.heatmapComplete = true
 	logger.log(infoLevel, devTool, "done creating pathfinding heatmap")
 }
 
@@ -864,7 +877,7 @@ func (s *state) draw(dc drawConfig, drawBlueTargets bool, drawRedTargets, drawFl
 		s.pixelPathing.draw(dc)
 	}
 
-	if len(s.heatmap) != 0 {
+	if s.heatmapComplete {
 		max := 0
 		for _, distance := range s.heatmap {
 			if distance > max {

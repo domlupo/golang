@@ -19,8 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Fix Ctrl+C for ./game pathfind heatmap. air hot reload is working right.
-
 - Improve guided air missile
   - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.
   - Fix bug where ground missile (not air missile) is not moving for computer player
@@ -256,6 +254,10 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Punted Checkpoints
+
+- Currently heatmap creation stops game update ticks. This means when creating a heatmap via button click
+  multiple button clicks are processed. I fixed this by only allowing one heat map to ever be created. Ideally, 
+  a delay should be added but it is not prioritized.
 
 - Check if hexagon look up table can be optimized with static aka compile time setup rather 
   than runtime setup at game start and accessed during game time via heap allocated pointer.
