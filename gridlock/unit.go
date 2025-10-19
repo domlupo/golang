@@ -445,30 +445,65 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 	logger.logSelected(u.selected, infoLevel, selectedUnit, "updateTarget", targetLog...)
 }
 
+// Not optimal but close enough to unblock future development. A hack is used which is not guaranteed
+// to find the best path. I suspect future path finding will need to be optimal and cache results at startup.
+//
+// The hack is when creating a path, los checks are performed from the current path position to the unit. The
+// path only considers jumping to obstacles which directly block the los but certain paths are more efficient
+// when jumping to obstacles which are not in the los.
+//
+// A scenario I am unsure of is when the desired final position is within a visbility grid, but the los check
+// between from the positio to unit immediately jumps to a different obstacle visibility grid when the first
+// visibility grid should have been traveled.
 func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathing, hc *hexConfig) int {
 	var foundPath bool
-	paths := [][]position{{u.globalTarget}}
-	newPaths := [][]position{}
+	tries := [][]position{{u.globalTarget}}
+	nextTries := [][]position{}
 
 	for !foundPath {
-		for _, path := range paths {
+		for _, path := range tries {
 			start := path[len(path)-1]
 			obstaclePoint, los := start.obstaclePoint(u.pixelPosition, pixelPathing, obstacles, hc)
 
 			if los {
 				foundPath = true
-				newPaths = append(newPaths, path)
+				nextTries = append(nextTries, path)
 				continue
 			}
 
-			cwPath := u.getPath(start, obstaclePoint, cw, pixelPathing, obstacles, hc)
-			ccwPath := u.getPath(start, obstaclePoint, ccw, pixelPathing, obstacles, hc)
+			cwPath := u.getPath(obstaclePoint, cw, pixelPathing, obstacles, hc)
+			ccwPath := u.getPath(obstaclePoint, ccw, pixelPathing, obstacles, hc)
 
-			newPaths = append(newPaths, slices.Concat(path, cwPath))
-			newPaths = append(newPaths, slices.Concat(path, ccwPath))
+			nextTries = append(nextTries, slices.Concat(path, cwPath))
+			nextTries = append(nextTries, slices.Concat(path, ccwPath))
 		}
-		paths = newPaths
-		newPaths = [][]position{}
+		tries = nextTries
+		nextTries = [][]position{}
+	}
+
+	paths := [][]position{}
+	for _, try := range tries {
+		end := try[len(try)-1]
+		if _, los := u.lineOfSight(end.pixelPosition, pixelPathing); los {
+			paths = append(paths, try)
+		}
+	}
+
+	for i, path := range paths {
+		trimPath := []position{path[0]}
+		for j := 0; j < len(path); j++ {
+			pos := path[j]
+			for k := len(path) - 1; k > j; k-- {
+				otherPos := path[k]
+				if _, los := pos.lineOfSight(otherPos.pixelPosition, pixelPathing); los {
+					j = k
+					trimPath = append(trimPath, path[k])
+					j--
+					break
+				}
+			}
+		}
+		paths[i] = trimPath
 	}
 
 	shortestDistance := math.MaxInt64
@@ -490,14 +525,13 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathi
 }
 
 func (u *unit) getPath(
-	start position,
 	current obstaclePoint,
 	direction pathDirection,
 	pixelPathing pixelPathing,
 	obstacles obstacles,
 	hc *hexConfig) []position {
 
-	path := []position{start}
+	path := []position{}
 
 	var end obstaclePoint
 	switch direction {
@@ -510,17 +544,9 @@ func (u *unit) getPath(
 	}
 
 	for current != end {
-		for trimIndex, prior := range path[:len(path)-1] {
-			// TODO: think through trim more. Should this stay LOS or convert to an obstacle target check
-			// that breaks on obstacle logic?
-			_, los := current.lineOfSight(prior.pixelPosition, pixelPathing)
-			if los {
-				path = path[:trimIndex+1]
-				break
-			}
-		}
 		path = append(path, position{layer: u.layer, pixelPosition: current.pixelPosition})
 		obstaclePoint, los := current.obstaclePoint(u.pixelPosition, pixelPathing, obstacles, hc)
+
 		if los || current.visibilityGridId != obstaclePoint.visibilityGridId {
 			break
 		}
@@ -535,7 +561,7 @@ func (u *unit) getPath(
 		}
 	}
 
-	return path[1:]
+	return path
 }
 
 func (u *unit) completeMove(pos position) {

@@ -96,7 +96,6 @@ func newGame() Game {
 			initialLogLevel:            slog.LevelDebug,
 			filterTimeAndLevelFromLogs: true,
 			logUndecidedBehavior:       true,
-			logSelectedUnit:            true,
 			logDevTool:                 true,
 		},
 	}

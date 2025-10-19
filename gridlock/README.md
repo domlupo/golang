@@ -19,9 +19,9 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Fix global path finding trim. Trim doesn't handle multi obstacle jumps well.
+- Fix Ctrl+C for ./game pathfind heatmap. air hot reload is working right.
 
-- Fix global path finding bugs. Sometimes very wrong path is found.
+- Fix rare global path find bug where no path is found
 
 - Improve guided air missile
   - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.
