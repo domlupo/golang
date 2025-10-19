@@ -452,8 +452,8 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 // path only considers jumping to obstacles which directly block the los but certain paths are more efficient
 // when jumping to obstacles which are not in the los.
 //
-// A scenario I am unsure of is when the desired final position is within a visbility grid, but the los check
-// between from the positio to unit immediately jumps to a different obstacle visibility grid when the first
+// A smaller issue is when the desired final position is within a visbility grid, but the los check from
+// the position to unit immediately jumps to a different obstacle visibility grid when the first
 // visibility grid should have been traveled.
 func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathing, hc *hexConfig) int {
 	var foundPath bool
