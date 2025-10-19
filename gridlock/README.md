@@ -19,6 +19,10 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Investigate if flux -> flow fields + boids + steering will help local path finding
+  - Can create flow fields dynamically based on counts of units entering or exiting hexagons
+  - Can use different stats for computer and human. Not sure what is best.
+
 - Improve guided air missile
   - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.
   - Fix bug where ground missile (not air missile) is not moving for computer player
