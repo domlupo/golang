@@ -75,6 +75,10 @@ func newLogger(lc loggerConfig) l {
 	return l
 }
 
+func (logger l) force(msg string, attrs ...slog.Attr) {
+	logger.log(errorLevel, alwaysLogType, msg, attrs...)
+}
+
 func (logger l) onlyEnable(logType logType) {
 	for k := range logger.enabledLogTypes {
 		logger.enabledLogTypes[k] = false
@@ -86,16 +90,16 @@ func (logger l) onlyEnable(logType logType) {
 func (logger l) toggleLevel() {
 	if logger.LevelVar.Level() == slog.LevelError {
 		logger.Set(slog.LevelWarn)
-		logger.log(errorLevel, alwaysLogType, "logger set to log WARN logs")
+		logger.force("logger set to log WARN leve")
 	} else if logger.LevelVar.Level() == slog.LevelWarn {
 		logger.Set(slog.LevelInfo)
-		logger.log(errorLevel, alwaysLogType, "logger set to log INFO logs")
+		logger.force("logger set to log INFO level")
 	} else if logger.LevelVar.Level() == slog.LevelInfo {
 		logger.Set(slog.LevelDebug)
-		logger.log(errorLevel, alwaysLogType, "logger set to log DEBUG logs")
+		logger.force("logger set to log DEBUG level")
 	} else if logger.LevelVar.Level() == slog.LevelDebug {
 		logger.Set(slog.LevelError)
-		logger.log(errorLevel, alwaysLogType, "logger set to log ERROR logs")
+		logger.force("logger set to log ERROR level")
 	}
 }
 
@@ -105,7 +109,7 @@ func (logger l) toggleType(lt logType) {
 	case noLogType:
 		ltName = "noLogType"
 	case alwaysLogType:
-		logger.log(errorLevel, alwaysLogType, "Cannot toggle always log type")
+		logger.force("Cannot toggle always log type")
 		return
 	case undecidedBehavior:
 		ltName = "undecidedBehavior"
@@ -116,16 +120,16 @@ func (logger l) toggleType(lt logType) {
 	case selectedUnit:
 		ltName = "selectedUnit"
 	default:
-		logger.log(errorLevel, alwaysLogType, "Did not find a matching log type name")
+		logger.force("Did not find a matching log type name")
 	}
 
 	enabled := logger.enabledLogTypes[lt]
 	logger.enabledLogTypes[lt] = !enabled
 
 	if ltName != "" && enabled {
-		logger.log(errorLevel, alwaysLogType, fmt.Sprintf("toggled log type off: %s", ltName))
+		logger.force(fmt.Sprintf("toggled log type off: %s", ltName))
 	} else if ltName != "" && !enabled {
-		logger.log(errorLevel, alwaysLogType, fmt.Sprintf("toggled log type on: %s", ltName))
+		logger.force(fmt.Sprintf("toggled log type on: %s", ltName))
 	}
 }
 

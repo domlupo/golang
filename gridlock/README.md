@@ -270,8 +270,6 @@ Is there a mobile equivalent for war/4x games?
   - Can I conditionally compile?
 
 - Polish logger
-  - Improve always log logic. Right now it is a bit confusing if always log surpasses logging level. I should
-    make this more clear probably through simplifying rather than adding more complexity.
   - Add runtime dynamic log sampling rates. Is this even possible? Are the benefits worth it?
   - Paused debugging? e.g. Updating unit during state.go execution can log state at game level.
 
