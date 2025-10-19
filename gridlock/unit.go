@@ -469,6 +469,11 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathi
 				foundPath = true
 				nextTries = append(nextTries, path)
 				continue
+			} else if !los && obstaclePoint.isZero() {
+				// TODO: HACK which handles cursor off screen. Need to determine
+				// what is desired player experience here.
+				foundPath = true
+				break
 			}
 
 			cwPath := u.getPath(obstaclePoint, cw, pixelPathing, obstacles, hc)
@@ -517,6 +522,12 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathi
 			shortestDistance = distance
 			shortestPath = i
 		}
+	}
+
+	if len(paths) == 0 {
+		// HACK which handles two issues. The first is when cursor is off screen.
+		// The second is a rare bug where a unit cannot find a path.
+		return 0
 	}
 
 	u.pathGlobalTarget = false

@@ -48,6 +48,10 @@ const (
 	highMountain
 )
 
+func (op obstaclePoint) isZero() bool {
+	return op.pixelPosition.equals(pixelPosition{0, 0})
+}
+
 func (os obstacles) insert(k gridPosition, v *obstacle) {
 	_, ok := os[k]
 	if ok {
@@ -212,8 +216,8 @@ func (start pixelPosition) obstaclePoint(end pixelPosition, pathing pixelPathing
 	var nearestIndex int
 	gridPos, ok := obstaclePixelPos.getGridPos(hc)
 	if !ok {
-		// TODO: Fix, this occurs when a human player selects a node + unit, click and holds a pixel then drags off screen
-		panic("expected obstacle grid position to exist")
+		// occurs when cursor is off screen
+		return obstaclePoint{}, los
 	}
 	visibilityGrid := *obstacles[gridPos].visibilityGrid
 	for index, op := range visibilityGrid {

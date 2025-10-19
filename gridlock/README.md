@@ -21,8 +21,6 @@ Is there a mobile equivalent for war/4x games?
 
 - Fix Ctrl+C for ./game pathfind heatmap. air hot reload is working right.
 
-- Fix rare global path find bug where no path is found
-
 - Improve guided air missile
   - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.
   - Fix bug where ground missile (not air missile) is not moving for computer player
