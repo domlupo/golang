@@ -21,8 +21,6 @@ type drawConfig struct {
 	selectectionBoxLineWidth      int
 	missileExplodeRadiusLineWidth int
 	healthLineWidth               int
-	fluxLineWidth                 int
-	fluxDirectionRadius           int
 	targetNodeLineWidth           int
 	hexLineWidth                  int
 	visibilityGridLineWidth       int
@@ -31,7 +29,6 @@ type drawConfig struct {
 	highlightColor                color.RGBA
 	unitHealthColor               color.RGBA
 	nodeHealthColor               color.RGBA
-	fluxColor                     color.RGBA
 	bluePlayerNodeColor           color.RGBA
 	bluePlayerUnitColor           color.RGBA
 	redPlayerNodeColor            color.RGBA
@@ -59,8 +56,6 @@ func newDrawConfig() *drawConfig {
 		selectectionBoxLineWidth:      1,
 		missileExplodeRadiusLineWidth: 1,
 		healthLineWidth:               2,
-		fluxLineWidth:                 2,
-		fluxDirectionRadius:           3,
 		targetNodeLineWidth:           2,
 		hexLineWidth:                  2,
 		visibilityGridLineWidth:       1,
@@ -68,7 +63,6 @@ func newDrawConfig() *drawConfig {
 		highlightColor:                highlightColor,
 		unitHealthColor:               highlightColor,
 		nodeHealthColor:               highlightColor,
-		fluxColor:                     highlightColor,
 		bluePlayerNodeColor:           color.RGBA{0, 0, 255, 100},
 		bluePlayerUnitColor:           color.RGBA{0, 0, 255, 100},
 		redPlayerNodeColor:            color.RGBA{255, 0, 0, 100},

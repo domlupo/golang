@@ -87,7 +87,7 @@ type unitTarget int
 const (
 	noTarget unitTarget = iota
 	currentTarget
-	fluxTarget
+	steerTarget
 	enemyTarget
 	localTarget
 	globalTarget
@@ -156,21 +156,17 @@ type unit struct {
 	position
 	player              player
 	currentTarget       position
-	fluxTarget          position
+	steerTarget         position
 	enemyTarget         position
 	localTarget         position
 	localTargets        []position
 	globalTarget        position
 	pathGlobalTarget    bool
-	fluxTurnCount       int
-	fluxTurnCountLimit  int
-	fluxTurnCooldown    int
-	fluxTurnCooldownMax int
-	fluxMagnitude       int
-	fluxCollisionLimit  int
 	atTerminalPosition  bool
 	bresenhamError      *int
 	nextBresenhamError  *int
+	steerTurnCount      int
+	steerTurnCountLimit int
 	unitConfig
 	health           int
 	movedThisTurn    bool
@@ -197,14 +193,11 @@ func newUnit(p player, globalTarget position, uc unitConfig, pos position, produ
 		player:              p,
 		globalTarget:        globalTarget,
 		pathGlobalTarget:    true,
-		fluxTurnCooldownMax: 10,
-		fluxTurnCountLimit:  10,
-		fluxMagnitude:       10,
-		fluxCollisionLimit:  2,
 		unitConfig:          uc,
 		health:              uc.maxHealth,
 		selected:            selected,
 		producedAt:          producedOrder,
+		steerTurnCountLimit: 20,
 	}
 
 	return u
@@ -212,9 +205,6 @@ func newUnit(p player, globalTarget position, uc unitConfig, pos position, produ
 
 func (u *unit) refresh() {
 	logger.logSelected(u.selected, infoLevel, selectedUnit, "beforeRefresh", u.log()...)
-	if u.fluxTurnCooldown != 0 {
-		u.fluxTurnCooldown--
-	}
 	u.movedThisTurn = false
 	u.attackedThisTurn = false
 	u.AtUnwalkable = false
@@ -222,22 +212,22 @@ func (u *unit) refresh() {
 }
 
 func (u *unit) prioritizeTargets() {
-	if !u.fluxTarget.isZero() && u.fluxTurnCount < u.fluxTurnCountLimit {
+	u.steerTurnCount++
+	if !u.steerTarget.isZero() && u.steerTurnCount < u.steerTurnCountLimit {
 		u.localTargets = []position{}
-		u.updateTarget(currentTarget, u.fluxTarget)
-		u.fluxTurnCount++
+		u.updateTarget(currentTarget, u.steerTarget)
 	} else if !u.enemyTarget.isZero() {
-		u.fluxTurnCount = 0
-		u.fluxTarget = position{}
+		u.steerTurnCount = 0
+		u.steerTarget = position{}
 		u.localTargets = []position{}
 		u.updateTarget(currentTarget, u.enemyTarget)
 	} else if len(u.localTargets) > 0 {
-		u.fluxTurnCount = 0
-		u.fluxTarget = position{}
+		u.steerTurnCount = 0
+		u.steerTarget = position{}
 		u.updateTarget(currentTarget, u.localTargets[len(u.localTargets)-1])
 	} else {
-		u.fluxTurnCount = 0
-		u.fluxTarget = position{}
+		u.steerTurnCount = 0
+		u.steerTarget = position{}
 		// TODO: determine behavior. Right now this path may occur for multiple reasons or only one.
 		// The reason I am sure of is it occurs after a targeted unit dies off since there is no path
 		// for the unit to continue. The issue is that that this might cause units to pause for an entire
@@ -346,70 +336,6 @@ func (u *unit) getNewPos() (position, func()) {
 	return newPos, func() { u.completeMove(newPos) }
 }
 
-func (u *unit) getFlux(hex *hexagon, hc *hexConfig) (position, bool) {
-	if u.fluxTurnCooldown != 0 {
-		return position{}, false
-	}
-
-	moveAwayFromUnits := u.AtCollision &&
-		(u.player == bluePlayer && hex.blueUnitsColliding >= u.fluxCollisionLimit) ||
-		(u.player == redPlayer && hex.redUnitsColliding >= u.fluxCollisionLimit)
-
-	moveTowardsHexCenter := u.AtUnwalkable ||
-		(u.AtCollision && (u.player == bluePlayer && hex.blueUnitsAttacking == 0 && hex.blueUnitsColliding >= u.fluxCollisionLimit) ||
-			(u.player == redPlayer && hex.redUnitsAttacking == 0 && hex.redUnitsColliding >= u.fluxCollisionLimit))
-
-	var xDelta int
-	var yDelta int
-	hexCenter, _ := hex.gridPos.getPixelPos(center, hc)
-
-	if moveAwayFromUnits {
-		switch {
-		case hex.avgUnit.x > u.x:
-			xDelta = -u.fluxMagnitude
-		case hex.avgUnit.x < u.x:
-			xDelta = u.fluxMagnitude
-		case hexCenter.x > u.x:
-			xDelta = u.fluxMagnitude
-		case hexCenter.x < u.x:
-			xDelta = -u.fluxMagnitude
-		default:
-			xDelta = u.fluxMagnitude
-		}
-		switch {
-		case hex.avgUnit.y > u.y:
-			yDelta = -u.fluxMagnitude
-		case hex.avgUnit.y < u.y:
-			yDelta = u.fluxMagnitude
-		case hexCenter.y > u.y:
-			yDelta = -u.fluxMagnitude
-		case hexCenter.y < u.y:
-			yDelta = u.fluxMagnitude
-		default:
-			yDelta = u.fluxMagnitude
-		}
-		return position{layer: u.layer, pixelPosition: pixelPosition{x: u.x + xDelta, y: u.y + yDelta}}, true
-	}
-
-	if moveTowardsHexCenter {
-		switch {
-		case hexCenter.x > u.x:
-			xDelta = u.fluxMagnitude
-		case hexCenter.x < u.x:
-			xDelta = -u.fluxMagnitude
-		}
-		switch {
-		case hexCenter.y > u.y:
-			yDelta = u.fluxMagnitude
-		case hexCenter.y < u.y:
-			yDelta = -u.fluxMagnitude
-		}
-		return position{layer: u.layer, pixelPosition: pixelPosition{x: u.x + xDelta, y: u.y + yDelta}}, true
-	}
-
-	return position{}, false
-}
-
 func (u *unit) updateTarget(ut unitTarget, target position) {
 	var unitTarget string
 	switch ut {
@@ -421,9 +347,9 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 		}
 		u.currentTarget = target
 		unitTarget = "currentTarget"
-	case fluxTarget:
-		u.fluxTarget = target
-		unitTarget = "fluxTarget"
+	case steerTarget:
+		u.steerTarget = target
+		unitTarget = "steerTarget"
 	case enemyTarget:
 		u.enemyTarget = target
 		unitTarget = "enemyTarget"
@@ -578,7 +504,6 @@ func (u *unit) getPath(
 func (u *unit) completeMove(pos position) {
 	u.position = pos
 	u.movedThisTurn = true
-	u.fluxTurnCooldown = u.fluxTurnCooldownMax
 	intCopy := &u.nextBresenhamError
 	u.bresenhamError = *intCopy
 }
@@ -607,10 +532,10 @@ func (u unit) log() []slog.Attr {
 	} else {
 		a = append(a, slog.String("currentTarget", "nil"))
 	}
-	if !u.fluxTarget.isZero() {
-		a = append(a, slog.Any("fluxTarget", u.fluxTarget.log()))
+	if !u.steerTarget.isZero() {
+		a = append(a, slog.Any("steerTarget", u.steerTarget.log()))
 	} else {
-		a = append(a, slog.String("fluxTarget", "nil"))
+		a = append(a, slog.String("steerTarget", "nil"))
 	}
 	if !u.enemyTarget.isZero() {
 		a = append(a, slog.Any("enemyTarget", u.enemyTarget.log()))
@@ -642,7 +567,6 @@ func (u unit) log() []slog.Attr {
 	a = append(a, slog.Int("health", u.health))
 	a = append(a, slog.Bool("movedThisTurn", u.movedThisTurn))
 	a = append(a, slog.Bool("attackedThisTurn", u.attackedThisTurn))
-	a = append(a, slog.Int("fluxTurnCount", u.fluxTurnCount))
 	a = append(a, slog.Any("canReachNode", u.canReachNode))
 	a = append(a, slog.Bool("selected", u.selected))
 	a = append(a, slog.Bool("debugFlag", u.debugFlag))

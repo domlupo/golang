@@ -37,8 +37,6 @@ type Game struct {
 	paused                   bool
 	blueComputerActive       bool
 	redComputerActive        bool
-	enableFlux               bool
-	drawFluxes               bool
 	drawPixelPathing         bool
 	hotRestart               bool
 	drawBlueTargets          bool
@@ -82,7 +80,6 @@ func newGame() Game {
 		currentSelectedY:        float32(-1.0),
 		blueComputerActive:      true,
 		redComputerActive:       true,
-		enableFlux:              true,
 		produceUnits:            true,
 		moveUnits:               true,
 		hotRestart:              true,
@@ -119,7 +116,7 @@ func (g *Game) restart() {
 		}
 	}
 
-	g.gameState = newState(nodes, obstacles, hexagons, pixelPathing, &g.drawConfig.hexConfig, g.enableFlux, g.developerMode)
+	g.gameState = newState(nodes, obstacles, hexagons, pixelPathing, &g.drawConfig.hexConfig, g.developerMode)
 	g.updateComputerTargetNodes()
 }
 
@@ -156,7 +153,6 @@ func (g *Game) Update() error {
 		if g.moveUnits {
 			g.gameState.moveUnits()
 		}
-		g.gameState.analyzeMoves()
 
 		if g.produceWait < g.produceInterval {
 			g.produceWait = g.produceWait + g.currentTime.Sub(g.priorTime)
@@ -280,7 +276,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	screen.Fill(g.drawConfig.backgroundColor)
 	drawDebug(*g.drawConfig, g.drawDebugGrid)
-	g.gameState.draw(*g.drawConfig, g.drawBlueTargets, g.drawRedTargets, g.drawFluxes, g.drawVisibilityGrids, g.drawPixelPathing)
+	g.gameState.draw(*g.drawConfig, g.drawBlueTargets, g.drawRedTargets, g.drawVisibilityGrids, g.drawPixelPathing)
 
 	if g.leftMouseHeld {
 		drawUnfilledBoxFloat32(
@@ -384,17 +380,12 @@ func main() {
 	g.developerToggles["drawAll"] = newToggle(
 		ebiten.KeyA,
 		func() {
-			var toggle = !(g.drawFluxes && g.drawBlueTargets && g.drawRedTargets && g.drawDebugGrid && g.drawVisibilityGrids)
-			g.drawFluxes = toggle
+			var toggle = !(g.drawBlueTargets && g.drawRedTargets && g.drawDebugGrid && g.drawVisibilityGrids)
 			g.drawBlueTargets = toggle
 			g.drawRedTargets = toggle
 			g.drawDebugGrid = toggle
 			g.drawVisibilityGrids = toggle
 		},
-		g.developerToggleCooldown)
-	g.developerToggles["drawFlux"] = newToggle(
-		ebiten.KeyF,
-		func() { g.drawFluxes = !g.drawFluxes },
 		g.developerToggleCooldown)
 	g.developerToggles["drawBlueTargets"] = newToggle(
 		ebiten.KeyB,

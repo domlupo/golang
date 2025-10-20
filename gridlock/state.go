@@ -22,7 +22,6 @@ type state struct {
 	obstacles          obstacles
 	nodes              nodes
 	units              map[position]*unit
-	enableFlux         bool
 	developerMode      bool
 	unitsProducedTotal int
 	unitsDeletedTotal  int
@@ -30,7 +29,7 @@ type state struct {
 	heatmapComplete    bool
 }
 
-func newState(n nodes, o obstacles, h hexagons, pixelPathing pixelPathing, hexConfig *hexConfig, enableFlux bool, developerMode bool) *state {
+func newState(n nodes, o obstacles, h hexagons, pixelPathing pixelPathing, hexConfig *hexConfig, developerMode bool) *state {
 	s := state{
 		hexConfig:     hexConfig,
 		obstacles:     o,
@@ -38,7 +37,6 @@ func newState(n nodes, o obstacles, h hexagons, pixelPathing pixelPathing, hexCo
 		hexagons:      h,
 		nodes:         n,
 		units:         make(map[position]*unit),
-		enableFlux:    enableFlux,
 		developerMode: developerMode,
 		heatmap:       make(map[pixelPosition]int),
 	}
@@ -50,10 +48,6 @@ func (s *state) refresh() {
 	for _, u := range s.units {
 		u.refresh()
 	}
-
-	for _, h := range s.hexagons {
-		h.refresh(s.hexConfig)
-	}
 }
 
 func (s *state) analyzeTargets() {
@@ -62,13 +56,9 @@ func (s *state) analyzeTargets() {
 			continue
 		}
 
-		uGridPos, uGridPosOk := u.getGridPos(s.hexConfig)
-		if !uGridPosOk {
-			panic("unit grid position must exist")
-		}
-		hex := s.hexagons[uGridPos]
-		if flux, fluxOk := u.getFlux(hex, s.hexConfig); fluxOk && s.enableFlux {
-			u.updateTarget(fluxTarget, flux)
+		steer := s.steer(u)
+		if !u.position.equals(steer.pixelPosition) {
+			u.updateTarget(steerTarget, steer)
 		}
 
 		u.reachesNodes(s.nodes, s.hexConfig)
@@ -86,12 +76,101 @@ func (s *state) analyzeTargets() {
 	}
 }
 
-func (s *state) analyzeMoves() {
-	for _, h := range s.hexagons {
-		if h.unitCount != 0 {
-			h.avgUnit = pixelPosition{h.sumUnitX / h.unitCount, h.sumUnitY / h.unitCount}
+func (s *state) steer(u *unit) position {
+	x1 := u.position.x + u.radius
+	y1 := u.position.y + u.radius
+
+	gridPos, _ := u.pixelPosition.getGridPos(s.hexConfig)
+	hex := s.hexagons[gridPos]
+	var neHex, eHex, seHex, swHex, wHex, nwHex *hexagon
+
+	if pos, ok := gridPos.adjacent(northeastSide, s.hexConfig); ok {
+		neHex = s.hexagons[pos]
+	}
+	if pos, ok := gridPos.adjacent(eastSide, s.hexConfig); ok {
+		eHex = s.hexagons[pos]
+	}
+	if pos, ok := gridPos.adjacent(southeastSide, s.hexConfig); ok {
+		seHex = s.hexagons[pos]
+	}
+	if pos, ok := gridPos.adjacent(southwestSide, s.hexConfig); ok {
+		swHex = s.hexagons[pos]
+	}
+	if pos, ok := gridPos.adjacent(westSide, s.hexConfig); ok {
+		wHex = s.hexagons[pos]
+	}
+	if pos, ok := gridPos.adjacent(northwestSide, s.hexConfig); ok {
+		nwHex = s.hexagons[pos]
+	}
+
+	hexagons := [7]*hexagon{hex, neHex, eHex, seHex, swHex, wHex, nwHex}
+
+	var xSteer int
+	var ySteer int
+	for _, hex := range hexagons {
+		if hex == nil {
+			continue
+		}
+
+		linkedList := hex.linkedList
+
+		if linkedList == nil || (linkedList.id == u.id && linkedList == linkedList.next) {
+			continue
+		}
+
+		end := linkedList
+		current := linkedList
+		// checkOccurred handles the edge case where a hexagon has a single
+		// unit within in. This unit should still be checked since it
+		// is not the unit passed into the function but don't self cycle
+		// since it will never progress to a different current unit.
+		var checkOccurred bool
+		for {
+			if current.id == end.id && checkOccurred {
+				break
+			}
+
+			if current.id == u.id {
+				current = current.next
+				continue
+			}
+
+			checkOccurred = true
+
+			if u.player != current.player {
+				current = current.next
+				continue
+			}
+
+			x2 := current.x + current.radius
+			y2 := current.y + current.radius
+
+			xDelta := x2 - x1
+			yDelta := y2 - y1
+			rSum := u.radius + current.radius + 1
+			if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
+				magnitude := 1
+
+				switch {
+				case u.x > current.x:
+					xSteer += magnitude
+				case u.x < current.x:
+					xSteer -= magnitude
+				}
+
+				switch {
+				case u.y > current.y:
+					ySteer += magnitude
+				case u.y < current.y:
+					ySteer -= magnitude
+				}
+			}
+
+			current = current.next
 		}
 	}
+
+	return position{layer: u.layer, pixelPosition: pixelPosition{x: u.x + xSteer, y: u.y + ySteer}}
 }
 
 func (s *state) moveUnits() {
@@ -110,13 +189,6 @@ func (s *state) moveUnits() {
 		if u.movedThisTurn {
 			continue
 		}
-
-		gridPos, _ := u.getGridPos(s.hexConfig)
-		hex := s.hexagons[gridPos]
-
-		// TODO: fix this isn't accurate since it assumes the unit does not move
-		hex.sumUnitX += u.x
-		hex.sumUnitY += u.y
 
 		if u.attackedThisTurn {
 			unitsAlreadyAttacked++
@@ -137,12 +209,6 @@ func (s *state) moveUnits() {
 		if !s.pixelPathing[newPos.pixelPosition].walkable {
 			unitsAtUnwalkable++
 			u.AtUnwalkable = true
-			switch u.player {
-			case bluePlayer:
-				hex.blueUnitsUnwalkable++
-			case redPlayer:
-				hex.redUnitsUnwalkable++
-			}
 			continue
 		}
 
@@ -155,10 +221,8 @@ func (s *state) moveUnits() {
 		switch {
 		case collidesWithUnit && u.player == bluePlayer:
 			u.AtCollision = true
-			hex.blueUnitsColliding++
 		case collidesWithUnit && u.player == redPlayer:
 			u.AtCollision = true
-			hex.redUnitsColliding++
 		}
 
 		if collidesWithBorder && collidesWithUnit {
@@ -494,20 +558,6 @@ func (s *state) attackUnits() {
 			unitAttackedOtherUnitCount++
 			s.units[u.enemyTarget] = nearestVisibleUnit
 			s.units[u.position] = u
-
-			gridPos, ok := u.pixelPosition.getGridPos(s.hexConfig)
-			if !ok {
-				panic("expected grid position to exist")
-			}
-			hex := s.hexagons[gridPos]
-			switch u.player {
-			case bluePlayer:
-				hex.blueUnitsAttacking++
-			case redPlayer:
-				hex.redUnitsAttacking++
-			default:
-				panic("expected blue or red player")
-			}
 		}
 	}
 
@@ -841,7 +891,7 @@ func (s *state) createPathfindHeatmap() {
 	logger.log(infoLevel, devTool, "done creating pathfinding heatmap")
 }
 
-func (s *state) draw(dc drawConfig, drawBlueTargets bool, drawRedTargets, drawFluxes bool, drawVisibilityGrids bool, drawPixelPathing bool) {
+func (s *state) draw(dc drawConfig, drawBlueTargets bool, drawRedTargets, drawVisibilityGrids bool, drawPixelPathing bool) {
 	for _, n := range s.nodes {
 		n.drawNode(dc)
 	}
@@ -869,11 +919,7 @@ func (s *state) draw(dc drawConfig, drawBlueTargets bool, drawRedTargets, drawFl
 			u.draw(dc, u.selected)
 		}
 	}
-	if drawFluxes {
-		for _, h := range s.hexagons {
-			h.drawFlux(dc)
-		}
-	}
+
 	if drawPixelPathing {
 		s.pixelPathing.draw(dc)
 	}

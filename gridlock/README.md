@@ -11,7 +11,7 @@ Is there a mobile equivalent for war/4x games?
 
 ## Top 3 Ranked Concerns : Risks
 
-1. Design and iterate on Local path finding (maybe flux) -> Most unknown but fundamental game engine decision.
+1. Design and iterate on Local path finding -> Most unknown but fundamental game engine decision.
 2. Faster iteration from better inspection and debugging tooling. -> Don't waste engineering effort due to poor prioritization.
 3. Playtesting MVP. -> Don't invest major engineering effort into wrong tasks.
 
@@ -19,9 +19,9 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Investigate if flux -> flow fields + boids + steering will help local path finding
-  - Can create flow fields dynamically based on counts of units entering or exiting hexagons
-  - Can use different stats for computer and human. Not sure what is best.
+- Update local pathfinding to boids model
+  - testing has shown boids model to be the easiest to tune, most flexible, beset results
+  - continue implementing flocking and steering behaviors 
 
 - Improve guided air missile
   - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.
@@ -36,7 +36,7 @@ Is there a mobile equivalent for war/4x games?
     - Ground missile exploding in air does no damage?
     - Should air missile exploding in air do damage?
     - Should air missile only get one retarget on missle? An upgrade could allow multiple retargets besides the first?
-    - Units may need different pathing algorithm or reactions to flux? 
+    - Units may need different pathing algorithm
       - How to avoid this?
       - How to simplify this?
       - How to make this CPU performant?
@@ -62,7 +62,7 @@ Is there a mobile equivalent for war/4x games?
     - Determine if the target moving is handled. There may be an elegant solution here.
     - If it is not handled determine how to fix. Structure may need updated.
   - A potentially good contract:
-    - Multiple sources (state, computer, etc) update units various targets (flux, local, global, etc)
+    - Multiple sources (state, computer, etc) update units various targets (local, global, etc)
     - Unit must keep itself in sync
   - Determine if a different structure is better for Bresenham
 
@@ -197,7 +197,7 @@ Is there a mobile equivalent for war/4x games?
   - two (groun vs air), three (ground, low altitude, high altitude) have major game differences
   - Should anything be on multiple layers e.g. high altitude mountains technically are on all 3.
 
-- Verify if Bresenham error is handle correctly for Flux movements.
+- Verify if Bresenham error is handle correctly 
 
 - Deterministic seeds and deterministic game engine:
   - I can easily run simulations to analyze game balance
@@ -227,27 +227,6 @@ Is there a mobile equivalent for war/4x games?
 - Release to phone: 
   - check phone controls
   - check resolution
-
-- Determine if flux iteration is useful:
-  - Need to implement specific local path finding before flux iteration.
-  - Even if group behavior is needed, methods other than flux might be better to invest in.
-  - Flux resolution can be improved by changing flux grid size at compile time. 
-  - Flux grid can be changed at runtime as well but probably unneded complexity. 
-  - How units react to flux can depend on unit type or be the same for all units.
-  - How units contribute to flux can depend on unit type or be the same for all units.
-  - Determine better flux structure and contracts.
-  - Does a flat top hexagon grid perform better for flux? If yes, is it worth it for potentially
-    worse asethetics? I think flux can most likely be designed around this but the monitor display
-    limitation for wide resolution suggests left vs right pathing is more likely where as phone 
-    vertical display suggests top vs bottom pathing is more likely.
-
-- Determine how to handle flux for units that never had targets or units just produced. Lots of issues:
-  - Do you make flux never move the unit? This creates bimodal behavior where some units respect flux and others dont?
-  - Do you make the unit that was never moved by flux add more or less to flux magnitude?
-  - Not actually spawning the unit until a target is set might be a very simple solution but the
-    player experiencee might be terrible.
-  - How do you handle missiles blowing up from flux moving them.
-  - How do you handle missiles moving without target? Can players abuse this?
 
 ---
 
@@ -335,7 +314,7 @@ Is there a mobile equivalent for war/4x games?
     - Specifically, the same infantry lines are formed but are more pleasing with a hexagon background.
     - Hexagon is closer to a circle shape for easier art, hacky collision detection, etc
   - Pixel Position to Hexagon index calcuation is not CPU intensive (floating point nor sqrt math needed)
-  - Grid chunking and flux only requires 6 adjacent rather than 8.
+  - Grid chunking only requires 6 adjacent rather than 8.
   - Matches existing games better like Catan, Civ, etc
   - Optional hexagonal and square grid is more code complexity, work, bimodal behavior, etc
 8. Hexagons are left side side inclusive, right side exclusive. 
@@ -372,17 +351,14 @@ Is there a mobile equivalent for war/4x games?
   but low altitude and high altitude units allow more than 1 pixel movement. Can aslo sub tick only 1 layer
   and regular tick the others.
 - Using 3 layers instead of 2 may help with spatial partitioning
-- Flux looks visually nice because units in combat vs out of combat have different animations. In final game,
-  perhaps there should be an attack animations for infantry and a non attack animation.
+- It looks visually nice when units in combat vs out of combat have different animations. It also clearly shows
+  game state. In final game, perhaps there should be an attack animations for infantry and a non attack animation.
 - Should air units have impassable terrain e.g. high mountain? Will make path finding harder for air units
 - Stopping node unit production in order to advance tech tree, improve node is probably a good form of risk -> reward.
 - Should nodes support unit cycling e.g. produce missile, then produce infantry, then produce tank, etc
 - Are both low altitude and high altitude needed or would a single air layer be sufficient?
 - Chemical gas can push enemies back unless they have gas masks
 - Should nodes have a max unit capacity e.g. This node stops producing since 10 units it produced are still alive
-- Should there be low altitude and high altitude flux? I suspect it is better to have separate maps rather
-  than a combined map as for units because there will be less interactions between flux layers but units
-  do interact somewhat between layers.
 - Should bombs dropped from planes have health and can die?
 - Should paratroopers be able to be shot at first?
 - Plane collisions would be awesome?
@@ -447,9 +423,8 @@ In general:
   in the future no matter what I build. Get a frame work in place that unblocks other tasks like 
   local path finding and adding more units types.
 - This may unblock performing more CPU intensive local path finding (e.g. theta*) for
-  single hexagon of unit or local 7 hexagons. This might work much better than flux.
-  Also, the unit can calculate for additional hexagons or add more more adjacent 
-  hexagons as needed.
+  single hexagon of unit or local 7 hexagons. Also, the unit can calculate for 
+  additional hexagons or add more more adjacent hexagons as needed.
 
 High level Implementation:
 
@@ -594,7 +569,7 @@ Other considerations:
 Probably don't want:
 
 - life long planning since I am not using multiple objective plans. Multiple targets or types of 
-  target (local, global and flux) might make this relevant.
+  target (local, global, etc) might make this relevant.
   - LPA* Life long planning A*
   - LPCBS Lifelong planning conflict-based search
 - ICT seems way too complex for minimal gains over a* (https://www.sciencedirect.com/science/article/pii/S0004370212001543)
@@ -648,8 +623,8 @@ CBS in depth notes: https://www.sciencedirect.com/science/article/pii/S000437021
 
 - Flow fields
   - Using pixel pathing struct, I can check the 9 adjacent squares to find the direction of the nearest obstacle.
-  - Can add flow fields based on nearby obstacles and sum thier fluxes to get a single final directon.
-  - longer obstacles can have stronger fluxs so units don't start don't long path.
+  - Can add flow fields based on nearby obstacles and sum thier forces to get a single final directon.
+  - longer obstacles can have stronger forces so units don't start don't long path.
 - Flocking
   - Three main types:
     - separation
