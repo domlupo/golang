@@ -29,8 +29,9 @@ type Game struct {
 	doneColor                   color.RGBA
 	logFileName                 string
 	timerStarted                bool
-	intDurationStartReadFromLog int
 	intDurationStart            int
+	intDurationStartFromLog     int
+	intDurationStartFromCLI     int
 	intDurationCount            int
 	duration                    time.Duration
 	currentTime                 time.Time
@@ -72,30 +73,20 @@ func newGame() Game {
 func (g *Game) Update() error {
 	g.currentTime = time.Now()
 
+	if !g.timerStarted && g.intDurationStartFromCLI != 0 {
+		g.intDurationStart = g.intDurationStartFromCLI
+		g.startTimer()
+	}
+
 	if !g.timerStarted {
 		_, dy := ebiten.Wheel()
 		g.intDurationStart = max(g.intDurationStart+int(dy), 1)
 		g.intDurationStart = min(g.intDurationStart, minutesInADay)
+
 		if ebiten.IsMouseButtonPressed(ebiten.MouseButton0) ||
 			ebiten.IsMouseButtonPressed(ebiten.MouseButton1) ||
 			ebiten.IsMouseButtonPressed(ebiten.MouseButton2) {
-			if !g.progressLoadedFromLogFile || g.intDurationStart != g.intDurationStartReadFromLog {
-				g.progressPercentStart = 0
-				g.file, g.err = os.Create(g.logFileName)
-				if g.err != nil {
-					log.Fatal(g.err)
-				}
-			}
-			g.timerStarted = true
-			g.startTime = time.Now()
-			g.duration = time.Duration(g.intDurationStart) * time.Minute
-			g.intDurationCount = g.intDurationStart
-			g.minuteTicker = *time.NewTicker(1 * time.Minute)
-			_, g.err = g.file.WriteString(
-				fmt.Sprintf("Timer set for %d minutes. \nstartTime: %s\n", g.intDurationStart, g.startTime.Format(time.RFC3339)))
-			if g.err != nil {
-				log.Fatal(g.err)
-			}
+			g.startTimer()
 		}
 	}
 
@@ -144,6 +135,26 @@ func (g *Game) Update() error {
 	}
 
 	return nil
+}
+
+func (g *Game) startTimer() {
+	if !g.progressLoadedFromLogFile || g.intDurationStart != g.intDurationStartFromLog {
+		g.progressPercentStart = 0
+		g.file, g.err = os.Create(g.logFileName)
+		if g.err != nil {
+			log.Fatal(g.err)
+		}
+	}
+	g.timerStarted = true
+	g.startTime = time.Now()
+	g.duration = time.Duration(g.intDurationStart) * time.Minute
+	g.intDurationCount = g.intDurationStart
+	g.minuteTicker = *time.NewTicker(1 * time.Minute)
+	_, g.err = g.file.WriteString(
+		fmt.Sprintf("Timer set for %d minutes. \nstartTime: %s\n", g.intDurationStart, g.startTime.Format(time.RFC3339)))
+	if g.err != nil {
+		log.Fatal(g.err)
+	}
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -202,19 +213,19 @@ func main() {
 	var convertMinsErr error
 	if len(args) == 2 {
 		mins, convertMinsErr = strconv.Atoi(os.Args[1])
-		g.intDurationStart = mins
 
 		if convertMinsErr != nil {
 			panic("Invalid arg passed, an integer is expected.")
 		}
-
 		if mins < 1 || mins > minutesInADay {
 			panic("Invalid arg passed, expected a number between 1 and 1440.")
 		}
+
+		g.intDurationStartFromCLI = mins
 	}
 
 	file, fileErr := os.OpenFile(g.logFileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if mins == 0 && fileErr == nil {
+	if g.intDurationStartFromCLI == 0 && fileErr == nil {
 		scanner := bufio.NewReader(file)
 		for {
 			textLine, readLineErr := scanner.ReadString('\n')
@@ -235,20 +246,20 @@ func main() {
 					if err != nil {
 						break
 					}
-					g.intDurationStartReadFromLog = loggedMins
+					g.intDurationStartFromLog = loggedMins
 				}
 			}
 		}
 	}
 
-	if g.intDurationStartReadFromLog > 0 && g.progressPercentReadFromLog < 100 {
+	if g.intDurationStartFromLog > 0 && g.progressPercentReadFromLog < 100 {
 		g.progressLoadedFromLogFile = true
 		g.file = file
 		g.progressPercentStart = g.progressPercentReadFromLog
-		g.intDurationStart = g.intDurationStartReadFromLog
+		g.intDurationStart = g.intDurationStartFromLog
 	} else {
 		g.progressPercentReadFromLog = 0
-		g.intDurationStartReadFromLog = 0
+		g.intDurationStartFromLog = 0
 	}
 
 	if err := ebiten.RunGame(&g); err != nil {
