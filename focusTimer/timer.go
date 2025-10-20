@@ -193,8 +193,28 @@ func main() {
 
 	ebiten.SetWindowSize(g.windowWidth*g.windowMultiplier, g.windowHeight*g.windowMultiplier)
 
+	args := os.Args
+	if len(args) > 2 {
+		panic("Invalid args passed, only a single arg is expected.")
+	}
+
+	var mins int
+	var convertMinsErr error
+	if len(args) == 2 {
+		mins, convertMinsErr = strconv.Atoi(os.Args[1])
+		g.intDurationStart = mins
+
+		if convertMinsErr != nil {
+			panic("Invalid arg passed, an integer is expected.")
+		}
+
+		if mins < 1 || mins > minutesInADay {
+			panic("Invalid arg passed, expected a number between 1 and 1440.")
+		}
+	}
+
 	file, fileErr := os.OpenFile(g.logFileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if fileErr == nil {
+	if mins == 0 && fileErr == nil {
 		scanner := bufio.NewReader(file)
 		for {
 			textLine, readLineErr := scanner.ReadString('\n')
