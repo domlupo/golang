@@ -341,8 +341,10 @@ func (s *state) nearestUnitWithinVision(u unit) (position, bool) {
 			yDelta := y2 - y1
 			distance := xDelta*xDelta + yDelta*yDelta
 			if distance < shortestDistance && distance <= u.vision*u.vision {
-				shortestDistance = distance
-				nearestUnitPos = current.position
+				if _, los := u.lineOfSight(current.pixelPosition, s.pixelPathing); los {
+					shortestDistance = distance
+					nearestUnitPos = current.position
+				}
 			}
 
 			current = current.next
