@@ -31,7 +31,6 @@ type Game struct {
 	timerStarted                bool
 	intDurationStart            int
 	intDurationStartFromLog     int
-	intDurationStartFromCLI     int
 	intDurationCount            int
 	duration                    time.Duration
 	currentTime                 time.Time
@@ -42,7 +41,6 @@ type Game struct {
 	minuteTicker                time.Ticker
 	progressPercent             float64
 	progressPercentStart        float64
-	progressPercentReadFromLog  float64
 	intProgressPercent          int
 	file                        *os.File
 	progressLoadedFromLogFile   bool
@@ -72,11 +70,6 @@ func newGame() Game {
 
 func (g *Game) Update() error {
 	g.currentTime = time.Now()
-
-	if !g.timerStarted && g.intDurationStartFromCLI != 0 {
-		g.intDurationStart = g.intDurationStartFromCLI
-		g.startTimer()
-	}
 
 	if !g.timerStarted {
 		_, dy := ebiten.Wheel()
@@ -145,6 +138,7 @@ func (g *Game) startTimer() {
 			log.Fatal(g.err)
 		}
 	}
+
 	g.timerStarted = true
 	g.startTime = time.Now()
 	g.duration = time.Duration(g.intDurationStart) * time.Minute
@@ -204,15 +198,34 @@ func main() {
 
 	ebiten.SetWindowSize(g.windowWidth*g.windowMultiplier, g.windowHeight*g.windowMultiplier)
 
+	intDurationStartFromCLI := readMinsFromCLI()
+	file, progressPercentFromLog, intDurationStartFromLog := readProgressFromLog(g.logFileName)
+
+	if intDurationStartFromCLI > 0 {
+		g.intDurationStart = intDurationStartFromCLI
+		g.startTimer()
+	} else if intDurationStartFromLog > 0 && progressPercentFromLog < 100 {
+		g.file = file
+		g.progressLoadedFromLogFile = true
+		g.progressPercentStart = progressPercentFromLog
+		g.intDurationStart = intDurationStartFromLog
+	}
+
+	if err := ebiten.RunGame(&g); err != nil {
+		log.Fatal(err)
+	}
+
+	g.file.Close()
+}
+
+func readMinsFromCLI() int {
 	args := os.Args
 	if len(args) > 2 {
 		panic("Invalid args passed, only a single arg is expected.")
 	}
 
-	var mins int
-	var convertMinsErr error
 	if len(args) == 2 {
-		mins, convertMinsErr = strconv.Atoi(os.Args[1])
+		mins, convertMinsErr := strconv.Atoi(os.Args[1])
 
 		if convertMinsErr != nil {
 			panic("Invalid arg passed, an integer is expected.")
@@ -221,11 +234,18 @@ func main() {
 			panic("Invalid arg passed, expected a number between 1 and 1440.")
 		}
 
-		g.intDurationStartFromCLI = mins
+		return mins
 	}
 
-	file, fileErr := os.OpenFile(g.logFileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if g.intDurationStartFromCLI == 0 && fileErr == nil {
+	return 0
+}
+
+func readProgressFromLog(filename string) (*os.File, float64, int) {
+	file, fileErr := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+
+	var progressPercentFromLog float64
+	var intDurationStartFromLog int
+	if fileErr == nil {
 		scanner := bufio.NewReader(file)
 		for {
 			textLine, readLineErr := scanner.ReadString('\n')
@@ -236,7 +256,7 @@ func main() {
 			percent := strings.Split(textLine, "%")[0]
 			percent = strings.TrimSpace(percent)
 			if loggedProgressPercent, convertErr := strconv.ParseFloat(percent, 64); convertErr == nil {
-				g.progressPercentReadFromLog = loggedProgressPercent
+				progressPercentFromLog = loggedProgressPercent
 			}
 
 			text := strings.Split(textLine, " ")
@@ -246,25 +266,10 @@ func main() {
 					if err != nil {
 						break
 					}
-					g.intDurationStartFromLog = loggedMins
+					intDurationStartFromLog = loggedMins
 				}
 			}
 		}
 	}
-
-	if g.intDurationStartFromLog > 0 && g.progressPercentReadFromLog < 100 {
-		g.progressLoadedFromLogFile = true
-		g.file = file
-		g.progressPercentStart = g.progressPercentReadFromLog
-		g.intDurationStart = g.intDurationStartFromLog
-	} else {
-		g.progressPercentReadFromLog = 0
-		g.intDurationStartFromLog = 0
-	}
-
-	if err := ebiten.RunGame(&g); err != nil {
-		log.Fatal(err)
-	}
-
-	g.file.Close()
+	return file, progressPercentFromLog, intDurationStartFromLog
 }
