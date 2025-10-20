@@ -208,6 +208,7 @@ func main() {
 		g.file = file
 		g.progressLoadedFromLogFile = true
 		g.progressPercentStart = progressPercentFromLog
+		g.intDurationStartFromLog = intDurationStartFromLog
 		g.intDurationStart = intDurationStartFromLog
 	}
 
