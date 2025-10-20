@@ -86,7 +86,7 @@ type unitTarget int
 
 const (
 	noTarget unitTarget = iota
-	currentTarget
+	activeTarget
 	steerTarget
 	enemyTarget
 	localTarget
@@ -155,7 +155,7 @@ type unit struct {
 	id uuid.UUID
 	position
 	player              player
-	currentTarget       position
+	activeTarget        position
 	steerTarget         position
 	enemyTarget         position
 	localTarget         position
@@ -215,16 +215,16 @@ func (u *unit) prioritizeTargets() {
 	u.steerTurnCount++
 	if !u.steerTarget.isZero() && u.steerTurnCount < u.steerTurnCountLimit {
 		u.localTargets = []position{}
-		u.updateTarget(currentTarget, u.steerTarget)
+		u.updateTarget(activeTarget, u.steerTarget)
 	} else if !u.enemyTarget.isZero() {
 		u.steerTurnCount = 0
 		u.steerTarget = position{}
 		u.localTargets = []position{}
-		u.updateTarget(currentTarget, u.enemyTarget)
+		u.updateTarget(activeTarget, u.enemyTarget)
 	} else if len(u.localTargets) > 0 {
 		u.steerTurnCount = 0
 		u.steerTarget = position{}
-		u.updateTarget(currentTarget, u.localTargets[len(u.localTargets)-1])
+		u.updateTarget(activeTarget, u.localTargets[len(u.localTargets)-1])
 	} else {
 		u.steerTurnCount = 0
 		u.steerTarget = position{}
@@ -284,12 +284,12 @@ func (u *unit) reachesNodes(nodes map[gridPosition]*node, hc *hexConfig) {
 func (u *unit) getNewPos() (position, func()) {
 	logger.logSelected(u.selected, infoLevel, selectedUnit, "getNewPos", u.position.log()...)
 
-	if u.currentTarget.isZero() {
+	if u.activeTarget.isZero() {
 		return u.position, func() {}
 	}
 
-	x1 := u.currentTarget.x
-	y1 := u.currentTarget.y
+	x1 := u.activeTarget.x
+	y1 := u.activeTarget.y
 	x0 := u.x
 	y0 := u.y
 
@@ -339,14 +339,14 @@ func (u *unit) getNewPos() (position, func()) {
 func (u *unit) updateTarget(ut unitTarget, target position) {
 	var unitTarget string
 	switch ut {
-	case currentTarget:
-		if target.isZero() || u.currentTarget.isZero() {
+	case activeTarget:
+		if target.isZero() || u.activeTarget.isZero() {
 			// TODO: Determine if bresenham needs zeroed more often.
 			u.bresenhamError = nil
 			u.nextBresenhamError = nil
 		}
-		u.currentTarget = target
-		unitTarget = "currentTarget"
+		u.activeTarget = target
+		unitTarget = "activeTarget"
 	case steerTarget:
 		u.steerTarget = target
 		unitTarget = "steerTarget"
@@ -527,10 +527,10 @@ func (u unit) log() []slog.Attr {
 	a = append(a, slog.Any("next", u.next.id))
 	a = append(a, slog.Any("prior", u.prior.id))
 	a = append(a, slog.Int("producedOrder", u.producedAt))
-	if !u.currentTarget.isZero() {
-		a = append(a, slog.Any("currentTarget", u.currentTarget.log()))
+	if !u.activeTarget.isZero() {
+		a = append(a, slog.Any("activeTarget", u.activeTarget.log()))
 	} else {
-		a = append(a, slog.String("currentTarget", "nil"))
+		a = append(a, slog.String("activeTarget", "nil"))
 	}
 	if !u.steerTarget.isZero() {
 		a = append(a, slog.Any("steerTarget", u.steerTarget.log()))
@@ -604,13 +604,13 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 		)
 	}
 
-	if selected && !u.currentTarget.isZero() {
+	if selected && !u.activeTarget.isZero() {
 		vector.StrokeLine(
 			dc.screen,
 			float32(u.x)*dc.windowMultiplier,
 			float32(u.y)*dc.windowMultiplier,
-			float32(u.currentTarget.x)*dc.windowMultiplier,
-			float32(u.currentTarget.y)*dc.windowMultiplier,
+			float32(u.activeTarget.x)*dc.windowMultiplier,
+			float32(u.activeTarget.y)*dc.windowMultiplier,
 			float32(dc.targetNodeLineWidth)*dc.windowMultiplier,
 			color.Black,
 			false,
@@ -641,8 +641,8 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 		if u.unitConfig.name == unguidedGroundMissile {
 			vector.StrokeCircle(
 				dc.screen,
-				float32(u.currentTarget.x)*dc.windowMultiplier,
-				float32(u.currentTarget.y)*dc.windowMultiplier,
+				float32(u.activeTarget.x)*dc.windowMultiplier,
+				float32(u.activeTarget.y)*dc.windowMultiplier,
 				float32(u.explodeRadius)*dc.windowMultiplier,
 				float32(dc.missileExplodeRadiusLineWidth)*dc.windowMultiplier,
 				dc.highlightColor,

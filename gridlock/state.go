@@ -197,7 +197,7 @@ func (s *state) moveUnits() {
 
 		newPos, completeMove := u.getNewPos()
 
-		if u.currentTarget.isZero() {
+		if u.activeTarget.isZero() {
 			unitsWithoutTarget++
 		}
 
