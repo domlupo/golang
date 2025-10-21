@@ -11,6 +11,7 @@ const (
 	neutralPlayer
 )
 
+// All hexagons on map
 type hexagons map[gridPosition]*hexagon
 
 // A hexagon which spatially partitions the map and stores dynamic state.
@@ -33,4 +34,16 @@ func setupHexagons(hc *hexConfig) map[gridPosition]*hexagon {
 		}
 	}
 	return hexagons
+}
+
+func (h *hexagon) updatePointers(u *unit) {
+	if h.linkedList == nil {
+		h.linkedList = u
+		h.linkedList.prior = u
+		h.linkedList.next = u
+	}
+	u.next = h.linkedList
+	u.prior = h.linkedList.prior
+	h.linkedList.prior.next = u
+	h.linkedList.prior = u
 }

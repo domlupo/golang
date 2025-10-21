@@ -17,10 +17,10 @@ type state struct {
 	// TODO: The next largest optimization might be to split hexagon linked list
 	// into respective layers.
 	pixelPath                   pixelPath
-	hexagons                    map[gridPosition]*hexagon
+	hexagons                    hexagons
 	obstacles                   obstacles
 	nodes                       nodes
-	units                       map[position]*unit
+	units                       units
 	developerMode               bool
 	unitsProducedTotal          int
 	unitsDeletedTotal           int
@@ -35,7 +35,7 @@ func newState(n nodes, o obstacles, h hexagons, pixelPath pixelPath, hexConfig *
 		pixelPath:     pixelPath,
 		hexagons:      h,
 		nodes:         n,
-		units:         make(map[position]*unit),
+		units:         make(units),
 		developerMode: developerMode,
 		unitPathfind:  make(heatmap),
 	}
@@ -211,7 +211,7 @@ func (s *state) moveUnits() {
 			continue
 		}
 
-		collidesWithBorder := s.collidesWithBorder(newPos, u.radius)
+		collidesWithBorder := collidesWithBorder(newPos, u.radius, s.hexConfig)
 
 		var collidedUnitPos, collidesWithUnit = s.collidesWithUnit(
 			newPos,
@@ -265,7 +265,7 @@ func (s *state) moveUnits() {
 				u.next.prior = u.prior
 				u.prior.next = u.next
 
-				updatePointers(newHex, u)
+				newHex.updatePointers(u)
 			}
 
 			delete(s.units, u.position)
@@ -287,19 +287,7 @@ func (s *state) moveUnits() {
 	)
 }
 
-func updatePointers(h *hexagon, u *unit) {
-	if h.linkedList == nil {
-		h.linkedList = u
-		h.linkedList.prior = u
-		h.linkedList.next = u
-	}
-	u.next = h.linkedList
-	u.prior = h.linkedList.prior
-	h.linkedList.prior.next = u
-	h.linkedList.prior = u
-}
-
-func (s *state) explode(pos position, blastRadius int, units map[position]*unit) {
+func (s *state) explode(pos position, blastRadius int, units units) {
 	x1 := pos.x
 	y1 := pos.y
 	r1 := blastRadius
@@ -818,23 +806,12 @@ func (s *state) produceUnits() {
 				panic("if hex linked list is nil, unit count should be 0")
 			}
 
-			updatePointers(hex, &newUnit)
+			hex.updatePointers(&newUnit)
 
 			s.units[uPos] = &newUnit
 			hex.unitCount++
 			s.unitsProducedTotal++
 		}
-	}
-}
-
-func (s *state) collidesWithBorder(pos position, offset int) bool {
-	if pos.pixelPosition.x+offset > s.windowWidth ||
-		pos.pixelPosition.x-offset < 0 ||
-		pos.pixelPosition.y+offset > s.windowHeight ||
-		pos.pixelPosition.y-offset < 0 {
-		return true
-	} else {
-		return false
 	}
 }
 
@@ -867,7 +844,7 @@ func (s *state) createUnitPathfindHeatmap() {
 	defer stop()
 
 	pixelCount := 0
-	for pixelPos, pathing := range s.pixelPath {
+	for pixelPos, path := range s.pixelPath {
 		select {
 		case <-ctx.Done():
 			return
@@ -878,7 +855,7 @@ func (s *state) createUnitPathfindHeatmap() {
 				logger.log(infoLevel, devTool, "pathfind heatmap", slog.Int("pixel positions percent progress", percentProgess))
 			}
 
-			if pathing.walkable {
+			if path.walkable {
 				unit.updateTarget(globalTarget, position{layer: unit.layer, pixelPosition: pixelPos})
 				distance := unit.pathfindGlobalTarget(s.obstacles, s.pixelPath, s.hexConfig)
 				s.unitPathfind[pixelPos] = distance

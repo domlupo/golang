@@ -31,6 +31,9 @@ const (
 	globalTarget
 )
 
+// All units on map
+type units map[position]*unit
+
 type unit struct {
 	position
 	unitConfig

@@ -398,3 +398,14 @@ func (l1 line) intersects(l2 line) bool {
 		return false
 	}
 }
+
+func collidesWithBorder(pos position, offset int, hc *hexConfig) bool {
+	if pos.x+offset > hc.windowWidth ||
+		pos.x-offset < 0 ||
+		pos.y+offset > hc.windowHeight ||
+		pos.y-offset < 0 {
+		return true
+	} else {
+		return false
+	}
+}
