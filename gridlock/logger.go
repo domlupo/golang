@@ -1,4 +1,4 @@
-// logger wrapper which adds runtime dynamic log level and log types (specific game logic e.g. state)
+// logger which adds dynmaic runtime log levels and log types for various game layers and concepts.
 package main
 
 import (
@@ -9,7 +9,6 @@ import (
 )
 
 type level int
-type logType int
 
 const (
 	debugLevel level = iota
@@ -18,6 +17,9 @@ const (
 	errorLevel
 )
 
+type logType int
+
+// Separate various game layers and concepts for easier log reading and debugging.
 const (
 	noLogType logType = iota
 	alwaysLogType
@@ -29,6 +31,7 @@ const (
 	devTool
 )
 
+// Logger configuration
 type loggerConfig struct {
 	initialLogLevel            slog.Level
 	filterTimeAndLevelFromLogs bool
@@ -78,10 +81,12 @@ func newLogger(lc loggerConfig) l {
 	return l
 }
 
+// Overide the logger state and force log the data.
 func (logger l) force(msg string, attrs ...slog.Attr) {
 	logger.log(errorLevel, alwaysLogType, msg, attrs...)
 }
 
+// Override the logger state to disable all log types except the passed log type.
 func (logger l) onlyEnable(logType logType) {
 	for k := range logger.enabledLogTypes {
 		logger.enabledLogTypes[k] = false
