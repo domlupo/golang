@@ -116,6 +116,8 @@ Is there a mobile equivalent for war/4x games?
 
 ### Future Checkpoints
 
+- When all nodes are selected, newly captured nodes should become selected as well.
+
 - Determine if spatial partitiong node colliison optimization is needed.
   - right now node collision naively checks all nodes.
 
