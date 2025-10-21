@@ -109,7 +109,7 @@ func (g *Game) restart() {
 	g.compTwo = *newComputer(redPlayer)
 
 	hexagons := setupHexagons(&g.drawConfig.hexConfig)
-	obstacles, pixelPathing := setupObstacles(multiObstacle, &g.drawConfig.hexConfig, g.pixelPathDistanceMax)
+	obstacles, pixelPath := setupObstacles(multiObstacle, &g.drawConfig.hexConfig, g.pixelPathDistanceMax)
 	nodes := setupNodes(leftVsRightVerticalOffset, &g.drawConfig.hexConfig, g.initialNodeHealth, obstacles, hexagons)
 
 	for nPos := range nodes {
@@ -120,7 +120,7 @@ func (g *Game) restart() {
 		}
 	}
 
-	g.gameState = newState(nodes, obstacles, hexagons, pixelPathing, &g.drawConfig.hexConfig, g.developerMode)
+	g.gameState = newState(nodes, obstacles, hexagons, pixelPath, &g.drawConfig.hexConfig, g.developerMode)
 	g.updateComputerTargetNodes()
 }
 

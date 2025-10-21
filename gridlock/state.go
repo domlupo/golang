@@ -16,7 +16,7 @@ type state struct {
 	*hexConfig
 	// TODO: The next largest optimization might be to split hexagon linked list
 	// into respective layers.
-	pixelPathing                pixelPathing
+	pixelPath                   pixelPath
 	hexagons                    map[gridPosition]*hexagon
 	obstacles                   obstacles
 	nodes                       nodes
@@ -28,11 +28,11 @@ type state struct {
 	unitPathfindHeatmapComplete bool
 }
 
-func newState(n nodes, o obstacles, h hexagons, pixelPathing pixelPathing, hexConfig *hexConfig, developerMode bool) *state {
+func newState(n nodes, o obstacles, h hexagons, pixelPath pixelPath, hexConfig *hexConfig, developerMode bool) *state {
 	s := state{
 		hexConfig:     hexConfig,
 		obstacles:     o,
-		pixelPathing:  pixelPathing,
+		pixelPath:     pixelPath,
 		hexagons:      h,
 		nodes:         n,
 		units:         make(map[position]*unit),
@@ -66,7 +66,7 @@ func (s *state) analyzeTargets() {
 		u.updateTarget(enemyTarget, nearest)
 
 		if !u.globalTarget.isZero() && u.pathGlobalTarget {
-			u.pathfindGlobalTarget(s.obstacles, s.pixelPathing, s.hexConfig)
+			u.pathfindGlobalTarget(s.obstacles, s.pixelPath, s.hexConfig)
 		} else if len(u.localTargets) > 0 && u.atTerminalPosition {
 			u.localTargets = u.localTargets[:len(u.localTargets)-1]
 		}
@@ -205,7 +205,7 @@ func (s *state) moveUnits() {
 			continue
 		}
 
-		if !s.pixelPathing[newPos.pixelPosition].walkable {
+		if !s.pixelPath[newPos.pixelPosition].walkable {
 			unitsAtUnwalkable++
 			u.AtUnwalkable = true
 			continue
@@ -404,7 +404,7 @@ func (s *state) nearestUnitWithinVision(u unit) (position, bool) {
 			yDelta := y2 - y1
 			distance := xDelta*xDelta + yDelta*yDelta
 			if distance < shortestDistance && distance <= u.vision*u.vision {
-				if _, los := u.lineOfSight(current.pixelPosition, s.pixelPathing); los {
+				if _, los := u.lineOfSight(current.pixelPosition, s.pixelPath); los {
 					shortestDistance = distance
 					nearestUnitPos = current.position
 				}
@@ -867,7 +867,7 @@ func (s *state) createUnitPathfindHeatmap() {
 	defer stop()
 
 	pixelCount := 0
-	for pixelPos, pathing := range s.pixelPathing {
+	for pixelPos, pathing := range s.pixelPath {
 		select {
 		case <-ctx.Done():
 			return
@@ -880,7 +880,7 @@ func (s *state) createUnitPathfindHeatmap() {
 
 			if pathing.walkable {
 				unit.updateTarget(globalTarget, position{layer: unit.layer, pixelPosition: pixelPos})
-				distance := unit.pathfindGlobalTarget(s.obstacles, s.pixelPathing, s.hexConfig)
+				distance := unit.pathfindGlobalTarget(s.obstacles, s.pixelPath, s.hexConfig)
 				s.unitPathfind[pixelPos] = distance
 			}
 		}
@@ -935,7 +935,7 @@ func (s *state) draw(
 	}
 
 	if drawPixelPath {
-		s.pixelPathing.draw(dc)
+		s.pixelPath.draw(dc)
 	}
 
 	if s.unitPathfindHeatmapComplete {

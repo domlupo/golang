@@ -32,10 +32,10 @@ type obstaclePoint struct {
 }
 
 // look up table for pixel path data
-type pixelPathing map[pixelPosition]pathing
+type pixelPath map[pixelPosition]path
 
 // path data
-type pathing struct {
+type path struct {
 	walkable                    bool
 	unwalkableChebyshevDistance int
 }
@@ -60,13 +60,13 @@ func (os obstacles) insert(k gridPosition, v *obstacle) {
 	os[k] = v
 }
 
-func (os obstacles) setup(hc *hexConfig, pixelPathingDistanceMax int) pixelPathing {
-	pixelPathing := os.setupPixelPathing(hc, pixelPathingDistanceMax)
+func (os obstacles) setup(hc *hexConfig, pixelPathDistanceMax int) pixelPath {
+	pixelPath := os.setupPixelPathing(hc, pixelPathDistanceMax)
 	groups := os.getGroups(hc)
 	for _, group := range groups {
-		group.setupVisibilityGrid(pixelPathing, hc)
+		group.setupVisibilityGrid(pixelPath, hc)
 	}
-	return pixelPathing
+	return pixelPath
 }
 
 // CPU intensize because it calculates the optimal distance from every walkable pixel to the nearest
@@ -74,8 +74,8 @@ func (os obstacles) setup(hc *hexConfig, pixelPathingDistanceMax int) pixelPathi
 // unwalkable pixels are found first. Then the pixels 1 pixel away are calculated next. This
 // continues until a pixel path distance limit is reached. The pixel path distance limit is
 // not needed for player experience. It helps developer productivity by keeping live reloads fast.
-func (os obstacles) setupPixelPathing(hc *hexConfig, distanceLimit int) pixelPathing {
-	pixelPathing := make(map[pixelPosition]pathing, hc.windowWidth*hc.windowHeight)
+func (os obstacles) setupPixelPathing(hc *hexConfig, distanceLimit int) pixelPath {
+	pixelPath := make(map[pixelPosition]path, hc.windowWidth*hc.windowHeight)
 
 	for x := range hc.windowWidth {
 		for y := range hc.windowHeight {
@@ -86,9 +86,9 @@ func (os obstacles) setupPixelPathing(hc *hexConfig, distanceLimit int) pixelPat
 			}
 			o := os[gridPos]
 			if o != nil && (o.kind == lowMountain || o.kind == highMountain) {
-				pixelPathing[p] = pathing{walkable: false}
+				pixelPath[p] = path{walkable: false}
 			} else {
-				pixelPathing[p] = pathing{walkable: true}
+				pixelPath[p] = path{walkable: true}
 			}
 		}
 	}
@@ -96,13 +96,13 @@ func (os obstacles) setupPixelPathing(hc *hexConfig, distanceLimit int) pixelPat
 	for x := range hc.windowWidth {
 		for y := range hc.windowHeight {
 			p := pixelPosition{x: x, y: y}
-			pathing := pixelPathing[p]
+			pathing := pixelPath[p]
 			if !pathing.walkable {
 				pathing.unwalkableChebyshevDistance = 0
 			} else {
 				pathing.unwalkableChebyshevDistance = distanceLimit
 			}
-			pixelPathing[p] = pathing
+			pixelPath[p] = pathing
 		}
 	}
 
@@ -121,13 +121,13 @@ func (os obstacles) setupPixelPathing(hc *hexConfig, distanceLimit int) pixelPat
 		for x := range hc.windowWidth {
 			for y := range hc.windowHeight {
 				i := pixelPosition{x: x, y: y}
-				pathing := pixelPathing[i]
+				pathing := pixelPath[i]
 
 				if !pathing.walkable || (pathing.walkable && pathing.unwalkableChebyshevDistance != distanceLimit) {
 					count += 1
 				}
 
-				if pixelPathing[i].unwalkableChebyshevDistance != limit {
+				if pixelPath[i].unwalkableChebyshevDistance != limit {
 					continue
 				}
 
@@ -140,37 +140,37 @@ func (os obstacles) setupPixelPathing(hc *hexConfig, distanceLimit int) pixelPat
 				w := i.adjacent(west)
 				nw := i.adjacent(northwest)
 
-				nPath := pixelPathing[n]
+				nPath := pixelPath[n]
 				nPath.unwalkableChebyshevDistance = min(limit+1, nPath.unwalkableChebyshevDistance)
-				pixelPathing[n] = nPath
+				pixelPath[n] = nPath
 
-				nePath := pixelPathing[ne]
+				nePath := pixelPath[ne]
 				nePath.unwalkableChebyshevDistance = min(limit+1, nePath.unwalkableChebyshevDistance)
-				pixelPathing[ne] = nePath
+				pixelPath[ne] = nePath
 
-				ePath := pixelPathing[e]
+				ePath := pixelPath[e]
 				ePath.unwalkableChebyshevDistance = min(limit+1, ePath.unwalkableChebyshevDistance)
-				pixelPathing[e] = ePath
+				pixelPath[e] = ePath
 
-				sePath := pixelPathing[se]
+				sePath := pixelPath[se]
 				sePath.unwalkableChebyshevDistance = min(limit+1, sePath.unwalkableChebyshevDistance)
-				pixelPathing[se] = sePath
+				pixelPath[se] = sePath
 
-				sPath := pixelPathing[s]
+				sPath := pixelPath[s]
 				sPath.unwalkableChebyshevDistance = min(limit+1, sPath.unwalkableChebyshevDistance)
-				pixelPathing[s] = sPath
+				pixelPath[s] = sPath
 
-				swPath := pixelPathing[sw]
+				swPath := pixelPath[sw]
 				swPath.unwalkableChebyshevDistance = min(limit+1, swPath.unwalkableChebyshevDistance)
-				pixelPathing[sw] = swPath
+				pixelPath[sw] = swPath
 
-				wPath := pixelPathing[w]
+				wPath := pixelPath[w]
 				wPath.unwalkableChebyshevDistance = min(limit+1, wPath.unwalkableChebyshevDistance)
-				pixelPathing[w] = wPath
+				pixelPath[w] = wPath
 
-				nwPath := pixelPathing[nw]
+				nwPath := pixelPath[nw]
 				nwPath.unwalkableChebyshevDistance = min(limit+1, nwPath.unwalkableChebyshevDistance)
-				pixelPathing[nw] = nwPath
+				pixelPath[nw] = nwPath
 			}
 		}
 
@@ -186,7 +186,7 @@ func (os obstacles) setupPixelPathing(hc *hexConfig, distanceLimit int) pixelPat
 	percent := float64(count) / float64(hc.windowWidth*hc.windowHeight) * 100
 	logger.log(infoLevel, setupLogic, fmt.Sprintf("setup pixel pathing. %.0f%% total pixels not skipped with a distance limit of %d", percent, distanceLimit))
 
-	return pixelPathing
+	return pixelPath
 }
 
 func (os obstacles) getGroups(hc *hexConfig) []obstacles {
@@ -246,7 +246,7 @@ func (os obstacles) getGroups(hc *hexConfig) []obstacles {
 }
 
 // Returns true if a point to point line of sight exists using Bresenham's algorithm
-func (pos pixelPosition) lineOfSight(otherPos pixelPosition, pathing pixelPathing) (pixelPosition, bool) {
+func (pos pixelPosition) lineOfSight(otherPos pixelPosition, pathing pixelPath) (pixelPosition, bool) {
 	x0 := pos.x
 	y0 := pos.y
 	x1 := otherPos.x
@@ -296,7 +296,7 @@ func (pos pixelPosition) lineOfSight(otherPos pixelPosition, pathing pixelPathin
 }
 
 // returns the obstacle point nearest to the line of sight block from start to end
-func (start pixelPosition) obstaclePoint(end pixelPosition, pathing pixelPathing, obstacles obstacles, hc *hexConfig) (obstaclePoint, bool) {
+func (start pixelPosition) obstaclePoint(end pixelPosition, pathing pixelPath, obstacles obstacles, hc *hexConfig) (obstaclePoint, bool) {
 	obstaclePixelPos, los := start.lineOfSight(end, pathing)
 
 	if los {
@@ -322,7 +322,7 @@ func (start pixelPosition) obstaclePoint(end pixelPosition, pathing pixelPathing
 	return visibilityGrid[nearestIndex], los
 }
 
-func (os obstacles) setupVisibilityGrid(pathing pixelPathing, hc *hexConfig) {
+func (os obstacles) setupVisibilityGrid(pathing pixelPath, hc *hexConfig) {
 	points := make(obstaclePoints)
 	points.createAllPoints(os, hc)
 	points.removeDuplicatePoints()
@@ -428,7 +428,7 @@ func (points obstaclePoints) removeDuplicatePoints() {
 	}
 }
 
-func (points obstaclePoints) connectPoints(pathing pixelPathing, hc *hexConfig) {
+func (points obstaclePoints) connectPoints(pathing pixelPath, hc *hexConfig) {
 	var notConnected []*obstaclePoint
 	for _, op := range points {
 		notConnected = append(notConnected, op)
@@ -533,7 +533,7 @@ func (o obstacle) drawVisibilityGrid(dc drawConfig) {
 	}
 }
 
-func (pp pixelPathing) draw(dc drawConfig) {
+func (pp pixelPath) draw(dc drawConfig) {
 	unwalkable := make(heatmap)
 	for pixelPos, pathing := range pp {
 		switch pathing.walkable {

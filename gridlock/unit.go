@@ -381,7 +381,7 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 // A smaller issue is when the desired final position is within a visbility grid, but the los check from
 // the position to unit immediately jumps to a different obstacle visibility grid when the first
 // visibility grid should have been traveled.
-func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathing, hc *hexConfig) int {
+func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPath pixelPath, hc *hexConfig) int {
 	var foundPath bool
 	tries := [][]position{{u.globalTarget}}
 	nextTries := [][]position{}
@@ -389,7 +389,7 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathi
 	for !foundPath {
 		for _, path := range tries {
 			start := path[len(path)-1]
-			obstaclePoint, los := start.obstaclePoint(u.pixelPosition, pixelPathing, obstacles, hc)
+			obstaclePoint, los := start.obstaclePoint(u.pixelPosition, pixelPath, obstacles, hc)
 
 			if los {
 				foundPath = true
@@ -402,8 +402,8 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathi
 				break
 			}
 
-			cwPath := u.getPath(obstaclePoint, cw, pixelPathing, obstacles, hc)
-			ccwPath := u.getPath(obstaclePoint, ccw, pixelPathing, obstacles, hc)
+			cwPath := u.getPath(obstaclePoint, cw, pixelPath, obstacles, hc)
+			ccwPath := u.getPath(obstaclePoint, ccw, pixelPath, obstacles, hc)
 
 			nextTries = append(nextTries, slices.Concat(path, cwPath))
 			nextTries = append(nextTries, slices.Concat(path, ccwPath))
@@ -415,7 +415,7 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathi
 	paths := [][]position{}
 	for _, try := range tries {
 		end := try[len(try)-1]
-		if _, los := u.lineOfSight(end.pixelPosition, pixelPathing); los {
+		if _, los := u.lineOfSight(end.pixelPosition, pixelPath); los {
 			paths = append(paths, try)
 		}
 	}
@@ -426,7 +426,7 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathi
 			pos := path[j]
 			for k := len(path) - 1; k > j; k-- {
 				otherPos := path[k]
-				if _, los := pos.lineOfSight(otherPos.pixelPosition, pixelPathing); los {
+				if _, los := pos.lineOfSight(otherPos.pixelPosition, pixelPath); los {
 					j = k
 					trimPath = append(trimPath, path[k])
 					j--
@@ -464,7 +464,7 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPathing pixelPathi
 func (u *unit) getPath(
 	current obstaclePoint,
 	direction pathDirection,
-	pixelPathing pixelPathing,
+	pixelPath pixelPath,
 	obstacles obstacles,
 	hc *hexConfig) []position {
 
@@ -482,7 +482,7 @@ func (u *unit) getPath(
 
 	for current != end {
 		path = append(path, position{layer: u.layer, pixelPosition: current.pixelPosition})
-		obstaclePoint, los := current.obstaclePoint(u.pixelPosition, pixelPathing, obstacles, hc)
+		obstaclePoint, los := current.obstaclePoint(u.pixelPosition, pixelPath, obstacles, hc)
 
 		if los || current.visibilityGridId != obstaclePoint.visibilityGridId {
 			break
