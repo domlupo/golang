@@ -11,75 +11,13 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+// Units path around obstacles in cw or ccw motion
 type pathDirection int
 
 const (
 	noPathDirection pathDirection = iota
 	cw
 	ccw
-)
-
-// Note: unit radius set to an odd number is better for testing due to division bugs
-var infantryConfig = unitConfig{
-	name:                 infantry,
-	radius:               3,
-	maxHealth:            50,
-	attack:               1,
-	vision:               30,
-	reach:                5,
-	produceLayer:         ground,
-	staticTarget:         false,
-	attacksGround:        true,
-	attacksLowAltitude:   false,
-	attacksHighAltitude:  false,
-	attacksPosition:      false,
-	explodeAtTerminalPos: false,
-	explodeRadius:        0,
-}
-
-// TODO: Figure out better naming for various missiles
-// TODO: Figure out better attack conventions e.g. direct, vs explosion, etc
-var unguidedGroundMissileConfig = unitConfig{
-	name:                 unguidedGroundMissile,
-	radius:               3,
-	maxHealth:            100,
-	attack:               1,
-	vision:               100,
-	reach:                0,
-	produceLayer:         lowAltitude,
-	staticTarget:         true,
-	attacksGround:        false,
-	attacksLowAltitude:   false,
-	attacksHighAltitude:  false,
-	attacksPosition:      true,
-	explodeAtTerminalPos: true,
-	explodeRadius:        100,
-}
-var guidedAirMissileConfig = unitConfig{
-	name:                 guidedAirMissile,
-	radius:               3,
-	maxHealth:            100,
-	attack:               1000,
-	vision:               250,
-	reach:                0,
-	produceLayer:         lowAltitude,
-	staticTarget:         false,
-	attacksGround:        false,
-	attacksLowAltitude:   true,
-	attacksHighAltitude:  true,
-	attacksPosition:      false,
-	explodeAtTerminalPos: true,
-	explodeRadius:        100,
-}
-
-type name int
-
-const (
-	noName name = iota
-	infantry
-	unguidedGroundMissile
-	guidedAirMissile
-	mobileSAM
 )
 
 type unitTarget int
@@ -93,67 +31,10 @@ const (
 	globalTarget
 )
 
-type unitConfig struct {
-	name                 name
-	radius               int
-	maxHealth            int
-	attack               int
-	vision               int
-	reach                int
-	produceLayer         layer
-	staticTarget         bool
-	attacksGround        bool
-	attacksLowAltitude   bool
-	attacksHighAltitude  bool
-	attacksPosition      bool
-	explodeAtTerminalPos bool
-	explodeRadius        int
-}
-
-func (uc unitConfig) log() []slog.Attr {
-	var a = []slog.Attr{}
-	var name string
-	switch uc.name {
-	case noName:
-		name = "no name"
-	case infantry:
-		name = "infantry"
-	case unguidedGroundMissile:
-		name = "unguidedGroundMissile"
-	case guidedAirMissile:
-		name = "guidedAirMissile"
-	default:
-		name = "unknown"
-	}
-	a = append(a, slog.String("name", name))
-	a = append(a, slog.Int("radius", uc.radius))
-	a = append(a, slog.Int("maxHealth", uc.maxHealth))
-	a = append(a, slog.Int("attack", uc.attack))
-	a = append(a, slog.Int("vision", uc.vision))
-	a = append(a, slog.Int("reach", uc.reach))
-	var layer string
-	switch uc.produceLayer {
-	case noLayer:
-		layer = "noLayer"
-	case ground:
-		layer = "ground"
-	case lowAltitude:
-		layer = "lowAltitude"
-	case highAltitude:
-		layer = "highAltitude"
-	}
-	a = append(a, slog.String("produceLayer", layer))
-	a = append(a, slog.Bool("staticTarget", uc.staticTarget))
-	a = append(a, slog.Bool("attacksGround", uc.attacksGround))
-	a = append(a, slog.Bool("attacksLowAltitude", uc.attacksLowAltitude))
-	a = append(a, slog.Bool("attacksHighAltitude", uc.attacksHighAltitude))
-	a = append(a, slog.Bool("attacksPosition", uc.attacksPosition))
-	return a
-}
-
 type unit struct {
-	id uuid.UUID
 	position
+	unitConfig
+	id                  uuid.UUID
 	player              player
 	activeTarget        position
 	steerTarget         position
@@ -167,18 +48,17 @@ type unit struct {
 	nextBresenhamError  *int
 	steerTurnCount      int
 	steerTurnCountLimit int
-	unitConfig
-	health           int
-	movedThisTurn    bool
-	attackedThisTurn bool
-	AtUnwalkable     bool
-	AtCollision      bool
-	canReachNode     node
-	selected         bool
-	prior            *unit
-	next             *unit
-	producedAt       int
-	debugFlag        bool
+	health              int
+	movedThisTurn       bool
+	attackedThisTurn    bool
+	AtUnwalkable        bool
+	AtCollision         bool
+	canReachNode        node
+	selected            bool
+	prior               *unit
+	next                *unit
+	producedAt          int
+	debugFlag           bool
 }
 
 func newUnit(p player, globalTarget position, uc unitConfig, pos position, producedOrder int, selected bool) unit {
@@ -187,6 +67,7 @@ func newUnit(p player, globalTarget position, uc unitConfig, pos position, produ
 		logger.log(errorLevel, selectedUnit, "newUnit", slog.String("failed to generate UUID", err.Error()))
 		panic("cannot newUnit since uuid generation failed")
 	}
+
 	u := unit{
 		id:                  id,
 		position:            pos,
