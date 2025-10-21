@@ -513,20 +513,20 @@ func (o obstacle) drawObstacle(dc drawConfig) {
 }
 
 func (o obstacle) drawVisibilityGrid(dc drawConfig) {
-	for _, ot := range *o.visibilityGrid {
+	for _, op := range *o.visibilityGrid {
 		vector.DrawFilledCircle(
 			dc.screen,
-			float32(ot.x)*dc.windowMultiplier,
-			float32(ot.y)*dc.windowMultiplier,
+			float32(op.x)*dc.windowMultiplier,
+			float32(op.y)*dc.windowMultiplier,
 			3*dc.windowMultiplier,
 			dc.highlightColor,
 			false)
 		vector.StrokeLine(
 			dc.screen,
-			float32(ot.x)*dc.windowMultiplier,
-			float32(ot.y)*dc.windowMultiplier,
-			float32(ot.cw.x)*dc.windowMultiplier,
-			float32(ot.cw.y)*dc.windowMultiplier,
+			float32(op.x)*dc.windowMultiplier,
+			float32(op.y)*dc.windowMultiplier,
+			float32(op.cw.x)*dc.windowMultiplier,
+			float32(op.cw.y)*dc.windowMultiplier,
 			float32(dc.visibilityGridLineWidth)*dc.windowMultiplier,
 			dc.highlightColor,
 			false)

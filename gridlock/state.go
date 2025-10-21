@@ -7,6 +7,8 @@ import (
 	"math"
 	"os"
 	"os/signal"
+
+	"github.com/gofrs/uuid/v5"
 )
 
 // not enforced but must be a singleton
@@ -901,9 +903,18 @@ func (s *state) draw(
 	for _, n := range s.nodes {
 		n.drawTargets(dc, drawBlueTargets, drawRedTargets)
 	}
+
+	visited := make(map[uuid.UUID]struct{})
 	for _, o := range s.obstacles {
 		o.drawObstacle(dc)
+
 		if drawVisibilityGrids {
+			g := *o.visibilityGrid
+			op := g[0]
+			if _, ok := visited[op.visibilityGridId]; ok {
+				continue
+			}
+			visited[op.visibilityGridId] = struct{}{}
 			o.drawVisibilityGrid(dc)
 		}
 	}
