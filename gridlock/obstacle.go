@@ -4,7 +4,6 @@ package main
 
 import (
 	"fmt"
-	"image/color"
 	"log/slog"
 	"math"
 
@@ -434,16 +433,14 @@ func (o obstacle) drawVisibilityGrid(dc drawConfig) {
 }
 
 func (pp pixelPathing) draw(dc drawConfig) {
+	heatmap := make(heatmap)
 	for pixelPos, pathing := range pp {
-		if !pathing.walkable {
-			vector.DrawFilledRect(
-				dc.screen,
-				float32(pixelPos.x)*dc.windowMultiplier,
-				float32(pixelPos.y)*dc.windowMultiplier,
-				1*dc.windowMultiplier,
-				1*dc.windowMultiplier,
-				color.Black,
-				false)
+		switch pathing.walkable {
+		case true:
+			heatmap[pixelPos] = 1
+		case false:
+			heatmap[pixelPos] = 0
 		}
 	}
+	heatmap.draw(dc)
 }

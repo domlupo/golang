@@ -8,6 +8,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+type heatmap map[pixelPosition]int
+
 type drawConfig struct {
 	screen *ebiten.Image
 	// windowMultiplier must only be used for drawing images and windows.
@@ -24,7 +26,6 @@ type drawConfig struct {
 	targetNodeLineWidth           int
 	hexLineWidth                  int
 	visibilityGridLineWidth       int
-	roygbivColors                 []color.RGBA
 	backgroundColor               color.RGBA
 	highlightColor                color.RGBA
 	unitHealthColor               color.RGBA
@@ -36,7 +37,12 @@ type drawConfig struct {
 	neutralNodeColor              color.RGBA
 	avgUnitPosRadius              int
 	avgUnitPosColor               color.Color
+	heatmapR                      uint8
+	heatmapG                      uint8
+	heatmapB                      uint8
+	heatmapAlphaMax               float64
 	drawTriangleDefaultImage      *ebiten.Image
+	roygbivColors                 []color.RGBA
 }
 
 func newDrawConfig() *drawConfig {
@@ -70,6 +76,10 @@ func newDrawConfig() *drawConfig {
 		neutralNodeColor:              color.RGBA{100, 60, 100, 200},
 		avgUnitPosRadius:              1,
 		avgUnitPosColor:               color.Black,
+		heatmapR:                      0,
+		heatmapG:                      0,
+		heatmapB:                      0,
+		heatmapAlphaMax:               200,
 		drawTriangleDefaultImage:      drawTriangleDefaultImage,
 		roygbivColors: []color.RGBA{
 			{200, 0, 0, 255},
@@ -82,6 +92,27 @@ func newDrawConfig() *drawConfig {
 		},
 	}
 	return &dc
+}
+
+func (heatmap heatmap) draw(dc drawConfig) {
+	max := 0
+	for _, distance := range heatmap {
+		if distance > max {
+			max = distance
+		}
+	}
+
+	for pixelPos, distance := range heatmap {
+		color := color.RGBA{dc.heatmapR, dc.heatmapB, dc.heatmapG, uint8(float64(distance) / float64(max) * dc.heatmapAlphaMax)}
+		vector.DrawFilledRect(
+			dc.screen,
+			float32(pixelPos.x)*dc.windowMultiplier,
+			float32(pixelPos.y)*dc.windowMultiplier,
+			1*dc.windowMultiplier,
+			1*dc.windowMultiplier,
+			color,
+			false)
+	}
 }
 
 func drawUnfilledBoxFloat32(dc drawConfig, color color.Color, initialX float32, initialY float32, finalX float32, finalY float32) {

@@ -3,13 +3,10 @@ package main
 
 import (
 	"context"
-	"image/color"
 	"log/slog"
 	"math"
 	"os"
 	"os/signal"
-
-	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 // not enforced but must be a singleton
@@ -17,16 +14,16 @@ type state struct {
 	*hexConfig
 	// TODO: The next largest optimization might be to split hexagon linked list
 	// into respective layers.
-	pixelPathing       pixelPathing
-	hexagons           map[gridPosition]*hexagon
-	obstacles          obstacles
-	nodes              nodes
-	units              map[position]*unit
-	developerMode      bool
-	unitsProducedTotal int
-	unitsDeletedTotal  int
-	heatmap            map[pixelPosition]int
-	heatmapComplete    bool
+	pixelPathing                pixelPathing
+	hexagons                    map[gridPosition]*hexagon
+	obstacles                   obstacles
+	nodes                       nodes
+	units                       map[position]*unit
+	developerMode               bool
+	unitsProducedTotal          int
+	unitsDeletedTotal           int
+	unitPathfind                heatmap
+	unitPathfindHeatmapComplete bool
 }
 
 func newState(n nodes, o obstacles, h hexagons, pixelPathing pixelPathing, hexConfig *hexConfig, developerMode bool) *state {
@@ -38,7 +35,7 @@ func newState(n nodes, o obstacles, h hexagons, pixelPathing pixelPathing, hexCo
 		nodes:         n,
 		units:         make(map[position]*unit),
 		developerMode: developerMode,
-		heatmap:       make(map[pixelPosition]int),
+		unitPathfind:  make(heatmap),
 	}
 
 	return &s
@@ -839,10 +836,10 @@ func (s *state) collidesWithBorder(pos position, offset int) bool {
 	}
 }
 
-func (s *state) createPathfindHeatmap() {
+func (s *state) createUnitPathfindHeatmap() {
 	logger.onlyEnable(devTool)
 
-	if len(s.heatmap) != 0 {
+	if len(s.unitPathfind) != 0 {
 		logger.log(infoLevel, devTool, "cannot create heatmap since it was already attempted")
 		return
 	}
@@ -882,12 +879,12 @@ func (s *state) createPathfindHeatmap() {
 			if pathing.walkable {
 				unit.updateTarget(globalTarget, position{layer: unit.layer, pixelPosition: pixelPos})
 				distance := unit.pathfindGlobalTarget(s.obstacles, s.pixelPathing, s.hexConfig)
-				s.heatmap[pixelPos] = distance
+				s.unitPathfind[pixelPos] = distance
 			}
 		}
 	}
 
-	s.heatmapComplete = true
+	s.unitPathfindHeatmapComplete = true
 	logger.log(infoLevel, devTool, "done creating pathfinding heatmap")
 }
 
@@ -924,24 +921,7 @@ func (s *state) draw(dc drawConfig, drawBlueTargets bool, drawRedTargets, drawVi
 		s.pixelPathing.draw(dc)
 	}
 
-	if s.heatmapComplete {
-		max := 0
-		for _, distance := range s.heatmap {
-			if distance > max {
-				max = distance
-			}
-		}
-
-		for pixelPos, distance := range s.heatmap {
-			color := color.RGBA{0, 0, 0, uint8(float64(distance) / float64(max) * 255)}
-			vector.DrawFilledRect(
-				dc.screen,
-				float32(pixelPos.x)*dc.windowMultiplier,
-				float32(pixelPos.y)*dc.windowMultiplier,
-				1*dc.windowMultiplier,
-				1*dc.windowMultiplier,
-				color,
-				false)
-		}
+	if s.unitPathfindHeatmapComplete {
+		s.unitPathfind.draw(dc)
 	}
 }

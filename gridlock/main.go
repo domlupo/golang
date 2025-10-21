@@ -187,7 +187,7 @@ func (g *Game) Update() error {
 		if gridPos, ok := pixelPos.getGridPos(&g.hexConfig); ok {
 			logger.log(infoLevel, devTool, "gridPos", slog.Int("x", gridPos.x), slog.Int("y", gridPos.y))
 		}
-		g.gameState.createPathfindHeatmap()
+		g.gameState.createUnitPathfindHeatmap()
 	}
 	if g.rightMouseClicked {
 		// TODO: Determine behavior. Should player choose which layer they target or handle it via game logic?
