@@ -7,6 +7,7 @@ package main
 // hexagon height.
 const hexLookUpTablePixelCount = 460
 
+// Hexagon configuration
 type hexConfig struct {
 	lookUpTable [hexLookUpTablePixelCount]hexagonTriangle
 	hexWidth    int
