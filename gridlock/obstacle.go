@@ -31,10 +31,13 @@ type obstaclePoint struct {
 	ccwDistance      int
 }
 
+// look up table for pixel path data
 type pixelPathing map[pixelPosition]pathing
 
+// path data
 type pathing struct {
-	walkable bool
+	walkable                    bool
+	unwalkableChebyshevDistance int
 }
 
 type obstacleKind int
@@ -57,8 +60,8 @@ func (os obstacles) insert(k gridPosition, v *obstacle) {
 	os[k] = v
 }
 
-func (os obstacles) setup(hc *hexConfig) pixelPathing {
-	pixelPathing := os.setupPixelPathing(hc)
+func (os obstacles) setup(hc *hexConfig, pixelPathingDistanceMax int) pixelPathing {
+	pixelPathing := os.setupPixelPathing(hc, pixelPathingDistanceMax)
 	groups := os.getGroups(hc)
 	for _, group := range groups {
 		group.setupVisibilityGrid(pixelPathing, hc)
@@ -66,24 +69,122 @@ func (os obstacles) setup(hc *hexConfig) pixelPathing {
 	return pixelPathing
 }
 
-func (os obstacles) setupPixelPathing(hc *hexConfig) pixelPathing {
+// CPU intensize because it calculates the optimal distance from every walkable pixel to the nearest
+// unwalkable pixel. It can be optimized further. The main optimization is dynamic programming. The
+// unwalkable pixels are found first. Then the pixels 1 pixel away are calculated next. This
+// continues until a pixel path distance limit is reached. The pixel path distance limit is
+// not needed for player experience. It helps developer productivity by keeping live reloads fast.
+func (os obstacles) setupPixelPathing(hc *hexConfig, distanceLimit int) pixelPathing {
 	pixelPathing := make(map[pixelPosition]pathing, hc.windowWidth*hc.windowHeight)
 
 	for x := range hc.windowWidth {
 		for y := range hc.windowHeight {
-			pixelPos := pixelPosition{x: x, y: y}
-			gridPos, ok := pixelPos.getGridPos(hc)
+			p := pixelPosition{x: x, y: y}
+			gridPos, ok := p.getGridPos(hc)
 			if !ok {
 				panic("Could not setup pixel path")
 			}
 			o := os[gridPos]
-			walkable := true
 			if o != nil && (o.kind == lowMountain || o.kind == highMountain) {
-				walkable = false
+				pixelPathing[p] = pathing{walkable: false}
+			} else {
+				pixelPathing[p] = pathing{walkable: true}
 			}
-			pixelPathing[pixelPos] = pathing{walkable: walkable}
 		}
 	}
+
+	for x := range hc.windowWidth {
+		for y := range hc.windowHeight {
+			p := pixelPosition{x: x, y: y}
+			pathing := pixelPathing[p]
+			if !pathing.walkable {
+				pathing.unwalkableChebyshevDistance = 0
+			} else {
+				pathing.unwalkableChebyshevDistance = distanceLimit
+			}
+			pixelPathing[p] = pathing
+		}
+	}
+
+	logger.log(infoLevel, setupLogic, "setup pixel pathing", slog.Int("distance limit", distanceLimit))
+
+	limit := 0
+	var priorCount int
+	var count int
+	for count != hc.windowWidth*hc.windowHeight {
+		if limit == distanceLimit {
+			break
+		}
+		priorCount = count
+		count = 0
+
+		for x := range hc.windowWidth {
+			for y := range hc.windowHeight {
+				i := pixelPosition{x: x, y: y}
+				pathing := pixelPathing[i]
+
+				if !pathing.walkable || (pathing.walkable && pathing.unwalkableChebyshevDistance != distanceLimit) {
+					count += 1
+				}
+
+				if pixelPathing[i].unwalkableChebyshevDistance != limit {
+					continue
+				}
+
+				n := i.adjacent(north)
+				ne := i.adjacent(northeast)
+				e := i.adjacent(east)
+				se := i.adjacent(southeast)
+				s := i.adjacent(south)
+				sw := i.adjacent(southwest)
+				w := i.adjacent(west)
+				nw := i.adjacent(northwest)
+
+				nPath := pixelPathing[n]
+				nPath.unwalkableChebyshevDistance = min(limit+1, nPath.unwalkableChebyshevDistance)
+				pixelPathing[n] = nPath
+
+				nePath := pixelPathing[ne]
+				nePath.unwalkableChebyshevDistance = min(limit+1, nePath.unwalkableChebyshevDistance)
+				pixelPathing[ne] = nePath
+
+				ePath := pixelPathing[e]
+				ePath.unwalkableChebyshevDistance = min(limit+1, ePath.unwalkableChebyshevDistance)
+				pixelPathing[e] = ePath
+
+				sePath := pixelPathing[se]
+				sePath.unwalkableChebyshevDistance = min(limit+1, sePath.unwalkableChebyshevDistance)
+				pixelPathing[se] = sePath
+
+				sPath := pixelPathing[s]
+				sPath.unwalkableChebyshevDistance = min(limit+1, sPath.unwalkableChebyshevDistance)
+				pixelPathing[s] = sPath
+
+				swPath := pixelPathing[sw]
+				swPath.unwalkableChebyshevDistance = min(limit+1, swPath.unwalkableChebyshevDistance)
+				pixelPathing[sw] = swPath
+
+				wPath := pixelPathing[w]
+				wPath.unwalkableChebyshevDistance = min(limit+1, wPath.unwalkableChebyshevDistance)
+				pixelPathing[w] = wPath
+
+				nwPath := pixelPathing[nw]
+				nwPath.unwalkableChebyshevDistance = min(limit+1, nwPath.unwalkableChebyshevDistance)
+				pixelPathing[nw] = nwPath
+			}
+		}
+
+		percent := float64(count) / float64(hc.windowWidth*hc.windowHeight) * 100
+		logger.log(
+			infoLevel,
+			setupLogic,
+			fmt.Sprintf("setup pixel pathing. %.0f%% total pixels calculated. %d pixels of distance %d", percent, count-priorCount, limit))
+
+		limit++
+	}
+
+	percent := float64(count) / float64(hc.windowWidth*hc.windowHeight) * 100
+	logger.log(infoLevel, setupLogic, fmt.Sprintf("setup pixel pathing. %.0f%% total pixels not skipped with a distance limit of %d", percent, distanceLimit))
 
 	return pixelPathing
 }
@@ -433,14 +534,21 @@ func (o obstacle) drawVisibilityGrid(dc drawConfig) {
 }
 
 func (pp pixelPathing) draw(dc drawConfig) {
-	heatmap := make(heatmap)
+	unwalkable := make(heatmap)
 	for pixelPos, pathing := range pp {
 		switch pathing.walkable {
 		case true:
-			heatmap[pixelPos] = 1
+			unwalkable[pixelPos] = 0
 		case false:
-			heatmap[pixelPos] = 0
+			unwalkable[pixelPos] = 1
 		}
 	}
-	heatmap.draw(dc)
+
+	distance := make(heatmap)
+	for pixelPos, pathing := range pp {
+		distance[pixelPos] = pathing.unwalkableChebyshevDistance
+	}
+
+	unwalkable.draw(dc)
+	distance.draw(dc)
 }

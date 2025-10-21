@@ -57,6 +57,20 @@ const (
 	northwestSide
 )
 
+type direction int
+
+const (
+	noDirecton direction = iota
+	north
+	northeast
+	east
+	southeast
+	south
+	southwest
+	west
+	northwest
+)
+
 type line struct {
 	start pixelPosition
 	end   pixelPosition
@@ -100,6 +114,39 @@ func (gridPos gridPosition) equals(other gridPosition) bool {
 
 func (pixelPos pixelPosition) equals(other pixelPosition) bool {
 	return pixelPos.x == other.x && pixelPos.y == other.y
+}
+
+func (pixelPos pixelPosition) adjacent(d direction) pixelPosition {
+	var x int
+	var y int
+
+	switch d {
+	case north:
+		y = -1
+	case northeast:
+		x = 1
+		y = -1
+	case east:
+		x = 1
+	case southeast:
+		x = 1
+		y = 1
+	case south:
+		y = 1
+	case southwest:
+		x = -1
+		y = 1
+	case west:
+		x = -1
+		x = -1
+	case northwest:
+		x = -1
+		y = -1
+	default:
+		panic("cannot get adjacent pixel position unknown direction")
+	}
+
+	return pixelPosition{x: pixelPos.x + x, y: pixelPos.y + y}
 }
 
 func (gridPos gridPosition) adjacent(side hexSide, hc *hexConfig) (gridPosition, bool) {

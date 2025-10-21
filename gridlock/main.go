@@ -37,7 +37,7 @@ type Game struct {
 	paused                   bool
 	blueComputerActive       bool
 	redComputerActive        bool
-	drawPixelPathing         bool
+	drawPixelPath            bool
 	hotRestart               bool
 	drawBlueTargets          bool
 	drawRedTargets           bool
@@ -61,12 +61,14 @@ type Game struct {
 	developerToggles         map[string]*toggle
 	developerToggleCooldown  time.Duration
 	initialNodeHealth        int
+	pixelPathDistanceMax     int
 	loggerConfig             loggerConfig
 }
 
 func newGame() Game {
+	drawConfig := newDrawConfig()
 	g := Game{
-		drawConfig:              newDrawConfig(),
+		drawConfig:              drawConfig,
 		backgroundColor:         color.RGBA{200, 200, 200, 255},
 		produceWait:             1_000_000 * time.Second,
 		produceInterval:         3 * time.Second,
@@ -89,10 +91,12 @@ func newGame() Game {
 		developerToggles:        make(map[string]*toggle),
 		developerToggleCooldown: 300 * time.Millisecond,
 		initialNodeHealth:       100,
+		pixelPathDistanceMax:    drawConfig.hexWidth,
 		loggerConfig: loggerConfig{
 			initialLogLevel:            slog.LevelDebug,
 			filterTimeAndLevelFromLogs: true,
 			logUndecidedBehavior:       true,
+			logSetupLogic:              true,
 			logDevTool:                 true,
 		},
 	}
@@ -105,7 +109,7 @@ func (g *Game) restart() {
 	g.compTwo = *newComputer(redPlayer)
 
 	hexagons := setupHexagons(&g.drawConfig.hexConfig)
-	obstacles, pixelPathing := setupObstacles(multiObstacle, &g.drawConfig.hexConfig)
+	obstacles, pixelPathing := setupObstacles(multiObstacle, &g.drawConfig.hexConfig, g.pixelPathDistanceMax)
 	nodes := setupNodes(leftVsRightVerticalOffset, &g.drawConfig.hexConfig, g.initialNodeHealth, obstacles, hexagons)
 
 	for nPos := range nodes {
@@ -276,7 +280,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	screen.Fill(g.drawConfig.backgroundColor)
 	drawDebug(*g.drawConfig, g.drawDebugGrid)
-	g.gameState.draw(*g.drawConfig, g.drawBlueTargets, g.drawRedTargets, g.drawVisibilityGrids, g.drawPixelPathing)
+	g.gameState.draw(*g.drawConfig, g.drawBlueTargets, g.drawRedTargets, g.drawVisibilityGrids, g.drawPixelPath)
 
 	if g.leftMouseHeld {
 		drawUnfilledBoxFloat32(

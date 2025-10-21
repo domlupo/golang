@@ -13,11 +13,11 @@ const (
 	horizontalObstacle
 )
 
-func setupObstacles(setup obstacleSetup, hc *hexConfig) (obstacles, pixelPathing) {
+func setupObstacles(setup obstacleSetup, hc *hexConfig, pixelPathingDistanceMax int) (obstacles, pixelPathing) {
 	obstacles := make(obstacles)
 	obstacles.setupBorder()
 	obstacles.setupInterior(setup, hc)
-	pixelPathing := obstacles.setup(hc)
+	pixelPathing := obstacles.setup(hc, pixelPathingDistanceMax)
 	return obstacles, pixelPathing
 }
 

@@ -24,6 +24,7 @@ const (
 	undecidedBehavior
 	mainLogic
 	stateLogic
+	setupLogic
 	selectedUnit
 	devTool
 )
@@ -34,6 +35,7 @@ type loggerConfig struct {
 	logUndecidedBehavior       bool
 	logMainLogic               bool
 	logStateLogic              bool
+	logSetupLogic              bool
 	logSelectedUnit            bool
 	logDevTool                 bool
 }
@@ -67,6 +69,7 @@ func newLogger(lc loggerConfig) l {
 			undecidedBehavior: lc.logUndecidedBehavior,
 			mainLogic:         lc.logMainLogic,
 			stateLogic:        lc.logStateLogic,
+			setupLogic:        lc.logSetupLogic,
 			selectedUnit:      lc.logSelectedUnit,
 			devTool:           lc.logDevTool,
 		},
@@ -117,6 +120,8 @@ func (logger l) toggleType(lt logType) {
 		ltName = "mainLogic"
 	case stateLogic:
 		ltName = "stateLogic"
+	case setupLogic:
+		ltName = "setupLogic"
 	case selectedUnit:
 		ltName = "selectedUnit"
 	default:

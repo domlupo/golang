@@ -888,7 +888,13 @@ func (s *state) createUnitPathfindHeatmap() {
 	logger.log(infoLevel, devTool, "done creating pathfinding heatmap")
 }
 
-func (s *state) draw(dc drawConfig, drawBlueTargets bool, drawRedTargets, drawVisibilityGrids bool, drawPixelPathing bool) {
+func (s *state) draw(
+	dc drawConfig,
+	drawBlueTargets bool,
+	drawRedTargets,
+	drawVisibilityGrids bool,
+	drawPixelPath bool) {
+
 	for _, n := range s.nodes {
 		n.drawNode(dc)
 	}
@@ -917,7 +923,7 @@ func (s *state) draw(dc drawConfig, drawBlueTargets bool, drawRedTargets, drawVi
 		}
 	}
 
-	if drawPixelPathing {
+	if drawPixelPath {
 		s.pixelPathing.draw(dc)
 	}
 
