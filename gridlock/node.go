@@ -1,4 +1,4 @@
-// A game component which spawns units and captured by opposing units
+// A game component which spawns units and is captured by opposing units
 package main
 
 import (
@@ -7,8 +7,10 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+// All nodes on map
 type nodes map[gridPosition]*node
 
+// Game component which spawns units and is captured by opposing units
 type node struct {
 	player        player
 	gridPos       gridPosition
@@ -52,10 +54,10 @@ func (nodes nodes) setupControl(hc *hexConfig, hexagons hexagons, obstacles obst
 	visited := make(map[gridPosition]struct{})
 
 	for _, h := range hexagons {
-		queue := []gridPosition{h.gridPos}
-		for len(queue) > 0 {
-			current := queue[0]
-			queue = queue[1:]
+		q := []gridPosition{h.gridPos}
+		for len(q) > 0 {
+			current := q[0]
+			q = q[1:]
 
 			if _, ok := visited[current]; ok {
 				continue
@@ -68,22 +70,22 @@ func (nodes nodes) setupControl(hc *hexConfig, hexagons hexagons, obstacles obst
 			}
 
 			if ne, ok := current.adjacent(northeastSide, hc); ok {
-				queue = append(queue, ne)
+				q = append(q, ne)
 			}
 			if e, ok := current.adjacent(eastSide, hc); ok {
-				queue = append(queue, e)
+				q = append(q, e)
 			}
 			if se, ok := current.adjacent(southeastSide, hc); ok {
-				queue = append(queue, se)
+				q = append(q, se)
 			}
 			if sw, ok := current.adjacent(southwestSide, hc); ok {
-				queue = append(queue, sw)
+				q = append(q, sw)
 			}
 			if w, ok := current.adjacent(westSide, hc); ok {
-				queue = append(queue, w)
+				q = append(q, w)
 			}
 			if nw, ok := current.adjacent(northwestSide, hc); ok {
-				queue = append(queue, nw)
+				q = append(q, nw)
 			}
 
 			n, nOk := nodes[current]
@@ -96,7 +98,7 @@ func (nodes nodes) setupControl(hc *hexConfig, hexagons hexagons, obstacles obst
 				n.control = append(n.control, h)
 				// TODO: Need to determine behavior for same depth conflicts.
 				// Currently, code selects first enountered node which is not correct.
-				queue = []gridPosition{}
+				q = []gridPosition{}
 			case noPlayer:
 				continue
 			default:
