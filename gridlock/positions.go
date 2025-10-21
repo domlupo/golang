@@ -149,6 +149,19 @@ func (pixelPos pixelPosition) adjacent(d direction) pixelPosition {
 	return pixelPosition{x: pixelPos.x + x, y: pixelPos.y + y}
 }
 
+func (p pixelPosition) allAdjacent() []pixelPosition {
+	n := p.adjacent(north)
+	ne := p.adjacent(northeast)
+	e := p.adjacent(east)
+	se := p.adjacent(southeast)
+	s := p.adjacent(south)
+	sw := p.adjacent(southwest)
+	w := p.adjacent(west)
+	nw := p.adjacent(northwest)
+
+	return []pixelPosition{n, ne, e, se, s, sw, w, nw}
+}
+
 func (gridPos gridPosition) adjacent(side hexSide, hc *hexConfig) (gridPosition, bool) {
 	x := gridPos.x
 	y := gridPos.y

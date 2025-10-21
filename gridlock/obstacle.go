@@ -42,6 +42,7 @@ type pixelPath map[pixelPosition]path
 type path struct {
 	walkable                    bool
 	unwalkableChebyshevDistance int
+	unwalkableSmoothSum         int
 }
 
 type obstacleKind int
@@ -135,46 +136,13 @@ func (os obstacles) setupPixelPath(hc *hexConfig, distanceLimit int) pixelPath {
 					continue
 				}
 
-				n := p.adjacent(north)
-				ne := p.adjacent(northeast)
-				e := p.adjacent(east)
-				se := p.adjacent(southeast)
-				s := p.adjacent(south)
-				sw := p.adjacent(southwest)
-				w := p.adjacent(west)
-				nw := p.adjacent(northwest)
+				adjacent := p.allAdjacent()
 
-				nPath := pixelPath[n]
-				nPath.unwalkableChebyshevDistance = min(distance+1, nPath.unwalkableChebyshevDistance)
-				pixelPath[n] = nPath
-
-				nePath := pixelPath[ne]
-				nePath.unwalkableChebyshevDistance = min(distance+1, nePath.unwalkableChebyshevDistance)
-				pixelPath[ne] = nePath
-
-				ePath := pixelPath[e]
-				ePath.unwalkableChebyshevDistance = min(distance+1, ePath.unwalkableChebyshevDistance)
-				pixelPath[e] = ePath
-
-				sePath := pixelPath[se]
-				sePath.unwalkableChebyshevDistance = min(distance+1, sePath.unwalkableChebyshevDistance)
-				pixelPath[se] = sePath
-
-				sPath := pixelPath[s]
-				sPath.unwalkableChebyshevDistance = min(distance+1, sPath.unwalkableChebyshevDistance)
-				pixelPath[s] = sPath
-
-				swPath := pixelPath[sw]
-				swPath.unwalkableChebyshevDistance = min(distance+1, swPath.unwalkableChebyshevDistance)
-				pixelPath[sw] = swPath
-
-				wPath := pixelPath[w]
-				wPath.unwalkableChebyshevDistance = min(distance+1, wPath.unwalkableChebyshevDistance)
-				pixelPath[w] = wPath
-
-				nwPath := pixelPath[nw]
-				nwPath.unwalkableChebyshevDistance = min(distance+1, nwPath.unwalkableChebyshevDistance)
-				pixelPath[nw] = nwPath
+				for _, a := range adjacent {
+					path := pixelPath[a]
+					path.unwalkableChebyshevDistance = min(distance+1, path.unwalkableChebyshevDistance)
+					pixelPath[a] = path
+				}
 			}
 		}
 
@@ -189,6 +157,28 @@ func (os obstacles) setupPixelPath(hc *hexConfig, distanceLimit int) pixelPath {
 
 	percent := float64(count) / float64(hc.windowWidth*hc.windowHeight) * 100
 	logger.log(infoLevel, setupLogic, fmt.Sprintf("setup pixel path. %.0f%% total pixels not skipped with a distance limit of %d", percent, distanceLimit))
+
+	logger.log(infoLevel, setupLogic, "start calculating weighted smooth for pixel path distance")
+	for x := range hc.windowWidth {
+		for y := range hc.windowHeight {
+			p := pixelPosition{x: x, y: y}
+			adjacent := p.allAdjacent()
+
+			sum := pixelPath[p].unwalkableChebyshevDistance
+			for _, a := range adjacent {
+				sum += pixelPath[a].unwalkableChebyshevDistance
+
+				otherAdjacent := a.allAdjacent()
+				for _, oa := range otherAdjacent {
+					sum += pixelPath[oa].unwalkableChebyshevDistance
+				}
+			}
+			path := pixelPath[p]
+			path.unwalkableSmoothSum = sum
+			pixelPath[p] = path
+		}
+	}
+	logger.log(infoLevel, setupLogic, "finished calculating weighted smooth for pixel path distance")
 
 	return pixelPath
 }
@@ -550,7 +540,7 @@ func (pp pixelPath) draw(dc drawConfig) {
 
 	distance := make(heatmap)
 	for pixelPos, path := range pp {
-		distance[pixelPos] = path.unwalkableChebyshevDistance
+		distance[pixelPos] = path.unwalkableSmoothSum
 	}
 
 	unwalkable.draw(dc)

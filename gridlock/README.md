@@ -116,6 +116,9 @@ Is there a mobile equivalent for war/4x games?
 
 ### Future Checkpoints
 
+- Optimize pixel path to load faster
+  - I can compute once and save locally then attempt to load with a type of checksum check during development.
+
 - When all nodes are selected, newly captured nodes should become selected as well.
 
 - Determine if spatial partitiong node colliison optimization is needed.

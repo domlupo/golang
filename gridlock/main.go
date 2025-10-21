@@ -91,7 +91,7 @@ func newGame() Game {
 		developerToggles:        make(map[string]*toggle),
 		developerToggleCooldown: 300 * time.Millisecond,
 		initialNodeHealth:       100,
-		pixelPathDistanceMax:    drawConfig.hexWidth,
+		pixelPathDistanceMax:    drawConfig.hexWidth / 2,
 		loggerConfig: loggerConfig{
 			initialLogLevel:            slog.LevelDebug,
 			filterTimeAndLevelFromLogs: true,
