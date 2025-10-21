@@ -6,13 +6,13 @@ import (
 	"log/slog"
 )
 
-// developer readable low resolution position used for grid items e.g. nodes
+// low resolution position used for grid items such as nodes, obstacles, hexagons, etc
 type gridPosition struct {
 	x int
 	y int
 }
 
-// developer unreadable high resolution position
+// high resolution position.
 type pixelPosition struct {
 	x int
 	y int
@@ -357,6 +357,7 @@ func (pixelPos pixelPosition) getGridPosOutbounds(hc *hexConfig) (gridPosition, 
 	return gridPosition{xIndex + xIndexOffset, yIndex + yIndexOffset}, true
 }
 
+// The point directions are p -> q -> r.
 func orientation(p pixelPosition, q pixelPosition, r pixelPosition) pointOrientation {
 	v := (q.y-p.y)*(r.x-q.x) - (q.x-p.x)*(r.y-q.y)
 	switch {
