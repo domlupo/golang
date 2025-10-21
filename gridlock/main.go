@@ -41,7 +41,7 @@ type Game struct {
 	hotRestart               bool
 	drawBlueTargets          bool
 	drawRedTargets           bool
-	drawDebugGrid            bool
+	drawHexDebugGrid         bool
 	drawVisibilityGrids      bool
 	slowTick                 bool
 	cpuProfilerOn            bool
@@ -279,7 +279,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	screen.Fill(g.drawConfig.backgroundColor)
-	drawDebug(*g.drawConfig, g.drawDebugGrid)
+	drawHexDebugGrid(*g.drawConfig, g.drawHexDebugGrid)
 	g.gameState.draw(*g.drawConfig, g.drawBlueTargets, g.drawRedTargets, g.drawVisibilityGrids, g.drawPixelPath)
 
 	if g.leftMouseHeld {
@@ -384,10 +384,10 @@ func main() {
 	g.developerToggles["drawAll"] = newToggle(
 		ebiten.KeyA,
 		func() {
-			var toggle = !(g.drawBlueTargets && g.drawRedTargets && g.drawDebugGrid && g.drawVisibilityGrids)
+			var toggle = !(g.drawBlueTargets && g.drawRedTargets && g.drawHexDebugGrid && g.drawVisibilityGrids)
 			g.drawBlueTargets = toggle
 			g.drawRedTargets = toggle
-			g.drawDebugGrid = toggle
+			g.drawHexDebugGrid = toggle
 			g.drawVisibilityGrids = toggle
 		},
 		g.developerToggleCooldown)
@@ -401,7 +401,7 @@ func main() {
 		g.developerToggleCooldown)
 	g.developerToggles["drawDebugGrid"] = newToggle(
 		ebiten.KeyG,
-		func() { g.drawDebugGrid = !g.drawDebugGrid },
+		func() { g.drawHexDebugGrid = !g.drawHexDebugGrid },
 		g.developerToggleCooldown)
 	g.developerToggles["drawVisibilityGrids"] = newToggle(
 		ebiten.KeyV,

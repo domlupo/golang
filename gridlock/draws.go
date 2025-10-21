@@ -8,8 +8,10 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+// A typical heatmap. Used for visual debugging.
 type heatmap map[pixelPosition]int
 
+// Drawing Configurations for game components
 type drawConfig struct {
 	screen *ebiten.Image
 	// windowMultiplier must only be used for drawing images and windows.
@@ -172,8 +174,8 @@ func drawUnfilledBoxInt(dc drawConfig, color color.Color, initialX int, initialY
 	drawUnfilledBoxFloat32(dc, color, float32(initialX), float32(initialY), float32(finalX), float32(finalY))
 }
 
-func drawDebug(dc drawConfig, drawDebugGrid bool) {
-	if !drawDebugGrid {
+func drawHexDebugGrid(dc drawConfig, draw bool) {
+	if !draw {
 		return
 	}
 
