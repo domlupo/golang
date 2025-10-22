@@ -73,7 +73,6 @@ type Game struct {
 func newGame() Game {
 	drawConfig := newDrawConfig()
 	g := Game{
-		drawPixelPath:           true,
 		drawConfig:              drawConfig,
 		backgroundColor:         color.RGBA{200, 200, 200, 255},
 		produceWait:             1_000_000 * time.Second,
@@ -102,7 +101,7 @@ func newGame() Game {
 		cpuProfilerFileName:     "cpu.prof",
 		memProfilerFileName:     "mem.prof",
 		loggerConfig: loggerConfig{
-			initialLogLevel:            slog.LevelDebug,
+			initialLogLevel:            slog.LevelInfo,
 			filterTimeAndLevelFromLogs: true,
 			logUndecidedBehavior:       true,
 			logSetupLogic:              true,
@@ -444,10 +443,10 @@ func main() {
 func (g Game) forceCleanup() {
 	pprof.StopCPUProfile()
 	g.cpuProfilerFile.Close()
-	logger.log(warnLevel, devTool, "force closed cpu profiler file")
+	logger.log(debugLevel, devTool, "force closed cpu profiler file")
 	if err := pprof.WriteHeapProfile(g.memoryProfilerFile); err != nil {
 		logger.log(errorLevel, devTool, "Could not write heap profile.")
 	}
 	g.memoryProfilerFile.Close()
-	logger.log(warnLevel, devTool, "force closed memory profiler file")
+	logger.log(debugLevel, devTool, "force closed memory profiler file")
 }
