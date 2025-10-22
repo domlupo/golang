@@ -19,9 +19,19 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Invest in look up tables 
+  - Cache and load results locally for pixel path
+  - hot reload time should be 0s
+  - More Look up tables will probably be used. They are simple and efficient for static information.
+    - node lookup table to check if a unit can attack a node. May also be used for pathing.
+    - For example, global pathfinding look up table seems very likely for theta* if it can be used
+      for any grid pos to any grid pos. Pixel to pixel is probably too data intensive.
+
 - Update local pathfinding to boids model
   - testing has shown boids model to be the easiest to tune, most flexible, beset results
   - continue implementing flocking and steering behaviors 
+
+- Optimize CPU usage since it is high
 
 - Improve guided air missile
   - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.
