@@ -21,9 +21,12 @@ Is there a mobile equivalent for war/4x games?
 
 - Invest in look up tables 
   - Cache and load results locally for pixel path using json encoding
+  - What should be the key?
+  - Do I need to use a checksum?
   - hot reload time should be 0s
   - More Look up tables will probably be used. They are simple and efficient for static information.
     - node lookup table to check if a unit can attack a node. May also be used for pathing.
+      Need to use distance to nod similar to nearest obstacle calculation.
     - For example, global pathfinding look up table seems very likely for theta* if it can be used
       for any grid pos to any grid pos. Pixel to pixel is probably too data intensive.
 
@@ -31,7 +34,13 @@ Is there a mobile equivalent for war/4x games?
   - testing has shown boids model to be the easiest to tune, most flexible, beset results
   - continue implementing flocking and steering behaviors 
 
-- Optimize CPU usage since it is high
+- Design and Determine best way for boids to avoid obstacles
+  - direction to and from seemed like the wrong approach
+  - Can determine which pixel position on each hexagon sides are fathest from obstacles
+  - Probably want to use global pathing influence as well
+  - How do units perform slides agaisnt obstacles and units in other games?
+
+- Optimize CPU usage via low hanging fruit if it is high enough to slow development
 
 - Improve guided air missile
   - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.
@@ -56,12 +65,6 @@ Is there a mobile equivalent for war/4x games?
       - An easy implementation might be to stay away from infantry
       - Counter missile will either need to travel faster than tracked missile or anticipate movement?
     - Added guided missile variant will probably help but might be low priority?
-
-- Determine if I need to implement separating axis theorem for collision other than (circle <-> circle)
-  - Right now node collision is hacky. It is just a circle that is smaller than the hexagon.
-  - Unpassable terrain e.g. water, high altitude mountains will probably require this for a* pathing.
-  - Nodes are hexagon. Determine if SAT is the simplest and most performant collision check for hexagons.
-  - Units like tank may need represented as a square. 
 
 - Fix Bresenham's algorithm edge cases:
   - Bresenham error needs to reset itself for several reasons. I still need to handle:
@@ -98,12 +101,6 @@ Is there a mobile equivalent for war/4x games?
   - Easier way to select all nodes of same type with double click
   - Better automated targetting from units. e.g. units don't auto target nodes when they should.
 
-- save file: 
-  - Will expose constraints
-  - Will expose platform concerns
-  - May expose issues with work so far 
-  - Can start menu structure
-
 - Release to web:
   - learn how to deploy
   - easier to share with friends
@@ -122,19 +119,20 @@ Is there a mobile equivalent for war/4x games?
 
 ### Future Checkpoints
 
-- Optimize pixel path to load faster
-  - I can compute once and save locally then attempt to load with a type of checksum check during development.
+- save file: 
+  - Will expose constraints
+  - Will expose platform concerns
+  - May expose issues with work so far 
+  - Can start menu structure
+
+- Determine if I need to implement separating axis theorem for collision other than (circle <-> circle)
+  - static collisions should most likely use a look up table
+  - dynamic collisions may be needed for certain units e.g. tanks
 
 - When all nodes are selected, newly captured nodes should become selected as well.
 
-- Determine if spatial partitiong node colliison optimization is needed.
-  - right now node collision naively checks all nodes.
-
-- Determine if spatial partitiong node colliison optimization is needed.
-  - right now node collision naively checks all nodes.
-
 - Determine if LOS algorithm should be updated from bresenham to check obstacle line intersects
-  - pixel path neareset obstacle check for los may make this less useful but it still could be useful enough to implement.
+  - pixel path neareset obstacle check for los probably made this less useful but it still could be useful enough to implement.
   - line intersect check will be probably be much more performant
   - line intersect check will probably be much better than switching from map to array for cache locality.
   - current CPU profiling shows map access during lineOfSight checks are taking up significant CPU
@@ -196,7 +194,7 @@ Is there a mobile equivalent for war/4x games?
 
 - Determine if for CPU reasons, I should not mix layers in the same map and always manage them by state.go
 
-- When is the write time to write high level tests?
+- When is the right time to write high level tests?
   - how can i write automated high level tests? basic unit test? simulation? 
 
 - Create more node setup test scenarios
@@ -253,7 +251,7 @@ Is there a mobile equivalent for war/4x games?
 
 - Set FPS or add setting for low performance platforms e.g. mobile?
 
-- Should I add a yaml, toml or json config file that is loaded at runtime?
+- Should I add a json config file that is loaded at runtime?
   - Toggles are already allowing runtime updates, rather than manually updating a text file.
 
 - Logging affects game performance. Especially hot loop logs e.g. unit refresh
