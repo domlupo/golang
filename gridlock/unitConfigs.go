@@ -1,3 +1,5 @@
+// Configurations for different unit types.
+
 package main
 
 import "log/slog"

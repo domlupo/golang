@@ -1,4 +1,5 @@
-// A game component which spawns units and is captured by opposing units
+// A node is a game component which spawns units and is captured by opposing units.
+
 package main
 
 import (

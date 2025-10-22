@@ -1,4 +1,5 @@
-// hard coded test setups which help manual testing
+// Hard coded test setups which help manual testing.
+
 package main
 
 type obstacleSetup int

@@ -1,4 +1,5 @@
-// A game component which moves and attacks other game components
+// A unit is a game component which moves and attacks other game components.
+
 package main
 
 import (

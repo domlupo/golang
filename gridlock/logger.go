@@ -1,4 +1,5 @@
-// logger which adds dynmaic runtime log levels and log types for various game layers and concepts.
+// A logger which adds dynmaic runtime log levels and log types for various game layers and concepts.
+
 package main
 
 import (

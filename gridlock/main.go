@@ -1,4 +1,5 @@
-// main entry for high level game logic
+// Main entry point for very high level game logic and configuration.
+
 package main
 
 import (

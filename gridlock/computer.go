@@ -1,4 +1,5 @@
-// computer aka non human player engine logic
+// Computer aka non human player engine logic.
+
 package main
 
 import "math"

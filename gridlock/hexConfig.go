@@ -1,4 +1,5 @@
-// The hexagon configuration is relatively complex. A look up table is implemented to optimize CPU usage.
+// The hexagon configuration is relatively complex because a look up table is implemented to optimize CPU usage.
+
 package main
 
 // This global should only be used for function signatures, structs, etc. It can

@@ -1,4 +1,5 @@
-// Currently contains most game state and game logic. May need to split in future.
+// High level game state and interactions between game components.
+
 package main
 
 import (

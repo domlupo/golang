@@ -1,4 +1,5 @@
-// general position utility functions. Most are pure functions. Used across many different files.
+// General position utility functions. Most are pure functions. Used across many different files.
+
 package main
 
 import (

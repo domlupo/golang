@@ -1,4 +1,5 @@
-// basic drawing configuration and utility functions
+// Basic drawing configuration and utility functions.
+
 package main
 
 import (
