@@ -1,5 +1,6 @@
 tmp
 game
+output
 *.swp
 *.prof
 *.out

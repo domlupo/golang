@@ -4,6 +4,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"image/color"
 	"log/slog"
 	"os"
@@ -49,8 +50,6 @@ type Game struct {
 	memoryProfilerOn         bool
 	produceUnits             bool
 	moveUnits                bool
-	cpuProfilerFile          *os.File
-	memoryProfilerFile       *os.File
 	initialSelectedX         float32
 	initialSelectedY         float32
 	currentSelectedX         float32
@@ -64,6 +63,11 @@ type Game struct {
 	initialNodeHealth        int
 	pixelPathDistanceMax     int
 	loggerConfig             loggerConfig
+	outputDirectoryName      string
+	cpuProfilerFileName      string
+	memProfilerFileName      string
+	cpuProfilerFile          *os.File
+	memoryProfilerFile       *os.File
 }
 
 func newGame() Game {
@@ -93,6 +97,9 @@ func newGame() Game {
 		developerToggleCooldown: 300 * time.Millisecond,
 		initialNodeHealth:       100,
 		pixelPathDistanceMax:    drawConfig.hexWidth / 2,
+		outputDirectoryName:     "output",
+		cpuProfilerFileName:     "cpu.prof",
+		memProfilerFileName:     "mem.prof",
 		loggerConfig: loggerConfig{
 			initialLogLevel:            slog.LevelDebug,
 			filterTimeAndLevelFromLogs: true,
@@ -315,6 +322,8 @@ func main() {
 
 	logger = newLogger(g.loggerConfig)
 
+	os.Mkdir(g.outputDirectoryName, 0755)
+
 	g.developerToggles["cpuProfile"] = newToggle(
 		ebiten.KeyC,
 		func() {
@@ -324,7 +333,7 @@ func main() {
 				g.cpuProfilerFile.Close()
 			} else {
 				logger.log(infoLevel, devTool, "Starting CPU profiler.")
-				f, err := os.Create("cpu.prof")
+				f, err := os.Create(fmt.Sprintf("%s/%s", g.outputDirectoryName, g.cpuProfilerFileName))
 				if err != nil {
 					logger.log(errorLevel, devTool, "Could not create CPU profiler file.")
 				}
@@ -348,7 +357,7 @@ func main() {
 				g.memoryProfilerFile.Close()
 			} else {
 				logger.log(infoLevel, devTool, "Starting memory profiler.")
-				f, err := os.Create("mem.prof")
+				f, err := os.Create(fmt.Sprintf("%s/%s", g.outputDirectoryName, g.memProfilerFileName))
 				if err != nil {
 					logger.log(errorLevel, devTool, "Could not create memory profiler file.")
 				}
