@@ -47,10 +47,6 @@ Is there a mobile equivalent for war/4x games?
       - Counter missile will either need to travel faster than tracked missile or anticipate movement?
     - Added guided missile variant will probably help but might be low priority?
 
-- Fix units colliding into hexagon obstacles:
-  - Can add collision detection for hexagon obstacles. Probably need spat partitioning
-  - Can make hexagon obstacles visually smaller
-
 - Determine if I need to implement separating axis theorem for collision other than (circle <-> circle)
   - Right now node collision is hacky. It is just a circle that is smaller than the hexagon.
   - Unpassable terrain e.g. water, high altitude mountains will probably require this for a* pathing.
@@ -128,6 +124,7 @@ Is there a mobile equivalent for war/4x games?
   - right now node collision naively checks all nodes.
 
 - Determine if LOS algorithm should be updated from bresenham to check obstacle line intersects
+  - pixel path neareset obstacle check for los may make this less useful but it still could be useful enough to implement.
   - line intersect check will be probably be much more performant
   - line intersect check will probably be much better than switching from map to array for cache locality.
   - current CPU profiling shows map access during lineOfSight checks are taking up significant CPU

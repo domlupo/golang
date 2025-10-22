@@ -206,7 +206,7 @@ func (s *state) moveUnits() {
 			continue
 		}
 
-		if !s.pixelPath[newPos.pixelPosition].walkable {
+		if !s.pixelPath[newPos.pixelPosition].walkable || s.pixelPath[newPos.pixelPosition].unwalkableChebyshevDistance < u.radius+1 {
 			unitsAtUnwalkable++
 			u.AtUnwalkable = true
 			continue
@@ -393,7 +393,7 @@ func (s *state) nearestUnitWithinVision(u unit) (position, bool) {
 			yDelta := y2 - y1
 			distance := xDelta*xDelta + yDelta*yDelta
 			if distance < shortestDistance && distance <= u.vision*u.vision {
-				if _, los := u.lineOfSight(current.pixelPosition, s.pixelPath); los {
+				if _, los := u.lineOfSight(current.pixelPosition, s.pixelPath, u.radius); los {
 					shortestDistance = distance
 					nearestUnitPos = current.position
 				}

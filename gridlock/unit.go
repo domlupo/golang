@@ -300,7 +300,7 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPath pixelPath, hc
 	paths := [][]position{}
 	for _, try := range tries {
 		end := try[len(try)-1]
-		if _, los := u.lineOfSight(end.pixelPosition, pixelPath); los {
+		if _, los := u.lineOfSight(end.pixelPosition, pixelPath, u.radius); los {
 			paths = append(paths, try)
 		}
 	}
@@ -311,7 +311,7 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPath pixelPath, hc
 			pos := path[j]
 			for k := len(path) - 1; k > j; k-- {
 				otherPos := path[k]
-				if _, los := pos.lineOfSight(otherPos.pixelPosition, pixelPath); los {
+				if _, los := pos.lineOfSight(otherPos.pixelPosition, pixelPath, u.radius); los {
 					j = k
 					trimPath = append(trimPath, path[k])
 					j--

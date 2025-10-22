@@ -240,7 +240,7 @@ func (os obstacles) getGroups(hc *hexConfig) []obstacles {
 }
 
 // Returns true if a point to point line of sight exists using Bresenham's algorithm
-func (pos pixelPosition) lineOfSight(otherPos pixelPosition, path pixelPath) (pixelPosition, bool) {
+func (pos pixelPosition) lineOfSight(otherPos pixelPosition, path pixelPath, radius int) (pixelPosition, bool) {
 	x0 := pos.x
 	y0 := pos.y
 	x1 := otherPos.x
@@ -270,7 +270,7 @@ func (pos pixelPosition) lineOfSight(otherPos pixelPosition, path pixelPath) (pi
 
 	for x0 != x1 || y0 != y1 {
 		p := pixelPosition{x: x0, y: y0}
-		if !path[p].walkable {
+		if !path[p].walkable || path[p].unwalkableChebyshevDistance < radius-1 {
 			return p, false
 		}
 
@@ -291,7 +291,7 @@ func (pos pixelPosition) lineOfSight(otherPos pixelPosition, path pixelPath) (pi
 
 // returns the obstacle point nearest to the line of sight block from start to end
 func (start pixelPosition) obstaclePoint(end pixelPosition, path pixelPath, obstacles obstacles, hc *hexConfig) (obstaclePoint, bool) {
-	obstaclePixelPos, los := start.lineOfSight(end, path)
+	obstaclePixelPos, los := start.lineOfSight(end, path, 0)
 
 	if los {
 		return obstaclePoint{}, los
@@ -445,7 +445,7 @@ func (points obstaclePoints) connectPoints(path pixelPath, hc *hexConfig) {
 				continue
 			}
 
-			if _, lineOfSight := current.lineOfSight(op.pixelPosition, path); !lineOfSight {
+			if _, lineOfSight := current.lineOfSight(op.pixelPosition, path, 0); !lineOfSight {
 				continue
 			}
 
