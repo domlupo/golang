@@ -143,10 +143,10 @@ func (n *node) drawNode(dc drawConfig) {
 		var healthLineLength = (float32(n.currentHealth) / float32(n.maxHealth)) * float32(n.radius*2)
 		vector.StrokeLine(
 			dc.screen,
-			float32(c.x-n.radius)*dc.windowMultiplier,
-			float32(c.y)*dc.windowMultiplier,
-			(float32(c.x-n.radius)+healthLineLength)*dc.windowMultiplier,
-			float32(c.y)*dc.windowMultiplier,
+			float32(c.X-n.radius)*dc.windowMultiplier,
+			float32(c.Y)*dc.windowMultiplier,
+			(float32(c.X-n.radius)+healthLineLength)*dc.windowMultiplier,
+			float32(c.Y)*dc.windowMultiplier,
 			float32(dc.healthLineWidth)*dc.windowMultiplier,
 			dc.nodeHealthColor,
 			false)
@@ -182,10 +182,10 @@ func (n *node) drawTargets(dc drawConfig, drawBlueTargets bool, drawRedTargets b
 		}
 		vector.StrokeLine(
 			dc.screen,
-			float32(center.x)*dc.windowMultiplier,
-			float32(center.y)*dc.windowMultiplier,
-			float32(n.target.x)*dc.windowMultiplier,
-			float32(n.target.y)*dc.windowMultiplier,
+			float32(center.X)*dc.windowMultiplier,
+			float32(center.Y)*dc.windowMultiplier,
+			float32(n.target.X)*dc.windowMultiplier,
+			float32(n.target.Y)*dc.windowMultiplier,
 			float32(dc.targetNodeLineWidth)*dc.windowMultiplier,
 			nodeColor,
 			false,

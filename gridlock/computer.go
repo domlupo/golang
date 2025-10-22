@@ -70,8 +70,8 @@ func (c *computer) updateTargetNodes(s state) {
 			if !ok {
 				panic("could not get pixel pos for update computer unit targets")
 			}
-			xDelta := (u.x - nPixelPos.x)
-			yDelta := (u.y - nPixelPos.y)
+			xDelta := (u.X - nPixelPos.X)
+			yDelta := (u.Y - nPixelPos.Y)
 			otherTargetDistanceSquared := xDelta*xDelta + yDelta*yDelta
 
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {

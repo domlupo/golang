@@ -128,8 +128,8 @@ func (u *unit) reachesNodes(nodes map[gridPosition]*node, hc *hexConfig) {
 		return
 	}
 
-	x1 := u.x
-	y1 := u.y
+	x1 := u.X
+	y1 := u.Y
 	r1 := u.reach
 
 	for _, n := range nodes {
@@ -145,8 +145,8 @@ func (u *unit) reachesNodes(nodes map[gridPosition]*node, hc *hexConfig) {
 			panic("could not get pixel pos for collide with node")
 		}
 
-		x2 := nPixelPos.x
-		y2 := nPixelPos.y
+		x2 := nPixelPos.X
+		y2 := nPixelPos.Y
 		r2 := n.radius
 
 		xDelta := x2 - x1
@@ -173,10 +173,10 @@ func (u *unit) getNewPos() (position, func()) {
 		return u.position, func() {}
 	}
 
-	x1 := u.activeTarget.x
-	y1 := u.activeTarget.y
-	x0 := u.x
-	y0 := u.y
+	x1 := u.activeTarget.X
+	y1 := u.activeTarget.Y
+	x0 := u.X
+	y0 := u.Y
 
 	var sx int
 	var sy int
@@ -217,7 +217,7 @@ func (u *unit) getNewPos() (position, func()) {
 		y0 += sy
 	}
 
-	newPos := position{u.layer, pixelPosition{x0, y0}}
+	newPos := position{u.layer, PixelPosition{x0, y0}}
 	return newPos, func() { u.completeMove(newPos) }
 }
 
@@ -274,7 +274,7 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPath pixelPath, hc
 	for !foundPath {
 		for _, path := range tries {
 			start := path[len(path)-1]
-			obstaclePoint, los := start.obstaclePoint(u.pixelPosition, pixelPath, obstacles, hc)
+			obstaclePoint, los := start.obstaclePoint(u.PixelPosition, pixelPath, obstacles, hc)
 
 			if los {
 				foundPath = true
@@ -300,7 +300,7 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPath pixelPath, hc
 	paths := [][]position{}
 	for _, try := range tries {
 		end := try[len(try)-1]
-		if _, los := u.lineOfSight(end.pixelPosition, pixelPath, u.radius); los {
+		if _, los := u.lineOfSight(end.PixelPosition, pixelPath, u.radius); los {
 			paths = append(paths, try)
 		}
 	}
@@ -311,7 +311,7 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPath pixelPath, hc
 			pos := path[j]
 			for k := len(path) - 1; k > j; k-- {
 				otherPos := path[k]
-				if _, los := pos.lineOfSight(otherPos.pixelPosition, pixelPath, u.radius); los {
+				if _, los := pos.lineOfSight(otherPos.PixelPosition, pixelPath, u.radius); los {
 					j = k
 					trimPath = append(trimPath, path[k])
 					j--
@@ -325,9 +325,9 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, pixelPath pixelPath, hc
 	shortestDistance := math.MaxInt64
 	shortestPath := 0
 	for i, path := range paths {
-		distance := u.chebyshevDistance(path[len(path)-1].pixelPosition)
+		distance := u.chebyshevDistance(path[len(path)-1].PixelPosition)
 		for i := 0; i < len(path)-1; i++ {
-			distance += path[i].chebyshevDistance(path[i+1].pixelPosition)
+			distance += path[i].chebyshevDistance(path[i+1].PixelPosition)
 		}
 		if distance < shortestDistance {
 			shortestDistance = distance
@@ -366,8 +366,8 @@ func (u *unit) getPath(
 	}
 
 	for current != end {
-		path = append(path, position{layer: u.layer, pixelPosition: current.pixelPosition})
-		obstaclePoint, los := current.obstaclePoint(u.pixelPosition, pixelPath, obstacles, hc)
+		path = append(path, position{layer: u.layer, PixelPosition: current.PixelPosition})
+		obstaclePoint, los := current.obstaclePoint(u.PixelPosition, pixelPath, obstacles, hc)
 
 		if los || current.visibilityGridId != obstaclePoint.visibilityGridId {
 			break
@@ -471,8 +471,8 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 
 	vector.DrawFilledCircle(
 		dc.screen,
-		float32(u.x)*dc.windowMultiplier,
-		float32(u.y)*dc.windowMultiplier,
+		float32(u.X)*dc.windowMultiplier,
+		float32(u.Y)*dc.windowMultiplier,
 		float32(u.radius)*dc.windowMultiplier,
 		unitColor,
 		false,
@@ -482,20 +482,20 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 		drawUnfilledBoxInt(
 			dc,
 			dc.highlightColor,
-			u.x-u.radius,
-			u.y-u.radius,
-			u.x+u.radius,
-			u.y+u.radius,
+			u.X-u.radius,
+			u.Y-u.radius,
+			u.X+u.radius,
+			u.Y+u.radius,
 		)
 	}
 
 	if selected && !u.activeTarget.isZero() {
 		vector.StrokeLine(
 			dc.screen,
-			float32(u.x)*dc.windowMultiplier,
-			float32(u.y)*dc.windowMultiplier,
-			float32(u.activeTarget.x)*dc.windowMultiplier,
-			float32(u.activeTarget.y)*dc.windowMultiplier,
+			float32(u.X)*dc.windowMultiplier,
+			float32(u.Y)*dc.windowMultiplier,
+			float32(u.activeTarget.X)*dc.windowMultiplier,
+			float32(u.activeTarget.Y)*dc.windowMultiplier,
 			float32(dc.targetNodeLineWidth)*dc.windowMultiplier,
 			color.Black,
 			false,
@@ -508,10 +508,10 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 
 			vector.StrokeLine(
 				dc.screen,
-				float32(u.x)*dc.windowMultiplier,
-				float32(u.y)*dc.windowMultiplier,
-				float32(lt.x)*dc.windowMultiplier,
-				float32(lt.y)*dc.windowMultiplier,
+				float32(u.X)*dc.windowMultiplier,
+				float32(u.Y)*dc.windowMultiplier,
+				float32(lt.X)*dc.windowMultiplier,
+				float32(lt.Y)*dc.windowMultiplier,
 				float32(dc.targetNodeLineWidth)*dc.windowMultiplier,
 				color,
 				false,
@@ -526,8 +526,8 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 		if u.unitConfig.name == unguidedGroundMissile {
 			vector.StrokeCircle(
 				dc.screen,
-				float32(u.activeTarget.x)*dc.windowMultiplier,
-				float32(u.activeTarget.y)*dc.windowMultiplier,
+				float32(u.activeTarget.X)*dc.windowMultiplier,
+				float32(u.activeTarget.Y)*dc.windowMultiplier,
 				float32(u.explodeRadius)*dc.windowMultiplier,
 				float32(dc.missileExplodeRadiusLineWidth)*dc.windowMultiplier,
 				dc.highlightColor,
@@ -538,8 +538,8 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 		if u.unitConfig.name == guidedAirMissile {
 			vector.StrokeCircle(
 				dc.screen,
-				float32(u.x)*dc.windowMultiplier,
-				float32(u.y)*dc.windowMultiplier,
+				float32(u.X)*dc.windowMultiplier,
+				float32(u.Y)*dc.windowMultiplier,
 				float32(u.vision)*dc.windowMultiplier,
 				float32(dc.missileExplodeRadiusLineWidth)*dc.windowMultiplier,
 				dc.highlightColor,
@@ -553,8 +553,8 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 
 		vector.DrawFilledRect(
 			dc.screen,
-			float32(u.x-u.radius)*dc.windowMultiplier,
-			float32(u.y-u.radius)*dc.windowMultiplier,
+			float32(u.X-u.radius)*dc.windowMultiplier,
+			float32(u.Y-u.radius)*dc.windowMultiplier,
 			healthLineLength*dc.windowMultiplier,
 			float32(u.radius)*dc.windowMultiplier,
 			dc.unitHealthColor,

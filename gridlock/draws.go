@@ -10,7 +10,7 @@ import (
 )
 
 // A typical heatmap. Used for visual debugging.
-type heatmap map[pixelPosition]int
+type heatmap map[PixelPosition]int
 
 // Drawing Configurations for game components
 type drawConfig struct {
@@ -109,8 +109,8 @@ func (heatmap heatmap) draw(dc drawConfig) {
 		color := color.RGBA{dc.heatmapR, dc.heatmapB, dc.heatmapG, uint8(float64(distance) / float64(max) * dc.heatmapAlphaMax)}
 		vector.DrawFilledRect(
 			dc.screen,
-			float32(pixelPos.x)*dc.windowMultiplier,
-			float32(pixelPos.y)*dc.windowMultiplier,
+			float32(pixelPos.X)*dc.windowMultiplier,
+			float32(pixelPos.Y)*dc.windowMultiplier,
 			1*dc.windowMultiplier,
 			1*dc.windowMultiplier,
 			color,
@@ -206,20 +206,20 @@ func drawHexDebugGrid(dc drawConfig, draw bool) {
 			pos := gridPosition{i, j}
 
 			n := pos.getPixelPosOutbounds(northPoint, &dc.hexConfig)
-			nX := float32(n.x) * dc.windowMultiplier
-			nY := float32(n.y) * dc.windowMultiplier
+			nX := float32(n.X) * dc.windowMultiplier
+			nY := float32(n.Y) * dc.windowMultiplier
 
 			nw := pos.getPixelPosOutbounds(northwestPoint, &dc.hexConfig)
-			nwX := float32(nw.x) * dc.windowMultiplier
-			nwY := float32(nw.y) * dc.windowMultiplier
+			nwX := float32(nw.X) * dc.windowMultiplier
+			nwY := float32(nw.Y) * dc.windowMultiplier
 
 			ne := pos.getPixelPosOutbounds(northeastPoint, &dc.hexConfig)
-			neX := float32(ne.x+1) * dc.windowMultiplier
-			neY := float32(ne.y) * dc.windowMultiplier
+			neX := float32(ne.X+1) * dc.windowMultiplier
+			neY := float32(ne.Y) * dc.windowMultiplier
 
 			sw := pos.getPixelPosOutbounds(southwestPoint, &dc.hexConfig)
-			swX := float32(sw.x) * dc.windowMultiplier
-			swY := float32(sw.y+1) * dc.windowMultiplier
+			swX := float32(sw.X) * dc.windowMultiplier
+			swY := float32(sw.Y+1) * dc.windowMultiplier
 
 			// draw west side
 			//    / \
@@ -285,13 +285,13 @@ func drawHex(dc drawConfig, gridPos gridPosition, color drawTriangleColor, selec
 
 	// The one pixel offsets for inclusive or exclusive hex points are handled at the game logic layer.
 	// The window multiplier offsets are handled here since window multiplier is a draw concept.
-	xCenter, yCenter := float32(center.x)*dc.windowMultiplier, float32(center.y)*dc.windowMultiplier
-	xNorth, yNorth := float32(north.x)*dc.windowMultiplier, float32(north.y)*dc.windowMultiplier
-	xNortheast, yNortheast := float32(northeast.x+1)*dc.windowMultiplier, float32(northeast.y)*dc.windowMultiplier
-	xSoutheast, ySoutheast := float32(southeast.x+1)*dc.windowMultiplier, float32(southeast.y+1)*dc.windowMultiplier
-	xSouthwest, ySouthwest := float32(southwest.x)*dc.windowMultiplier, float32(southwest.y+1)*dc.windowMultiplier
-	xSouth, ySouth := float32(south.x)*dc.windowMultiplier, float32(south.y+1)*dc.windowMultiplier
-	xNorthwest, yNorthwest := float32(northwest.x)*dc.windowMultiplier, float32(northwest.y)*dc.windowMultiplier
+	xCenter, yCenter := float32(center.X)*dc.windowMultiplier, float32(center.Y)*dc.windowMultiplier
+	xNorth, yNorth := float32(north.X)*dc.windowMultiplier, float32(north.Y)*dc.windowMultiplier
+	xNortheast, yNortheast := float32(northeast.X+1)*dc.windowMultiplier, float32(northeast.Y)*dc.windowMultiplier
+	xSoutheast, ySoutheast := float32(southeast.X+1)*dc.windowMultiplier, float32(southeast.Y+1)*dc.windowMultiplier
+	xSouthwest, ySouthwest := float32(southwest.X)*dc.windowMultiplier, float32(southwest.Y+1)*dc.windowMultiplier
+	xSouth, ySouth := float32(south.X)*dc.windowMultiplier, float32(south.Y+1)*dc.windowMultiplier
+	xNorthwest, yNorthwest := float32(northwest.X)*dc.windowMultiplier, float32(northwest.Y)*dc.windowMultiplier
 
 	indices := []uint16{0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 1}
 	vertices := []ebiten.Vertex{
@@ -310,28 +310,28 @@ func drawHex(dc drawConfig, gridPos gridPosition, color drawTriangleColor, selec
 		lineWidth := float32(dc.hexLineWidth) * dc.windowMultiplier
 
 		north := gridPos.getPixelPosOutbounds(northPoint, &dc.hexConfig)
-		nX := float32(north.x) * dc.windowMultiplier
-		nY := float32(north.y) * dc.windowMultiplier
+		nX := float32(north.X) * dc.windowMultiplier
+		nY := float32(north.Y) * dc.windowMultiplier
 
 		nw := gridPos.getPixelPosOutbounds(northwestPoint, &dc.hexConfig)
-		nwX := float32(nw.x) * dc.windowMultiplier
-		nwY := float32(nw.y) * dc.windowMultiplier
+		nwX := float32(nw.X) * dc.windowMultiplier
+		nwY := float32(nw.Y) * dc.windowMultiplier
 
 		ne := gridPos.getPixelPosOutbounds(northeastPoint, &dc.hexConfig)
-		neX := float32(ne.x+1) * dc.windowMultiplier
-		neY := float32(ne.y) * dc.windowMultiplier
+		neX := float32(ne.X+1) * dc.windowMultiplier
+		neY := float32(ne.Y) * dc.windowMultiplier
 
 		sw := gridPos.getPixelPosOutbounds(southwestPoint, &dc.hexConfig)
-		swX := float32(sw.x) * dc.windowMultiplier
-		swY := float32(sw.y+1) * dc.windowMultiplier
+		swX := float32(sw.X) * dc.windowMultiplier
+		swY := float32(sw.Y+1) * dc.windowMultiplier
 
 		se := gridPos.getPixelPosOutbounds(southeastPoint, &dc.hexConfig)
-		seX := float32(se.x+1) * dc.windowMultiplier
-		seY := float32(se.y+1) * dc.windowMultiplier
+		seX := float32(se.X+1) * dc.windowMultiplier
+		seY := float32(se.Y+1) * dc.windowMultiplier
 
 		s := gridPos.getPixelPosOutbounds(southPoint, &dc.hexConfig)
-		sX := float32(s.x) * dc.windowMultiplier
-		sY := float32(s.y+1) * dc.windowMultiplier
+		sX := float32(s.X) * dc.windowMultiplier
+		sY := float32(s.Y+1) * dc.windowMultiplier
 
 		vector.StrokeLine(
 			dc.screen,

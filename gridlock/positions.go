@@ -14,9 +14,9 @@ type gridPosition struct {
 }
 
 // high resolution position.
-type pixelPosition struct {
-	x int
-	y int
+type PixelPosition struct {
+	X int `json:"x"`
+	Y int `json:"y"`
 }
 
 type layer int
@@ -31,7 +31,7 @@ const (
 // globally unique position
 type position struct {
 	layer
-	pixelPosition
+	PixelPosition
 }
 
 type hexPoint int
@@ -73,8 +73,8 @@ const (
 )
 
 type line struct {
-	start pixelPosition
-	end   pixelPosition
+	start PixelPosition
+	end   PixelPosition
 }
 
 type pointOrientation int
@@ -90,19 +90,19 @@ func (pos position) isZero() bool {
 	return pos.layer == noLayer
 }
 
-func (pixelPos pixelPosition) log() []slog.Attr {
+func (pixelPos PixelPosition) log() []slog.Attr {
 	var a = []slog.Attr{}
-	a = append(a, slog.Int("x", pixelPos.x))
-	a = append(a, slog.Int("y", pixelPos.y))
+	a = append(a, slog.Int("x", pixelPos.X))
+	a = append(a, slog.Int("y", pixelPos.Y))
 	return a
 }
 
-func (pos pixelPosition) chebyshevDistance(otherPos pixelPosition) int {
-	xDelta := pos.x - otherPos.x
+func (pos PixelPosition) chebyshevDistance(otherPos PixelPosition) int {
+	xDelta := pos.X - otherPos.X
 	if xDelta < 0 {
 		xDelta *= -1
 	}
-	yDelta := pos.y - otherPos.y
+	yDelta := pos.Y - otherPos.Y
 	if yDelta < 0 {
 		yDelta *= -1
 	}
@@ -113,11 +113,11 @@ func (gridPos gridPosition) equals(other gridPosition) bool {
 	return gridPos.x == other.x && gridPos.y == other.y
 }
 
-func (pixelPos pixelPosition) equals(other pixelPosition) bool {
-	return pixelPos.x == other.x && pixelPos.y == other.y
+func (pixelPos PixelPosition) equals(other PixelPosition) bool {
+	return pixelPos.X == other.X && pixelPos.Y == other.Y
 }
 
-func (pixelPos pixelPosition) adjacent(d direction) pixelPosition {
+func (pixelPos PixelPosition) adjacent(d direction) PixelPosition {
 	var x int
 	var y int
 
@@ -147,10 +147,10 @@ func (pixelPos pixelPosition) adjacent(d direction) pixelPosition {
 		panic("cannot get adjacent pixel position unknown direction")
 	}
 
-	return pixelPosition{x: pixelPos.x + x, y: pixelPos.y + y}
+	return PixelPosition{X: pixelPos.X + x, Y: pixelPos.Y + y}
 }
 
-func (p pixelPosition) allAdjacent() []pixelPosition {
+func (p PixelPosition) allAdjacent() []PixelPosition {
 	n := p.adjacent(north)
 	ne := p.adjacent(northeast)
 	e := p.adjacent(east)
@@ -160,7 +160,7 @@ func (p pixelPosition) allAdjacent() []pixelPosition {
 	w := p.adjacent(west)
 	nw := p.adjacent(northwest)
 
-	return []pixelPosition{n, ne, e, se, s, sw, w, nw}
+	return []PixelPosition{n, ne, e, se, s, sw, w, nw}
 }
 
 func (gridPos gridPosition) adjacent(side hexSide, hc *hexConfig) (gridPosition, bool) {
@@ -234,33 +234,33 @@ func (pos position) log() []slog.Attr {
 		layer = "highAltitude"
 	}
 	a = append(a, slog.String("layer", layer))
-	a = append(a, pos.pixelPosition.log()...)
+	a = append(a, pos.PixelPosition.log()...)
 	return a
 }
 
-func (pos pixelPosition) add(other pixelPosition, hc *hexConfig) (pixelPosition, bool) {
-	x := pos.x + other.x
-	y := pos.y + other.y
+func (pos PixelPosition) add(other PixelPosition, hc *hexConfig) (PixelPosition, bool) {
+	x := pos.X + other.X
+	y := pos.Y + other.Y
 
 	if x < 0 || x >= hc.windowWidth || y < 0 || y >= hc.windowHeight {
-		return pixelPosition{}, false
+		return PixelPosition{}, false
 	} else {
-		return pixelPosition{x, y}, true
+		return PixelPosition{x, y}, true
 	}
 }
 
-func (gridPos gridPosition) getPixelPos(hexPoint hexPoint, hc *hexConfig) (pixelPosition, bool) {
+func (gridPos gridPosition) getPixelPos(hexPoint hexPoint, hc *hexConfig) (PixelPosition, bool) {
 	pixelPos := gridPos.getPixelPosOutbounds(hexPoint, hc)
-	x, y := pixelPos.x, pixelPos.y
+	x, y := pixelPos.X, pixelPos.Y
 
 	if x < 0 || x >= hc.windowWidth || y < 0 || y >= hc.windowHeight {
-		return pixelPosition{}, false
+		return PixelPosition{}, false
 	} else {
-		return pixelPosition{x, y}, true
+		return PixelPosition{x, y}, true
 	}
 }
 
-func (gridPos gridPosition) getPixelPosOutbounds(hexPoint hexPoint, hc *hexConfig) pixelPosition {
+func (gridPos gridPosition) getPixelPosOutbounds(hexPoint hexPoint, hc *hexConfig) PixelPosition {
 	x := gridPos.x * hc.hexWidth
 	y := gridPos.y * (hc.hexHeight / 4 * 3)
 	if gridPos.y%2 == 1 {
@@ -292,21 +292,21 @@ func (gridPos gridPosition) getPixelPosOutbounds(hexPoint hexPoint, hc *hexConfi
 		y -= 1
 	}
 
-	return pixelPosition{x + hc.xOffset, y + hc.yOffset}
+	return PixelPosition{x + hc.xOffset, y + hc.yOffset}
 }
 
-func (pixelPos pixelPosition) getGridPos(hc *hexConfig) (gridPosition, bool) {
-	if pixelPos.x < 0 || pixelPos.x > hc.windowWidth-1 || pixelPos.y < 0 || pixelPos.y > hc.windowHeight-1 {
+func (pixelPos PixelPosition) getGridPos(hc *hexConfig) (gridPosition, bool) {
+	if pixelPos.X < 0 || pixelPos.X > hc.windowWidth-1 || pixelPos.Y < 0 || pixelPos.Y > hc.windowHeight-1 {
 		return gridPosition{}, false
 	}
 	return pixelPos.getGridPosOutbounds(hc)
 }
 
-func (pixelPos pixelPosition) getGridPosOutbounds(hc *hexConfig) (gridPosition, bool) {
-	xIndex := (pixelPos.x+hc.hexWidth-hc.xOffset)/hc.hexWidth - 1
-	yIndex := (pixelPos.y+(hc.hexHeight/4*3)-hc.yOffset)/(hc.hexHeight/4*3) - 2
-	innerX := (pixelPos.x + hc.hexWidth - hc.xOffset) % hc.hexWidth
-	innerY := (pixelPos.y + (hc.hexHeight * 3 / 2) - hc.yOffset) % (hc.hexHeight * 3 / 2)
+func (pixelPos PixelPosition) getGridPosOutbounds(hc *hexConfig) (gridPosition, bool) {
+	xIndex := (pixelPos.X+hc.hexWidth-hc.xOffset)/hc.hexWidth - 1
+	yIndex := (pixelPos.Y+(hc.hexHeight/4*3)-hc.yOffset)/(hc.hexHeight/4*3) - 2
+	innerX := (pixelPos.X + hc.hexWidth - hc.xOffset) % hc.hexWidth
+	innerY := (pixelPos.Y + (hc.hexHeight * 3 / 2) - hc.yOffset) % (hc.hexHeight * 3 / 2)
 
 	firstYSectionStart := 0
 	secondYSectionStart := firstYSectionStart + hc.hexHeight/4
@@ -372,8 +372,8 @@ func (pixelPos pixelPosition) getGridPosOutbounds(hc *hexConfig) (gridPosition, 
 }
 
 // The point directions are p -> q -> r.
-func orientation(p pixelPosition, q pixelPosition, r pixelPosition) pointOrientation {
-	v := (q.y-p.y)*(r.x-q.x) - (q.x-p.x)*(r.y-q.y)
+func orientation(p PixelPosition, q PixelPosition, r PixelPosition) pointOrientation {
+	v := (q.Y-p.Y)*(r.X-q.X) - (q.X-p.X)*(r.Y-q.Y)
 	switch {
 	case v == 0:
 		return collinear
@@ -387,8 +387,8 @@ func orientation(p pixelPosition, q pixelPosition, r pixelPosition) pointOrienta
 	}
 }
 
-func onSegment(p pixelPosition, q pixelPosition, r pixelPosition) bool {
-	return q.x <= max(p.x, r.x) && q.x >= min(p.x, r.x) && q.y <= max(p.y, r.y) && q.y >= min(p.y, r.y)
+func onSegment(p PixelPosition, q PixelPosition, r PixelPosition) bool {
+	return q.X <= max(p.X, r.X) && q.X >= min(p.X, r.X) && q.Y <= max(p.Y, r.Y) && q.Y >= min(p.Y, r.Y)
 }
 
 func (l1 line) intersects(l2 line) bool {
@@ -414,10 +414,10 @@ func (l1 line) intersects(l2 line) bool {
 }
 
 func collidesWithBorder(pos position, offset int, hc *hexConfig) bool {
-	if pos.x+offset > hc.windowWidth ||
-		pos.x-offset < 0 ||
-		pos.y+offset > hc.windowHeight ||
-		pos.y-offset < 0 {
+	if pos.X+offset > hc.windowWidth ||
+		pos.X-offset < 0 ||
+		pos.Y+offset > hc.windowHeight ||
+		pos.Y-offset < 0 {
 		return true
 	} else {
 		return false

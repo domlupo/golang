@@ -73,6 +73,7 @@ type Game struct {
 func newGame() Game {
 	drawConfig := newDrawConfig()
 	g := Game{
+		drawPixelPath:           true,
 		drawConfig:              drawConfig,
 		backgroundColor:         color.RGBA{200, 200, 200, 255},
 		produceWait:             1_000_000 * time.Second,
@@ -178,7 +179,7 @@ func (g *Game) Update() error {
 	graphicalX, graphicalY := ebiten.CursorPosition()
 	x := float32(graphicalX) / g.windowMultiplier
 	y := float32(graphicalY) / g.windowMultiplier
-	pixelPos := pixelPosition{int(x), int(y)}
+	pixelPos := PixelPosition{int(x), int(y)}
 
 	g.priorLeftMouseClicked = g.leftMouseClicked
 	g.leftMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
@@ -210,8 +211,8 @@ func (g *Game) Update() error {
 	// update game state after player actions
 	if g.leftMouseReleased {
 		g.gameState.updateSelected(
-			pixelPosition{int(g.initialSelectedX), int(g.initialSelectedY)},
-			pixelPosition{int(g.currentSelectedX), int(g.currentSelectedY)})
+			PixelPosition{int(g.initialSelectedX), int(g.initialSelectedY)},
+			PixelPosition{int(g.currentSelectedX), int(g.currentSelectedY)})
 	}
 	nodeOwnershipChanged := g.gameState.updateNodeOwnership()
 

@@ -57,7 +57,7 @@ func (s *state) analyzeTargets() {
 		}
 
 		steer := s.steer(u)
-		if !u.position.equals(steer.pixelPosition) {
+		if !u.position.equals(steer.PixelPosition) {
 			u.updateTarget(steerTarget, steer)
 		}
 
@@ -77,10 +77,10 @@ func (s *state) analyzeTargets() {
 }
 
 func (s *state) steer(u *unit) position {
-	x1 := u.position.x + u.radius
-	y1 := u.position.y + u.radius
+	x1 := u.position.X + u.radius
+	y1 := u.position.Y + u.radius
 
-	gridPos, _ := u.pixelPosition.getGridPos(s.hexConfig)
+	gridPos, _ := u.PixelPosition.getGridPos(s.hexConfig)
 	hex := s.hexagons[gridPos]
 	var neHex, eHex, seHex, swHex, wHex, nwHex *hexagon
 
@@ -142,8 +142,8 @@ func (s *state) steer(u *unit) position {
 				continue
 			}
 
-			x2 := current.x + current.radius
-			y2 := current.y + current.radius
+			x2 := current.X + current.radius
+			y2 := current.Y + current.radius
 
 			xDelta := x2 - x1
 			yDelta := y2 - y1
@@ -152,16 +152,16 @@ func (s *state) steer(u *unit) position {
 				magnitude := 1
 
 				switch {
-				case u.x > current.x:
+				case u.X > current.X:
 					xSteer += magnitude
-				case u.x < current.x:
+				case u.X < current.X:
 					xSteer -= magnitude
 				}
 
 				switch {
-				case u.y > current.y:
+				case u.Y > current.Y:
 					ySteer += magnitude
-				case u.y < current.y:
+				case u.Y < current.Y:
 					ySteer -= magnitude
 				}
 			}
@@ -170,7 +170,7 @@ func (s *state) steer(u *unit) position {
 		}
 	}
 
-	return position{layer: u.layer, pixelPosition: pixelPosition{x: u.x + xSteer, y: u.y + ySteer}}
+	return position{layer: u.layer, PixelPosition: PixelPosition{X: u.X + xSteer, Y: u.Y + ySteer}}
 }
 
 func (s *state) moveUnits() {
@@ -201,12 +201,12 @@ func (s *state) moveUnits() {
 			unitsWithoutTarget++
 		}
 
-		if u.equals(newPos.pixelPosition) {
+		if u.equals(newPos.PixelPosition) {
 			unitsAtFinalPosition++
 			continue
 		}
 
-		if !s.pixelPath[newPos.pixelPosition].walkable || s.pixelPath[newPos.pixelPosition].unwalkableChebyshevDistance < u.radius+1 {
+		if !s.pixelPath[newPos.PixelPosition].Walkable || s.pixelPath[newPos.PixelPosition].UnwalkableChebyshevDistance < u.radius+1 {
 			unitsAtUnwalkable++
 			u.AtUnwalkable = true
 			continue
@@ -237,18 +237,18 @@ func (s *state) moveUnits() {
 			if u.layer == lowAltitude || u.layer == highAltitude {
 				otherUnit := s.units[collidedUnitPos]
 				otherUnit.health = 0
-				s.units[collidedUnitPos] = s.units[position{collidedUnitPos.layer, pixelPosition{collidedUnitPos.x, collidedUnitPos.y}}]
+				s.units[collidedUnitPos] = s.units[position{collidedUnitPos.layer, PixelPosition{collidedUnitPos.X, collidedUnitPos.Y}}]
 				u.health = 0
-				s.units[u.position] = s.units[position{u.layer, pixelPosition{u.x, u.y}}]
+				s.units[u.position] = s.units[position{u.layer, PixelPosition{u.X, u.Y}}]
 			}
 		} else if !u.canReachNode.isZero() {
 			unitsAtNode++
 		} else {
 			unitsMovedCount++
-			s.units[newPos] = s.units[position{u.layer, pixelPosition{u.x, u.y}}]
+			s.units[newPos] = s.units[position{u.layer, PixelPosition{u.X, u.Y}}]
 
-			oldGridPos, _ := u.pixelPosition.getGridPos(s.hexConfig)
-			newGridPos, _ := newPos.pixelPosition.getGridPos(s.hexConfig)
+			oldGridPos, _ := u.PixelPosition.getGridPos(s.hexConfig)
+			newGridPos, _ := newPos.PixelPosition.getGridPos(s.hexConfig)
 			if !oldGridPos.equals(newGridPos) {
 				oldHex := s.hexagons[oldGridPos]
 				newHex := s.hexagons[newGridPos]
@@ -289,8 +289,8 @@ func (s *state) moveUnits() {
 }
 
 func (s *state) explode(pos position, blastRadius int, units units) {
-	x1 := pos.x
-	y1 := pos.y
+	x1 := pos.X
+	y1 := pos.Y
 	r1 := blastRadius
 
 	for _, otherUnit := range units {
@@ -298,8 +298,8 @@ func (s *state) explode(pos position, blastRadius int, units units) {
 			continue
 		}
 
-		x2 := otherUnit.x + otherUnit.radius
-		y2 := otherUnit.y + otherUnit.radius
+		x2 := otherUnit.X + otherUnit.radius
+		y2 := otherUnit.Y + otherUnit.radius
 		r2 := otherUnit.radius
 
 		xDelta := x2 - x1
@@ -313,10 +313,10 @@ func (s *state) explode(pos position, blastRadius int, units units) {
 }
 
 func (s *state) nearestUnitWithinVision(u unit) (position, bool) {
-	x1 := u.position.x + u.radius
-	y1 := u.position.y + u.radius
+	x1 := u.position.X + u.radius
+	y1 := u.position.Y + u.radius
 
-	gridPos, _ := u.pixelPosition.getGridPos(s.hexConfig)
+	gridPos, _ := u.PixelPosition.getGridPos(s.hexConfig)
 	hex := s.hexagons[gridPos]
 	var neHex, eHex, seHex, swHex, wHex, nwHex *hexagon
 
@@ -386,14 +386,14 @@ func (s *state) nearestUnitWithinVision(u unit) (position, bool) {
 				continue
 			}
 
-			x2 := current.x + current.radius
-			y2 := current.y + current.radius
+			x2 := current.X + current.radius
+			y2 := current.Y + current.radius
 
 			xDelta := x2 - x1
 			yDelta := y2 - y1
 			distance := xDelta*xDelta + yDelta*yDelta
 			if distance < shortestDistance && distance <= u.vision*u.vision {
-				if _, los := u.lineOfSight(current.pixelPosition, s.pixelPath, u.radius); los {
+				if _, los := u.lineOfSight(current.PixelPosition, s.pixelPath, u.radius); los {
 					shortestDistance = distance
 					nearestUnitPos = current.position
 				}
@@ -410,11 +410,11 @@ func (s *state) nearestUnitWithinVision(u unit) (position, bool) {
 // passed unit and unit midpoints within those hexagons. Returns the position
 // of the unit which collided with the passed unit.
 func (s *state) collidesWithUnit(newPos position, unit unit) (position, bool) {
-	x1 := newPos.x + unit.radius
-	y1 := newPos.y + unit.radius
+	x1 := newPos.X + unit.radius
+	y1 := newPos.Y + unit.radius
 	r1 := unit.radius
 
-	gridPos, _ := newPos.pixelPosition.getGridPos(s.hexConfig)
+	gridPos, _ := newPos.PixelPosition.getGridPos(s.hexConfig)
 	hex := s.hexagons[gridPos]
 	var neHex, eHex, seHex, swHex, wHex, nwHex *hexagon
 
@@ -474,8 +474,8 @@ func (s *state) collidesWithUnit(newPos position, unit unit) (position, bool) {
 				continue
 			}
 
-			x2 := current.x + current.radius
-			y2 := current.y + current.radius
+			x2 := current.X + current.radius
+			y2 := current.Y + current.radius
 			r2 := current.radius
 
 			xDelta := x2 - x1
@@ -522,20 +522,20 @@ func (s *state) attackUnits() {
 			continue
 		}
 
-		xTargetPixelPos := u.enemyTarget.x
-		yTargetPixelPos := u.enemyTarget.y
+		xTargetPixelPos := u.enemyTarget.X
+		yTargetPixelPos := u.enemyTarget.Y
 
 		var xDelta int
 		var yDelta int
-		if u.x < (xTargetPixelPos) {
-			xDelta = xTargetPixelPos - u.x
-		} else if u.x > (xTargetPixelPos) {
-			xDelta = u.x - xTargetPixelPos
+		if u.X < (xTargetPixelPos) {
+			xDelta = xTargetPixelPos - u.X
+		} else if u.X > (xTargetPixelPos) {
+			xDelta = u.X - xTargetPixelPos
 		}
-		if u.y < (yTargetPixelPos) {
-			yDelta = yTargetPixelPos - u.y
-		} else if u.y > (yTargetPixelPos) {
-			yDelta = u.y - yTargetPixelPos
+		if u.Y < (yTargetPixelPos) {
+			yDelta = yTargetPixelPos - u.Y
+		} else if u.Y > (yTargetPixelPos) {
+			yDelta = u.Y - yTargetPixelPos
 		}
 
 		var nearestVisibleUnit = s.units[u.enemyTarget]
@@ -552,7 +552,7 @@ func (s *state) attackUnits() {
 	for _, u := range s.units {
 		if u.health <= 0 {
 
-			gridPos, _ := u.pixelPosition.getGridPos(s.hexConfig)
+			gridPos, _ := u.PixelPosition.getGridPos(s.hexConfig)
 			hex := s.hexagons[gridPos]
 			hex.unitCount--
 			if hex.linkedList.id == u.id && u.next.id != u.id {
@@ -636,7 +636,7 @@ func (s *state) updateNodeOwnership() bool {
 	return nodeOwnershipChanged
 }
 
-func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixelPosition) {
+func (s *state) updateSelected(clickPosition PixelPosition, releasePosition PixelPosition) {
 	var priorSingleSelect gridPosition
 	for _, n := range s.nodes {
 		if n.singleSelect {
@@ -660,22 +660,22 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 		return
 	}
 
-	var topLeftPixelPos pixelPosition
-	var bottomRightPixelPos pixelPosition
+	var topLeftPixelPos PixelPosition
+	var bottomRightPixelPos PixelPosition
 
 	switch {
-	case clickPosition.x < releasePosition.x && clickPosition.y < releasePosition.y:
+	case clickPosition.X < releasePosition.X && clickPosition.Y < releasePosition.Y:
 		topLeftPixelPos = clickPosition
 		bottomRightPixelPos = releasePosition
-	case clickPosition.x > releasePosition.x && clickPosition.y > releasePosition.y:
+	case clickPosition.X > releasePosition.X && clickPosition.Y > releasePosition.Y:
 		topLeftPixelPos = releasePosition
 		bottomRightPixelPos = clickPosition
-	case clickPosition.x > releasePosition.x && clickPosition.y < releasePosition.y:
-		topLeftPixelPos = pixelPosition{releasePosition.x, clickPosition.y}
-		bottomRightPixelPos = pixelPosition{clickPosition.x, releasePosition.y}
-	case clickPosition.x < releasePosition.x && clickPosition.y > releasePosition.y:
-		topLeftPixelPos = pixelPosition{clickPosition.x, releasePosition.y}
-		bottomRightPixelPos = pixelPosition{releasePosition.x, clickPosition.y}
+	case clickPosition.X > releasePosition.X && clickPosition.Y < releasePosition.Y:
+		topLeftPixelPos = PixelPosition{releasePosition.X, clickPosition.Y}
+		bottomRightPixelPos = PixelPosition{clickPosition.X, releasePosition.Y}
+	case clickPosition.X < releasePosition.X && clickPosition.Y > releasePosition.Y:
+		topLeftPixelPos = PixelPosition{clickPosition.X, releasePosition.Y}
+		bottomRightPixelPos = PixelPosition{releasePosition.X, clickPosition.Y}
 	}
 
 	// TODO: Fix bad UI behavior when cursor ends off screen. Right now, when a cursor
@@ -708,10 +708,10 @@ func (s *state) updateSelected(clickPosition pixelPosition, releasePosition pixe
 
 	if s.developerMode {
 		for _, u := range s.units {
-			if (topLeftPixelPos.x < u.x) &&
-				(u.x < bottomRightPixelPos.x) &&
-				(topLeftPixelPos.y < u.y) &&
-				(u.y < bottomRightPixelPos.y) {
+			if (topLeftPixelPos.X < u.X) &&
+				(u.X < bottomRightPixelPos.X) &&
+				(topLeftPixelPos.Y < u.Y) &&
+				(u.Y < bottomRightPixelPos.Y) {
 				u.selected = true
 			} else {
 				u.selected = false
@@ -856,8 +856,8 @@ func (s *state) createUnitPathfindHeatmap() {
 				logger.log(infoLevel, devTool, "pathfind heatmap", slog.Int("pixel positions percent progress", percentProgess))
 			}
 
-			if path.walkable {
-				unit.updateTarget(globalTarget, position{layer: unit.layer, pixelPosition: pixelPos})
+			if path.Walkable {
+				unit.updateTarget(globalTarget, position{layer: unit.layer, PixelPosition: pixelPos})
 				distance := unit.pathfindGlobalTarget(s.obstacles, s.pixelPath, s.hexConfig)
 				s.unitPathfind[pixelPos] = distance
 			}
