@@ -52,10 +52,11 @@ func (n node) selected() bool {
 }
 
 func (nodes nodes) setupControl(hc *hexConfig, hexagons hexagons, obstacles obstacles) {
-	visited := make(map[gridPosition]struct{})
 
 	for _, h := range hexagons {
 		q := []gridPosition{h.gridPos}
+		visited := make(map[gridPosition]struct{})
+
 		for len(q) > 0 {
 			current := q[0]
 			q = q[1:]
