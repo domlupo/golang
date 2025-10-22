@@ -20,7 +20,7 @@ Is there a mobile equivalent for war/4x games?
 ### Next Checkpoints
 
 - Invest in look up tables 
-  - Cache and load results locally for pixel path
+  - Cache and load results locally for pixel path using json encoding
   - hot reload time should be 0s
   - More Look up tables will probably be used. They are simple and efficient for static information.
     - node lookup table to check if a unit can attack a node. May also be used for pathing.
@@ -350,6 +350,11 @@ Is there a mobile equivalent for war/4x games?
   - sniper -> range upgrade
   - anti tank infantry -> anti tank ammunition
   - marine -> cross shallow water
+14. Use json for files (cache, saves, etc)
+  - human readable
+  - Go standard library support
+  - Go standard library does not support toml or yaml
+  - Avoids cross platform issues with sqlite
 
 ---
 
