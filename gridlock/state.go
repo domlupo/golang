@@ -637,7 +637,7 @@ func (s *state) updateNodeOwnership() bool {
 }
 
 func (s *state) updateSelected(clickPosition PixelPosition, releasePosition PixelPosition) {
-	var priorSingleSelect gridPosition
+	var priorSingleSelect GridPosition
 	for _, n := range s.nodes {
 		if n.singleSelect {
 			priorSingleSelect = n.gridPos
@@ -689,10 +689,10 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 
 	var firstSelectedNode *node
 	for _, n := range s.nodes {
-		if (topLeftGridPos.x < n.gridPos.x) &&
-			(n.gridPos.x < bottomRightGridPos.x) &&
-			(topLeftGridPos.y < n.gridPos.y) &&
-			(n.gridPos.y < bottomRightGridPos.y) {
+		if (topLeftGridPos.X < n.gridPos.X) &&
+			(n.gridPos.X < bottomRightGridPos.X) &&
+			(topLeftGridPos.Y < n.gridPos.Y) &&
+			(n.gridPos.Y < bottomRightGridPos.Y) {
 
 			if firstSelectedNode == nil {
 				firstSelectedNode = n

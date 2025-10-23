@@ -33,8 +33,8 @@ func (c *computer) updateTargetNodes(s state) {
 
 			otherNodePos := n.gridPos
 			otherNode := n
-			xDelta := (selfNodePos.x - otherNode.gridPos.x)
-			yDelta := (selfNodePos.y - otherNode.gridPos.y)
+			xDelta := (selfNodePos.X - otherNode.gridPos.X)
+			yDelta := (selfNodePos.Y - otherNode.gridPos.Y)
 			otherTargetDistanceSquared := xDelta*xDelta + yDelta*yDelta
 
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {

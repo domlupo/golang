@@ -12,24 +12,24 @@ const (
 )
 
 // All hexagons on map
-type hexagons map[gridPosition]*hexagon
+type hexagons map[GridPosition]*hexagon
 
 // A hexagon which spatially partitions the map and stores dynamic state.
 type hexagon struct {
-	gridPos    gridPosition
+	gridPos    GridPosition
 	linkedList *unit
 	unitCount  int
 }
 
-func setupHexagons(hc *hexConfig) map[gridPosition]*hexagon {
-	hexagons := make(map[gridPosition]*hexagon)
+func setupHexagons(hc *hexConfig) map[GridPosition]*hexagon {
+	hexagons := make(map[GridPosition]*hexagon)
 	for i := range hc.xIndexMax {
 		for j := range hc.yIndexMax {
 			if j%2 == 0 && i == hc.xIndexMax-1 {
 				continue
 			}
 
-			gridPos := gridPosition{i, j}
+			gridPos := GridPosition{i, j}
 			hexagons[gridPos] = &hexagon{gridPos: gridPos}
 		}
 	}

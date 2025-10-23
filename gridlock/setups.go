@@ -23,7 +23,7 @@ func setupObstacles(setup obstacleSetup, hc *hexConfig, pixelPathDistanceMax int
 }
 
 func (os obstacles) setupBorder() {
-	gridPositions := []gridPosition{
+	GridPositions := []GridPosition{
 		// north west corner
 		{0, 0},
 		{1, 1},
@@ -140,18 +140,18 @@ func (os obstacles) setupBorder() {
 		{0, 23},
 	}
 
-	for _, pos := range gridPositions {
+	for _, pos := range GridPositions {
 		os.insert(pos, &obstacle{gridPos: pos, kind: highMountain})
 	}
 }
 
 func (os obstacles) setupInterior(setup obstacleSetup, hc *hexConfig) {
-	var gridPositions []gridPosition
+	var GridPositions []GridPosition
 
 	switch setup {
 	case noObstacle:
 	case singleObstacle:
-		gridPositions = []gridPosition{
+		GridPositions = []GridPosition{
 			{3, 3},
 			{3, 4},
 			{4, 4},
@@ -180,7 +180,7 @@ func (os obstacles) setupInterior(setup obstacleSetup, hc *hexConfig) {
 			{5, 22},
 		}
 	case doubleObstacle:
-		gridPositions = []gridPosition{
+		GridPositions = []GridPosition{
 			{3, 3},
 			{3, 4},
 			{4, 4},
@@ -230,7 +230,7 @@ func (os obstacles) setupInterior(setup obstacleSetup, hc *hexConfig) {
 			{10, 22},
 		}
 	case tripleObstacle:
-		gridPositions = []gridPosition{
+		GridPositions = []GridPosition{
 			{8, 6},
 			{8, 7},
 
@@ -246,7 +246,7 @@ func (os obstacles) setupInterior(setup obstacleSetup, hc *hexConfig) {
 			{12, 7},
 		}
 	case multiObstacle:
-		gridPositions = []gridPosition{
+		GridPositions = []GridPosition{
 			{2, 4},
 			{3, 3},
 			{3, 4},
@@ -317,7 +317,7 @@ func (os obstacles) setupInterior(setup obstacleSetup, hc *hexConfig) {
 			{13, 22},
 		}
 	case borderObstacle:
-		gridPositions = []gridPosition{
+		GridPositions = []GridPosition{
 			{22, 2},
 
 			{9, 3},
@@ -343,7 +343,7 @@ func (os obstacles) setupInterior(setup obstacleSetup, hc *hexConfig) {
 			{9, 23},
 		}
 	case horizontalObstacle:
-		gridPositions = []gridPosition{
+		GridPositions = []GridPosition{
 			{1, 3},
 			{2, 3},
 			{3, 3},
@@ -360,7 +360,7 @@ func (os obstacles) setupInterior(setup obstacleSetup, hc *hexConfig) {
 		panic("obstacle setup does not exist")
 	}
 
-	for _, pos := range gridPositions {
+	for _, pos := range GridPositions {
 		os.insert(pos, &obstacle{gridPos: pos, kind: lowMountain})
 	}
 }
@@ -387,7 +387,7 @@ const (
 )
 
 type nodeInfo struct {
-	gridPos    gridPosition
+	gridPos    GridPosition
 	player     player
 	unitConfig unitConfig
 }
@@ -408,284 +408,284 @@ func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth 
 		player := bluePlayer
 		unitConfig := infantryConfig
 		nodeInfos = []nodeInfo{
-			{gridPosition{3, 1}, player, unitConfig},
-			{gridPosition{4, 1}, player, unitConfig},
-			{gridPosition{2, 2}, player, unitConfig},
-			{gridPosition{3, 2}, player, unitConfig},
-			{gridPosition{4, 2}, player, unitConfig},
-			{gridPosition{3, 3}, player, unitConfig},
-			{gridPosition{4, 3}, player, unitConfig},
+			{GridPosition{3, 1}, player, unitConfig},
+			{GridPosition{4, 1}, player, unitConfig},
+			{GridPosition{2, 2}, player, unitConfig},
+			{GridPosition{3, 2}, player, unitConfig},
+			{GridPosition{4, 2}, player, unitConfig},
+			{GridPosition{3, 3}, player, unitConfig},
+			{GridPosition{4, 3}, player, unitConfig},
 		}
 	case northWest:
 		nodeInfos = []nodeInfo{
-			{gridPosition{2, 2}, bluePlayer, infantryConfig},
+			{GridPosition{2, 2}, bluePlayer, infantryConfig},
 		}
 	case horizontal:
 		nodeInfos = []nodeInfo{
-			{gridPosition{1, 23}, bluePlayer, infantryConfig},
-			{gridPosition{3, 23}, redPlayer, infantryConfig},
+			{GridPosition{1, 23}, bluePlayer, infantryConfig},
+			{GridPosition{3, 23}, redPlayer, infantryConfig},
 		}
 	case horizontalMissile:
 		nodeInfos = []nodeInfo{
-			{gridPosition{1, 23}, bluePlayer, unguidedGroundMissileConfig},
-			{gridPosition{3, 23}, redPlayer, guidedAirMissileConfig},
+			{GridPosition{1, 23}, bluePlayer, unguidedGroundMissileConfig},
+			{GridPosition{3, 23}, redPlayer, guidedAirMissileConfig},
 		}
 	case vertical:
 		nodeInfos = []nodeInfo{
-			{gridPosition{1, 21}, bluePlayer, infantryConfig},
-			{gridPosition{1, 23}, redPlayer, infantryConfig},
+			{GridPosition{1, 21}, bluePlayer, infantryConfig},
+			{GridPosition{1, 23}, redPlayer, infantryConfig},
 		}
 	case diagonal:
 		nodeInfos = []nodeInfo{
-			{gridPosition{2, 2}, bluePlayer, infantryConfig},
-			{gridPosition{5, 5}, redPlayer, infantryConfig},
+			{GridPosition{2, 2}, bluePlayer, infantryConfig},
+			{GridPosition{5, 5}, redPlayer, infantryConfig},
 		}
 	case lowNodeCount:
 		nodeInfos = []nodeInfo{
-			{gridPosition{2, 2}, bluePlayer, infantryConfig},
-			{gridPosition{2, 5}, bluePlayer, infantryConfig},
-			{gridPosition{20, 5}, redPlayer, infantryConfig},
+			{GridPosition{2, 2}, bluePlayer, infantryConfig},
+			{GridPosition{2, 5}, bluePlayer, infantryConfig},
+			{GridPosition{20, 5}, redPlayer, infantryConfig},
 		}
 	case noNeutral:
 		unitConfig := infantryConfig
 		nodeInfos = []nodeInfo{
-			{gridPosition{2, 2}, bluePlayer, unitConfig},
-			{gridPosition{6, 1}, bluePlayer, unitConfig},
-			{gridPosition{11, 1}, bluePlayer, unitConfig},
-			{gridPosition{15, 1}, bluePlayer, unitConfig},
-			{gridPosition{21, 1}, bluePlayer, unitConfig},
-			{gridPosition{26, 1}, bluePlayer, unitConfig},
+			{GridPosition{2, 2}, bluePlayer, unitConfig},
+			{GridPosition{6, 1}, bluePlayer, unitConfig},
+			{GridPosition{11, 1}, bluePlayer, unitConfig},
+			{GridPosition{15, 1}, bluePlayer, unitConfig},
+			{GridPosition{21, 1}, bluePlayer, unitConfig},
+			{GridPosition{26, 1}, bluePlayer, unitConfig},
 
-			{gridPosition{1, 6}, bluePlayer, unitConfig},
-			{gridPosition{6, 6}, bluePlayer, unitConfig},
-			{gridPosition{11, 6}, bluePlayer, unitConfig},
-			{gridPosition{16, 6}, bluePlayer, unitConfig},
-			{gridPosition{21, 6}, bluePlayer, unitConfig},
-			{gridPosition{26, 6}, bluePlayer, unitConfig},
+			{GridPosition{1, 6}, bluePlayer, unitConfig},
+			{GridPosition{6, 6}, bluePlayer, unitConfig},
+			{GridPosition{11, 6}, bluePlayer, unitConfig},
+			{GridPosition{16, 6}, bluePlayer, unitConfig},
+			{GridPosition{21, 6}, bluePlayer, unitConfig},
+			{GridPosition{26, 6}, bluePlayer, unitConfig},
 
-			{gridPosition{1, 11}, bluePlayer, unitConfig},
-			{gridPosition{6, 11}, bluePlayer, unitConfig},
-			{gridPosition{11, 11}, bluePlayer, unitConfig},
+			{GridPosition{1, 11}, bluePlayer, unitConfig},
+			{GridPosition{6, 11}, bluePlayer, unitConfig},
+			{GridPosition{11, 11}, bluePlayer, unitConfig},
 
-			{gridPosition{16, 11}, redPlayer, unitConfig},
-			{gridPosition{21, 11}, redPlayer, unitConfig},
-			{gridPosition{26, 11}, redPlayer, unitConfig},
+			{GridPosition{16, 11}, redPlayer, unitConfig},
+			{GridPosition{21, 11}, redPlayer, unitConfig},
+			{GridPosition{26, 11}, redPlayer, unitConfig},
 
-			{gridPosition{1, 16}, redPlayer, unitConfig},
-			{gridPosition{6, 16}, redPlayer, unitConfig},
-			{gridPosition{11, 16}, redPlayer, unitConfig},
-			{gridPosition{16, 16}, redPlayer, unitConfig},
-			{gridPosition{21, 16}, redPlayer, unitConfig},
-			{gridPosition{26, 16}, redPlayer, unitConfig},
+			{GridPosition{1, 16}, redPlayer, unitConfig},
+			{GridPosition{6, 16}, redPlayer, unitConfig},
+			{GridPosition{11, 16}, redPlayer, unitConfig},
+			{GridPosition{16, 16}, redPlayer, unitConfig},
+			{GridPosition{21, 16}, redPlayer, unitConfig},
+			{GridPosition{26, 16}, redPlayer, unitConfig},
 
-			{gridPosition{1, 21}, redPlayer, unitConfig},
-			{gridPosition{6, 21}, redPlayer, unitConfig},
-			{gridPosition{11, 21}, redPlayer, unitConfig},
-			{gridPosition{16, 21}, redPlayer, unitConfig},
-			{gridPosition{21, 21}, redPlayer, unitConfig},
-			{gridPosition{26, 21}, redPlayer, unitConfig},
+			{GridPosition{1, 21}, redPlayer, unitConfig},
+			{GridPosition{6, 21}, redPlayer, unitConfig},
+			{GridPosition{11, 21}, redPlayer, unitConfig},
+			{GridPosition{16, 21}, redPlayer, unitConfig},
+			{GridPosition{21, 21}, redPlayer, unitConfig},
+			{GridPosition{26, 21}, redPlayer, unitConfig},
 		}
 	case leftVsRight:
 		unitConfig := infantryConfig
 		nodeInfos = []nodeInfo{
-			{gridPosition{2, 2}, bluePlayer, unitConfig},
-			{gridPosition{6, 1}, bluePlayer, unitConfig},
-			{gridPosition{11, 1}, neutralPlayer, unitConfig},
-			{gridPosition{15, 1}, neutralPlayer, unitConfig},
-			{gridPosition{21, 1}, redPlayer, unitConfig},
-			{gridPosition{26, 1}, redPlayer, unitConfig},
+			{GridPosition{2, 2}, bluePlayer, unitConfig},
+			{GridPosition{6, 1}, bluePlayer, unitConfig},
+			{GridPosition{11, 1}, neutralPlayer, unitConfig},
+			{GridPosition{15, 1}, neutralPlayer, unitConfig},
+			{GridPosition{21, 1}, redPlayer, unitConfig},
+			{GridPosition{26, 1}, redPlayer, unitConfig},
 
-			{gridPosition{1, 6}, bluePlayer, unitConfig},
-			{gridPosition{6, 6}, bluePlayer, unitConfig},
-			{gridPosition{11, 6}, neutralPlayer, unitConfig},
-			{gridPosition{16, 6}, neutralPlayer, unitConfig},
-			{gridPosition{21, 6}, redPlayer, unitConfig},
-			{gridPosition{26, 6}, redPlayer, unitConfig},
+			{GridPosition{1, 6}, bluePlayer, unitConfig},
+			{GridPosition{6, 6}, bluePlayer, unitConfig},
+			{GridPosition{11, 6}, neutralPlayer, unitConfig},
+			{GridPosition{16, 6}, neutralPlayer, unitConfig},
+			{GridPosition{21, 6}, redPlayer, unitConfig},
+			{GridPosition{26, 6}, redPlayer, unitConfig},
 
-			{gridPosition{1, 11}, bluePlayer, unitConfig},
-			{gridPosition{6, 11}, bluePlayer, unitConfig},
-			{gridPosition{11, 11}, neutralPlayer, unitConfig},
-			{gridPosition{16, 11}, neutralPlayer, unitConfig},
-			{gridPosition{21, 11}, redPlayer, unitConfig},
-			{gridPosition{26, 11}, redPlayer, unitConfig},
+			{GridPosition{1, 11}, bluePlayer, unitConfig},
+			{GridPosition{6, 11}, bluePlayer, unitConfig},
+			{GridPosition{11, 11}, neutralPlayer, unitConfig},
+			{GridPosition{16, 11}, neutralPlayer, unitConfig},
+			{GridPosition{21, 11}, redPlayer, unitConfig},
+			{GridPosition{26, 11}, redPlayer, unitConfig},
 
-			{gridPosition{1, 16}, bluePlayer, unitConfig},
-			{gridPosition{6, 16}, bluePlayer, unitConfig},
-			{gridPosition{11, 16}, neutralPlayer, unitConfig},
-			{gridPosition{16, 16}, neutralPlayer, unitConfig},
-			{gridPosition{21, 16}, redPlayer, unitConfig},
-			{gridPosition{26, 16}, redPlayer, unitConfig},
+			{GridPosition{1, 16}, bluePlayer, unitConfig},
+			{GridPosition{6, 16}, bluePlayer, unitConfig},
+			{GridPosition{11, 16}, neutralPlayer, unitConfig},
+			{GridPosition{16, 16}, neutralPlayer, unitConfig},
+			{GridPosition{21, 16}, redPlayer, unitConfig},
+			{GridPosition{26, 16}, redPlayer, unitConfig},
 
-			{gridPosition{1, 21}, bluePlayer, unitConfig},
-			{gridPosition{6, 21}, bluePlayer, unitConfig},
-			{gridPosition{11, 21}, neutralPlayer, unitConfig},
-			{gridPosition{16, 21}, neutralPlayer, unitConfig},
-			{gridPosition{21, 21}, redPlayer, unitConfig},
-			{gridPosition{26, 21}, redPlayer, unitConfig},
+			{GridPosition{1, 21}, bluePlayer, unitConfig},
+			{GridPosition{6, 21}, bluePlayer, unitConfig},
+			{GridPosition{11, 21}, neutralPlayer, unitConfig},
+			{GridPosition{16, 21}, neutralPlayer, unitConfig},
+			{GridPosition{21, 21}, redPlayer, unitConfig},
+			{GridPosition{26, 21}, redPlayer, unitConfig},
 		}
 	case leftVsRightHorizontalOffset:
 		unitConfig := infantryConfig
 		nodeInfos = []nodeInfo{
-			{gridPosition{2, 2}, bluePlayer, unitConfig},
-			{gridPosition{6, 1}, bluePlayer, unitConfig},
-			{gridPosition{11, 1}, neutralPlayer, unitConfig},
-			{gridPosition{16, 1}, neutralPlayer, unitConfig},
-			{gridPosition{21, 1}, redPlayer, unitConfig},
-			{gridPosition{26, 1}, redPlayer, unitConfig},
+			{GridPosition{2, 2}, bluePlayer, unitConfig},
+			{GridPosition{6, 1}, bluePlayer, unitConfig},
+			{GridPosition{11, 1}, neutralPlayer, unitConfig},
+			{GridPosition{16, 1}, neutralPlayer, unitConfig},
+			{GridPosition{21, 1}, redPlayer, unitConfig},
+			{GridPosition{26, 1}, redPlayer, unitConfig},
 
-			{gridPosition{1, 1}, bluePlayer, unitConfig},
-			{gridPosition{6, 6}, bluePlayer, unitConfig},
-			{gridPosition{11, 6}, neutralPlayer, unitConfig},
-			{gridPosition{16, 6}, neutralPlayer, unitConfig},
-			{gridPosition{21, 6}, redPlayer, unitConfig},
-			{gridPosition{26, 6}, redPlayer, unitConfig},
+			{GridPosition{1, 1}, bluePlayer, unitConfig},
+			{GridPosition{6, 6}, bluePlayer, unitConfig},
+			{GridPosition{11, 6}, neutralPlayer, unitConfig},
+			{GridPosition{16, 6}, neutralPlayer, unitConfig},
+			{GridPosition{21, 6}, redPlayer, unitConfig},
+			{GridPosition{26, 6}, redPlayer, unitConfig},
 
-			{gridPosition{1, 11}, bluePlayer, unitConfig},
-			{gridPosition{6, 11}, bluePlayer, unitConfig},
-			{gridPosition{11, 11}, neutralPlayer, unitConfig},
-			{gridPosition{16, 11}, neutralPlayer, unitConfig},
-			{gridPosition{21, 11}, redPlayer, unitConfig},
-			{gridPosition{26, 11}, redPlayer, unitConfig},
+			{GridPosition{1, 11}, bluePlayer, unitConfig},
+			{GridPosition{6, 11}, bluePlayer, unitConfig},
+			{GridPosition{11, 11}, neutralPlayer, unitConfig},
+			{GridPosition{16, 11}, neutralPlayer, unitConfig},
+			{GridPosition{21, 11}, redPlayer, unitConfig},
+			{GridPosition{26, 11}, redPlayer, unitConfig},
 
-			{gridPosition{1, 16}, bluePlayer, unitConfig},
-			{gridPosition{6, 16}, bluePlayer, unitConfig},
-			{gridPosition{11, 16}, neutralPlayer, unitConfig},
-			{gridPosition{16, 16}, neutralPlayer, unitConfig},
-			{gridPosition{21, 16}, redPlayer, unitConfig},
-			{gridPosition{26, 16}, redPlayer, unitConfig},
+			{GridPosition{1, 16}, bluePlayer, unitConfig},
+			{GridPosition{6, 16}, bluePlayer, unitConfig},
+			{GridPosition{11, 16}, neutralPlayer, unitConfig},
+			{GridPosition{16, 16}, neutralPlayer, unitConfig},
+			{GridPosition{21, 16}, redPlayer, unitConfig},
+			{GridPosition{26, 16}, redPlayer, unitConfig},
 
-			{gridPosition{1, 21}, bluePlayer, unitConfig},
-			{gridPosition{6, 21}, bluePlayer, unitConfig},
-			{gridPosition{11, 21}, neutralPlayer, unitConfig},
-			{gridPosition{16, 21}, neutralPlayer, unitConfig},
-			{gridPosition{21, 21}, redPlayer, unitConfig},
-			{gridPosition{26, 21}, redPlayer, unitConfig},
+			{GridPosition{1, 21}, bluePlayer, unitConfig},
+			{GridPosition{6, 21}, bluePlayer, unitConfig},
+			{GridPosition{11, 21}, neutralPlayer, unitConfig},
+			{GridPosition{16, 21}, neutralPlayer, unitConfig},
+			{GridPosition{21, 21}, redPlayer, unitConfig},
+			{GridPosition{26, 21}, redPlayer, unitConfig},
 		}
 	case leftVsRightVerticalOffset:
 		unitConfig := infantryConfig
 		nodeInfos = []nodeInfo{
-			{gridPosition{2, 2}, bluePlayer, unitConfig},
-			{gridPosition{6, 1}, bluePlayer, unitConfig},
-			{gridPosition{11, 2}, neutralPlayer, unitConfig},
-			{gridPosition{16, 4}, neutralPlayer, unitConfig},
-			{gridPosition{21, 3}, redPlayer, unitConfig},
-			{gridPosition{26, 3}, redPlayer, unitConfig},
+			{GridPosition{2, 2}, bluePlayer, unitConfig},
+			{GridPosition{6, 1}, bluePlayer, unitConfig},
+			{GridPosition{11, 2}, neutralPlayer, unitConfig},
+			{GridPosition{16, 4}, neutralPlayer, unitConfig},
+			{GridPosition{21, 3}, redPlayer, unitConfig},
+			{GridPosition{26, 3}, redPlayer, unitConfig},
 
-			{gridPosition{1, 6}, bluePlayer, unitConfig},
-			{gridPosition{6, 6}, bluePlayer, unitConfig},
-			{gridPosition{11, 7}, neutralPlayer, unitConfig},
-			{gridPosition{16, 9}, neutralPlayer, unitConfig},
-			{gridPosition{21, 8}, redPlayer, unitConfig},
-			{gridPosition{26, 8}, redPlayer, unitConfig},
+			{GridPosition{1, 6}, bluePlayer, unitConfig},
+			{GridPosition{6, 6}, bluePlayer, unitConfig},
+			{GridPosition{11, 7}, neutralPlayer, unitConfig},
+			{GridPosition{16, 9}, neutralPlayer, unitConfig},
+			{GridPosition{21, 8}, redPlayer, unitConfig},
+			{GridPosition{26, 8}, redPlayer, unitConfig},
 
-			{gridPosition{1, 11}, bluePlayer, unitConfig},
-			{gridPosition{6, 11}, bluePlayer, unitConfig},
-			{gridPosition{11, 12}, neutralPlayer, unitConfig},
-			{gridPosition{16, 14}, neutralPlayer, unitConfig},
-			{gridPosition{21, 13}, redPlayer, unitConfig},
-			{gridPosition{26, 13}, redPlayer, unitConfig},
+			{GridPosition{1, 11}, bluePlayer, unitConfig},
+			{GridPosition{6, 11}, bluePlayer, unitConfig},
+			{GridPosition{11, 12}, neutralPlayer, unitConfig},
+			{GridPosition{16, 14}, neutralPlayer, unitConfig},
+			{GridPosition{21, 13}, redPlayer, unitConfig},
+			{GridPosition{26, 13}, redPlayer, unitConfig},
 
-			{gridPosition{1, 16}, bluePlayer, unitConfig},
-			{gridPosition{6, 16}, bluePlayer, unitConfig},
-			{gridPosition{11, 17}, neutralPlayer, unitConfig},
-			{gridPosition{16, 19}, neutralPlayer, unitConfig},
-			{gridPosition{21, 18}, redPlayer, unitConfig},
-			{gridPosition{26, 18}, redPlayer, unitConfig},
+			{GridPosition{1, 16}, bluePlayer, unitConfig},
+			{GridPosition{6, 16}, bluePlayer, unitConfig},
+			{GridPosition{11, 17}, neutralPlayer, unitConfig},
+			{GridPosition{16, 19}, neutralPlayer, unitConfig},
+			{GridPosition{21, 18}, redPlayer, unitConfig},
+			{GridPosition{26, 18}, redPlayer, unitConfig},
 
-			{gridPosition{1, 21}, bluePlayer, unitConfig},
-			{gridPosition{6, 21}, bluePlayer, unitConfig},
-			{gridPosition{11, 22}, neutralPlayer, unitConfig},
-			{gridPosition{16, 22}, neutralPlayer, unitConfig},
-			{gridPosition{21, 23}, redPlayer, unitConfig},
-			{gridPosition{26, 23}, redPlayer, unitConfig},
+			{GridPosition{1, 21}, bluePlayer, unitConfig},
+			{GridPosition{6, 21}, bluePlayer, unitConfig},
+			{GridPosition{11, 22}, neutralPlayer, unitConfig},
+			{GridPosition{16, 22}, neutralPlayer, unitConfig},
+			{GridPosition{21, 23}, redPlayer, unitConfig},
+			{GridPosition{26, 23}, redPlayer, unitConfig},
 		}
 	case topVsBottom:
 		unitConfig := infantryConfig
 		nodeInfos = []nodeInfo{
-			{gridPosition{2, 2}, bluePlayer, unitConfig},
-			{gridPosition{6, 1}, bluePlayer, unitConfig},
-			{gridPosition{11, 1}, bluePlayer, unitConfig},
-			{gridPosition{16, 1}, bluePlayer, unitConfig},
-			{gridPosition{21, 1}, bluePlayer, unitConfig},
-			{gridPosition{26, 1}, bluePlayer, unitConfig},
+			{GridPosition{2, 2}, bluePlayer, unitConfig},
+			{GridPosition{6, 1}, bluePlayer, unitConfig},
+			{GridPosition{11, 1}, bluePlayer, unitConfig},
+			{GridPosition{16, 1}, bluePlayer, unitConfig},
+			{GridPosition{21, 1}, bluePlayer, unitConfig},
+			{GridPosition{26, 1}, bluePlayer, unitConfig},
 
-			{gridPosition{1, 5}, bluePlayer, unitConfig},
-			{gridPosition{6, 5}, bluePlayer, unitConfig},
-			{gridPosition{11, 5}, bluePlayer, unitConfig},
-			{gridPosition{16, 5}, bluePlayer, unitConfig},
-			{gridPosition{21, 5}, bluePlayer, unitConfig},
-			{gridPosition{26, 5}, bluePlayer, unitConfig},
+			{GridPosition{1, 5}, bluePlayer, unitConfig},
+			{GridPosition{6, 5}, bluePlayer, unitConfig},
+			{GridPosition{11, 5}, bluePlayer, unitConfig},
+			{GridPosition{16, 5}, bluePlayer, unitConfig},
+			{GridPosition{21, 5}, bluePlayer, unitConfig},
+			{GridPosition{26, 5}, bluePlayer, unitConfig},
 
-			{gridPosition{1, 9}, neutralPlayer, unitConfig},
-			{gridPosition{6, 9}, neutralPlayer, unitConfig},
-			{gridPosition{11, 9}, neutralPlayer, unitConfig},
-			{gridPosition{16, 9}, neutralPlayer, unitConfig},
-			{gridPosition{21, 9}, neutralPlayer, unitConfig},
-			{gridPosition{26, 9}, neutralPlayer, unitConfig},
+			{GridPosition{1, 9}, neutralPlayer, unitConfig},
+			{GridPosition{6, 9}, neutralPlayer, unitConfig},
+			{GridPosition{11, 9}, neutralPlayer, unitConfig},
+			{GridPosition{16, 9}, neutralPlayer, unitConfig},
+			{GridPosition{21, 9}, neutralPlayer, unitConfig},
+			{GridPosition{26, 9}, neutralPlayer, unitConfig},
 
-			{gridPosition{1, 13}, neutralPlayer, unitConfig},
-			{gridPosition{6, 13}, neutralPlayer, unitConfig},
-			{gridPosition{11, 13}, neutralPlayer, unitConfig},
-			{gridPosition{16, 13}, neutralPlayer, unitConfig},
-			{gridPosition{21, 13}, neutralPlayer, unitConfig},
-			{gridPosition{26, 13}, neutralPlayer, unitConfig},
+			{GridPosition{1, 13}, neutralPlayer, unitConfig},
+			{GridPosition{6, 13}, neutralPlayer, unitConfig},
+			{GridPosition{11, 13}, neutralPlayer, unitConfig},
+			{GridPosition{16, 13}, neutralPlayer, unitConfig},
+			{GridPosition{21, 13}, neutralPlayer, unitConfig},
+			{GridPosition{26, 13}, neutralPlayer, unitConfig},
 
-			{gridPosition{1, 17}, redPlayer, unitConfig},
-			{gridPosition{6, 17}, redPlayer, unitConfig},
-			{gridPosition{11, 17}, redPlayer, unitConfig},
-			{gridPosition{16, 17}, redPlayer, unitConfig},
-			{gridPosition{21, 17}, redPlayer, unitConfig},
-			{gridPosition{26, 17}, redPlayer, unitConfig},
+			{GridPosition{1, 17}, redPlayer, unitConfig},
+			{GridPosition{6, 17}, redPlayer, unitConfig},
+			{GridPosition{11, 17}, redPlayer, unitConfig},
+			{GridPosition{16, 17}, redPlayer, unitConfig},
+			{GridPosition{21, 17}, redPlayer, unitConfig},
+			{GridPosition{26, 17}, redPlayer, unitConfig},
 
-			{gridPosition{1, 21}, redPlayer, unitConfig},
-			{gridPosition{6, 21}, redPlayer, unitConfig},
-			{gridPosition{11, 21}, redPlayer, unitConfig},
-			{gridPosition{16, 21}, redPlayer, unitConfig},
-			{gridPosition{21, 21}, redPlayer, unitConfig},
-			{gridPosition{26, 21}, redPlayer, unitConfig},
+			{GridPosition{1, 21}, redPlayer, unitConfig},
+			{GridPosition{6, 21}, redPlayer, unitConfig},
+			{GridPosition{11, 21}, redPlayer, unitConfig},
+			{GridPosition{16, 21}, redPlayer, unitConfig},
+			{GridPosition{21, 21}, redPlayer, unitConfig},
+			{GridPosition{26, 21}, redPlayer, unitConfig},
 		}
 	case topVsBottomHorizontalOffset:
 		unitConfig := infantryConfig
 		nodeInfos = []nodeInfo{
-			{gridPosition{2, 2}, bluePlayer, unitConfig},
-			{gridPosition{6, 1}, bluePlayer, unitConfig},
-			{gridPosition{11, 1}, bluePlayer, unitConfig},
-			{gridPosition{16, 1}, bluePlayer, unitConfig},
-			{gridPosition{21, 1}, bluePlayer, unitConfig},
-			{gridPosition{26, 1}, bluePlayer, unitConfig},
+			{GridPosition{2, 2}, bluePlayer, unitConfig},
+			{GridPosition{6, 1}, bluePlayer, unitConfig},
+			{GridPosition{11, 1}, bluePlayer, unitConfig},
+			{GridPosition{16, 1}, bluePlayer, unitConfig},
+			{GridPosition{21, 1}, bluePlayer, unitConfig},
+			{GridPosition{26, 1}, bluePlayer, unitConfig},
 
-			{gridPosition{1, 6}, bluePlayer, unitConfig},
-			{gridPosition{6, 6}, bluePlayer, unitConfig},
-			{gridPosition{11, 6}, bluePlayer, unitConfig},
-			{gridPosition{16, 6}, bluePlayer, unitConfig},
-			{gridPosition{21, 6}, bluePlayer, unitConfig},
-			{gridPosition{26, 6}, bluePlayer, unitConfig},
+			{GridPosition{1, 6}, bluePlayer, unitConfig},
+			{GridPosition{6, 6}, bluePlayer, unitConfig},
+			{GridPosition{11, 6}, bluePlayer, unitConfig},
+			{GridPosition{16, 6}, bluePlayer, unitConfig},
+			{GridPosition{21, 6}, bluePlayer, unitConfig},
+			{GridPosition{26, 6}, bluePlayer, unitConfig},
 
-			{gridPosition{1, 11}, neutralPlayer, unitConfig},
-			{gridPosition{6, 11}, neutralPlayer, unitConfig},
-			{gridPosition{11, 11}, neutralPlayer, unitConfig},
-			{gridPosition{16, 11}, neutralPlayer, unitConfig},
-			{gridPosition{21, 11}, neutralPlayer, unitConfig},
-			{gridPosition{26, 9}, neutralPlayer, unitConfig},
+			{GridPosition{1, 11}, neutralPlayer, unitConfig},
+			{GridPosition{6, 11}, neutralPlayer, unitConfig},
+			{GridPosition{11, 11}, neutralPlayer, unitConfig},
+			{GridPosition{16, 11}, neutralPlayer, unitConfig},
+			{GridPosition{21, 11}, neutralPlayer, unitConfig},
+			{GridPosition{26, 9}, neutralPlayer, unitConfig},
 
-			{gridPosition{1, 16}, redPlayer, unitConfig},
-			{gridPosition{6, 16}, redPlayer, unitConfig},
-			{gridPosition{11, 16}, redPlayer, unitConfig},
-			{gridPosition{16, 16}, redPlayer, unitConfig},
-			{gridPosition{21, 16}, redPlayer, unitConfig},
-			{gridPosition{26, 16}, redPlayer, unitConfig},
+			{GridPosition{1, 16}, redPlayer, unitConfig},
+			{GridPosition{6, 16}, redPlayer, unitConfig},
+			{GridPosition{11, 16}, redPlayer, unitConfig},
+			{GridPosition{16, 16}, redPlayer, unitConfig},
+			{GridPosition{21, 16}, redPlayer, unitConfig},
+			{GridPosition{26, 16}, redPlayer, unitConfig},
 
-			{gridPosition{1, 21}, redPlayer, unitConfig},
-			{gridPosition{6, 21}, redPlayer, unitConfig},
-			{gridPosition{11, 21}, redPlayer, unitConfig},
-			{gridPosition{16, 21}, redPlayer, unitConfig},
-			{gridPosition{21, 21}, redPlayer, unitConfig},
-			{gridPosition{26, 21}, redPlayer, unitConfig},
+			{GridPosition{1, 21}, redPlayer, unitConfig},
+			{GridPosition{6, 21}, redPlayer, unitConfig},
+			{GridPosition{11, 21}, redPlayer, unitConfig},
+			{GridPosition{16, 21}, redPlayer, unitConfig},
+			{GridPosition{21, 21}, redPlayer, unitConfig},
+			{GridPosition{26, 21}, redPlayer, unitConfig},
 		}
 	case zoomHorizontal:
 		nodeInfos = []nodeInfo{
-			{gridPosition{2, 2}, bluePlayer, infantryConfig},
-			{gridPosition{6, 2}, redPlayer, infantryConfig},
+			{GridPosition{2, 2}, bluePlayer, infantryConfig},
+			{GridPosition{6, 2}, redPlayer, infantryConfig},
 		}
 	default:
 		panic("node setup does not exist")

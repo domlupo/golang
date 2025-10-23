@@ -197,7 +197,7 @@ func (g *Game) Update() error {
 	}
 	if g.developerMode && g.middleMouseScrollClicked {
 		if gridPos, ok := pixelPos.getGridPos(&g.hexConfig); ok {
-			logger.log(infoLevel, devTool, "gridPos", slog.Int("x", gridPos.x), slog.Int("y", gridPos.y))
+			logger.log(infoLevel, devTool, "gridPos", gridPos.log()...)
 		}
 		g.gameState.createUnitPathfindHeatmap()
 	}

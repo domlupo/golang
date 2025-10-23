@@ -12,14 +12,14 @@ import (
 )
 
 // All obstacles on map
-type obstacles map[gridPosition]*obstacle
+type obstacles map[GridPosition]*obstacle
 
 // All points on map from every obstacle visibility grid
 type obstaclePoints map[PixelPosition]*obstaclePoint
 
 // A grid level component which blocks unit movement
 type obstacle struct {
-	gridPos        gridPosition
+	gridPos        GridPosition
 	kind           obstacleKind
 	visibilityGrid *[]obstaclePoint
 }
@@ -27,7 +27,7 @@ type obstacle struct {
 // A point on an obstacle visibility grid
 type obstaclePoint struct {
 	PixelPosition
-	source           gridPosition
+	source           GridPosition
 	visibilityGridId uuid.UUID
 	cw               *obstaclePoint
 	cwDistance       int
@@ -57,10 +57,10 @@ func (op obstaclePoint) isZero() bool {
 	return op.PixelPosition.equals(PixelPosition{0, 0})
 }
 
-func (os obstacles) insert(k gridPosition, v *obstacle) {
+func (os obstacles) insert(k GridPosition, v *obstacle) {
 	_, ok := os[k]
 	if ok {
-		panic(fmt.Sprintf("grid position {%d, %d} already contains obstacle: ", k.x, k.y))
+		panic(fmt.Sprintf("grid position {%d, %d} already contains obstacle: ", k.X, k.Y))
 	}
 	os[k] = v
 }
@@ -186,7 +186,7 @@ func (os obstacles) setupPixelPath(hc *hexConfig) pixelPath {
 }
 
 func (os obstacles) getGroups(hc *hexConfig) []obstacles {
-	needsGrouped := make(map[gridPosition]bool)
+	needsGrouped := make(map[GridPosition]bool)
 	for k := range os {
 		needsGrouped[k] = true
 	}
@@ -199,7 +199,7 @@ func (os obstacles) getGroups(hc *hexConfig) []obstacles {
 		}
 
 		group := make(obstacles)
-		q := []gridPosition{k}
+		q := []GridPosition{k}
 		for len(q) != 0 {
 			current := q[0]
 			q = q[1:]

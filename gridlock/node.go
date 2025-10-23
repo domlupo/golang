@@ -9,12 +9,12 @@ import (
 )
 
 // All nodes on map
-type nodes map[gridPosition]*node
+type nodes map[GridPosition]*node
 
 // Game component which spawns units and is captured by opposing units
 type node struct {
 	player        player
-	gridPos       gridPosition
+	gridPos       GridPosition
 	control       []*hexagon
 	radius        int
 	singleSelect  bool
@@ -26,7 +26,7 @@ type node struct {
 	unitConfig    unitConfig
 }
 
-func newNode(p player, gridPos gridPosition, initialNodeHealth int, hexConfig *hexConfig, uc unitConfig) node {
+func newNode(p player, gridPos GridPosition, initialNodeHealth int, hexConfig *hexConfig, uc unitConfig) node {
 	n := node{
 		player:  p,
 		gridPos: gridPos,
@@ -44,7 +44,7 @@ func newNode(p player, gridPos gridPosition, initialNodeHealth int, hexConfig *h
 
 func (n node) isZero() bool {
 	// TODO: fix implementation
-	return n.player == noPlayer && n.gridPos.x == 0 && n.gridPos.y == 0 && n.target.layer == noLayer
+	return n.player == noPlayer && n.gridPos.X == 0 && n.gridPos.Y == 0 && n.target.layer == noLayer
 }
 
 func (n node) selected() bool {
@@ -54,8 +54,8 @@ func (n node) selected() bool {
 func (nodes nodes) setupControl(hc *hexConfig, hexagons hexagons, obstacles obstacles) {
 
 	for _, h := range hexagons {
-		q := []gridPosition{h.gridPos}
-		visited := make(map[gridPosition]struct{})
+		q := []GridPosition{h.gridPos}
+		visited := make(map[GridPosition]struct{})
 
 		for len(q) > 0 {
 			current := q[0]
@@ -100,7 +100,7 @@ func (nodes nodes) setupControl(hc *hexConfig, hexagons hexagons, obstacles obst
 				n.control = append(n.control, h)
 				// TODO: Need to determine behavior for same depth conflicts.
 				// Currently, code selects first enountered node which is not correct.
-				q = []gridPosition{}
+				q = []GridPosition{}
 			case noPlayer:
 				continue
 			default:

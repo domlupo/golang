@@ -121,7 +121,7 @@ func (u *unit) prioritizeTargets() {
 	}
 }
 
-func (u *unit) reachesNodes(nodes map[gridPosition]*node, hc *hexConfig) {
+func (u *unit) reachesNodes(nodes map[GridPosition]*node, hc *hexConfig) {
 	u.canReachNode = node{}
 
 	if u.layer == lowAltitude || u.layer == highAltitude {

@@ -203,7 +203,7 @@ func drawHexDebugGrid(dc drawConfig, draw bool) {
 			}
 
 			lineWidth := float32(dc.debugGridWidth) * dc.windowMultiplier
-			pos := gridPosition{i, j}
+			pos := GridPosition{i, j}
 
 			n := pos.getPixelPosOutbounds(northPoint, &dc.hexConfig)
 			nX := float32(n.X) * dc.windowMultiplier
@@ -274,7 +274,7 @@ type drawTriangleColor struct {
 	alpha float32
 }
 
-func drawHex(dc drawConfig, gridPos gridPosition, color drawTriangleColor, selected bool) {
+func drawHex(dc drawConfig, gridPos GridPosition, color drawTriangleColor, selected bool) {
 	center := gridPos.getPixelPosOutbounds(center, &dc.hexConfig)
 	north := gridPos.getPixelPosOutbounds(northPoint, &dc.hexConfig)
 	northeast := gridPos.getPixelPosOutbounds(northeastPoint, &dc.hexConfig)

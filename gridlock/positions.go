@@ -8,9 +8,9 @@ import (
 )
 
 // low resolution position used for grid items such as nodes, obstacles, hexagons, etc
-type gridPosition struct {
-	x int
-	y int
+type GridPosition struct {
+	X int
+	Y int
 }
 
 // high resolution position.
@@ -126,6 +126,13 @@ func (pixelPos PixelPosition) log() []slog.Attr {
 	return a
 }
 
+func (gridPos GridPosition) log() []slog.Attr {
+	var a = []slog.Attr{}
+	a = append(a, slog.Int("x", gridPos.X))
+	a = append(a, slog.Int("y", gridPos.Y))
+	return a
+}
+
 func (pos PixelPosition) chebyshevDistance(otherPos PixelPosition) int {
 	xDelta := pos.X - otherPos.X
 	if xDelta < 0 {
@@ -138,8 +145,8 @@ func (pos PixelPosition) chebyshevDistance(otherPos PixelPosition) int {
 	return max(xDelta, yDelta)
 }
 
-func (gridPos gridPosition) equals(other gridPosition) bool {
-	return gridPos.x == other.x && gridPos.y == other.y
+func (gridPos GridPosition) equals(other GridPosition) bool {
+	return gridPos.X == other.X && gridPos.Y == other.Y
 }
 
 func (pixelPos PixelPosition) equals(other PixelPosition) bool {
@@ -193,34 +200,34 @@ func (pixelPos PixelPosition) allAdjacent(hc *hexConfig) []PixelPosition {
 	return a
 }
 
-func (gridPos gridPosition) adjacent(side hexSide, hc *hexConfig) (gridPosition, bool) {
-	x := gridPos.x
-	y := gridPos.y
+func (gridPos GridPosition) adjacent(side hexSide, hc *hexConfig) (GridPosition, bool) {
+	x := gridPos.X
+	y := gridPos.Y
 	switch side {
 	case noSide:
 		panic("need a direction to find adjacent grid position")
 	case northeastSide:
 		y--
-		if gridPos.y%2 == 0 {
+		if gridPos.Y%2 == 0 {
 			x++
 		}
 	case eastSide:
 		x++
 	case southeastSide:
 		y++
-		if gridPos.y%2 == 0 {
+		if gridPos.Y%2 == 0 {
 			x++
 		}
 	case westSide:
 		x--
 	case southwestSide:
 		y++
-		if gridPos.y%2 == 1 {
+		if gridPos.Y%2 == 1 {
 			x--
 		}
 	case northwestSide:
 		y--
-		if gridPos.y%2 == 1 {
+		if gridPos.Y%2 == 1 {
 			x--
 		}
 	default:
@@ -228,13 +235,13 @@ func (gridPos gridPosition) adjacent(side hexSide, hc *hexConfig) (gridPosition,
 	}
 
 	if x < 0 || y < 0 || y >= hc.yIndexMax || (y%2 == 0 && x >= hc.xIndexMax-1) || (y%2 == 1 && x >= hc.xIndexMax) {
-		return gridPosition{}, false
+		return GridPosition{}, false
 	} else {
-		return gridPosition{x, y}, true
+		return GridPosition{x, y}, true
 	}
 }
 
-func (gridPos gridPosition) isAdjacent(other gridPosition, hc *hexConfig) bool {
+func (gridPos GridPosition) isAdjacent(other GridPosition, hc *hexConfig) bool {
 	ne, neOk := gridPos.adjacent(northeastSide, hc)
 	e, eOk := gridPos.adjacent(eastSide, hc)
 	se, seOk := gridPos.adjacent(southeastSide, hc)
@@ -279,7 +286,7 @@ func (pos PixelPosition) add(other PixelPosition, hc *hexConfig) (PixelPosition,
 	}
 }
 
-func (gridPos gridPosition) getPixelPos(hexPoint hexPoint, hc *hexConfig) (PixelPosition, bool) {
+func (gridPos GridPosition) getPixelPos(hexPoint hexPoint, hc *hexConfig) (PixelPosition, bool) {
 	pixelPos := gridPos.getPixelPosOutbounds(hexPoint, hc)
 	x, y := pixelPos.X, pixelPos.Y
 
@@ -290,10 +297,10 @@ func (gridPos gridPosition) getPixelPos(hexPoint hexPoint, hc *hexConfig) (Pixel
 	}
 }
 
-func (gridPos gridPosition) getPixelPosOutbounds(hexPoint hexPoint, hc *hexConfig) PixelPosition {
-	x := gridPos.x * hc.hexWidth
-	y := gridPos.y * (hc.hexHeight / 4 * 3)
-	if gridPos.y%2 == 1 {
+func (gridPos GridPosition) getPixelPosOutbounds(hexPoint hexPoint, hc *hexConfig) PixelPosition {
+	x := gridPos.X * hc.hexWidth
+	y := gridPos.Y * (hc.hexHeight / 4 * 3)
+	if gridPos.Y%2 == 1 {
 		x -= (hc.hexWidth) / 2
 	}
 
@@ -325,14 +332,14 @@ func (gridPos gridPosition) getPixelPosOutbounds(hexPoint hexPoint, hc *hexConfi
 	return PixelPosition{x + hc.xOffset, y + hc.yOffset}
 }
 
-func (pixelPos PixelPosition) getGridPos(hc *hexConfig) (gridPosition, bool) {
+func (pixelPos PixelPosition) getGridPos(hc *hexConfig) (GridPosition, bool) {
 	if pixelPos.X < 0 || pixelPos.X > hc.windowWidth-1 || pixelPos.Y < 0 || pixelPos.Y > hc.windowHeight-1 {
-		return gridPosition{}, false
+		return GridPosition{}, false
 	}
 	return pixelPos.getGridPosOutbounds(hc)
 }
 
-func (pixelPos PixelPosition) getGridPosOutbounds(hc *hexConfig) (gridPosition, bool) {
+func (pixelPos PixelPosition) getGridPosOutbounds(hc *hexConfig) (GridPosition, bool) {
 	xIndex := (pixelPos.X+hc.hexWidth-hc.xOffset)/hc.hexWidth - 1
 	yIndex := (pixelPos.Y+(hc.hexHeight/4*3)-hc.yOffset)/(hc.hexHeight/4*3) - 2
 	innerX := (pixelPos.X + hc.hexWidth - hc.xOffset) % hc.hexWidth
@@ -398,7 +405,7 @@ func (pixelPos PixelPosition) getGridPosOutbounds(hc *hexConfig) (gridPosition, 
 		panic(fmt.Sprintf("getHexGridPostion could not find a y section for the inner y: %d for pixel position %s", innerY, pixelPos.log()))
 	}
 
-	return gridPosition{xIndex + xIndexOffset, yIndex + yIndexOffset}, true
+	return GridPosition{xIndex + xIndexOffset, yIndex + yIndexOffset}, true
 }
 
 // The point directions are p -> q -> r.
