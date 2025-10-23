@@ -53,6 +53,14 @@ const (
 	highMountain
 )
 
+func (p Path) log() []slog.Attr {
+	var a = []slog.Attr{}
+	a = append(a, slog.Bool("Walkable", p.Walkable))
+	a = append(a, slog.Int("UnwalkableChebyshevDistance", p.UnwalkableChebyshevDistance))
+	a = append(a, slog.Int("UnwalkableSmoothSum", p.UnwalkableSmoothSum))
+	return a
+}
+
 func (op obstaclePoint) isZero() bool {
 	return op.PixelPosition.equals(PixelPosition{0, 0})
 }

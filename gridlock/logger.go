@@ -166,3 +166,11 @@ func (logger l) log(level level, logType logType, msg string, attrs ...slog.Attr
 		logger.LogAttrs(context.Background(), slog.LevelError, msg, attrs...)
 	}
 }
+
+func nest(key string, attrs []slog.Attr) slog.Attr {
+	interfaceSlice := make([]any, len(attrs))
+	for k, v := range attrs {
+		interfaceSlice[k] = v
+	}
+	return slog.Group(key, interfaceSlice...)
+}

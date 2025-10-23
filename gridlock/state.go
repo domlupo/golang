@@ -3,13 +3,8 @@
 package main
 
 import (
-	"context"
 	"log/slog"
 	"math"
-	"os"
-	"os/signal"
-
-	"github.com/gofrs/uuid/v5"
 )
 
 // not enforced but must be a singleton
@@ -17,16 +12,14 @@ type state struct {
 	*hexConfig
 	// TODO: The next largest optimization might be to split hexagon linked list
 	// into respective layers.
-	pixelPath                   pixelPath
-	hexagons                    hexagons
-	obstacles                   obstacles
-	nodes                       nodes
-	units                       units
-	developerMode               bool
-	unitsProducedTotal          int
-	unitsDeletedTotal           int
-	unitPathfind                heatmap
-	unitPathfindHeatmapComplete bool
+	pixelPath          pixelPath
+	hexagons           hexagons
+	obstacles          obstacles
+	nodes              nodes
+	units              units
+	developerMode      bool
+	unitsProducedTotal int
+	unitsDeletedTotal  int
 }
 
 func newState(n nodes, o obstacles, h hexagons, pixelPath pixelPath, hexConfig *hexConfig, developerMode bool) *state {
@@ -38,7 +31,6 @@ func newState(n nodes, o obstacles, h hexagons, pixelPath pixelPath, hexConfig *
 		nodes:         n,
 		units:         make(units),
 		developerMode: developerMode,
-		unitPathfind:  make(heatmap),
 	}
 
 	return &s
@@ -816,86 +808,17 @@ func (s *state) produceUnits() {
 	}
 }
 
-func (s *state) createUnitPathfindHeatmap() {
-	logger.onlyEnable(devTool)
-
-	if len(s.unitPathfind) != 0 {
-		logger.log(infoLevel, devTool, "cannot create heatmap since it was already attempted")
-		return
-	}
-
-	logger.log(infoLevel, devTool, "start creating pathfinding heatmap")
-
-	var unit *unit
-	for _, u := range s.units {
-		if u.selected && unit != nil {
-			logger.log(infoLevel, devTool, "can only select one unit when creating heatmap")
-			return
-		} else if u.selected {
-			unit = u
-		}
-	}
-
-	if unit == nil {
-		logger.log(infoLevel, devTool, "must select one unit when creating heat map")
-		return
-	}
-
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
-
-	pixelCount := 0
-	for pixelPos, path := range s.pixelPath {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			pixelCount++
-			if pixelCount%(s.windowWidth*s.windowHeight/100) == 0 {
-				percentProgess := pixelCount / (s.windowWidth * s.windowHeight / 100)
-				logger.log(infoLevel, devTool, "pathfind heatmap", slog.Int("pixel positions percent progress", percentProgess))
-			}
-
-			if path.Walkable {
-				unit.updateTarget(globalTarget, position{layer: unit.layer, PixelPosition: pixelPos})
-				distance := unit.pathfindGlobalTarget(s.obstacles, s.pixelPath, s.hexConfig)
-				s.unitPathfind[pixelPos] = distance
-			}
-		}
-	}
-
-	s.unitPathfindHeatmapComplete = true
-	logger.log(infoLevel, devTool, "done creating pathfinding heatmap")
-}
-
-func (s *state) draw(
-	dc drawConfig,
-	drawBlueTargets bool,
-	drawRedTargets,
-	drawVisibilityGrids bool,
-	drawPixelPath bool) {
+func (s *state) draw(dc drawConfig) {
 
 	for _, n := range s.nodes {
 		n.drawNode(dc)
 	}
-	for _, n := range s.nodes {
-		n.drawTargets(dc, drawBlueTargets, drawRedTargets)
-	}
 
-	visited := make(map[uuid.UUID]struct{})
 	for _, o := range s.obstacles {
 		o.drawObstacle(dc)
-
-		if drawVisibilityGrids {
-			g := *o.visibilityGrid
-			op := g[0]
-			if _, ok := visited[op.visibilityGridId]; ok {
-				continue
-			}
-			visited[op.visibilityGridId] = struct{}{}
-			o.drawVisibilityGrid(dc)
-		}
 	}
+
+	// TODO: Store units by layer for better performance
 	for _, u := range s.units {
 		if u.layer == highAltitude {
 			u.draw(dc, u.selected)
@@ -910,13 +833,5 @@ func (s *state) draw(
 		if u.layer == ground {
 			u.draw(dc, u.selected)
 		}
-	}
-
-	if drawPixelPath {
-		s.pixelPath.draw(dc)
-	}
-
-	if s.unitPathfindHeatmapComplete {
-		s.unitPathfind.draw(dc)
 	}
 }

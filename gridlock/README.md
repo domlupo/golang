@@ -120,6 +120,13 @@ Is there a mobile equivalent for war/4x games?
 
 ### Future Checkpoints
 
+- Add paused unit debugging 
+  - This is easy to add now that debugger.go exists and it is unaffected by pause
+  - Clean up prior nested unit + unitConfig logging which is probably broke.
+
+- Refactor debugger draw flags into its own struct
+  - Determine if toggles should be refactored in anyway 
+
 - save file: 
   - Will expose constraints
   - Will expose platform concerns
@@ -261,7 +268,6 @@ Is there a mobile equivalent for war/4x games?
 
 - Polish logger
   - Add runtime dynamic log sampling rates. Is this even possible? Are the benefits worth it?
-  - Paused debugging? e.g. Updating unit during state.go execution can log state at game level.
 
 - Controls interface which work on computer, steam deck, phone, etc: 
   - multiple platform means more sales

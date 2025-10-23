@@ -57,6 +57,7 @@ type Game struct {
 	compOne                  computer
 	compTwo                  computer
 	gameState                *state
+	debugger                 debugger
 	developerMode            bool
 	developerToggles         map[string]*toggle
 	developerToggleCooldown  time.Duration
@@ -129,6 +130,7 @@ func (g *Game) restart() {
 	}
 
 	g.gameState = newState(nodes, obstacles, hexagons, pixelPath, &g.drawConfig.hexConfig, g.developerMode)
+	g.debugger = newDebugger(g.gameState)
 	g.updateComputerTargetNodes()
 }
 
@@ -196,10 +198,7 @@ func (g *Game) Update() error {
 		g.leftMouseHeld = true
 	}
 	if g.developerMode && g.middleMouseScrollClicked {
-		if gridPos, ok := pixelPos.getGridPos(&g.hexConfig); ok {
-			logger.log(infoLevel, devTool, "gridPos", gridPos.log()...)
-		}
-		g.gameState.createUnitPathfindHeatmap()
+		g.debugger.debug(pixelPos)
 	}
 	if g.rightMouseClicked {
 		// TODO: Determine behavior. Should player choose which layer they target or handle it via game logic?
@@ -287,8 +286,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	screen.Fill(g.drawConfig.backgroundColor)
-	drawHexDebugGrid(*g.drawConfig, g.drawHexDebugGrid)
-	g.gameState.draw(*g.drawConfig, g.drawBlueTargets, g.drawRedTargets, g.drawVisibilityGrids, g.drawPixelPath)
+	g.gameState.draw(*g.drawConfig)
+	g.debugger.draw(*g.drawConfig, g.drawHexDebugGrid, g.drawPixelPath, g.drawVisibilityGrids, g.drawBlueTargets, g.drawRedTargets)
 
 	if g.leftMouseHeld {
 		drawUnfilledBoxFloat32(
