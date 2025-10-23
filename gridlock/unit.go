@@ -39,7 +39,7 @@ type unit struct {
 	position
 	unitConfig
 	id                  uuid.UUID
-	player              player
+	player              Player
 	activeTarget        position
 	steerTarget         position
 	enemyTarget         position
@@ -65,7 +65,7 @@ type unit struct {
 	debugFlag           bool
 }
 
-func newUnit(p player, globalTarget position, uc unitConfig, pos position, producedOrder int, selected bool) unit {
+func newUnit(p Player, globalTarget position, uc unitConfig, pos position, producedOrder int, selected bool) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
 		logger.log(errorLevel, selectedUnit, "newUnit", slog.String("failed to generate UUID", err.Error()))

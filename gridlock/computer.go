@@ -5,10 +5,10 @@ package main
 import "math"
 
 type computer struct {
-	player player
+	player Player
 }
 
-func newComputer(p player) *computer {
+func newComputer(p Player) *computer {
 	c := computer{
 		player: p,
 	}

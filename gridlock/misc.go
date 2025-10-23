@@ -2,10 +2,10 @@
 
 package main
 
-type player int
+type Player int
 
 const (
-	noPlayer player = iota
+	noPlayer Player = iota
 	bluePlayer
 	redPlayer
 	neutralPlayer

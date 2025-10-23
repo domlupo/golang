@@ -388,7 +388,7 @@ const (
 
 type nodeInfo struct {
 	gridPos    GridPosition
-	player     player
+	player     Player
 	unitConfig unitConfig
 }
 

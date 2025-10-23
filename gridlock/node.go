@@ -13,7 +13,7 @@ type nodes map[GridPosition]*node
 
 // Game component which spawns units and is captured by opposing units
 type node struct {
-	player        player
+	player        Player
 	gridPos       GridPosition
 	control       []*hexagon
 	radius        int
@@ -21,12 +21,12 @@ type node struct {
 	multiSelect   bool
 	maxHealth     int
 	currentHealth int
-	capturedBy    player
+	capturedBy    Player
 	target        position
 	unitConfig    unitConfig
 }
 
-func newNode(p player, gridPos GridPosition, initialNodeHealth int, hexConfig *hexConfig, uc unitConfig) node {
+func newNode(p Player, gridPos GridPosition, initialNodeHealth int, hexConfig *hexConfig, uc unitConfig) node {
 	n := node{
 		player:  p,
 		gridPos: gridPos,
