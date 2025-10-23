@@ -138,7 +138,7 @@ func (os obstacles) setupPixelPath(hc *hexConfig) pixelPath {
 					continue
 				}
 
-				adjacent := p.allAdjacent()
+				adjacent := p.allAdjacent(hc)
 
 				for _, a := range adjacent {
 					path := pixelPath[a]
@@ -164,13 +164,13 @@ func (os obstacles) setupPixelPath(hc *hexConfig) pixelPath {
 	for x := range hc.windowWidth {
 		for y := range hc.windowHeight {
 			p := PixelPosition{X: x, Y: y}
-			adjacent := p.allAdjacent()
+			adjacent := p.allAdjacent(hc)
 
 			sum := pixelPath[p].UnwalkableChebyshevDistance
 			for _, a := range adjacent {
 				sum += pixelPath[a].UnwalkableChebyshevDistance
 
-				otherAdjacent := a.allAdjacent()
+				otherAdjacent := a.allAdjacent(hc)
 				for _, oa := range otherAdjacent {
 					sum += pixelPath[oa].UnwalkableChebyshevDistance
 				}

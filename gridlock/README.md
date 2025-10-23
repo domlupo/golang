@@ -19,8 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Debug why pixel path entries count is larger than needed. It is a bug in obstacles.go not file handler
-
 - Determine if I need to add Ctrl+C handling for new file saves. This could lead to hard to debug issues.
 
 - Invest in look up tables 

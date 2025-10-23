@@ -45,8 +45,6 @@ func (f fileHandler) read(obstacles obstacles, hc *hexConfig) pixelPath {
 		return f.write(obstacles, hc)
 	}
 
-	logger.log(infoLevel, setupLogic, "loaded pixel path file, skipped creating it.")
-
 	entries := make([]pixelPathEntry, hc.windowWidth*hc.windowHeight)
 	json.Unmarshal(bytes, &entries)
 
@@ -54,6 +52,13 @@ func (f fileHandler) read(obstacles obstacles, hc *hexConfig) pixelPath {
 	for _, e := range entries {
 		pixelPath[e.Key] = e.Value
 	}
+
+	if len(pixelPath) != hc.windowWidth*hc.windowHeight {
+		logger.log(errorLevel, setupLogic, "create pixel path since loaded pixel path was invalid size")
+		return f.write(obstacles, hc)
+	}
+
+	logger.log(infoLevel, setupLogic, "loaded pixel path, skipped creating it.")
 
 	return pixelPath
 }

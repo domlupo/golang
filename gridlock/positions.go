@@ -86,6 +86,35 @@ const (
 	collinear
 )
 
+func directions() []direction {
+	return []direction{north, northeast, east, southeast, south, southwest, west, northwest}
+}
+
+func (d direction) String() string {
+	switch d {
+	case noDirecton:
+		return "noDirection"
+	case north:
+		return "north"
+	case northeast:
+		return "northeast"
+	case east:
+		return "east"
+	case southeast:
+		return "southeast"
+	case south:
+		return "south"
+	case southwest:
+		return "southwest"
+	case west:
+		return "west"
+	case northwest:
+		return "northwest"
+	default:
+		panic(fmt.Sprintf("Cannot convert direction to string: %d", d))
+	}
+}
+
 func (pos position) isZero() bool {
 	return pos.layer == noLayer
 }
@@ -117,7 +146,7 @@ func (pixelPos PixelPosition) equals(other PixelPosition) bool {
 	return pixelPos.X == other.X && pixelPos.Y == other.Y
 }
 
-func (pixelPos PixelPosition) adjacent(d direction) PixelPosition {
+func (pixelPos PixelPosition) adjacent(d direction, hc *hexConfig) (PixelPosition, bool) {
 	var x int
 	var y int
 
@@ -147,20 +176,21 @@ func (pixelPos PixelPosition) adjacent(d direction) PixelPosition {
 		panic("cannot get adjacent pixel position unknown direction")
 	}
 
-	return PixelPosition{X: pixelPos.X + x, Y: pixelPos.Y + y}
+	p := PixelPosition{X: pixelPos.X + x, Y: pixelPos.Y + y}
+	if p.X < 0 || p.X > hc.windowWidth-1 || p.Y < 0 || p.Y >= hc.windowHeight-1 {
+		return PixelPosition{}, false
+	}
+	return p, true
 }
 
-func (p PixelPosition) allAdjacent() []PixelPosition {
-	n := p.adjacent(north)
-	ne := p.adjacent(northeast)
-	e := p.adjacent(east)
-	se := p.adjacent(southeast)
-	s := p.adjacent(south)
-	sw := p.adjacent(southwest)
-	w := p.adjacent(west)
-	nw := p.adjacent(northwest)
-
-	return []PixelPosition{n, ne, e, se, s, sw, w, nw}
+func (pixelPos PixelPosition) allAdjacent(hc *hexConfig) []PixelPosition {
+	a := []PixelPosition{}
+	for _, d := range directions() {
+		if p, ok := pixelPos.adjacent(d, hc); ok {
+			a = append(a, p)
+		}
+	}
+	return a
 }
 
 func (gridPos gridPosition) adjacent(side hexSide, hc *hexConfig) (gridPosition, bool) {
