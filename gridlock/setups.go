@@ -396,7 +396,9 @@ func setupNodes(s nodeSetup, hc *hexConfig, initialNodeHealth int, o obstacles, 
 	nodes := make(nodes)
 	nodes.setupPositions(s, hc, initialNodeHealth)
 	nodes.setupControl(hc, h, o)
-	return nodes, nodes.setupLookup(pixelPath, hc)
+	fileHandler := newFileHandler()
+	nodeLookup := fileHandler.readNodeLookup(nodes, pixelPath, hc)
+	return nodes, nodeLookup
 }
 
 func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth int) {

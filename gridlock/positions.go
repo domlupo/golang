@@ -9,8 +9,8 @@ import (
 
 // low resolution position used for grid items such as nodes, obstacles, hexagons, etc
 type GridPosition struct {
-	X int
-	Y int
+	X int `json:"x"`
+	Y int `json:"y"`
 }
 
 // high resolution position.

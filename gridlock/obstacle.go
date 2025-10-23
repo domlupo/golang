@@ -75,7 +75,7 @@ func (os obstacles) insert(k GridPosition, v *obstacle) {
 
 func (os obstacles) setup(hc *hexConfig, pixelPathDistanceMax int) pixelPath {
 	fileHandler := newFileHandler()
-	pixelPath := fileHandler.read(os, hc)
+	pixelPath := fileHandler.readPixelPath(os, hc)
 	groups := os.getGroups(hc)
 	for _, group := range groups {
 		group.setupVisibilityGrid(pixelPath, hc)
