@@ -120,8 +120,7 @@ func (g *Game) restart() {
 
 	hexagons := setupHexagons(&g.drawConfig.hexConfig)
 	obstacles, pixelPath := setupObstacles(multiObstacle, &g.drawConfig.hexConfig, g.pixelPathDistanceMax)
-	// TODO: Don't pass obstacles, this is not needed now that pixelPath is being passed
-	nodes, nodeLookup := setupNodes(leftVsRightVerticalOffset, &g.drawConfig.hexConfig, g.initialNodeHealth, obstacles, hexagons, pixelPath)
+	nodes, nodeLookup := setupNodes(leftVsRightVerticalOffset, &g.drawConfig.hexConfig, g.initialNodeHealth, hexagons, pixelPath)
 
 	for nPos := range nodes {
 		for oPos := range obstacles {

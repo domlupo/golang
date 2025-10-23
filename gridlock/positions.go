@@ -90,6 +90,10 @@ func directions() []direction {
 	return []direction{north, northeast, east, southeast, south, southwest, west, northwest}
 }
 
+func hexPoints() []hexPoint {
+	return []hexPoint{center, northPoint, northeastPoint, southeastPoint, southPoint, southwestPoint, northwestPoint}
+}
+
 func (d direction) String() string {
 	switch d {
 	case noDirecton:
@@ -295,6 +299,15 @@ func (gridPos GridPosition) getPixelPos(hexPoint hexPoint, hc *hexConfig) (Pixel
 	} else {
 		return PixelPosition{x, y}, true
 	}
+}
+
+func (gridPos GridPosition) getAnyPixelPos(hc *hexConfig) (PixelPosition, bool) {
+	for _, hp := range hexPoints() {
+		if p, ok := gridPos.getPixelPos(hp, hc); ok {
+			return p, true
+		}
+	}
+	return PixelPosition{}, false
 }
 
 func (gridPos GridPosition) getPixelPosOutbounds(hexPoint hexPoint, hc *hexConfig) PixelPosition {

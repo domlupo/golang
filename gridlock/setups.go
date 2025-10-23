@@ -392,10 +392,10 @@ type nodeInfo struct {
 	unitConfig unitConfig
 }
 
-func setupNodes(s nodeSetup, hc *hexConfig, initialNodeHealth int, o obstacles, h hexagons, pixelPath pixelPath) (nodes, nodeLookup) {
+func setupNodes(s nodeSetup, hc *hexConfig, initialNodeHealth int, h hexagons, pixelPath pixelPath) (nodes, nodeLookup) {
 	nodes := make(nodes)
 	nodes.setupPositions(s, hc, initialNodeHealth)
-	nodes.setupControl(hc, h, o)
+	nodes.setupControl(hc, h, pixelPath)
 	fileHandler := newFileHandler()
 	nodeLookup := fileHandler.readNodeLookup(nodes, pixelPath, hc)
 	return nodes, nodeLookup

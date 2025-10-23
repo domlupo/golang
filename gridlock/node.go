@@ -186,7 +186,7 @@ func (n node) selected() bool {
 	return n.singleSelect || n.multiSelect
 }
 
-func (nodes nodes) setupControl(hc *hexConfig, hexagons hexagons, obstacles obstacles) {
+func (nodes nodes) setupControl(hc *hexConfig, hexagons hexagons, pixelPath pixelPath) {
 
 	for _, h := range hexagons {
 		q := []GridPosition{h.gridPos}
@@ -202,7 +202,10 @@ func (nodes nodes) setupControl(hc *hexConfig, hexagons hexagons, obstacles obst
 
 			visited[current] = struct{}{}
 
-			if _, obstacle := obstacles[current]; obstacle {
+			p, ok := current.getAnyPixelPos(hc)
+			if !ok {
+				panic("setup control, could not find any pixel position")
+			} else if !pixelPath[p].Walkable {
 				continue
 			}
 
