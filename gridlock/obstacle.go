@@ -35,7 +35,7 @@ type obstaclePoint struct {
 	ccwDistance      int
 }
 
-// look up table for pixel path data
+// Lookup table for pixel path data
 type pixelPath map[PixelPosition]Path
 
 // path data
