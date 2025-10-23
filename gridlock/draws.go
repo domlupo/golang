@@ -183,13 +183,13 @@ type drawTriangleColor struct {
 }
 
 func drawHex(dc drawConfig, gridPos GridPosition, color drawTriangleColor, selected bool) {
-	center := gridPos.getPixelPosOutbounds(center, &dc.hexConfig)
-	north := gridPos.getPixelPosOutbounds(northPoint, &dc.hexConfig)
-	northeast := gridPos.getPixelPosOutbounds(northeastPoint, &dc.hexConfig)
-	southeast := gridPos.getPixelPosOutbounds(southeastPoint, &dc.hexConfig)
-	southwest := gridPos.getPixelPosOutbounds(southwestPoint, &dc.hexConfig)
-	south := gridPos.getPixelPosOutbounds(southPoint, &dc.hexConfig)
-	northwest := gridPos.getPixelPosOutbounds(northwestPoint, &dc.hexConfig)
+	center := gridPos.getPixelPosOutbounds(hpCenter, &dc.hexConfig)
+	north := gridPos.getPixelPosOutbounds(hpNorth, &dc.hexConfig)
+	northeast := gridPos.getPixelPosOutbounds(hpNortheast, &dc.hexConfig)
+	southeast := gridPos.getPixelPosOutbounds(hpSoutheast, &dc.hexConfig)
+	southwest := gridPos.getPixelPosOutbounds(hpSouthwest, &dc.hexConfig)
+	south := gridPos.getPixelPosOutbounds(hpSouth, &dc.hexConfig)
+	northwest := gridPos.getPixelPosOutbounds(hpNorthwest, &dc.hexConfig)
 
 	// The one pixel offsets for inclusive or exclusive hex points are handled at the game logic layer.
 	// The window multiplier offsets are handled here since window multiplier is a draw concept.
@@ -217,27 +217,27 @@ func drawHex(dc drawConfig, gridPos GridPosition, color drawTriangleColor, selec
 	if selected {
 		lineWidth := float32(dc.hexLineWidth) * dc.windowMultiplier
 
-		north := gridPos.getPixelPosOutbounds(northPoint, &dc.hexConfig)
+		north := gridPos.getPixelPosOutbounds(hpNorth, &dc.hexConfig)
 		nX := float32(north.X) * dc.windowMultiplier
 		nY := float32(north.Y) * dc.windowMultiplier
 
-		nw := gridPos.getPixelPosOutbounds(northwestPoint, &dc.hexConfig)
+		nw := gridPos.getPixelPosOutbounds(hpNorthwest, &dc.hexConfig)
 		nwX := float32(nw.X) * dc.windowMultiplier
 		nwY := float32(nw.Y) * dc.windowMultiplier
 
-		ne := gridPos.getPixelPosOutbounds(northeastPoint, &dc.hexConfig)
+		ne := gridPos.getPixelPosOutbounds(hpNortheast, &dc.hexConfig)
 		neX := float32(ne.X+1) * dc.windowMultiplier
 		neY := float32(ne.Y) * dc.windowMultiplier
 
-		sw := gridPos.getPixelPosOutbounds(southwestPoint, &dc.hexConfig)
+		sw := gridPos.getPixelPosOutbounds(hpSouthwest, &dc.hexConfig)
 		swX := float32(sw.X) * dc.windowMultiplier
 		swY := float32(sw.Y+1) * dc.windowMultiplier
 
-		se := gridPos.getPixelPosOutbounds(southeastPoint, &dc.hexConfig)
+		se := gridPos.getPixelPosOutbounds(hpSoutheast, &dc.hexConfig)
 		seX := float32(se.X+1) * dc.windowMultiplier
 		seY := float32(se.Y+1) * dc.windowMultiplier
 
-		s := gridPos.getPixelPosOutbounds(southPoint, &dc.hexConfig)
+		s := gridPos.getPixelPosOutbounds(hpSouth, &dc.hexConfig)
 		sX := float32(s.X) * dc.windowMultiplier
 		sY := float32(s.Y+1) * dc.windowMultiplier
 

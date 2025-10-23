@@ -165,19 +165,19 @@ func drawHexDebugGrid(dc drawConfig) {
 			lineWidth := float32(dc.debugGridWidth) * dc.windowMultiplier
 			pos := GridPosition{i, j}
 
-			n := pos.getPixelPosOutbounds(northPoint, &dc.hexConfig)
+			n := pos.getPixelPosOutbounds(hpNorth, &dc.hexConfig)
 			nX := float32(n.X) * dc.windowMultiplier
 			nY := float32(n.Y) * dc.windowMultiplier
 
-			nw := pos.getPixelPosOutbounds(northwestPoint, &dc.hexConfig)
+			nw := pos.getPixelPosOutbounds(hpNorthwest, &dc.hexConfig)
 			nwX := float32(nw.X) * dc.windowMultiplier
 			nwY := float32(nw.Y) * dc.windowMultiplier
 
-			ne := pos.getPixelPosOutbounds(northeastPoint, &dc.hexConfig)
+			ne := pos.getPixelPosOutbounds(hpNortheast, &dc.hexConfig)
 			neX := float32(ne.X+1) * dc.windowMultiplier
 			neY := float32(ne.Y) * dc.windowMultiplier
 
-			sw := pos.getPixelPosOutbounds(southwestPoint, &dc.hexConfig)
+			sw := pos.getPixelPosOutbounds(hpSouthwest, &dc.hexConfig)
 			swX := float32(sw.X) * dc.windowMultiplier
 			swY := float32(sw.Y+1) * dc.windowMultiplier
 

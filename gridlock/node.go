@@ -209,22 +209,22 @@ func (nodes nodes) setupControl(hc *hexConfig, hexagons hexagons, pixelPath pixe
 				continue
 			}
 
-			if ne, ok := current.adjacent(northeastSide, hc); ok {
+			if ne, ok := current.adjacent(hsNortheast, hc); ok {
 				q = append(q, ne)
 			}
-			if e, ok := current.adjacent(eastSide, hc); ok {
+			if e, ok := current.adjacent(hsEast, hc); ok {
 				q = append(q, e)
 			}
-			if se, ok := current.adjacent(southeastSide, hc); ok {
+			if se, ok := current.adjacent(hsSoutheast, hc); ok {
 				q = append(q, se)
 			}
-			if sw, ok := current.adjacent(southwestSide, hc); ok {
+			if sw, ok := current.adjacent(hsSouthwest, hc); ok {
 				q = append(q, sw)
 			}
-			if w, ok := current.adjacent(westSide, hc); ok {
+			if w, ok := current.adjacent(hsWest, hc); ok {
 				q = append(q, w)
 			}
-			if nw, ok := current.adjacent(northwestSide, hc); ok {
+			if nw, ok := current.adjacent(hsNorthwest, hc); ok {
 				q = append(q, nw)
 			}
 
@@ -283,7 +283,7 @@ func (n *node) drawNode(dc drawConfig) {
 
 	drawHex(dc, n.gridPos, drawTriangleColor{red: red, blue: blue, green: green, alpha: alpha}, n.multiSelect)
 
-	c := n.gridPos.getPixelPosOutbounds(center, &dc.hexConfig)
+	c := n.gridPos.getPixelPosOutbounds(hpCenter, &dc.hexConfig)
 
 	if n.currentHealth != n.maxHealth {
 		var healthLineLength = (float32(n.currentHealth) / float32(n.maxHealth)) * float32(n.radius*2)
@@ -322,7 +322,7 @@ func (n *node) drawTargets(dc drawConfig, drawBlueTargets bool, drawRedTargets b
 	}
 
 	if !n.target.isZero() && ((n.player == bluePlayer && drawBlueTargets) || (n.player == redPlayer && drawRedTargets)) {
-		var center, ok = n.gridPos.getPixelPos(center, &dc.hexConfig)
+		var center, ok = n.gridPos.getPixelPos(hpCenter, &dc.hexConfig)
 		if !ok {
 			panic("could not get pixel pos for node draw targets")
 		}

@@ -37,25 +37,25 @@ type position struct {
 type hexPoint int
 
 const (
-	center hexPoint = iota
-	northPoint
-	northeastPoint
-	southeastPoint
-	southPoint
-	southwestPoint
-	northwestPoint
+	hpCenter hexPoint = iota
+	hpNorth
+	hpNortheast
+	hpSoutheast
+	hpSouth
+	hpSouthwest
+	hpNorthwest
 )
 
 type hexSide int
 
 const (
-	noSide hexSide = iota
-	northeastSide
-	eastSide
-	southeastSide
-	southwestSide
-	westSide
-	northwestSide
+	hsNone hexSide = iota
+	hsNortheast
+	hsEast
+	hsSoutheast
+	hsSouthwest
+	hsWest
+	hsNorthwest
 )
 
 type direction int
@@ -91,7 +91,7 @@ func directions() []direction {
 }
 
 func hexPoints() []hexPoint {
-	return []hexPoint{center, northPoint, northeastPoint, southeastPoint, southPoint, southwestPoint, northwestPoint}
+	return []hexPoint{hpCenter, hpNorth, hpNortheast, hpSoutheast, hpSouth, hpSouthwest, hpNorthwest}
 }
 
 func (d direction) String() string {
@@ -208,28 +208,28 @@ func (gridPos GridPosition) adjacent(side hexSide, hc *hexConfig) (GridPosition,
 	x := gridPos.X
 	y := gridPos.Y
 	switch side {
-	case noSide:
+	case hsNone:
 		panic("need a direction to find adjacent grid position")
-	case northeastSide:
+	case hsNortheast:
 		y--
 		if gridPos.Y%2 == 0 {
 			x++
 		}
-	case eastSide:
+	case hsEast:
 		x++
-	case southeastSide:
+	case hsSoutheast:
 		y++
 		if gridPos.Y%2 == 0 {
 			x++
 		}
-	case westSide:
+	case hsWest:
 		x--
-	case southwestSide:
+	case hsSouthwest:
 		y++
 		if gridPos.Y%2 == 1 {
 			x--
 		}
-	case northwestSide:
+	case hsNorthwest:
 		y--
 		if gridPos.Y%2 == 1 {
 			x--
@@ -246,12 +246,12 @@ func (gridPos GridPosition) adjacent(side hexSide, hc *hexConfig) (GridPosition,
 }
 
 func (gridPos GridPosition) isAdjacent(other GridPosition, hc *hexConfig) bool {
-	ne, neOk := gridPos.adjacent(northeastSide, hc)
-	e, eOk := gridPos.adjacent(eastSide, hc)
-	se, seOk := gridPos.adjacent(southeastSide, hc)
-	sw, swOk := gridPos.adjacent(southwestSide, hc)
-	w, wOk := gridPos.adjacent(westSide, hc)
-	nw, nwOk := gridPos.adjacent(northwestSide, hc)
+	ne, neOk := gridPos.adjacent(hsNortheast, hc)
+	e, eOk := gridPos.adjacent(hsEast, hc)
+	se, seOk := gridPos.adjacent(hsSoutheast, hc)
+	sw, swOk := gridPos.adjacent(hsSouthwest, hc)
+	w, wOk := gridPos.adjacent(hsWest, hc)
+	nw, nwOk := gridPos.adjacent(hsNorthwest, hc)
 
 	return (neOk && ne.equals(other)) ||
 		(eOk && e.equals(other)) ||
@@ -322,22 +322,22 @@ func (gridPos GridPosition) getPixelPosOutbounds(hexPoint hexPoint, hc *hexConfi
 	// These offsets are found from the hex look up table start point which is
 	// located at (xOffset, yOffset).
 	switch hexPoint {
-	case center:
+	case hpCenter:
 		y -= hc.hexHeight / 4
-	case northPoint:
+	case hpNorth:
 		y -= hc.hexHeight / 4 * 3
-	case northwestPoint:
+	case hpNorthwest:
 		x -= hc.hexWidth / 2
 		y -= hc.hexHeight / 2
-	case northeastPoint:
+	case hpNortheast:
 		x += hc.hexWidth/2 - 1
 		y -= hc.hexHeight / 2
-	case southPoint:
+	case hpSouth:
 		y += hc.hexHeight/4 - 1
-	case southwestPoint:
+	case hpSouthwest:
 		x -= hc.hexWidth / 2
 		y -= 1
-	case southeastPoint:
+	case hpSoutheast:
 		x += hc.hexWidth/2 - 1
 		y -= 1
 	}

@@ -88,22 +88,22 @@ func (s *state) steer(u *unit) position {
 	hex := s.hexagons[gridPos]
 	var neHex, eHex, seHex, swHex, wHex, nwHex *hexagon
 
-	if pos, ok := gridPos.adjacent(northeastSide, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsNortheast, s.hexConfig); ok {
 		neHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(eastSide, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsEast, s.hexConfig); ok {
 		eHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(southeastSide, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsSoutheast, s.hexConfig); ok {
 		seHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(southwestSide, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsSouthwest, s.hexConfig); ok {
 		swHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(westSide, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsWest, s.hexConfig); ok {
 		wHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(northwestSide, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsNorthwest, s.hexConfig); ok {
 		nwHex = s.hexagons[pos]
 	}
 
@@ -323,22 +323,22 @@ func (s *state) nearestUnitWithinVision(u unit) (position, bool) {
 	hex := s.hexagons[gridPos]
 	var neHex, eHex, seHex, swHex, wHex, nwHex *hexagon
 
-	if pos, ok := gridPos.adjacent(northeastSide, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsNortheast, s.hexConfig); ok {
 		neHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(eastSide, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsEast, s.hexConfig); ok {
 		eHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(southeastSide, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsSoutheast, s.hexConfig); ok {
 		seHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(southwestSide, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsSouthwest, s.hexConfig); ok {
 		swHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(westSide, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsWest, s.hexConfig); ok {
 		wHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(northwestSide, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsNorthwest, s.hexConfig); ok {
 		nwHex = s.hexagons[pos]
 	}
 
@@ -421,22 +421,22 @@ func (s *state) collidesWithUnit(newPos position, unit unit) (position, bool) {
 	hex := s.hexagons[gridPos]
 	var neHex, eHex, seHex, swHex, wHex, nwHex *hexagon
 
-	if pos, ok := gridPos.adjacent(northeastSide, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsNortheast, s.hexConfig); ok {
 		neHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(eastSide, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsEast, s.hexConfig); ok {
 		eHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(southeastSide, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsSoutheast, s.hexConfig); ok {
 		seHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(southwestSide, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsSouthwest, s.hexConfig); ok {
 		swHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(westSide, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsWest, s.hexConfig); ok {
 		wHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(northwestSide, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsNorthwest, s.hexConfig); ok {
 		nwHex = s.hexagons[pos]
 	}
 
@@ -798,7 +798,7 @@ func (s *state) produceUnits() {
 		}
 
 		// TODO: determine behavior for producing units during collision
-		pixelPos, ok := n.gridPos.getPixelPos(center, s.hexConfig)
+		pixelPos, ok := n.gridPos.getPixelPos(hpCenter, s.hexConfig)
 		if !ok {
 			panic("could not get pixel pos for produce units")
 		}

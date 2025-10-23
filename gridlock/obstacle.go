@@ -212,32 +212,32 @@ func (os obstacles) getGroups(hc *hexConfig) []obstacles {
 			q = q[1:]
 			group[current] = os[current]
 
-			ne, neOk := current.adjacent(northeastSide, hc)
+			ne, neOk := current.adjacent(hsNortheast, hc)
 			if neOk && needsGrouped[ne] {
 				needsGrouped[ne] = false
 				q = append(q, ne)
 			}
-			e, eOk := current.adjacent(eastSide, hc)
+			e, eOk := current.adjacent(hsEast, hc)
 			if eOk && needsGrouped[e] {
 				needsGrouped[e] = false
 				q = append(q, e)
 			}
-			se, seOk := current.adjacent(southeastSide, hc)
+			se, seOk := current.adjacent(hsSoutheast, hc)
 			if seOk && needsGrouped[se] {
 				needsGrouped[se] = false
 				q = append(q, se)
 			}
-			sw, swOk := current.adjacent(southwestSide, hc)
+			sw, swOk := current.adjacent(hsSouthwest, hc)
 			if swOk && needsGrouped[sw] {
 				needsGrouped[sw] = false
 				q = append(q, sw)
 			}
-			w, wOk := current.adjacent(westSide, hc)
+			w, wOk := current.adjacent(hsWest, hc)
 			if wOk && needsGrouped[w] {
 				needsGrouped[w] = false
 				q = append(q, w)
 			}
-			nw, nwOk := current.adjacent(northwestSide, hc)
+			nw, nwOk := current.adjacent(hsNorthwest, hc)
 			if nwOk && needsGrouped[nw] {
 				needsGrouped[nw] = false
 				q = append(q, nw)
@@ -364,12 +364,12 @@ func (points obstaclePoints) createAllPoints(os obstacles, hc *hexConfig) {
 		swObstaclePoint := &obstaclePoint{source: o.gridPos}
 		nwObstaclePoint := &obstaclePoint{source: o.gridPos}
 
-		n := o.gridPos.getPixelPosOutbounds(northPoint, hc)
-		ne := o.gridPos.getPixelPosOutbounds(northeastPoint, hc)
-		se := o.gridPos.getPixelPosOutbounds(southeastPoint, hc)
-		s := o.gridPos.getPixelPosOutbounds(southPoint, hc)
-		sw := o.gridPos.getPixelPosOutbounds(southwestPoint, hc)
-		nw := o.gridPos.getPixelPosOutbounds(northwestPoint, hc)
+		n := o.gridPos.getPixelPosOutbounds(hpNorth, hc)
+		ne := o.gridPos.getPixelPosOutbounds(hpNortheast, hc)
+		se := o.gridPos.getPixelPosOutbounds(hpSoutheast, hc)
+		s := o.gridPos.getPixelPosOutbounds(hpSouth, hc)
+		sw := o.gridPos.getPixelPosOutbounds(hpSouthwest, hc)
+		nw := o.gridPos.getPixelPosOutbounds(hpNorthwest, hc)
 
 		if nPoint, ok := n.add(nOffset, hc); ok {
 			nObstaclePoint.PixelPosition = nPoint
@@ -460,7 +460,7 @@ func (points obstaclePoints) connectPoints(path pixelPath, hc *hexConfig) {
 
 			if !foundFirstCwConnection &&
 				current.source.equals(op.source) &&
-				orientation(current.PixelPosition, current.source.getPixelPosOutbounds(center, hc), op.PixelPosition) == clockwise {
+				orientation(current.PixelPosition, current.source.getPixelPosOutbounds(hpCenter, hc), op.PixelPosition) == clockwise {
 				foundFirstCwConnection = true
 			}
 
