@@ -3,7 +3,10 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
+	"log/slog"
+	"slices"
 
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
@@ -11,9 +14,17 @@ import (
 // All nodes on map
 type nodes map[GridPosition]*node
 
+// Look up table for nearest nodes.
+type nodeLookup map[PixelPosition]NearestNodes
+
+type NearestNodes struct {
+	ChebyshevDistance int            `json:"nearestNodeChebyshevDistance"`
+	Nodes             []GridPosition `json:"nodes"`
+}
+
 // Game component which spawns units and is captured by opposing units
 type node struct {
-	player        Player
+	player        player
 	gridPos       GridPosition
 	control       []*hexagon
 	radius        int
@@ -21,12 +32,12 @@ type node struct {
 	multiSelect   bool
 	maxHealth     int
 	currentHealth int
-	capturedBy    Player
+	capturedBy    player
 	target        position
 	unitConfig    unitConfig
 }
 
-func newNode(p Player, gridPos GridPosition, initialNodeHealth int, hexConfig *hexConfig, uc unitConfig) node {
+func newNode(p player, gridPos GridPosition, initialNodeHealth int, hexConfig *hexConfig, uc unitConfig) node {
 	n := node{
 		player:  p,
 		gridPos: gridPos,
@@ -40,6 +51,130 @@ func newNode(p Player, gridPos GridPosition, initialNodeHealth int, hexConfig *h
 		unitConfig:    uc,
 	}
 	return n
+}
+
+func (nn NearestNodes) log() []slog.Attr {
+	var a = []slog.Attr{}
+	a = append(a, slog.Int("ChebyshevDistance", nn.ChebyshevDistance))
+	positions := []slog.Attr{}
+	for _, p := range nn.Nodes {
+		positions = append(positions, p.log()...)
+	}
+	if len(positions) == 0 {
+		a = append(a, slog.String("nodes", "none"))
+	} else {
+		a = append(a, nest("nodes", positions))
+	}
+	return a
+}
+
+// CPU intensive because it calculates the optimal distance from any pixel to the nearest node. It
+// probably can be optimized further but it is low priority since it it cached. The main optimization
+// is dynamic programming. The node pixels are processed first. Next, the pixels 1 pixel away are
+// processed. This continues until the all pixels are procesed.:w
+func (nodes nodes) setupLookup(pixelPath pixelPath, hc *hexConfig) nodeLookup {
+	distanceLimit := max(hc.windowWidth, hc.windowHeight)
+	lookup := make(map[PixelPosition]NearestNodes, hc.windowWidth*hc.windowHeight)
+
+	for x := range hc.windowWidth {
+		for y := range hc.windowHeight {
+			p := PixelPosition{X: x, Y: y}
+			gridPos, ok := p.getGridPos(hc)
+			if !ok {
+				panic("nodes setup lookup expected grid position to exist")
+			}
+			n := nodes[gridPos]
+			if n != nil && n.player != noPlayer {
+				lookup[p] = NearestNodes{ChebyshevDistance: 0, Nodes: []GridPosition{n.gridPos}}
+			} else {
+				lookup[p] = NearestNodes{ChebyshevDistance: distanceLimit}
+			}
+		}
+	}
+
+	logger.log(infoLevel, setupLogic, "setup node lookup", slog.Int("distance limit", distanceLimit))
+
+	distance := 0
+	var priorCount int
+	var count int
+	for count != hc.windowWidth*hc.windowHeight {
+		if distance == distanceLimit {
+			break
+		}
+		priorCount = count
+		count = 0
+
+		for x := range hc.windowWidth {
+			for y := range hc.windowHeight {
+				p := PixelPosition{X: x, Y: y}
+				path := pixelPath[p]
+				nnO := lookup[p]
+
+				if !path.Walkable || (path.Walkable && nnO.ChebyshevDistance != distanceLimit) {
+					count += 1
+				}
+
+				if !pixelPath[p].Walkable || lookup[p].ChebyshevDistance != distance {
+					continue
+				}
+
+				adjacent := p.allAdjacent(hc)
+
+				for _, a := range adjacent {
+					if !pixelPath[a].Walkable {
+						continue
+					}
+
+					nn := lookup[a]
+					nn.ChebyshevDistance = min(distance+1, nn.ChebyshevDistance)
+					lookup[a] = nn
+				}
+
+				for _, a := range adjacent {
+					if !pixelPath[a].Walkable {
+						continue
+					}
+
+					nn := lookup[a]
+					if nn.ChebyshevDistance < distance {
+						nodes := nnO.Nodes
+						for _, n := range nn.Nodes {
+							if !slices.Contains(nodes, n) {
+								nodes = append(nodes, n)
+							}
+						}
+						nnO.Nodes = nodes
+						lookup[p] = nnO
+					}
+				}
+			}
+		}
+
+		percent := float64(count) / float64(hc.windowWidth*hc.windowHeight) * 100
+		logger.log(
+			infoLevel,
+			setupLogic,
+			fmt.Sprintf("setup node lookup. %.1f%% total pixels calculated. %d pixels of distance %d", percent, count-priorCount, distance))
+
+		distance++
+	}
+
+	percent := float64(count) / float64(hc.windowWidth*hc.windowHeight) * 100
+	logger.log(infoLevel, setupLogic, fmt.Sprintf("setup node lookup. %.0f%% total pixels not skipped with a distance limit of %d", percent, distanceLimit))
+
+	for x := range hc.windowWidth {
+		for y := range hc.windowHeight {
+			p := PixelPosition{X: x, Y: y}
+			path := pixelPath[p]
+			if !path.Walkable {
+				nn := lookup[p]
+				nn.ChebyshevDistance = distance
+				lookup[p] = nn
+			}
+		}
+	}
+
+	return lookup
 }
 
 func (n node) isZero() bool {
@@ -108,6 +243,14 @@ func (nodes nodes) setupControl(hc *hexConfig, hexagons hexagons, obstacles obst
 			}
 		}
 	}
+}
+
+func (lookup nodeLookup) draw(dc drawConfig) {
+	distance := make(heatmap)
+	for pixelPos, nn := range lookup {
+		distance[pixelPos] = nn.ChebyshevDistance
+	}
+	distance.draw(dc)
 }
 
 func (n *node) drawNode(dc drawConfig) {

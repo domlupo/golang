@@ -83,11 +83,10 @@ func (os obstacles) setup(hc *hexConfig, pixelPathDistanceMax int) pixelPath {
 	return pixelPath
 }
 
-// CPU intensize because it calculates the optimal distance from every walkable pixel to the nearest
-// unwalkable pixel. It can be optimized further. The main optimization is dynamic programming. The
-// unwalkable pixels are found first. Then the pixels 1 pixel away are calculated next. This
-// continues until a pixel path distance limit is reached. The pixel path distance limit is
-// not needed for player experience. It helps developer productivity by keeping live reloads fast.
+// CPU intensive because it calculates the optimal distance from every walkable pixel to the nearest
+// unwalkable pixel. It probably can be optimized further but it is low priority since it it cached.
+// The main optimization is dynamic programming. The unwalkable pixels are processed first. Next, the
+// pixels 1 pixel away are processed. This continues until all the pixels are processed.
 func (os obstacles) setupPixelPath(hc *hexConfig) pixelPath {
 	distanceLimit := max(hc.windowWidth, hc.windowHeight)
 	pixelPath := make(map[PixelPosition]Path, hc.windowWidth*hc.windowHeight)
@@ -160,7 +159,7 @@ func (os obstacles) setupPixelPath(hc *hexConfig) pixelPath {
 		logger.log(
 			infoLevel,
 			setupLogic,
-			fmt.Sprintf("setup pixel path. %.0f%% total pixels calculated. %d pixels of distance %d", percent, count-priorCount, distance))
+			fmt.Sprintf("setup pixel path. %.1f%% total pixels calculated. %d pixels of distance %d", percent, count-priorCount, distance))
 
 		distance++
 	}

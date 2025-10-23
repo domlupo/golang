@@ -388,15 +388,15 @@ const (
 
 type nodeInfo struct {
 	gridPos    GridPosition
-	player     Player
+	player     player
 	unitConfig unitConfig
 }
 
-func setupNodes(s nodeSetup, hc *hexConfig, initialNodeHealth int, o obstacles, h hexagons) nodes {
+func setupNodes(s nodeSetup, hc *hexConfig, initialNodeHealth int, o obstacles, h hexagons, pixelPath pixelPath) (nodes, nodeLookup) {
 	nodes := make(nodes)
 	nodes.setupPositions(s, hc, initialNodeHealth)
 	nodes.setupControl(hc, h, o)
-	return nodes
+	return nodes, nodes.setupLookup(pixelPath, hc)
 }
 
 func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth int) {

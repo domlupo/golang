@@ -40,6 +40,7 @@ type Game struct {
 	blueComputerActive       bool
 	redComputerActive        bool
 	drawPixelPath            bool
+	drawNodeLookup           bool
 	hotRestart               bool
 	drawBlueTargets          bool
 	drawRedTargets           bool
@@ -119,7 +120,8 @@ func (g *Game) restart() {
 
 	hexagons := setupHexagons(&g.drawConfig.hexConfig)
 	obstacles, pixelPath := setupObstacles(multiObstacle, &g.drawConfig.hexConfig, g.pixelPathDistanceMax)
-	nodes := setupNodes(leftVsRightVerticalOffset, &g.drawConfig.hexConfig, g.initialNodeHealth, obstacles, hexagons)
+	// TODO: Don't pass obstacles, this is not needed now that pixelPath is being passed
+	nodes, nodeLookup := setupNodes(leftVsRightVerticalOffset, &g.drawConfig.hexConfig, g.initialNodeHealth, obstacles, hexagons, pixelPath)
 
 	for nPos := range nodes {
 		for oPos := range obstacles {
@@ -129,7 +131,7 @@ func (g *Game) restart() {
 		}
 	}
 
-	g.gameState = newState(nodes, obstacles, hexagons, pixelPath, &g.drawConfig.hexConfig, g.developerMode)
+	g.gameState = newState(nodes, obstacles, hexagons, pixelPath, nodeLookup, &g.drawConfig.hexConfig, g.developerMode)
 	g.debugger = newDebugger(g.gameState)
 	g.updateComputerTargetNodes()
 }
@@ -287,7 +289,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	screen.Fill(g.drawConfig.backgroundColor)
 	g.gameState.draw(*g.drawConfig)
-	g.debugger.draw(*g.drawConfig, g.drawHexDebugGrid, g.drawPixelPath, g.drawVisibilityGrids, g.drawBlueTargets, g.drawRedTargets)
+	g.debugger.draw(*g.drawConfig, g.drawHexDebugGrid, g.drawPixelPath, g.drawNodeLookup, g.drawVisibilityGrids, g.drawBlueTargets, g.drawRedTargets)
 
 	if g.leftMouseHeld {
 		drawUnfilledBoxFloat32(

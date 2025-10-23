@@ -13,6 +13,7 @@ type state struct {
 	// TODO: The next largest optimization might be to split hexagon linked list
 	// into respective layers.
 	pixelPath          pixelPath
+	nodeLookup         nodeLookup
 	hexagons           hexagons
 	obstacles          obstacles
 	nodes              nodes
@@ -22,13 +23,14 @@ type state struct {
 	unitsDeletedTotal  int
 }
 
-func newState(n nodes, o obstacles, h hexagons, pixelPath pixelPath, hexConfig *hexConfig, developerMode bool) *state {
+func newState(n nodes, o obstacles, h hexagons, pixelPath pixelPath, nodeLookup nodeLookup, hexConfig *hexConfig, developerMode bool) *state {
 	s := state{
 		hexConfig:     hexConfig,
 		obstacles:     o,
 		pixelPath:     pixelPath,
 		hexagons:      h,
 		nodes:         n,
+		nodeLookup:    nodeLookup,
 		units:         make(units),
 		developerMode: developerMode,
 	}
@@ -53,7 +55,17 @@ func (s *state) analyzeTargets() {
 			u.updateTarget(steerTarget, steer)
 		}
 
-		u.reachesNodes(s.nodes, s.hexConfig)
+		u.canReachNode = node{}
+		if s.nodeLookup[u.PixelPosition].ChebyshevDistance < u.reach {
+			if len(s.nodeLookup[u.PixelPosition].Nodes) > 1 {
+				logger.log(errorLevel, undecidedBehavior, "Undecided behavior. Unit can reach multiple nodes. Arbitrarily picking one")
+			}
+			p := s.nodeLookup[u.PixelPosition].Nodes[0]
+			n := s.nodes[p]
+			if u.player != n.player {
+				u.canReachNode = *n
+			}
+		}
 
 		nearest, _ := s.nearestUnitWithinVision(*u)
 		u.updateTarget(enemyTarget, nearest)
@@ -200,7 +212,6 @@ func (s *state) moveUnits() {
 
 		if !s.pixelPath[newPos.PixelPosition].Walkable || s.pixelPath[newPos.PixelPosition].UnwalkableChebyshevDistance < u.radius+1 {
 			unitsAtUnwalkable++
-			u.AtUnwalkable = true
 			continue
 		}
 

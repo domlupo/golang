@@ -39,7 +39,7 @@ type unit struct {
 	position
 	unitConfig
 	id                  uuid.UUID
-	player              Player
+	player              player
 	activeTarget        position
 	steerTarget         position
 	enemyTarget         position
@@ -55,7 +55,6 @@ type unit struct {
 	health              int
 	movedThisTurn       bool
 	attackedThisTurn    bool
-	AtUnwalkable        bool
 	AtCollision         bool
 	canReachNode        node
 	selected            bool
@@ -65,7 +64,7 @@ type unit struct {
 	debugFlag           bool
 }
 
-func newUnit(p Player, globalTarget position, uc unitConfig, pos position, producedOrder int, selected bool) unit {
+func newUnit(p player, globalTarget position, uc unitConfig, pos position, producedOrder int, selected bool) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
 		logger.log(errorLevel, selectedUnit, "newUnit", slog.String("failed to generate UUID", err.Error()))
@@ -92,7 +91,6 @@ func (u *unit) refresh() {
 	logger.logSelected(u.selected, infoLevel, selectedUnit, "beforeRefresh", u.log()...)
 	u.movedThisTurn = false
 	u.attackedThisTurn = false
-	u.AtUnwalkable = false
 	u.AtCollision = false
 }
 
@@ -119,48 +117,6 @@ func (u *unit) prioritizeTargets() {
 		// turn since no target is set which seems wrong.
 		u.pathGlobalTarget = true
 	}
-}
-
-func (u *unit) reachesNodes(nodes map[GridPosition]*node, hc *hexConfig) {
-	u.canReachNode = node{}
-
-	if u.layer == lowAltitude || u.layer == highAltitude {
-		return
-	}
-
-	x1 := u.X
-	y1 := u.Y
-	r1 := u.reach
-
-	for _, n := range nodes {
-		if u.player == n.player {
-			// unit cannot collide with own nodes
-			// HACK: This will probably change in the future, and it will most likely break attackNodes logic
-			// since it assumes a unit never collides with its own node
-			continue
-		}
-
-		nPixelPos, ok := n.gridPos.getPixelPos(center, hc)
-		if !ok {
-			panic("could not get pixel pos for collide with node")
-		}
-
-		x2 := nPixelPos.X
-		y2 := nPixelPos.Y
-		r2 := n.radius
-
-		xDelta := x2 - x1
-		yDelta := y2 - y1
-		rSum := r1 + r2
-
-		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
-			if !u.canReachNode.isZero() {
-				logger.log(infoLevel, undecidedBehavior, "unit reaches multiple nodes, randomly selected last iterated node")
-			}
-			u.canReachNode = *n
-		}
-	}
-
 }
 
 // Uses Bresenham's line algorithm https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm

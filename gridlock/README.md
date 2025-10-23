@@ -19,6 +19,12 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Cache node lookup
+
+- // TODO: Don't pass obstacles, this is not needed now that pixelPath is being passed
+
+- Add toggles for debugger visualizations
+
 - Determine if I need to add Ctrl+C handling for new file saves. This could lead to hard to debug issues.
 
 - Invest in look up tables 

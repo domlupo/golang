@@ -2,14 +2,31 @@
 
 package main
 
-type Player int
+import "fmt"
+
+type player int
 
 const (
-	noPlayer Player = iota
+	noPlayer player = iota
 	bluePlayer
 	redPlayer
 	neutralPlayer
 )
+
+func (p player) String() string {
+	switch p {
+	case noPlayer:
+		return "noPlayer"
+	case bluePlayer:
+		return "bluePlayer"
+	case redPlayer:
+		return "redPlayer"
+	case neutralPlayer:
+		return "neutralPlayer"
+	default:
+		panic(fmt.Sprintf("Cannot convert player to string: %d", p))
+	}
+}
 
 // All hexagons on map
 type hexagons map[GridPosition]*hexagon

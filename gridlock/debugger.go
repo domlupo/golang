@@ -35,8 +35,11 @@ func (d *debugger) logPixel(p PixelPosition) {
 	attrs := []slog.Attr{nest("PixelPosition", p.log())}
 	if gridPos, ok := p.getGridPos(d.hexConfig); ok {
 		attrs = append(attrs, nest("GridPosition", gridPos.log()))
+	} else {
+		attrs = append(attrs, slog.String("GridPosition", "notFound"))
 	}
 	attrs = append(attrs, nest("PixelPath", d.pixelPath[p].log()))
+	attrs = append(attrs, nest("NodeLookup", d.nodeLookup[p].log()))
 	logger.log(infoLevel, devTool, "debugPixel", attrs...)
 }
 
@@ -96,6 +99,7 @@ func (d debugger) draw(
 	dc drawConfig,
 	drawDebugGrid bool,
 	drawPixelPath bool,
+	drawNodeLookup bool,
 	drawVisibilityGrids bool,
 	drawBlueTargets bool,
 	drawRedTargets bool) {
@@ -106,6 +110,10 @@ func (d debugger) draw(
 
 	if drawPixelPath {
 		d.pixelPath.draw(dc)
+	}
+
+	if drawNodeLookup {
+		d.nodeLookup.draw(dc)
 	}
 
 	if d.unitPathfindHeatmapComplete {
