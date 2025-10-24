@@ -64,7 +64,7 @@ func (f fileHandler) readObstacleLUT(obstacles obstacles, hc *hexConfig) obstacl
 		return f.writeObstacleLUT(obstacles, hc)
 	}
 
-	logger.log(infoLevel, setupLogic, "loaded obstacle look up table, skipped creating it.")
+	logger.log(infoLevel, setupLogic, "readObstacleLUT: loaded obstacle look up table, skipped creating it.")
 
 	return oLUT
 }
