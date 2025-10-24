@@ -19,7 +19,6 @@ import (
 type debuggerConfig struct {
 	drawHexGrid             bool
 	drawObstacleLUT         bool
-	drawObstacleLUTNearest  bool
 	drawNodeLUT             bool
 	drawVisibilityGrids     bool
 	drawBlueTargets         bool
@@ -28,6 +27,7 @@ type debuggerConfig struct {
 	debugGridIndexCount     int
 	debugGridColor          color.Color
 	visibilityGridLineWidth int
+	pixelSpotlightOffset    int
 	heatmapR                uint8
 	heatmapG                uint8
 	heatmapB                uint8
@@ -39,11 +39,11 @@ type debuggerConfig struct {
 
 func newDebuggerConfig() *debuggerConfig {
 	dc := debuggerConfig{
-		drawObstacleLUTNearest:  true,
 		debugGridWidth:          1,
 		debugGridIndexCount:     32,
 		debugGridColor:          color.Black,
 		visibilityGridLineWidth: 1,
+		pixelSpotlightOffset:    5,
 		heatmapR:                0,
 		heatmapG:                0,
 		heatmapB:                0,
@@ -239,10 +239,9 @@ func (d debugger) draw(c drawConfig) {
 		d.obstacleLUTUnwalkable.draw(c, *d.debuggerConfig, d.heatmapMax)
 		d.obstacleLUTDistance.draw(c, *d.debuggerConfig, d.heatmapMax)
 
-		if d.pixel != nil && d.drawObstacleLUTNearest {
-			for _, p := range d.oLUT[*d.pixel].NearestUnwalkables {
-				p.draw(c)
-			}
+		if d.pixel != nil {
+			p := d.oLUT[*d.pixel].NearestUnwalkablesAvg
+			p.draw(c, *d.debuggerConfig)
 		}
 	}
 
@@ -276,7 +275,7 @@ func (d debugger) draw(c drawConfig) {
 	}
 }
 
-func (p PixelPosition) draw(c drawConfig) {
+func (p PixelPosition) draw(c drawConfig, dC debuggerConfig) {
 	vector.DrawFilledRect(
 		c.screen,
 		float32(p.X)*c.windowMultiplier,
@@ -285,6 +284,14 @@ func (p PixelPosition) draw(c drawConfig) {
 		1*c.windowMultiplier,
 		c.highlightColor,
 		false)
+
+	drawUnfilledBoxInt(
+		c,
+		c.highlightColor,
+		p.X-dC.pixelSpotlightOffset,
+		p.Y-dC.pixelSpotlightOffset,
+		p.X+dC.pixelSpotlightOffset,
+		p.Y+dC.pixelSpotlightOffset)
 }
 
 func (heatmap heatmap) draw(c drawConfig, dC debuggerConfig, heatmapMax int) {

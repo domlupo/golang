@@ -23,51 +23,56 @@ var logger l
 
 type Game struct {
 	*drawConfig
-	backgroundColor          color.RGBA
-	produceWait              time.Duration
-	produceInterval          time.Duration
-	slowTickInterval         time.Duration
-	slowTickTime             time.Time
-	priorTime                time.Time
-	currentTime              time.Time
-	leftMouseClicked         bool
-	leftMouseHeld            bool
-	priorLeftMouseClicked    bool
-	leftMouseReleased        bool
-	middleMouseScrollClicked bool
-	rightMouseClicked        bool
-	paused                   bool
-	blueComputerActive       bool
-	redComputerActive        bool
-	hotRestart               bool
-	slowTick                 bool
-	cpuProfilerOn            bool
-	memoryProfilerOn         bool
-	produceUnits             bool
-	moveUnits                bool
-	initialSelectedX         float32
-	initialSelectedY         float32
-	currentSelectedX         float32
-	currentSelectedY         float32
-	compOne                  computer
-	compTwo                  computer
-	gameState                *state
-	debugger                 debugger
-	developerMode            bool
-	developerToggles         map[string]*toggle
-	developerToggleCooldown  time.Duration
-	initialNodeHealth        int
-	loggerConfig             loggerConfig
-	outputDirectoryName      string
-	cpuProfilerFileName      string
-	memProfilerFileName      string
-	cpuProfilerFile          *os.File
-	memoryProfilerFile       *os.File
+	backgroundColor            color.RGBA
+	produceWait                time.Duration
+	produceInterval            time.Duration
+	slowTickInterval           time.Duration
+	slowTickTime               time.Time
+	priorTime                  time.Time
+	currentTime                time.Time
+	leftMouseClicked           bool
+	leftMouseHeld              bool
+	priorLeftMouseClicked      bool
+	leftMouseReleased          bool
+	middleMouseScrollClicked   bool
+	rightMouseClicked          bool
+	paused                     bool
+	blueComputerActive         bool
+	redComputerActive          bool
+	hotRestart                 bool
+	slowTick                   bool
+	cpuProfilerOn              bool
+	memoryProfilerOn           bool
+	produceUnits               bool
+	moveUnits                  bool
+	initialSelectedX           float32
+	initialSelectedY           float32
+	currentSelectedX           float32
+	currentSelectedY           float32
+	compOne                    computer
+	compTwo                    computer
+	gameState                  *state
+	debugger                   debugger
+	developerMode              bool
+	developerToggles           map[string]*toggle
+	developerToggleCooldown    time.Duration
+	initialNodeHealth          int
+	loggerConfig               loggerConfig
+	outputDirectoryName        string
+	cpuProfilerToggleName      string
+	memProfilerToggleName      string
+	cpuProfilerFileName        string
+	memProfilerFileName        string
+	cpuProfilerStartBeforeGame bool
+	memProfilerStartBeforeGame bool
+	cpuProfilerFile            *os.File
+	memoryProfilerFile         *os.File
 }
 
 func newGame() Game {
 	drawConfig := newDrawConfig()
 	g := Game{
+		developerMode:           true,
 		drawConfig:              drawConfig,
 		backgroundColor:         color.RGBA{200, 200, 200, 255},
 		produceWait:             1_000_000 * time.Second,
@@ -85,9 +90,8 @@ func newGame() Game {
 		produceUnits:            true,
 		moveUnits:               true,
 		hotRestart:              true,
-		cpuProfilerOn:           false,
-		memoryProfilerOn:        false,
-		developerMode:           true,
+		cpuProfilerToggleName:   "cpuProfiler",
+		memProfilerToggleName:   "memProfiler",
 		developerToggles:        make(map[string]*toggle),
 		developerToggleCooldown: 300 * time.Millisecond,
 		initialNodeHealth:       100,
@@ -323,7 +327,7 @@ func main() {
 
 	os.Mkdir(g.outputDirectoryName, 0755)
 
-	g.developerToggles["cpuProfile"] = newToggle(
+	g.developerToggles[g.cpuProfilerToggleName] = newToggle(
 		ebiten.KeyC,
 		func() {
 			if g.cpuProfilerOn {
@@ -344,7 +348,7 @@ func main() {
 			g.cpuProfilerOn = !g.cpuProfilerOn
 		},
 		g.developerToggleCooldown)
-	g.developerToggles["memoryProfile"] = newToggle(
+	g.developerToggles[g.memProfilerToggleName] = newToggle(
 		ebiten.KeyX,
 		func() {
 			if g.memoryProfilerOn {
@@ -403,6 +407,13 @@ func main() {
 			g.forceCleanup()
 		}
 	}(g)
+
+	if g.cpuProfilerStartBeforeGame {
+		g.developerToggles[g.cpuProfilerToggleName].callBack()
+	}
+	if g.memProfilerStartBeforeGame {
+		g.developerToggles[g.memProfilerToggleName].callBack()
+	}
 
 	g.restart()
 

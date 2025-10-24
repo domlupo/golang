@@ -40,10 +40,10 @@ type obstacleLUT map[PixelPosition]obstacleInfo
 
 // Processed obstacle information.
 type obstacleInfo struct {
-	Walkable                    bool            `json:"walkable"`
-	NearestUnwalkables          []PixelPosition `json:"nearestUnwalkables"`
-	UnwalkableChebyshevDistance int             `json:"unwalkableChebyshevDistance"`
-	UnwalkableSmoothSum         int             `json:"unwalkableSmoothSum"`
+	Walkable                    bool          `json:"walkable"`
+	NearestUnwalkablesAvg       PixelPosition `json:"nearestUnwalkablesAvg"`
+	UnwalkableChebyshevDistance int           `json:"unwalkableChebyshevDistance"`
+	UnwalkableSmoothSum         int           `json:"unwalkableSmoothSum"`
 }
 
 type obstacleKind int
@@ -57,15 +57,7 @@ const (
 func (info obstacleInfo) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, slog.Bool("Walkable", info.Walkable))
-	nearestUnwalkables := []slog.Attr{}
-	for _, p := range info.NearestUnwalkables {
-		nearestUnwalkables = append(nearestUnwalkables, p.log()...)
-	}
-	if len(nearestUnwalkables) == 0 {
-		a = append(a, slog.String("nearest unwalkables", "none"))
-	} else {
-		a = append(a, nest("nearest unwalkables", nearestUnwalkables))
-	}
+	a = append(a, nest("nearestUnwalkablesAvg", info.NearestUnwalkablesAvg.log()))
 	a = append(a, slog.Int("UnwalkableChebyshevDistance", info.UnwalkableChebyshevDistance))
 	a = append(a, slog.Int("UnwalkableSmoothSum", info.UnwalkableSmoothSum))
 	return a
@@ -93,12 +85,19 @@ func (os obstacles) setup(hc *hexConfig) obstacleLUT {
 	return oLUT
 }
 
-// CPU intensive because it calculates the optimal distance from every walkable pixel to the nearest
-// unwalkable pixel. It probably can be optimized further but it is low priority since it it cached.
-// The main optimization is dynamic programming. The unwalkable pixels are processed first. Next, the
-// pixels 1 pixel away are processed. This continues until all the pixels are processed.
+// CPU intensive for several reasons. One, it calculates the optimal distance from every walkable pixel
+// to the nearest unwalkable pixel (dynamic programming is needed since it easily takes >30 mins without).
+// Two, it calculates the nearestUnwalkablesAvg which is (o(n)^3) complexity. This has a worse case of
+// (1280 * 720 * ~1440) aka (window width pixel * window height pixels * a pixel where the nearest obstacles
+// are a the largest possible square around it. 1440 is (720 * 4 / 2). 4 sides but the hexagons sides would
+// alternate cutting the value in half.
+//
+// Can be optimized further but it is low priority since LUT is cached and optimizatons are error prone.
+// The main optimization currently used is dynamic programming. The unwalkable pixels are processed first. Next,
+// the pixels 1 pixel away are processed. This continues until all the pixels are processed.
 func (os obstacles) setupObstacleLUT(hc *hexConfig) obstacleLUT {
 	distanceLimit := max(hc.windowWidth, hc.windowHeight)
+	nearestUnwalkables := make(map[PixelPosition][]PixelPosition)
 	oLUT := make(map[PixelPosition]obstacleInfo, hc.windowWidth*hc.windowHeight)
 
 	for x := range hc.windowWidth {
@@ -110,9 +109,8 @@ func (os obstacles) setupObstacleLUT(hc *hexConfig) obstacleLUT {
 			}
 			o := os[gridPos]
 			if o != nil && (o.kind == lowMountain || o.kind == highMountain) {
-				// TODO: This can be removed to save file size, but the average pixel position is going
-				// to be found in a future commit. It will replace the array. So it is wasted work.
-				oLUT[p] = obstacleInfo{Walkable: false, NearestUnwalkables: []PixelPosition{p}}
+				oLUT[p] = obstacleInfo{Walkable: false}
+				nearestUnwalkables[p] = []PixelPosition{p}
 			} else {
 				oLUT[p] = obstacleInfo{Walkable: true}
 			}
@@ -168,13 +166,13 @@ func (os obstacles) setupObstacleLUT(hc *hexConfig) obstacleLUT {
 				for _, a := range adjacent {
 					aInfo := oLUT[a]
 					if aInfo.UnwalkableChebyshevDistance < distance {
-						nearest := info.NearestUnwalkables
-						for _, unwalkable := range aInfo.NearestUnwalkables {
-							if !slices.Contains(nearest, unwalkable) {
-								nearest = append(nearest, unwalkable)
+						n := nearestUnwalkables[p]
+						for _, unwalkable := range nearestUnwalkables[a] {
+							if !slices.Contains(n, unwalkable) {
+								n = append(n, unwalkable)
 							}
 						}
-						info.NearestUnwalkables = nearest
+						nearestUnwalkables[p] = n
 						oLUT[p] = info
 					}
 				}
@@ -186,6 +184,32 @@ func (os obstacles) setupObstacleLUT(hc *hexConfig) obstacleLUT {
 			infoLevel,
 			setupLogic,
 			fmt.Sprintf("setupObstacleLUT: %.1f%% total pixels calculated. %d pixels of distance %d", percent, count-priorCount, distance))
+
+		// Currently, this calculation takes the longest e.g. (30s of 45s total).
+		// I looked into removing floating point math. A few CPU profiles showed this is only
+		// slightly less performant (< 5 seconds) than integer math. I suspect using integer math
+		// may lead to very hard to deubg issues which I want to avoid. Another potential error prone
+		// optmization that I am avoiding is summing the pixel position as they are added to the array.
+		// Optimizing may be needed in the future to speed up setup, but LUT caching is sufficient for now.
+		for x := range hc.windowWidth {
+			for y := range hc.windowHeight {
+				p := PixelPosition{X: x, Y: y}
+				n := nearestUnwalkables[p]
+
+				xSum := 0
+				ySum := 0
+				for _, pos := range n {
+					xSum += pos.X
+					ySum += pos.Y
+				}
+				xAvg := int(math.Round(float64(xSum) / float64(len(n))))
+				yAvg := int(math.Round(float64(ySum) / float64(len(n))))
+
+				info := oLUT[p]
+				info.NearestUnwalkablesAvg = PixelPosition{X: xAvg, Y: yAvg}
+				oLUT[p] = info
+			}
+		}
 
 		distance++
 	}

@@ -19,10 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Update obstacleLUT to know the pixel of nearest obstacle not just the distance
-  - Similar logic already exists for node LUT
-  - This will be used in boids For example, O <- U-> X, If O is obstacle, and U is unit, go directly away to point X
-
 - Design and Determine best way for boids to avoid obstacles
   - There are multiple options to handle velocity:
     - I can refactor code to use velocity and then trim it to magnitude 1.
@@ -124,6 +120,16 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Future Checkpoints
+
+- Log setup time so I can see lookup table creation regressions easily
+
+- Fix Ctrl+C for ./game, it works for air but not ./game.
+  - Primarily helps exiting a setup early
+  - Fix memory profiler not saving to file when CTRL+C is used (works fine when game exists normally)
+
+- Add debugger node highlight for nearest nodes. (similar to pixel highlight for obstacle LUT)
+ - Determine if I should also add nearest node pixel position to node LUT 
+  - If yes, I should probably also highlight the pixel like obstacle LUT
 
 - Add paused unit debugging 
   - This is easy to add now that debugger.go exists and it is unaffected by pause

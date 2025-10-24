@@ -62,9 +62,9 @@ func (info nodeInfo) log() []slog.Attr {
 		nearestNodes = append(nearestNodes, p.log()...)
 	}
 	if len(nearestNodes) == 0 {
-		a = append(a, slog.String("nearest nodes", "none"))
+		a = append(a, slog.String("NearestNodes", "none"))
 	} else {
-		a = append(a, nest("nearest nodes", nearestNodes))
+		a = append(a, nest("nearestNodes", nearestNodes))
 	}
 	return a
 }
