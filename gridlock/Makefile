@@ -7,3 +7,9 @@ mem:
 cover:
 	go test -v -cover -coverprofile=cover.out; \
         go tool cover -html=cover.out
+c:
+	rm -rf output
+co:
+	rm -rf output/obstacleLUT.json
+cn:
+	rm -rf output/nodeLUT.json
