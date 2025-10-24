@@ -19,25 +19,30 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Add toggles for debugger visualizations
+- Update pixelPath to know the pixel of nearest obstacle not just the distance
+  - Similar logic already exists for node lookup
+  - This will be used in boids For example, O <- U-> X, If O is obstacle, and U is unit, go directly away to point X
 
-- Add mouse wheel override to lower max heatmap value
+- Rename pixelPath name to Obstacle lookup 
 
-- Determine if I need to add Ctrl+C handling for new file saves. This could lead to hard to debug issues.
+- Rename hex stuff to lookup as well
 
-- Invest in look up tables 
-  - What should be the key?
-  - Do I need to use a checksum?
-  - hot reload time should be 0s
-  - More Look up tables will probably be used. They are simple and efficient for static information.
-    - node lookup table to check if a unit can attack a node. May also be used for pathing.
-      Need to use distance to nod similar to nearest obstacle calculation.
-    - For example, global pathfinding look up table seems very likely for theta* if it can be used
-      for any grid pos to any grid pos. Pixel to pixel is probably too data intensive.
+- Design and Determine best way for boids to avoid obstacles
+  - There are multiple options to handle velocity:
+    - I can refactor code to use velocity and then trim it to magnitude 1.
+    - I can store velocity as state in unit from prior steers and steer updates this saved state.
+    - I can reduce "turn delay" or turns between steeers so more steering turns occur
+      together or apart.
+  - direction to and from seemed like the wrong approach
+  - Can determine which pixel position on each hexagon sides are fathest from obstacles
+  - Probably want to use global pathing influence as well
+  - How do units perform slides agaisnt obstacles and units in other games?
 
 - Update local pathfinding to boids model
   - testing has shown boids model to be the easiest to tune, most flexible, beset results
   - continue implementing flocking and steering behaviors 
+
+- Determine if I need to add Ctrl+C handling for new file saves. This could lead to hard to debug issues.
 
 - Design and Determine best way for boids to avoid obstacles
   - direction to and from seemed like the wrong approach
@@ -128,8 +133,8 @@ Is there a mobile equivalent for war/4x games?
   - This is easy to add now that debugger.go exists and it is unaffected by pause
   - Clean up prior nested unit + unitConfig logging which is probably broke.
 
-- Refactor debugger draw flags into its own struct
-  - Determine if toggles should be refactored in anyway 
+- Update debugger to use percentages for heatmap max rather than an int
+  - Update pixel path to sum distance 
 
 - save file: 
   - Will expose constraints
