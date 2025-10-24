@@ -13,14 +13,14 @@ import (
 type fileHandler struct {
 	directoryName       string
 	obstacleLUTFileName string
-	nodeLookupFileName  string
+	nodeLUTFileName     string
 }
 
 func newFileHandler() fileHandler {
 	return fileHandler{
 		directoryName:       "output",
 		obstacleLUTFileName: "obstacleLUT.json",
-		nodeLookupFileName:  "nodeLookup.json",
+		nodeLUTFileName:     "nodeLUT.json",
 	}
 }
 
@@ -30,9 +30,9 @@ type obstacleLUTEntry struct {
 	Key   PixelPosition `json:"key"`
 	Value obstacleInfo  `json:"value"`
 }
-type nodeLookupEntry struct {
+type nodeLUTEntry struct {
 	Key   PixelPosition `json:"key"`
-	Value NearestNodes  `json:"value"`
+	Value nodeInfo      `json:"value"`
 }
 
 func (f fileHandler) readObstacleLUT(obstacles obstacles, hc *hexConfig) obstacleLUT {
@@ -86,55 +86,55 @@ func (f fileHandler) writeObstacleLUT(obstacles obstacles, hc *hexConfig) obstac
 	return oLUT
 }
 
-func (f fileHandler) readNodeLookup(nodes nodes, obstacleLUT obstacleLUT, hc *hexConfig) nodeLookup {
-	file, err := os.Open(fmt.Sprintf("%s/%s", f.directoryName, f.nodeLookupFileName))
+func (f fileHandler) readNodeLUT(nodes nodes, obstacleLUT obstacleLUT, hc *hexConfig) nodeLUT {
+	file, err := os.Open(fmt.Sprintf("%s/%s", f.directoryName, f.nodeLUTFileName))
 	if errors.Is(err, os.ErrNotExist) {
-		logger.log(infoLevel, setupLogic, "create node lookup file since it does not exist")
-		return f.writeNodeLookup(nodes, obstacleLUT, hc)
+		logger.log(infoLevel, setupLogic, "readNodeLUT: cannot create node lookup table file since it does not exist")
+		return f.writeNodeLUT(nodes, obstacleLUT, hc)
 	} else if err != nil {
-		logger.log(errorLevel, setupLogic, fmt.Sprintf("file handler could not read json file: %v", err))
+		logger.log(errorLevel, setupLogic, fmt.Sprintf("readNodeLUT: file handler could not read json file: %v", err))
 	}
 	defer file.Close()
 
 	bytes, err := io.ReadAll(file)
 	if err != nil {
-		logger.log(errorLevel, setupLogic, fmt.Sprintf("file handler could not read json file: %e", err))
-		return f.writeNodeLookup(nodes, obstacleLUT, hc)
+		logger.log(errorLevel, setupLogic, fmt.Sprintf("readNodeLUT: file handler could not read json file: %e", err))
+		return f.writeNodeLUT(nodes, obstacleLUT, hc)
 	}
 
-	entries := make([]nodeLookupEntry, hc.windowWidth*hc.windowHeight)
+	entries := make([]nodeLUTEntry, hc.windowWidth*hc.windowHeight)
 	json.Unmarshal(bytes, &entries)
 
-	nodeLookup := make(nodeLookup, hc.windowWidth*hc.windowHeight)
+	nLUT := make(nodeLUT, hc.windowWidth*hc.windowHeight)
 	for _, e := range entries {
-		nodeLookup[e.Key] = e.Value
+		nLUT[e.Key] = e.Value
 	}
 
-	if len(nodeLookup) != hc.windowWidth*hc.windowHeight {
-		logger.log(errorLevel, setupLogic, "create node lookup since loaded noode lookup was invalid size")
-		return f.writeNodeLookup(nodes, obstacleLUT, hc)
+	if len(nLUT) != hc.windowWidth*hc.windowHeight {
+		logger.log(errorLevel, setupLogic, "readNodeLUT: create node lookup table since loaded node lookup table was invalid size")
+		return f.writeNodeLUT(nodes, obstacleLUT, hc)
 	}
 
-	logger.log(infoLevel, setupLogic, "loaded node lookup, skipped creating it.")
+	logger.log(infoLevel, setupLogic, "readNodeLUT: loaded node lookup table, skipped creating it.")
 
-	return nodeLookup
+	return nLUT
 }
 
-func (f fileHandler) writeNodeLookup(nodes nodes, obstacleLUT obstacleLUT, hc *hexConfig) nodeLookup {
-	nodeLookup := nodes.setupLookup(obstacleLUT, hc)
+func (f fileHandler) writeNodeLUT(nodes nodes, obstacleLUT obstacleLUT, hc *hexConfig) nodeLUT {
+	nLUT := nodes.setupNodeLUT(obstacleLUT, hc)
 
-	entries := make([]nodeLookupEntry, hc.windowWidth*hc.windowHeight)
-	for k, v := range nodeLookup {
-		entries = append(entries, nodeLookupEntry{Key: k, Value: v})
+	entries := make([]nodeLUTEntry, hc.windowWidth*hc.windowHeight)
+	for k, v := range nLUT {
+		entries = append(entries, nodeLUTEntry{Key: k, Value: v})
 	}
 
 	data, _ := json.Marshal(entries)
-	err := os.WriteFile(fmt.Sprintf("%s/%s", f.directoryName, f.nodeLookupFileName), data, 0644)
+	err := os.WriteFile(fmt.Sprintf("%s/%s", f.directoryName, f.nodeLUTFileName), data, 0644)
 	if err != nil {
 		panic(err)
 	}
 
-	return nodeLookup
+	return nLUT
 }
 
 func (f fileHandler) key(obstacles obstacles, hc hexConfig) {

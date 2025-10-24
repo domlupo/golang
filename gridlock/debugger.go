@@ -19,7 +19,7 @@ import (
 type debuggerConfig struct {
 	drawHexGrid             bool
 	drawObstacleLUT         bool
-	drawNodeLookup          bool
+	drawNodeLUT             bool
 	drawVisibilityGrids     bool
 	drawBlueTargets         bool
 	drawRedTargets          bool
@@ -66,7 +66,7 @@ type debugger struct {
 	*debuggerConfig
 	obstacleLUTUnwalkable       heatmap
 	obstacleLUTDistance         heatmap
-	nodeLookupDistance          heatmap
+	nodeLUTDistance             heatmap
 	heatmapAlphaMax             int
 	unitPathfind                heatmap
 	unitPathfindHeatmapComplete bool
@@ -92,7 +92,7 @@ func newDebugger(state *state, toggleCooldown time.Duration) debugger {
 func (d *debugger) setupHeatmaps() {
 	d.obstacleLUTUnwalkable = make(heatmap)
 	d.obstacleLUTDistance = make(heatmap)
-	d.nodeLookupDistance = make(heatmap)
+	d.nodeLUTDistance = make(heatmap)
 
 	for pixelPos, path := range d.oLUT {
 		switch path.Walkable {
@@ -103,13 +103,13 @@ func (d *debugger) setupHeatmaps() {
 		}
 	}
 
-	for pixelPos, path := range d.oLUT {
+	for pixelPos, info := range d.oLUT {
 		// TODO: Update this to unwalkable smooth sum once debugger supports percentages
-		d.obstacleLUTDistance[pixelPos] = path.UnwalkableChebyshevDistance
+		d.obstacleLUTDistance[pixelPos] = info.UnwalkableChebyshevDistance
 	}
 
-	for pixelPos, nn := range d.nodeLookup {
-		d.nodeLookupDistance[pixelPos] = nn.ChebyshevDistance
+	for pixelPos, info := range d.nLUT {
+		d.nodeLUTDistance[pixelPos] = info.ChebyshevDistance
 	}
 }
 
@@ -147,7 +147,7 @@ func (d *debugger) setupToggles(cooldown time.Duration) {
 		cooldown)
 	toggles["drawNodeLookup"] = newToggle(
 		ebiten.KeyW,
-		func() { d.drawNodeLookup = !d.drawNodeLookup },
+		func() { d.drawNodeLUT = !d.drawNodeLUT },
 		cooldown)
 	d.toggles = toggles
 }
@@ -165,7 +165,7 @@ func (d *debugger) logPixel(p PixelPosition) {
 		attrs = append(attrs, slog.String("GridPosition", "notFound"))
 	}
 	attrs = append(attrs, nest("ObsacleLUT", d.oLUT[p].log()))
-	attrs = append(attrs, nest("NodeLookup", d.nodeLookup[p].log()))
+	attrs = append(attrs, nest("NodeLookup", d.nLUT[p].log()))
 	logger.log(infoLevel, devTool, "debugPixel", attrs...)
 }
 
@@ -236,8 +236,8 @@ func (d debugger) draw(c drawConfig) {
 		d.obstacleLUTDistance.draw(c, *d.debuggerConfig, d.heatmapMax)
 	}
 
-	if d.drawNodeLookup {
-		d.nodeLookupDistance.draw(c, *d.debuggerConfig, d.heatmapMax)
+	if d.drawNodeLUT {
+		d.nodeLUTDistance.draw(c, *d.debuggerConfig, d.heatmapMax)
 	}
 
 	if d.unitPathfindHeatmapComplete {

@@ -14,11 +14,11 @@ import (
 // All nodes on map
 type nodes map[GridPosition]*node
 
-// Look up table for nearest nodes.
-type nodeLookup map[PixelPosition]NearestNodes
+// Lookup table for processed node information.
+type nodeLUT map[PixelPosition]nodeInfo
 
-// TODO: Don't export NearestNodes it can be private
-type NearestNodes struct {
+// Processed node information.
+type nodeInfo struct {
 	ChebyshevDistance int            `json:"nearestNodeChebyshevDistance"`
 	Nodes             []GridPosition `json:"nodes"`
 }
@@ -54,11 +54,11 @@ func newNode(p player, gridPos GridPosition, initialNodeHealth int, hexConfig *h
 	return n
 }
 
-func (nn NearestNodes) log() []slog.Attr {
+func (info nodeInfo) log() []slog.Attr {
 	var a = []slog.Attr{}
-	a = append(a, slog.Int("ChebyshevDistance", nn.ChebyshevDistance))
+	a = append(a, slog.Int("ChebyshevDistance", info.ChebyshevDistance))
 	positions := []slog.Attr{}
-	for _, p := range nn.Nodes {
+	for _, p := range info.Nodes {
 		positions = append(positions, p.log()...)
 	}
 	if len(positions) == 0 {
@@ -73,27 +73,27 @@ func (nn NearestNodes) log() []slog.Attr {
 // probably can be optimized further but it is low priority since it it cached. The main optimization
 // is dynamic programming. The node pixels are processed first. Next, the pixels 1 pixel away are
 // processed. This continues until the all pixels are procesed.
-func (nodes nodes) setupLookup(oLUT obstacleLUT, hc *hexConfig) nodeLookup {
+func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, hc *hexConfig) nodeLUT {
 	distanceLimit := max(hc.windowWidth, hc.windowHeight)
-	lookup := make(map[PixelPosition]NearestNodes, hc.windowWidth*hc.windowHeight)
+	nodeLUT := make(map[PixelPosition]nodeInfo, hc.windowWidth*hc.windowHeight)
 
 	for x := range hc.windowWidth {
 		for y := range hc.windowHeight {
 			p := PixelPosition{X: x, Y: y}
 			gridPos, ok := p.getGridPos(hc)
 			if !ok {
-				panic("nodes setup lookup expected grid position to exist")
+				panic("setupNodeLUT: expected grid position to exist")
 			}
 			n := nodes[gridPos]
 			if n != nil && n.player != noPlayer {
-				lookup[p] = NearestNodes{ChebyshevDistance: 0, Nodes: []GridPosition{n.gridPos}}
+				nodeLUT[p] = nodeInfo{ChebyshevDistance: 0, Nodes: []GridPosition{n.gridPos}}
 			} else {
-				lookup[p] = NearestNodes{ChebyshevDistance: distanceLimit}
+				nodeLUT[p] = nodeInfo{ChebyshevDistance: distanceLimit}
 			}
 		}
 	}
 
-	logger.log(infoLevel, setupLogic, "setup node lookup", slog.Int("distance limit", distanceLimit))
+	logger.log(infoLevel, setupLogic, "setupNodeLUT", slog.Int("distance limit", distanceLimit))
 
 	distance := 0
 	var priorCount int
@@ -109,13 +109,13 @@ func (nodes nodes) setupLookup(oLUT obstacleLUT, hc *hexConfig) nodeLookup {
 			for y := range hc.windowHeight {
 				p := PixelPosition{X: x, Y: y}
 				oInfo := oLUT[p]
-				nnO := lookup[p]
+				nInfo := nodeLUT[p]
 
-				if !oInfo.Walkable || (oInfo.Walkable && nnO.ChebyshevDistance != distanceLimit) {
+				if !oInfo.Walkable || (oInfo.Walkable && nInfo.ChebyshevDistance != distanceLimit) {
 					count += 1
 				}
 
-				if !oLUT[p].Walkable || lookup[p].ChebyshevDistance != distance {
+				if !oLUT[p].Walkable || nodeLUT[p].ChebyshevDistance != distance {
 					continue
 				}
 
@@ -126,9 +126,9 @@ func (nodes nodes) setupLookup(oLUT obstacleLUT, hc *hexConfig) nodeLookup {
 						continue
 					}
 
-					nn := lookup[a]
-					nn.ChebyshevDistance = min(distance+1, nn.ChebyshevDistance)
-					lookup[a] = nn
+					naInfo := nodeLUT[a]
+					naInfo.ChebyshevDistance = min(distance+1, naInfo.ChebyshevDistance)
+					nodeLUT[a] = naInfo
 				}
 
 				for _, a := range adjacent {
@@ -136,16 +136,16 @@ func (nodes nodes) setupLookup(oLUT obstacleLUT, hc *hexConfig) nodeLookup {
 						continue
 					}
 
-					nn := lookup[a]
-					if nn.ChebyshevDistance < distance {
-						nodes := nnO.Nodes
-						for _, n := range nn.Nodes {
+					naInfo := nodeLUT[a]
+					if naInfo.ChebyshevDistance < distance {
+						nodes := nInfo.Nodes
+						for _, n := range naInfo.Nodes {
 							if !slices.Contains(nodes, n) {
 								nodes = append(nodes, n)
 							}
 						}
-						nnO.Nodes = nodes
-						lookup[p] = nnO
+						nInfo.Nodes = nodes
+						nodeLUT[p] = nInfo
 					}
 				}
 			}
@@ -155,27 +155,27 @@ func (nodes nodes) setupLookup(oLUT obstacleLUT, hc *hexConfig) nodeLookup {
 		logger.log(
 			infoLevel,
 			setupLogic,
-			fmt.Sprintf("setup node lookup. %.1f%% total pixels calculated. %d pixels of distance %d", percent, count-priorCount, distance))
+			fmt.Sprintf("setupNodeLUT: %.1f%% total pixels calculated. %d pixels of distance %d", percent, count-priorCount, distance))
 
 		distance++
 	}
 
 	percent := float64(count) / float64(hc.windowWidth*hc.windowHeight) * 100
-	logger.log(infoLevel, setupLogic, fmt.Sprintf("setup node lookup. %.0f%% total pixels not skipped with a distance limit of %d", percent, distanceLimit))
+	logger.log(infoLevel, setupLogic, fmt.Sprintf("setupNodeLUT: %.0f%% total pixels not skipped with a distance limit of %d", percent, distanceLimit))
 
 	for x := range hc.windowWidth {
 		for y := range hc.windowHeight {
 			p := PixelPosition{X: x, Y: y}
 			oInfo := oLUT[p]
 			if !oInfo.Walkable {
-				nn := lookup[p]
-				nn.ChebyshevDistance = distance
-				lookup[p] = nn
+				info := nodeLUT[p]
+				info.ChebyshevDistance = distance
+				nodeLUT[p] = info
 			}
 		}
 	}
 
-	return lookup
+	return nodeLUT
 }
 
 func (n node) isZero() bool {

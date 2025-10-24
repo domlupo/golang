@@ -186,7 +186,7 @@ func (os obstacles) setupObstacleLUT(hc *hexConfig) obstacleLUT {
 			oLUT[p] = info
 		}
 	}
-	logger.log(infoLevel, setupLogic, "setupObstacleLUT: Done calculating weighted smooth distance")
+	logger.log(infoLevel, setupLogic, "setupObstacleLUT: done calculating weighted smooth distance")
 
 	return oLUT
 }

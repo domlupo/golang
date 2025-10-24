@@ -386,30 +386,30 @@ const (
 	zoomVertical
 )
 
-type nodeInfo struct {
+type nodeSetupInput struct {
 	gridPos    GridPosition
 	player     player
 	unitConfig unitConfig
 }
 
-func setupNodes(s nodeSetup, hc *hexConfig, initialNodeHealth int, h hexagons, oLUT obstacleLUT) (nodes, nodeLookup) {
+func setupNodes(s nodeSetup, hc *hexConfig, initialNodeHealth int, h hexagons, oLUT obstacleLUT) (nodes, nodeLUT) {
 	nodes := make(nodes)
 	nodes.setupPositions(s, hc, initialNodeHealth)
 	nodes.setupControl(hc, h, oLUT)
 	fileHandler := newFileHandler()
-	nodeLookup := fileHandler.readNodeLookup(nodes, oLUT, hc)
+	nodeLookup := fileHandler.readNodeLUT(nodes, oLUT, hc)
 	return nodes, nodeLookup
 }
 
 func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth int) {
-	var nodeInfos []nodeInfo
+	var nodeSetupInputs []nodeSetupInput
 
 	switch s {
 	case noNodes:
 	case nodeSurrounded:
 		player := bluePlayer
 		unitConfig := infantryConfig
-		nodeInfos = []nodeInfo{
+		nodeSetupInputs = []nodeSetupInput{
 			{GridPosition{3, 1}, player, unitConfig},
 			{GridPosition{4, 1}, player, unitConfig},
 			{GridPosition{2, 2}, player, unitConfig},
@@ -419,38 +419,38 @@ func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth 
 			{GridPosition{4, 3}, player, unitConfig},
 		}
 	case northWest:
-		nodeInfos = []nodeInfo{
+		nodeSetupInputs = []nodeSetupInput{
 			{GridPosition{2, 2}, bluePlayer, infantryConfig},
 		}
 	case horizontal:
-		nodeInfos = []nodeInfo{
+		nodeSetupInputs = []nodeSetupInput{
 			{GridPosition{1, 23}, bluePlayer, infantryConfig},
 			{GridPosition{3, 23}, redPlayer, infantryConfig},
 		}
 	case horizontalMissile:
-		nodeInfos = []nodeInfo{
+		nodeSetupInputs = []nodeSetupInput{
 			{GridPosition{1, 23}, bluePlayer, unguidedGroundMissileConfig},
 			{GridPosition{3, 23}, redPlayer, guidedAirMissileConfig},
 		}
 	case vertical:
-		nodeInfos = []nodeInfo{
+		nodeSetupInputs = []nodeSetupInput{
 			{GridPosition{1, 21}, bluePlayer, infantryConfig},
 			{GridPosition{1, 23}, redPlayer, infantryConfig},
 		}
 	case diagonal:
-		nodeInfos = []nodeInfo{
+		nodeSetupInputs = []nodeSetupInput{
 			{GridPosition{2, 2}, bluePlayer, infantryConfig},
 			{GridPosition{5, 5}, redPlayer, infantryConfig},
 		}
 	case lowNodeCount:
-		nodeInfos = []nodeInfo{
+		nodeSetupInputs = []nodeSetupInput{
 			{GridPosition{2, 2}, bluePlayer, infantryConfig},
 			{GridPosition{2, 5}, bluePlayer, infantryConfig},
 			{GridPosition{20, 5}, redPlayer, infantryConfig},
 		}
 	case noNeutral:
 		unitConfig := infantryConfig
-		nodeInfos = []nodeInfo{
+		nodeSetupInputs = []nodeSetupInput{
 			{GridPosition{2, 2}, bluePlayer, unitConfig},
 			{GridPosition{6, 1}, bluePlayer, unitConfig},
 			{GridPosition{11, 1}, bluePlayer, unitConfig},
@@ -489,7 +489,7 @@ func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth 
 		}
 	case leftVsRight:
 		unitConfig := infantryConfig
-		nodeInfos = []nodeInfo{
+		nodeSetupInputs = []nodeSetupInput{
 			{GridPosition{2, 2}, bluePlayer, unitConfig},
 			{GridPosition{6, 1}, bluePlayer, unitConfig},
 			{GridPosition{11, 1}, neutralPlayer, unitConfig},
@@ -527,7 +527,7 @@ func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth 
 		}
 	case leftVsRightHorizontalOffset:
 		unitConfig := infantryConfig
-		nodeInfos = []nodeInfo{
+		nodeSetupInputs = []nodeSetupInput{
 			{GridPosition{2, 2}, bluePlayer, unitConfig},
 			{GridPosition{6, 1}, bluePlayer, unitConfig},
 			{GridPosition{11, 1}, neutralPlayer, unitConfig},
@@ -565,7 +565,7 @@ func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth 
 		}
 	case leftVsRightVerticalOffset:
 		unitConfig := infantryConfig
-		nodeInfos = []nodeInfo{
+		nodeSetupInputs = []nodeSetupInput{
 			{GridPosition{2, 2}, bluePlayer, unitConfig},
 			{GridPosition{6, 1}, bluePlayer, unitConfig},
 			{GridPosition{11, 2}, neutralPlayer, unitConfig},
@@ -603,7 +603,7 @@ func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth 
 		}
 	case topVsBottom:
 		unitConfig := infantryConfig
-		nodeInfos = []nodeInfo{
+		nodeSetupInputs = []nodeSetupInput{
 			{GridPosition{2, 2}, bluePlayer, unitConfig},
 			{GridPosition{6, 1}, bluePlayer, unitConfig},
 			{GridPosition{11, 1}, bluePlayer, unitConfig},
@@ -648,7 +648,7 @@ func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth 
 		}
 	case topVsBottomHorizontalOffset:
 		unitConfig := infantryConfig
-		nodeInfos = []nodeInfo{
+		nodeSetupInputs = []nodeSetupInput{
 			{GridPosition{2, 2}, bluePlayer, unitConfig},
 			{GridPosition{6, 1}, bluePlayer, unitConfig},
 			{GridPosition{11, 1}, bluePlayer, unitConfig},
@@ -685,7 +685,7 @@ func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth 
 			{GridPosition{26, 21}, redPlayer, unitConfig},
 		}
 	case zoomHorizontal:
-		nodeInfos = []nodeInfo{
+		nodeSetupInputs = []nodeSetupInput{
 			{GridPosition{2, 2}, bluePlayer, infantryConfig},
 			{GridPosition{6, 2}, redPlayer, infantryConfig},
 		}
@@ -693,7 +693,7 @@ func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth 
 		panic("node setup does not exist")
 	}
 
-	for _, ni := range nodeInfos {
+	for _, ni := range nodeSetupInputs {
 		node := newNode(ni.player, ni.gridPos, initialNodeHealth, hc, ni.unitConfig)
 		nodes[ni.gridPos] = &node
 	}

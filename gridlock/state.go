@@ -13,7 +13,7 @@ type state struct {
 	// TODO: The next largest optimization might be to split hexagon linked list
 	// into respective layers.
 	oLUT               obstacleLUT
-	nodeLookup         nodeLookup
+	nLUT               nodeLUT
 	hexagons           hexagons
 	obstacles          obstacles
 	nodes              nodes
@@ -23,14 +23,14 @@ type state struct {
 	unitsDeletedTotal  int
 }
 
-func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nodeLookup nodeLookup, hexConfig *hexConfig, developerMode bool) *state {
+func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, hexConfig *hexConfig, developerMode bool) *state {
 	s := state{
 		hexConfig:     hexConfig,
 		obstacles:     o,
 		oLUT:          oLUT,
 		hexagons:      h,
 		nodes:         n,
-		nodeLookup:    nodeLookup,
+		nLUT:          nLUT,
 		units:         make(units),
 		developerMode: developerMode,
 	}
@@ -56,11 +56,11 @@ func (s *state) analyzeTargets() {
 		}
 
 		u.canReachNode = node{}
-		if s.nodeLookup[u.PixelPosition].ChebyshevDistance < u.reach {
-			if len(s.nodeLookup[u.PixelPosition].Nodes) > 1 {
+		if s.nLUT[u.PixelPosition].ChebyshevDistance < u.reach {
+			if len(s.nLUT[u.PixelPosition].Nodes) > 1 {
 				logger.log(errorLevel, undecidedBehavior, "Undecided behavior. Unit can reach multiple nodes. Arbitrarily picking one")
 			}
-			p := s.nodeLookup[u.PixelPosition].Nodes[0]
+			p := s.nLUT[u.PixelPosition].Nodes[0]
 			n := s.nodes[p]
 			if u.player != n.player {
 				u.canReachNode = *n
@@ -686,7 +686,7 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 	// ends left or above window, the position is incorrectly set to {0, 0} which
 	// usually causes too much selection to occur. The behavior is correct when
 	// the cursor ends right or below window. It is tricky and error prone to fix this
-	// due to hexagon lookup repetition, so I am punting it.
+	// due to hexagon LUT repetition, so I am punting it.
 	topLeftGridPos, _ := topLeftPixelPos.getGridPos(s.hexConfig)
 	bottomRightGridPos, _ := bottomRightPixelPos.getGridPosOutbounds(s.hexConfig)
 

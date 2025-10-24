@@ -20,10 +20,10 @@ Is there a mobile equivalent for war/4x games?
 ### Next Checkpoints
 
 - Update obstacleLUT to know the pixel of nearest obstacle not just the distance
-  - Similar logic already exists for node lookup
+  - Similar logic already exists for node LUT
   - This will be used in boids For example, O <- U-> X, If O is obstacle, and U is unit, go directly away to point X
 
-- Rename hex stuff to lookup as well
+- Rename hex stuff to LUT as well
 
 - Design and Determine best way for boids to avoid obstacles
   - There are multiple options to handle velocity:
