@@ -57,10 +57,10 @@ func (s *state) analyzeTargets() {
 
 		u.canReachNode = node{}
 		if s.nLUT[u.PixelPosition].ChebyshevDistance < u.reach {
-			if len(s.nLUT[u.PixelPosition].Nodes) > 1 {
+			if len(s.nLUT[u.PixelPosition].NearestNodes) > 1 {
 				logger.log(errorLevel, undecidedBehavior, "Undecided behavior. Unit can reach multiple nodes. Arbitrarily picking one")
 			}
-			p := s.nLUT[u.PixelPosition].Nodes[0]
+			p := s.nLUT[u.PixelPosition].NearestNodes[0]
 			n := s.nodes[p]
 			if u.player != n.player {
 				u.canReachNode = *n

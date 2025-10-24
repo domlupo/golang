@@ -19,8 +19,8 @@ type nodeLUT map[PixelPosition]nodeInfo
 
 // Processed node information.
 type nodeInfo struct {
-	ChebyshevDistance int            `json:"nearestNodeChebyshevDistance"`
-	Nodes             []GridPosition `json:"nodes"`
+	ChebyshevDistance int            `json:"chebyshevDistance"`
+	NearestNodes      []GridPosition `json:"nearestNodes"`
 }
 
 // Game component which spawns units and is captured by opposing units
@@ -58,7 +58,7 @@ func (info nodeInfo) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, slog.Int("ChebyshevDistance", info.ChebyshevDistance))
 	positions := []slog.Attr{}
-	for _, p := range info.Nodes {
+	for _, p := range info.NearestNodes {
 		positions = append(positions, p.log()...)
 	}
 	if len(positions) == 0 {
@@ -86,7 +86,7 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, hc *hexConfig) nodeLUT {
 			}
 			n := nodes[gridPos]
 			if n != nil && n.player != noPlayer {
-				nodeLUT[p] = nodeInfo{ChebyshevDistance: 0, Nodes: []GridPosition{n.gridPos}}
+				nodeLUT[p] = nodeInfo{ChebyshevDistance: 0, NearestNodes: []GridPosition{n.gridPos}}
 			} else {
 				nodeLUT[p] = nodeInfo{ChebyshevDistance: distanceLimit}
 			}
@@ -138,13 +138,13 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, hc *hexConfig) nodeLUT {
 
 					naInfo := nodeLUT[a]
 					if naInfo.ChebyshevDistance < distance {
-						nodes := nInfo.Nodes
-						for _, n := range naInfo.Nodes {
+						nodes := nInfo.NearestNodes
+						for _, n := range naInfo.NearestNodes {
 							if !slices.Contains(nodes, n) {
 								nodes = append(nodes, n)
 							}
 						}
-						nInfo.Nodes = nodes
+						nInfo.NearestNodes = nodes
 						nodeLUT[p] = nInfo
 					}
 				}
