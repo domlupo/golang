@@ -19,6 +19,11 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Look into optimize heatmap draws.
+  - heatmaps are causing large stutters. I highly doubt this cannot be optimized.
+  - This will help me understand ebiten better.
+  - https://ebitengine.org/en/documents/performancetips.html 
+
 - Design and Determine best way for boids to avoid obstacles
   - There are multiple options to handle velocity:
     - I can refactor code to use velocity and then trim it to magnitude 1.
