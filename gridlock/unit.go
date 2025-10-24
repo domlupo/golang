@@ -181,8 +181,7 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 	var unitTarget string
 	switch ut {
 	case activeTarget:
-		if target.isZero() || u.activeTarget.isZero() {
-			// TODO: Determine if bresenham needs zeroed more often.
+		if !u.activeTarget.equals(target.PixelPosition) {
 			u.bresenhamError = nil
 			u.nextBresenhamError = nil
 		}
