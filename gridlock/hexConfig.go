@@ -1,4 +1,4 @@
-// The hexagon configuration is relatively complex because a look up table is implemented to optimize CPU usage.
+// The hexagon configuration is relatively complex because a look up table (LUT) is implemented to optimize CPU usage.
 
 package main
 
@@ -6,13 +6,13 @@ package main
 // be calculated during runtime via hexConfig fields. It is calculated from hexagon width
 // * (hexagon height/4). The 4 is from the hexagon look up table being 1/4 of the total
 // hexagon height.
-const hexLookUpTablePixelCount = 460
+const hexLUTPixelCount = 460
 
 // Hexagon configuration
 type hexConfig struct {
-	lookUpTable [hexLookUpTablePixelCount]hexagonTriangle
-	hexWidth    int
-	hexHeight   int
+	lut       [hexLUTPixelCount]hexagonTriangle
+	hexWidth  int
+	hexHeight int
 	// These offsets define the top left point for the most top left hex look up
 	// table pattern. It was chosen since both a positive x and y simplifies code.
 	xOffset      int
@@ -24,11 +24,11 @@ type hexConfig struct {
 }
 
 func newHexConfig(windowWidth int, windowHeight int, hexWidth int, hexHeight int, xOffset int, yOffset int) hexConfig {
-	lookUpTable := newHexLookUpTable(hexWidth)
+	lut := setupHexLUT(hexWidth)
 	xIndexMax := windowWidth/hexWidth + 2
 	yIndexMax := windowHeight/(hexHeight/4*3) + 1
 	hc := hexConfig{
-		lookUpTable: lookUpTable,
+		lut: lut,
 		// For 1280p * 720p resolution, a hexagon height of 40p is ideally 80/sqrt(3) wide.
 		// 80/sqrt(3) is 46.188 which is approximately 46p.
 		hexWidth:     hexWidth,
@@ -129,54 +129,54 @@ const (
 	rightHexTriangle
 )
 
-func newHexLookUpTable(rowPixelCount int) [hexLookUpTablePixelCount]hexagonTriangle {
-	var pc [hexLookUpTablePixelCount]hexagonTriangle
+func setupHexLUT(rowPixelCount int) [hexLUTPixelCount]hexagonTriangle {
+	var pc [hexLUTPixelCount]hexagonTriangle
 
 	// row 1
 	rowStart := 0
 	rowMiddleOffset := 1
-	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setupHexLUTRow(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 	// row 2
 	rowStart = rowPixelCount
 	rowMiddleOffset = 3
-	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setupHexLUTRow(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 	// row 3
 	rowStart = rowPixelCount * 2
 	rowMiddleOffset = 6
-	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setupHexLUTRow(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 	// row 4
 	rowStart = rowPixelCount * 3
 	rowMiddleOffset = 8
-	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setupHexLUTRow(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 	// row 5
 	rowStart = rowPixelCount * 4
 	rowMiddleOffset = 10
-	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setupHexLUTRow(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 	// row 6
 	rowStart = rowPixelCount * 5
 	rowMiddleOffset = 13
-	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setupHexLUTRow(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 	// row 7
 	rowStart = rowPixelCount * 6
 	rowMiddleOffset = 15
-	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setupHexLUTRow(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 	// row 8
 	rowStart = rowPixelCount * 7
 	rowMiddleOffset = 17
-	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setupHexLUTRow(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 	// row 9
 	rowStart = rowPixelCount * 8
 	rowMiddleOffset = 20
-	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setupHexLUTRow(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 	// row 10
 	rowStart = rowPixelCount * 9
 	rowMiddleOffset = 22
-	setHexLookUpTable(&pc, rowPixelCount, rowStart, rowMiddleOffset)
+	setupHexLUTRow(&pc, rowPixelCount, rowStart, rowMiddleOffset)
 
 	return pc
 }
 
-func setHexLookUpTable(pc *[hexLookUpTablePixelCount]hexagonTriangle, rowPixelCount int, rowStart int, rowMiddleOffset int) {
+func setupHexLUTRow(pc *[hexLUTPixelCount]hexagonTriangle, rowPixelCount int, rowStart int, rowMiddleOffset int) {
 	pixelCount := rowPixelCount / 2
 
 	leftHexStart := rowStart

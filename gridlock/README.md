@@ -23,8 +23,6 @@ Is there a mobile equivalent for war/4x games?
   - Similar logic already exists for node LUT
   - This will be used in boids For example, O <- U-> X, If O is obstacle, and U is unit, go directly away to point X
 
-- Rename hex stuff to LUT as well
-
 - Design and Determine best way for boids to avoid obstacles
   - There are multiple options to handle velocity:
     - I can refactor code to use velocity and then trim it to magnitude 1.
@@ -253,6 +251,13 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Punted Checkpoints
+
+- A performance gain might be possible from investing in hex lookup 
+ - I am unsure if this is needed because this code is already performant, but it is in
+   a very hot loop so even minimal gains might be worth it.
+  - Right now, hex triangle LUT are created at startup which are used at runtime to get hex position
+  - Instead, I can do more calculation at startup and use a LUT to store pixelPos -> hex 
+    directly. This avoids doing pixelPos -> hex triangle -> hex calculations at runtime.
 
 - Currently heatmap creation stops game update ticks. This means when creating a heatmap via button click
   multiple button clicks are processed. I fixed this by only allowing one heat map to ever be created. Ideally, 
