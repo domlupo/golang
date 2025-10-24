@@ -1,5 +1,5 @@
 lines:
-	find . -type f -name "*.go" -exec wc -l {} +
+	find . -type f -name "*.go" -exec wc -l {} + | sort -nr
 cpu:
 	go tool pprof -http=:6060 output/cpu.prof
 mem:
