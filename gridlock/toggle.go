@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 type callBack func()
@@ -28,7 +29,7 @@ func newToggle(key ebiten.Key, callback callBack, cooldown time.Duration) *toggl
 }
 
 func (t *toggle) checkToggle(currentTime time.Time) {
-	if currentTime.Sub(t.timer) > t.cooldown && ebiten.IsKeyPressed(t.key) {
+	if currentTime.Sub(t.timer) > t.cooldown && inpututil.IsKeyJustPressed(t.key) {
 		t.callBack()
 		t.timer = currentTime
 	}

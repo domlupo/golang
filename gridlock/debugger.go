@@ -61,6 +61,9 @@ func newDebuggerConfig() *debuggerConfig {
 type debugger struct {
 	*state
 	*debuggerConfig
+	pixelPathUnwalkable         heatmap
+	pixelPathDistance           heatmap
+	nodeLookupDistance          heatmap
 	heatmapAlphaMax             float64
 	unitPathfind                heatmap
 	unitPathfindHeatmapComplete bool
@@ -70,44 +73,79 @@ type debugger struct {
 // A typical heatmap. Used for visual debugging.
 type heatmap map[PixelPosition]int
 
-func newDebugger(state *state, developerToggleCooldown time.Duration) debugger {
+func newDebugger(state *state, toggleCooldown time.Duration) debugger {
 	c := newDebuggerConfig()
-
-	toggles := make(map[string]*toggle)
-	toggles["drawAll"] = newToggle(
-		ebiten.KeyA,
-		func() {
-			var toggle = !(c.drawBlueTargets && c.drawRedTargets && c.drawHexGrid && c.drawVisibilityGrids)
-			c.drawBlueTargets = toggle
-			c.drawRedTargets = toggle
-			c.drawHexGrid = toggle
-			c.drawVisibilityGrids = toggle
-		},
-		developerToggleCooldown)
-	toggles["drawBlueTargets"] = newToggle(
-		ebiten.KeyB,
-		func() { c.drawBlueTargets = !c.drawBlueTargets },
-		developerToggleCooldown)
-	toggles["drawRedTargets"] = newToggle(
-		ebiten.KeyR,
-		func() { c.drawRedTargets = !c.drawRedTargets },
-		developerToggleCooldown)
-	toggles["drawDebugGrid"] = newToggle(
-		ebiten.KeyG,
-		func() { c.drawHexGrid = !c.drawHexGrid },
-		developerToggleCooldown)
-	toggles["drawVisibilityGrids"] = newToggle(
-		ebiten.KeyV,
-		func() { c.drawVisibilityGrids = !c.drawVisibilityGrids },
-		developerToggleCooldown)
-
-	return debugger{
+	debugger := debugger{
 		state:           state,
 		debuggerConfig:  c,
 		heatmapAlphaMax: c.heatmapAlphaMaxLimit,
 		unitPathfind:    make(heatmap),
-		toggles:         toggles,
 	}
+	debugger.setupHeatmaps()
+	debugger.setupToggles(toggleCooldown)
+	return debugger
+}
+
+func (d *debugger) setupHeatmaps() {
+	d.pixelPathUnwalkable = make(heatmap)
+	d.pixelPathDistance = make(heatmap)
+	d.nodeLookupDistance = make(heatmap)
+
+	for pixelPos, path := range d.pixelPath {
+		switch path.Walkable {
+		case true:
+			d.pixelPathUnwalkable[pixelPos] = 0
+		case false:
+			d.pixelPathUnwalkable[pixelPos] = 1
+		}
+	}
+
+	for pixelPos, path := range d.pixelPath {
+		d.pixelPathDistance[pixelPos] = path.UnwalkableSmoothSum
+	}
+
+	for pixelPos, nn := range d.nodeLookup {
+		d.nodeLookupDistance[pixelPos] = nn.ChebyshevDistance
+	}
+}
+
+func (d *debugger) setupToggles(cooldown time.Duration) {
+	toggles := make(map[string]*toggle)
+	toggles["drawAll"] = newToggle(
+		ebiten.KeyA,
+		func() {
+			var toggle = !(d.drawBlueTargets && d.drawRedTargets && d.drawHexGrid && d.drawVisibilityGrids)
+			d.drawBlueTargets = toggle
+			d.drawRedTargets = toggle
+			d.drawHexGrid = toggle
+			d.drawVisibilityGrids = toggle
+		},
+		cooldown)
+	toggles["drawBlueTargets"] = newToggle(
+		ebiten.KeyB,
+		func() { d.drawBlueTargets = !d.drawBlueTargets },
+		cooldown)
+	toggles["drawRedTargets"] = newToggle(
+		ebiten.KeyR,
+		func() { d.drawRedTargets = !d.drawRedTargets },
+		cooldown)
+	toggles["drawDebugGrid"] = newToggle(
+		ebiten.KeyG,
+		func() { d.drawHexGrid = !d.drawHexGrid },
+		cooldown)
+	toggles["drawVisibilityGrids"] = newToggle(
+		ebiten.KeyV,
+		func() { d.drawVisibilityGrids = !d.drawVisibilityGrids },
+		cooldown)
+	toggles["drawPixelPath"] = newToggle(
+		ebiten.KeyQ,
+		func() { d.drawPixelPath = !d.drawPixelPath },
+		cooldown)
+	toggles["drawNodeLookup"] = newToggle(
+		ebiten.KeyW,
+		func() { d.drawNodeLookup = !d.drawNodeLookup },
+		cooldown)
+	d.toggles = toggles
 }
 
 func (d *debugger) debug(p PixelPosition) {
@@ -185,31 +223,12 @@ func (d debugger) draw(c drawConfig) {
 	}
 
 	if d.drawPixelPath {
-		unwalkable := make(heatmap)
-		for pixelPos, path := range d.pixelPath {
-			switch path.Walkable {
-			case true:
-				unwalkable[pixelPos] = 0
-			case false:
-				unwalkable[pixelPos] = 1
-			}
-		}
-
-		distance := make(heatmap)
-		for pixelPos, path := range d.pixelPath {
-			distance[pixelPos] = path.UnwalkableSmoothSum
-		}
-
-		unwalkable.draw(c, *d.debuggerConfig)
-		distance.draw(c, *d.debuggerConfig)
+		d.pixelPathUnwalkable.draw(c, *d.debuggerConfig)
+		d.pixelPathDistance.draw(c, *d.debuggerConfig)
 	}
 
 	if d.drawNodeLookup {
-		distance := make(heatmap)
-		for pixelPos, nn := range d.nodeLookup {
-			distance[pixelPos] = nn.ChebyshevDistance
-		}
-		distance.draw(c, *d.debuggerConfig)
+		d.nodeLookupDistance.draw(c, *d.debuggerConfig)
 	}
 
 	if d.unitPathfindHeatmapComplete {
