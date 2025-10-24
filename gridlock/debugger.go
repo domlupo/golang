@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"image/color"
 	"log/slog"
 	"os"
@@ -30,7 +31,7 @@ type debuggerConfig struct {
 	heatmapR                uint8
 	heatmapG                uint8
 	heatmapB                uint8
-	heatmapAlphaMaxLimit    float64
+	heatmapAlphaMaxLimit    int
 	roygbivColors           []color.RGBA
 }
 
@@ -64,7 +65,7 @@ type debugger struct {
 	pixelPathUnwalkable         heatmap
 	pixelPathDistance           heatmap
 	nodeLookupDistance          heatmap
-	heatmapAlphaMax             float64
+	heatmapAlphaMax             int
 	unitPathfind                heatmap
 	unitPathfindHeatmapComplete bool
 	toggles                     map[string]*toggle
@@ -217,22 +218,28 @@ func (d *debugger) createUnitPathfindHeatmap() {
 	logger.log(infoLevel, devTool, "done creating pathfinding heatmap")
 }
 
+func (d *debugger) updateHeatmapMax(delta int) {
+	d.heatmapAlphaMax = max(d.heatmapAlphaMax+delta, 1)
+	d.heatmapAlphaMax = min(d.heatmapAlphaMax, d.heatmapAlphaMaxLimit)
+	fmt.Println(d.heatmapAlphaMax)
+}
+
 func (d debugger) draw(c drawConfig) {
 	if d.drawHexGrid {
 		drawHexGrid(c)
 	}
 
 	if d.drawPixelPath {
-		d.pixelPathUnwalkable.draw(c, *d.debuggerConfig)
-		d.pixelPathDistance.draw(c, *d.debuggerConfig)
+		d.pixelPathUnwalkable.draw(c, *d.debuggerConfig, d.heatmapAlphaMax)
+		d.pixelPathDistance.draw(c, *d.debuggerConfig, d.heatmapAlphaMax)
 	}
 
 	if d.drawNodeLookup {
-		d.nodeLookupDistance.draw(c, *d.debuggerConfig)
+		d.nodeLookupDistance.draw(c, *d.debuggerConfig, d.heatmapAlphaMax)
 	}
 
 	if d.unitPathfindHeatmapComplete {
-		d.unitPathfind.draw(c, *d.debuggerConfig)
+		d.unitPathfind.draw(c, *d.debuggerConfig, d.heatmapAlphaMax)
 	}
 
 	for _, n := range d.nodes {
@@ -257,16 +264,17 @@ func (d debugger) draw(c drawConfig) {
 	}
 }
 
-func (heatmap heatmap) draw(c drawConfig, dC debuggerConfig) {
-	max := 0
+func (heatmap heatmap) draw(c drawConfig, dC debuggerConfig, heatmapAlphaMax int) {
+	m := 0
 	for _, distance := range heatmap {
-		if distance > max {
-			max = distance
+		if distance > m {
+			m = distance
 		}
 	}
+	m = min(m, heatmapAlphaMax)
 
 	for pixelPos, distance := range heatmap {
-		color := color.RGBA{dC.heatmapR, dC.heatmapB, dC.heatmapG, uint8(float64(distance) / float64(max) * dC.heatmapAlphaMaxLimit)}
+		color := color.RGBA{dC.heatmapR, dC.heatmapB, dC.heatmapG, uint8(float64(distance) / float64(m) * float64(dC.heatmapAlphaMaxLimit))}
 		vector.DrawFilledRect(
 			c.screen,
 			float32(pixelPos.X)*c.windowMultiplier,

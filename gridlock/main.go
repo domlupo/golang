@@ -83,7 +83,7 @@ func newGame() Game {
 		currentSelectedY:        float32(-1.0),
 		blueComputerActive:      true,
 		redComputerActive:       true,
-		produceUnits:            true,
+		produceUnits:            false,
 		moveUnits:               true,
 		hotRestart:              true,
 		cpuProfilerOn:           false,
@@ -176,6 +176,8 @@ func (g *Game) Update() error {
 
 	// player actions
 	graphicalX, graphicalY := ebiten.CursorPosition()
+	_, mouseWheelDelta := ebiten.Wheel()
+	g.debugger.updateHeatmapMax(int(mouseWheelDelta))
 
 	x := float32(graphicalX) / g.windowMultiplier
 	y := float32(graphicalY) / g.windowMultiplier
