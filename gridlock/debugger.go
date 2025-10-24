@@ -30,8 +30,10 @@ type debuggerConfig struct {
 	heatmapR                uint8
 	heatmapG                uint8
 	heatmapB                uint8
-	heatmapAlphaMaxLimit    float64
-	roygbivColors           []color.RGBA
+	heatmapAlphaMaxLimit    int
+	// TODO: Make heatmap max a percentage so it has same behavior across heatmaps
+	heatmapMax    int
+	roygbivColors []color.RGBA
 }
 
 func newDebuggerConfig() *debuggerConfig {
@@ -44,6 +46,7 @@ func newDebuggerConfig() *debuggerConfig {
 		heatmapG:                0,
 		heatmapB:                0,
 		heatmapAlphaMaxLimit:    200,
+		heatmapMax:              250,
 		roygbivColors: []color.RGBA{
 			{200, 0, 0, 255},
 			{250, 150, 0, 255},
@@ -64,7 +67,7 @@ type debugger struct {
 	pixelPathUnwalkable         heatmap
 	pixelPathDistance           heatmap
 	nodeLookupDistance          heatmap
-	heatmapAlphaMax             float64
+	heatmapAlphaMax             int
 	unitPathfind                heatmap
 	unitPathfindHeatmapComplete bool
 	toggles                     map[string]*toggle
@@ -101,7 +104,8 @@ func (d *debugger) setupHeatmaps() {
 	}
 
 	for pixelPos, path := range d.pixelPath {
-		d.pixelPathDistance[pixelPos] = path.UnwalkableSmoothSum
+		// TODO: Update this to unwalkable smooth sum once debugger supports percentages
+		d.pixelPathDistance[pixelPos] = path.UnwalkableChebyshevDistance
 	}
 
 	for pixelPos, nn := range d.nodeLookup {
@@ -217,22 +221,27 @@ func (d *debugger) createUnitPathfindHeatmap() {
 	logger.log(infoLevel, devTool, "done creating pathfinding heatmap")
 }
 
+func (d *debugger) updateHeatmapMax(delta int) {
+	d.heatmapMax = max(d.heatmapMax+delta, 1)
+	d.heatmapMax = min(d.heatmapMax, 1200)
+}
+
 func (d debugger) draw(c drawConfig) {
 	if d.drawHexGrid {
 		drawHexGrid(c)
 	}
 
 	if d.drawPixelPath {
-		d.pixelPathUnwalkable.draw(c, *d.debuggerConfig)
-		d.pixelPathDistance.draw(c, *d.debuggerConfig)
+		d.pixelPathUnwalkable.draw(c, *d.debuggerConfig, d.heatmapMax)
+		d.pixelPathDistance.draw(c, *d.debuggerConfig, d.heatmapMax)
 	}
 
 	if d.drawNodeLookup {
-		d.nodeLookupDistance.draw(c, *d.debuggerConfig)
+		d.nodeLookupDistance.draw(c, *d.debuggerConfig, d.heatmapMax)
 	}
 
 	if d.unitPathfindHeatmapComplete {
-		d.unitPathfind.draw(c, *d.debuggerConfig)
+		d.unitPathfind.draw(c, *d.debuggerConfig, d.heatmapAlphaMax)
 	}
 
 	for _, n := range d.nodes {
@@ -257,16 +266,16 @@ func (d debugger) draw(c drawConfig) {
 	}
 }
 
-func (heatmap heatmap) draw(c drawConfig, dC debuggerConfig) {
-	max := 0
+func (heatmap heatmap) draw(c drawConfig, dC debuggerConfig, heatmapMax int) {
+	m := 0
 	for _, distance := range heatmap {
-		if distance > max {
-			max = distance
-		}
+		m = max(m, distance)
 	}
+	m = min(m, heatmapMax)
 
-	for pixelPos, distance := range heatmap {
-		color := color.RGBA{dC.heatmapR, dC.heatmapB, dC.heatmapG, uint8(float64(distance) / float64(max) * dC.heatmapAlphaMaxLimit)}
+	for pixelPos, v := range heatmap {
+		v := min(v, heatmapMax)
+		color := color.RGBA{dC.heatmapR, dC.heatmapB, dC.heatmapG, uint8(float64(v) / float64(m) * float64(dC.heatmapAlphaMaxLimit))}
 		vector.DrawFilledRect(
 			c.screen,
 			float32(pixelPos.X)*c.windowMultiplier,
