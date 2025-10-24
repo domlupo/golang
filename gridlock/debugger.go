@@ -94,8 +94,8 @@ func (d *debugger) setupHeatmaps() {
 	d.obstacleLUTDistance = make(heatmap)
 	d.nodeLUTDistance = make(heatmap)
 
-	for pixelPos, path := range d.oLUT {
-		switch path.Walkable {
+	for pixelPos, info := range d.oLUT {
+		switch info.Walkable {
 		case true:
 			d.obstacleLUTUnwalkable[pixelPos] = 0
 		case false:
@@ -198,7 +198,7 @@ func (d *debugger) createUnitPathfindHeatmap() {
 	defer stop()
 
 	pixelCount := 0
-	for pixelPos, path := range d.oLUT {
+	for pixelPos, info := range d.oLUT {
 		select {
 		case <-ctx.Done():
 			return
@@ -209,7 +209,7 @@ func (d *debugger) createUnitPathfindHeatmap() {
 				logger.log(infoLevel, devTool, "pathfind heatmap", slog.Int("pixel positions percent progress", percentProgess))
 			}
 
-			if path.Walkable {
+			if info.Walkable {
 				unit.updateTarget(globalTarget, position{layer: unit.layer, PixelPosition: pixelPos})
 				distance := unit.pathfindGlobalTarget(d.obstacles, d.oLUT, d.hexConfig)
 				d.unitPathfind[pixelPos] = distance
