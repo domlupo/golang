@@ -57,14 +57,14 @@ func newNode(p player, gridPos GridPosition, initialNodeHealth int, hexConfig *h
 func (info nodeInfo) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, slog.Int("ChebyshevDistance", info.ChebyshevDistance))
-	positions := []slog.Attr{}
+	nearestNodes := []slog.Attr{}
 	for _, p := range info.NearestNodes {
-		positions = append(positions, p.log()...)
+		nearestNodes = append(nearestNodes, p.log()...)
 	}
-	if len(positions) == 0 {
-		a = append(a, slog.String("nodes", "none"))
+	if len(nearestNodes) == 0 {
+		a = append(a, slog.String("nearest nodes", "none"))
 	} else {
-		a = append(a, nest("nodes", positions))
+		a = append(a, nest("nearest nodes", nearestNodes))
 	}
 	return a
 }

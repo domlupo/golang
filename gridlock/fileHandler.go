@@ -38,7 +38,7 @@ type nodeLUTEntry struct {
 func (f fileHandler) readObstacleLUT(obstacles obstacles, hc *hexConfig) obstacleLUT {
 	file, err := os.Open(fmt.Sprintf("%s/%s", f.directoryName, f.obstacleLUTFileName))
 	if errors.Is(err, os.ErrNotExist) {
-		logger.log(infoLevel, setupLogic, "readObstacleLUT: create obstacle look up table file since it does not exist")
+		logger.log(infoLevel, setupLogic, "readObstacleLUT: create look up table file since it does not exist")
 		return f.writeObstacleLUT(obstacles, hc)
 	} else if err != nil {
 		logger.log(errorLevel, setupLogic, fmt.Sprintf("readObstacleLUT: file handler could not read json file: %v", err))
@@ -60,7 +60,7 @@ func (f fileHandler) readObstacleLUT(obstacles obstacles, hc *hexConfig) obstacl
 	}
 
 	if len(oLUT) != hc.windowWidth*hc.windowHeight {
-		logger.log(errorLevel, setupLogic, "readObstacleLUT: cannot create obstacle look up table since loaded obstacle look up was invalid size")
+		logger.log(errorLevel, setupLogic, "readObstacleLUT: cannot read obstacle look up table since loaded obstacle look up was invalid size")
 		return f.writeObstacleLUT(obstacles, hc)
 	}
 

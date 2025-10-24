@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math"
+	"slices"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -39,9 +40,10 @@ type obstacleLUT map[PixelPosition]obstacleInfo
 
 // Processed obstacle information.
 type obstacleInfo struct {
-	Walkable                    bool `json:"walkable"`
-	UnwalkableChebyshevDistance int  `json:"unwalkableChebyshevDistance"`
-	UnwalkableSmoothSum         int  `json:"unwalkableSmoothSum"`
+	Walkable                    bool            `json:"walkable"`
+	NearestUnwalkables          []PixelPosition `json:"nearestUnwalkables"`
+	UnwalkableChebyshevDistance int             `json:"unwalkableChebyshevDistance"`
+	UnwalkableSmoothSum         int             `json:"unwalkableSmoothSum"`
 }
 
 type obstacleKind int
@@ -52,11 +54,20 @@ const (
 	highMountain
 )
 
-func (oI obstacleInfo) log() []slog.Attr {
+func (info obstacleInfo) log() []slog.Attr {
 	var a = []slog.Attr{}
-	a = append(a, slog.Bool("Walkable", oI.Walkable))
-	a = append(a, slog.Int("UnwalkableChebyshevDistance", oI.UnwalkableChebyshevDistance))
-	a = append(a, slog.Int("UnwalkableSmoothSum", oI.UnwalkableSmoothSum))
+	a = append(a, slog.Bool("Walkable", info.Walkable))
+	nearestUnwalkables := []slog.Attr{}
+	for _, p := range info.NearestUnwalkables {
+		nearestUnwalkables = append(nearestUnwalkables, p.log()...)
+	}
+	if len(nearestUnwalkables) == 0 {
+		a = append(a, slog.String("nearest unwalkables", "none"))
+	} else {
+		a = append(a, nest("nearest unwalkables", nearestUnwalkables))
+	}
+	a = append(a, slog.Int("UnwalkableChebyshevDistance", info.UnwalkableChebyshevDistance))
+	a = append(a, slog.Int("UnwalkableSmoothSum", info.UnwalkableSmoothSum))
 	return a
 }
 
@@ -99,7 +110,9 @@ func (os obstacles) setupObstacleLUT(hc *hexConfig) obstacleLUT {
 			}
 			o := os[gridPos]
 			if o != nil && (o.kind == lowMountain || o.kind == highMountain) {
-				oLUT[p] = obstacleInfo{Walkable: false}
+				// TODO: This can be removed to save file size, but the average pixel position is going
+				// to be found in a future commit. It will replace the array. So it is wasted work.
+				oLUT[p] = obstacleInfo{Walkable: false, NearestUnwalkables: []PixelPosition{p}}
 			} else {
 				oLUT[p] = obstacleInfo{Walkable: true}
 			}
@@ -140,16 +153,30 @@ func (os obstacles) setupObstacleLUT(hc *hexConfig) obstacleLUT {
 					count += 1
 				}
 
-				if oLUT[p].UnwalkableChebyshevDistance != distance {
+				if info.UnwalkableChebyshevDistance != distance {
 					continue
 				}
 
 				adjacent := p.allAdjacent(hc)
 
 				for _, a := range adjacent {
-					info := oLUT[a]
-					info.UnwalkableChebyshevDistance = min(distance+1, info.UnwalkableChebyshevDistance)
-					oLUT[a] = info
+					aInfo := oLUT[a]
+					aInfo.UnwalkableChebyshevDistance = min(distance+1, aInfo.UnwalkableChebyshevDistance)
+					oLUT[a] = aInfo
+				}
+
+				for _, a := range adjacent {
+					aInfo := oLUT[a]
+					if aInfo.UnwalkableChebyshevDistance < distance {
+						nearest := info.NearestUnwalkables
+						for _, unwalkable := range aInfo.NearestUnwalkables {
+							if !slices.Contains(nearest, unwalkable) {
+								nearest = append(nearest, unwalkable)
+							}
+						}
+						info.NearestUnwalkables = nearest
+						oLUT[p] = info
+					}
 				}
 			}
 		}

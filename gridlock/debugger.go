@@ -19,6 +19,7 @@ import (
 type debuggerConfig struct {
 	drawHexGrid             bool
 	drawObstacleLUT         bool
+	drawObstacleLUTNearest  bool
 	drawNodeLUT             bool
 	drawVisibilityGrids     bool
 	drawBlueTargets         bool
@@ -38,6 +39,7 @@ type debuggerConfig struct {
 
 func newDebuggerConfig() *debuggerConfig {
 	dc := debuggerConfig{
+		drawObstacleLUTNearest:  true,
 		debugGridWidth:          1,
 		debugGridIndexCount:     32,
 		debugGridColor:          color.Black,
@@ -64,6 +66,7 @@ func newDebuggerConfig() *debuggerConfig {
 type debugger struct {
 	*state
 	*debuggerConfig
+	pixel                       *PixelPosition
 	obstacleLUTUnwalkable       heatmap
 	obstacleLUTDistance         heatmap
 	nodeLUTDistance             heatmap
@@ -141,11 +144,11 @@ func (d *debugger) setupToggles(cooldown time.Duration) {
 		ebiten.KeyV,
 		func() { d.drawVisibilityGrids = !d.drawVisibilityGrids },
 		cooldown)
-	toggles["drawPixelPath"] = newToggle(
+	toggles["drawObstacleLUT"] = newToggle(
 		ebiten.KeyQ,
 		func() { d.drawObstacleLUT = !d.drawObstacleLUT },
 		cooldown)
-	toggles["drawNodeLookup"] = newToggle(
+	toggles["drawNodeLUT"] = newToggle(
 		ebiten.KeyW,
 		func() { d.drawNodeLUT = !d.drawNodeLUT },
 		cooldown)
@@ -153,6 +156,7 @@ func (d *debugger) setupToggles(cooldown time.Duration) {
 }
 
 func (d *debugger) debug(p PixelPosition) {
+	d.pixel = &p
 	d.logPixel(p)
 	d.createUnitPathfindHeatmap()
 }
@@ -165,7 +169,7 @@ func (d *debugger) logPixel(p PixelPosition) {
 		attrs = append(attrs, slog.String("GridPosition", "notFound"))
 	}
 	attrs = append(attrs, nest("ObsacleLUT", d.oLUT[p].log()))
-	attrs = append(attrs, nest("NodeLookup", d.nLUT[p].log()))
+	attrs = append(attrs, nest("NodeLUT", d.nLUT[p].log()))
 	logger.log(infoLevel, devTool, "debugPixel", attrs...)
 }
 
@@ -234,6 +238,12 @@ func (d debugger) draw(c drawConfig) {
 	if d.drawObstacleLUT {
 		d.obstacleLUTUnwalkable.draw(c, *d.debuggerConfig, d.heatmapMax)
 		d.obstacleLUTDistance.draw(c, *d.debuggerConfig, d.heatmapMax)
+
+		if d.pixel != nil && d.drawObstacleLUTNearest {
+			for _, p := range d.oLUT[*d.pixel].NearestUnwalkables {
+				p.draw(c)
+			}
+		}
 	}
 
 	if d.drawNodeLUT {
@@ -264,6 +274,17 @@ func (d debugger) draw(c drawConfig) {
 			o.drawVisibilityGrid(c)
 		}
 	}
+}
+
+func (p PixelPosition) draw(c drawConfig) {
+	vector.DrawFilledRect(
+		c.screen,
+		float32(p.X)*c.windowMultiplier,
+		float32(p.Y)*c.windowMultiplier,
+		1*c.windowMultiplier,
+		1*c.windowMultiplier,
+		c.highlightColor,
+		false)
 }
 
 func (heatmap heatmap) draw(c drawConfig, dC debuggerConfig, heatmapMax int) {
