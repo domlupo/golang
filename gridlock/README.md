@@ -19,11 +19,9 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Update pixelPath to know the pixel of nearest obstacle not just the distance
+- Update obstacleLUT to know the pixel of nearest obstacle not just the distance
   - Similar logic already exists for node lookup
   - This will be used in boids For example, O <- U-> X, If O is obstacle, and U is unit, go directly away to point X
-
-- Rename pixelPath name to Obstacle lookup 
 
 - Rename hex stuff to lookup as well
 
@@ -134,7 +132,7 @@ Is there a mobile equivalent for war/4x games?
   - Clean up prior nested unit + unitConfig logging which is probably broke.
 
 - Update debugger to use percentages for heatmap max rather than an int
-  - Update pixel path to sum distance 
+  - Update obstacleLUT to sum distance rather than chebyshev distance? Not sure if this is needed.
 
 - save file: 
   - Will expose constraints
@@ -149,7 +147,7 @@ Is there a mobile equivalent for war/4x games?
 - When all nodes are selected, newly captured nodes should become selected as well.
 
 - Determine if LOS algorithm should be updated from bresenham to check obstacle line intersects
-  - pixel path neareset obstacle check for los probably made this less useful but it still could be useful enough to implement.
+  - obstacleLUT neareset obstacle check for los probably made this less useful but it still could be useful enough to implement.
   - line intersect check will be probably be much more performant
   - line intersect check will probably be much better than switching from map to array for cache locality.
   - current CPU profiling shows map access during lineOfSight checks are taking up significant CPU
@@ -183,9 +181,6 @@ Is there a mobile equivalent for war/4x games?
     position, I can then only calculate the final path. If obstacles and nodes are not dynamic this 
     will probably be easy. Essentially, avoid cache invalidation.
   - Current theta* implementation is not finding shortest path for multi obstacle. 
-  - For pixel pathing may optimize by adding two fields:
-    - nearestUnwalkabledDistance int
-    - nearestUnwalkable pixelPosition
 
 - While game is paused, node targets can be updated. Determine if this behavior is correct. Fix if needed.
 
@@ -653,7 +648,7 @@ CBS in depth notes: https://www.sciencedirect.com/science/article/pii/S000437021
   Only allow so much complex pathing to occur over a span of time.
 
 - Flow fields
-  - Using pixel pathing struct, I can check the 9 adjacent squares to find the direction of the nearest obstacle.
+  - Using obstacle info struct, I can check the 9 adjacent squares to find the direction of the nearest obstacle.
   - Can add flow fields based on nearby obstacles and sum thier forces to get a single final directon.
   - longer obstacles can have stronger forces so units don't start don't long path.
 - Flocking

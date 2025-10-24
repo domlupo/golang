@@ -12,7 +12,7 @@ type state struct {
 	*hexConfig
 	// TODO: The next largest optimization might be to split hexagon linked list
 	// into respective layers.
-	pixelPath          pixelPath
+	oLUT               obstacleLUT
 	nodeLookup         nodeLookup
 	hexagons           hexagons
 	obstacles          obstacles
@@ -23,11 +23,11 @@ type state struct {
 	unitsDeletedTotal  int
 }
 
-func newState(n nodes, o obstacles, h hexagons, pixelPath pixelPath, nodeLookup nodeLookup, hexConfig *hexConfig, developerMode bool) *state {
+func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nodeLookup nodeLookup, hexConfig *hexConfig, developerMode bool) *state {
 	s := state{
 		hexConfig:     hexConfig,
 		obstacles:     o,
-		pixelPath:     pixelPath,
+		oLUT:          oLUT,
 		hexagons:      h,
 		nodes:         n,
 		nodeLookup:    nodeLookup,
@@ -71,7 +71,7 @@ func (s *state) analyzeTargets() {
 		u.updateTarget(enemyTarget, nearest)
 
 		if !u.globalTarget.isZero() && u.pathGlobalTarget {
-			u.pathfindGlobalTarget(s.obstacles, s.pixelPath, s.hexConfig)
+			u.pathfindGlobalTarget(s.obstacles, s.oLUT, s.hexConfig)
 		} else if len(u.localTargets) > 0 && u.atTerminalPosition {
 			u.localTargets = u.localTargets[:len(u.localTargets)-1]
 		}
@@ -210,7 +210,7 @@ func (s *state) moveUnits() {
 			continue
 		}
 
-		if !s.pixelPath[newPos.PixelPosition].Walkable || s.pixelPath[newPos.PixelPosition].UnwalkableChebyshevDistance < u.radius+1 {
+		if !s.oLUT[newPos.PixelPosition].Walkable || s.oLUT[newPos.PixelPosition].UnwalkableChebyshevDistance < u.radius+1 {
 			unitsAtUnwalkable++
 			continue
 		}
@@ -396,7 +396,7 @@ func (s *state) nearestUnitWithinVision(u unit) (position, bool) {
 			yDelta := y2 - y1
 			distance := xDelta*xDelta + yDelta*yDelta
 			if distance < shortestDistance && distance <= u.vision*u.vision {
-				if _, los := u.lineOfSight(current.PixelPosition, s.pixelPath, u.radius); los {
+				if _, los := u.lineOfSight(current.PixelPosition, s.oLUT, u.radius); los {
 					shortestDistance = distance
 					nearestUnitPos = current.position
 				}

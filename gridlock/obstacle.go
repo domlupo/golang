@@ -34,11 +34,11 @@ type obstaclePoint struct {
 	ccwDistance      int
 }
 
-// Lookup table for pixel path data
-type pixelPath map[PixelPosition]Path
+// Lookup table for processed obstacle information.
+type obstacleLUT map[PixelPosition]obstacleInfo
 
-// path data
-type Path struct {
+// Processed obstacle information.
+type obstacleInfo struct {
 	Walkable                    bool `json:"walkable"`
 	UnwalkableChebyshevDistance int  `json:"unwalkableChebyshevDistance"`
 	UnwalkableSmoothSum         int  `json:"unwalkableSmoothSum"`
@@ -52,11 +52,11 @@ const (
 	highMountain
 )
 
-func (p Path) log() []slog.Attr {
+func (oI obstacleInfo) log() []slog.Attr {
 	var a = []slog.Attr{}
-	a = append(a, slog.Bool("Walkable", p.Walkable))
-	a = append(a, slog.Int("UnwalkableChebyshevDistance", p.UnwalkableChebyshevDistance))
-	a = append(a, slog.Int("UnwalkableSmoothSum", p.UnwalkableSmoothSum))
+	a = append(a, slog.Bool("Walkable", oI.Walkable))
+	a = append(a, slog.Int("UnwalkableChebyshevDistance", oI.UnwalkableChebyshevDistance))
+	a = append(a, slog.Int("UnwalkableSmoothSum", oI.UnwalkableSmoothSum))
 	return a
 }
 
@@ -72,36 +72,36 @@ func (os obstacles) insert(k GridPosition, v *obstacle) {
 	os[k] = v
 }
 
-func (os obstacles) setup(hc *hexConfig, pixelPathDistanceMax int) pixelPath {
+func (os obstacles) setup(hc *hexConfig) obstacleLUT {
 	fileHandler := newFileHandler()
-	pixelPath := fileHandler.readPixelPath(os, hc)
+	oLUT := fileHandler.readObstacleLUT(os, hc)
 	groups := os.getGroups(hc)
 	for _, group := range groups {
-		group.setupVisibilityGrid(pixelPath, hc)
+		group.setupVisibilityGrid(oLUT, hc)
 	}
-	return pixelPath
+	return oLUT
 }
 
 // CPU intensive because it calculates the optimal distance from every walkable pixel to the nearest
 // unwalkable pixel. It probably can be optimized further but it is low priority since it it cached.
 // The main optimization is dynamic programming. The unwalkable pixels are processed first. Next, the
 // pixels 1 pixel away are processed. This continues until all the pixels are processed.
-func (os obstacles) setupPixelPath(hc *hexConfig) pixelPath {
+func (os obstacles) setupObstacleLUT(hc *hexConfig) obstacleLUT {
 	distanceLimit := max(hc.windowWidth, hc.windowHeight)
-	pixelPath := make(map[PixelPosition]Path, hc.windowWidth*hc.windowHeight)
+	oLUT := make(map[PixelPosition]obstacleInfo, hc.windowWidth*hc.windowHeight)
 
 	for x := range hc.windowWidth {
 		for y := range hc.windowHeight {
 			p := PixelPosition{X: x, Y: y}
 			gridPos, ok := p.getGridPos(hc)
 			if !ok {
-				panic("Could not setup pixel path")
+				panic("setupObstacleLUT: Could not setup obstacle lookup table")
 			}
 			o := os[gridPos]
 			if o != nil && (o.kind == lowMountain || o.kind == highMountain) {
-				pixelPath[p] = Path{Walkable: false}
+				oLUT[p] = obstacleInfo{Walkable: false}
 			} else {
-				pixelPath[p] = Path{Walkable: true}
+				oLUT[p] = obstacleInfo{Walkable: true}
 			}
 		}
 	}
@@ -109,17 +109,17 @@ func (os obstacles) setupPixelPath(hc *hexConfig) pixelPath {
 	for x := range hc.windowWidth {
 		for y := range hc.windowHeight {
 			p := PixelPosition{X: x, Y: y}
-			path := pixelPath[p]
-			if !path.Walkable {
-				path.UnwalkableChebyshevDistance = 0
+			info := oLUT[p]
+			if !info.Walkable {
+				info.UnwalkableChebyshevDistance = 0
 			} else {
-				path.UnwalkableChebyshevDistance = distanceLimit
+				info.UnwalkableChebyshevDistance = distanceLimit
 			}
-			pixelPath[p] = path
+			oLUT[p] = info
 		}
 	}
 
-	logger.log(infoLevel, setupLogic, "setup pixel path", slog.Int("distance limit", distanceLimit))
+	logger.log(infoLevel, setupLogic, "setupObstacleLUT", slog.Int("distance limit", distanceLimit))
 
 	distance := 0
 	var priorCount int
@@ -134,22 +134,22 @@ func (os obstacles) setupPixelPath(hc *hexConfig) pixelPath {
 		for x := range hc.windowWidth {
 			for y := range hc.windowHeight {
 				p := PixelPosition{X: x, Y: y}
-				path := pixelPath[p]
+				info := oLUT[p]
 
-				if !path.Walkable || (path.Walkable && path.UnwalkableChebyshevDistance != distanceLimit) {
+				if !info.Walkable || (info.Walkable && info.UnwalkableChebyshevDistance != distanceLimit) {
 					count += 1
 				}
 
-				if pixelPath[p].UnwalkableChebyshevDistance != distance {
+				if oLUT[p].UnwalkableChebyshevDistance != distance {
 					continue
 				}
 
 				adjacent := p.allAdjacent(hc)
 
 				for _, a := range adjacent {
-					path := pixelPath[a]
-					path.UnwalkableChebyshevDistance = min(distance+1, path.UnwalkableChebyshevDistance)
-					pixelPath[a] = path
+					info := oLUT[a]
+					info.UnwalkableChebyshevDistance = min(distance+1, info.UnwalkableChebyshevDistance)
+					oLUT[a] = info
 				}
 			}
 		}
@@ -158,37 +158,37 @@ func (os obstacles) setupPixelPath(hc *hexConfig) pixelPath {
 		logger.log(
 			infoLevel,
 			setupLogic,
-			fmt.Sprintf("setup pixel path. %.1f%% total pixels calculated. %d pixels of distance %d", percent, count-priorCount, distance))
+			fmt.Sprintf("setupObstacleLUT: %.1f%% total pixels calculated. %d pixels of distance %d", percent, count-priorCount, distance))
 
 		distance++
 	}
 
 	percent := float64(count) / float64(hc.windowWidth*hc.windowHeight) * 100
-	logger.log(infoLevel, setupLogic, fmt.Sprintf("setup pixel path. %.0f%% total pixels not skipped with a distance limit of %d", percent, distanceLimit))
+	logger.log(infoLevel, setupLogic, fmt.Sprintf("setupObstacleLUT: %.0f%% total pixels not skipped with a distance limit of %d", percent, distanceLimit))
 
-	logger.log(infoLevel, setupLogic, "start calculating weighted smooth for pixel path distance")
+	logger.log(infoLevel, setupLogic, "setupObstacleLUT: start calculating weighted smooth distance")
 	for x := range hc.windowWidth {
 		for y := range hc.windowHeight {
 			p := PixelPosition{X: x, Y: y}
 			adjacent := p.allAdjacent(hc)
 
-			sum := pixelPath[p].UnwalkableChebyshevDistance
+			sum := oLUT[p].UnwalkableChebyshevDistance
 			for _, a := range adjacent {
-				sum += pixelPath[a].UnwalkableChebyshevDistance
+				sum += oLUT[a].UnwalkableChebyshevDistance
 
 				otherAdjacent := a.allAdjacent(hc)
 				for _, oa := range otherAdjacent {
-					sum += pixelPath[oa].UnwalkableChebyshevDistance
+					sum += oLUT[oa].UnwalkableChebyshevDistance
 				}
 			}
-			path := pixelPath[p]
-			path.UnwalkableSmoothSum = sum
-			pixelPath[p] = path
+			info := oLUT[p]
+			info.UnwalkableSmoothSum = sum
+			oLUT[p] = info
 		}
 	}
-	logger.log(infoLevel, setupLogic, "finished calculating weighted smooth for pixel path distance")
+	logger.log(infoLevel, setupLogic, "setupObstacleLUT: Done calculating weighted smooth distance")
 
-	return pixelPath
+	return oLUT
 }
 
 func (os obstacles) getGroups(hc *hexConfig) []obstacles {
@@ -248,7 +248,7 @@ func (os obstacles) getGroups(hc *hexConfig) []obstacles {
 }
 
 // Returns true if a point to point line of sight exists using Bresenham's algorithm
-func (pos PixelPosition) lineOfSight(otherPos PixelPosition, path pixelPath, radius int) (PixelPosition, bool) {
+func (pos PixelPosition) lineOfSight(otherPos PixelPosition, oLUT obstacleLUT, radius int) (PixelPosition, bool) {
 	x0 := pos.X
 	y0 := pos.Y
 	x1 := otherPos.X
@@ -278,7 +278,7 @@ func (pos PixelPosition) lineOfSight(otherPos PixelPosition, path pixelPath, rad
 
 	for x0 != x1 || y0 != y1 {
 		p := PixelPosition{X: x0, Y: y0}
-		if !path[p].Walkable || path[p].UnwalkableChebyshevDistance < radius-1 {
+		if !oLUT[p].Walkable || oLUT[p].UnwalkableChebyshevDistance < radius-1 {
 			return p, false
 		}
 
@@ -298,8 +298,8 @@ func (pos PixelPosition) lineOfSight(otherPos PixelPosition, path pixelPath, rad
 }
 
 // returns the obstacle point nearest to the line of sight block from start to end
-func (start PixelPosition) obstaclePoint(end PixelPosition, path pixelPath, obstacles obstacles, hc *hexConfig) (obstaclePoint, bool) {
-	obstaclePixelPos, los := start.lineOfSight(end, path, 0)
+func (start PixelPosition) obstaclePoint(end PixelPosition, oLUT obstacleLUT, obstacles obstacles, hc *hexConfig) (obstaclePoint, bool) {
+	obstaclePixelPos, los := start.lineOfSight(end, oLUT, 0)
 
 	if los {
 		return obstaclePoint{}, los
@@ -324,11 +324,11 @@ func (start PixelPosition) obstaclePoint(end PixelPosition, path pixelPath, obst
 	return visibilityGrid[nearestIndex], los
 }
 
-func (os obstacles) setupVisibilityGrid(path pixelPath, hc *hexConfig) {
+func (os obstacles) setupVisibilityGrid(oLUT obstacleLUT, hc *hexConfig) {
 	points := make(obstaclePoints)
 	points.createAllPoints(os, hc)
 	points.removeDuplicatePoints()
-	points.connectPoints(path, hc)
+	points.connectPoints(oLUT, hc)
 
 	id, err := uuid.NewV4()
 	if err != nil {
@@ -430,7 +430,7 @@ func (points obstaclePoints) removeDuplicatePoints() {
 	}
 }
 
-func (points obstaclePoints) connectPoints(path pixelPath, hc *hexConfig) {
+func (points obstaclePoints) connectPoints(oLUT obstacleLUT, hc *hexConfig) {
 	var notConnected []*obstaclePoint
 	for _, op := range points {
 		notConnected = append(notConnected, op)
@@ -453,7 +453,7 @@ func (points obstaclePoints) connectPoints(path pixelPath, hc *hexConfig) {
 				continue
 			}
 
-			if _, lineOfSight := current.lineOfSight(op.PixelPosition, path, 0); !lineOfSight {
+			if _, lineOfSight := current.lineOfSight(op.PixelPosition, oLUT, 0); !lineOfSight {
 				continue
 			}
 

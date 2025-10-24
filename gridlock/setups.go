@@ -14,12 +14,12 @@ const (
 	horizontalObstacle
 )
 
-func setupObstacles(setup obstacleSetup, hc *hexConfig, pixelPathDistanceMax int) (obstacles, pixelPath) {
+func setupObstacles(setup obstacleSetup, hc *hexConfig) (obstacles, obstacleLUT) {
 	obstacles := make(obstacles)
 	obstacles.setupBorder()
 	obstacles.setupInterior(setup, hc)
-	pixelPath := obstacles.setup(hc, pixelPathDistanceMax)
-	return obstacles, pixelPath
+	oLUT := obstacles.setup(hc)
+	return obstacles, oLUT
 }
 
 func (os obstacles) setupBorder() {
@@ -392,12 +392,12 @@ type nodeInfo struct {
 	unitConfig unitConfig
 }
 
-func setupNodes(s nodeSetup, hc *hexConfig, initialNodeHealth int, h hexagons, pixelPath pixelPath) (nodes, nodeLookup) {
+func setupNodes(s nodeSetup, hc *hexConfig, initialNodeHealth int, h hexagons, oLUT obstacleLUT) (nodes, nodeLookup) {
 	nodes := make(nodes)
 	nodes.setupPositions(s, hc, initialNodeHealth)
-	nodes.setupControl(hc, h, pixelPath)
+	nodes.setupControl(hc, h, oLUT)
 	fileHandler := newFileHandler()
-	nodeLookup := fileHandler.readNodeLookup(nodes, pixelPath, hc)
+	nodeLookup := fileHandler.readNodeLookup(nodes, oLUT, hc)
 	return nodes, nodeLookup
 }
 

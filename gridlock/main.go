@@ -57,7 +57,6 @@ type Game struct {
 	developerToggles         map[string]*toggle
 	developerToggleCooldown  time.Duration
 	initialNodeHealth        int
-	pixelPathDistanceMax     int
 	loggerConfig             loggerConfig
 	outputDirectoryName      string
 	cpuProfilerFileName      string
@@ -92,7 +91,6 @@ func newGame() Game {
 		developerToggles:        make(map[string]*toggle),
 		developerToggleCooldown: 300 * time.Millisecond,
 		initialNodeHealth:       100,
-		pixelPathDistanceMax:    drawConfig.hexWidth / 2,
 		outputDirectoryName:     "output",
 		cpuProfilerFileName:     "cpu.prof",
 		memProfilerFileName:     "mem.prof",
@@ -113,8 +111,8 @@ func (g *Game) restart() {
 	g.compTwo = *newComputer(redPlayer)
 
 	hexagons := setupHexagons(&g.drawConfig.hexConfig)
-	obstacles, pixelPath := setupObstacles(multiObstacle, &g.drawConfig.hexConfig, g.pixelPathDistanceMax)
-	nodes, nodeLookup := setupNodes(leftVsRightVerticalOffset, &g.drawConfig.hexConfig, g.initialNodeHealth, hexagons, pixelPath)
+	obstacles, oLUT := setupObstacles(multiObstacle, &g.drawConfig.hexConfig)
+	nodes, nodeLookup := setupNodes(leftVsRightVerticalOffset, &g.drawConfig.hexConfig, g.initialNodeHealth, hexagons, oLUT)
 
 	for nPos := range nodes {
 		for oPos := range obstacles {
@@ -124,7 +122,7 @@ func (g *Game) restart() {
 		}
 	}
 
-	g.gameState = newState(nodes, obstacles, hexagons, pixelPath, nodeLookup, &g.drawConfig.hexConfig, g.developerMode)
+	g.gameState = newState(nodes, obstacles, hexagons, oLUT, nodeLookup, &g.drawConfig.hexConfig, g.developerMode)
 	g.debugger = newDebugger(g.gameState, g.developerToggleCooldown)
 	g.updateComputerTargetNodes()
 }

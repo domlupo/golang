@@ -17,6 +17,7 @@ type nodes map[GridPosition]*node
 // Look up table for nearest nodes.
 type nodeLookup map[PixelPosition]NearestNodes
 
+// TODO: Don't export NearestNodes it can be private
 type NearestNodes struct {
 	ChebyshevDistance int            `json:"nearestNodeChebyshevDistance"`
 	Nodes             []GridPosition `json:"nodes"`
@@ -71,8 +72,8 @@ func (nn NearestNodes) log() []slog.Attr {
 // CPU intensive because it calculates the optimal distance from any pixel to the nearest node. It
 // probably can be optimized further but it is low priority since it it cached. The main optimization
 // is dynamic programming. The node pixels are processed first. Next, the pixels 1 pixel away are
-// processed. This continues until the all pixels are procesed.:w
-func (nodes nodes) setupLookup(pixelPath pixelPath, hc *hexConfig) nodeLookup {
+// processed. This continues until the all pixels are procesed.
+func (nodes nodes) setupLookup(oLUT obstacleLUT, hc *hexConfig) nodeLookup {
 	distanceLimit := max(hc.windowWidth, hc.windowHeight)
 	lookup := make(map[PixelPosition]NearestNodes, hc.windowWidth*hc.windowHeight)
 
@@ -107,21 +108,21 @@ func (nodes nodes) setupLookup(pixelPath pixelPath, hc *hexConfig) nodeLookup {
 		for x := range hc.windowWidth {
 			for y := range hc.windowHeight {
 				p := PixelPosition{X: x, Y: y}
-				path := pixelPath[p]
+				oInfo := oLUT[p]
 				nnO := lookup[p]
 
-				if !path.Walkable || (path.Walkable && nnO.ChebyshevDistance != distanceLimit) {
+				if !oInfo.Walkable || (oInfo.Walkable && nnO.ChebyshevDistance != distanceLimit) {
 					count += 1
 				}
 
-				if !pixelPath[p].Walkable || lookup[p].ChebyshevDistance != distance {
+				if !oLUT[p].Walkable || lookup[p].ChebyshevDistance != distance {
 					continue
 				}
 
 				adjacent := p.allAdjacent(hc)
 
 				for _, a := range adjacent {
-					if !pixelPath[a].Walkable {
+					if !oLUT[a].Walkable {
 						continue
 					}
 
@@ -131,7 +132,7 @@ func (nodes nodes) setupLookup(pixelPath pixelPath, hc *hexConfig) nodeLookup {
 				}
 
 				for _, a := range adjacent {
-					if !pixelPath[a].Walkable {
+					if !oLUT[a].Walkable {
 						continue
 					}
 
@@ -165,8 +166,8 @@ func (nodes nodes) setupLookup(pixelPath pixelPath, hc *hexConfig) nodeLookup {
 	for x := range hc.windowWidth {
 		for y := range hc.windowHeight {
 			p := PixelPosition{X: x, Y: y}
-			path := pixelPath[p]
-			if !path.Walkable {
+			oInfo := oLUT[p]
+			if !oInfo.Walkable {
 				nn := lookup[p]
 				nn.ChebyshevDistance = distance
 				lookup[p] = nn
@@ -186,7 +187,7 @@ func (n node) selected() bool {
 	return n.singleSelect || n.multiSelect
 }
 
-func (nodes nodes) setupControl(hc *hexConfig, hexagons hexagons, pixelPath pixelPath) {
+func (nodes nodes) setupControl(hc *hexConfig, hexagons hexagons, oLUT obstacleLUT) {
 
 	for _, h := range hexagons {
 		q := []GridPosition{h.gridPos}
@@ -205,7 +206,7 @@ func (nodes nodes) setupControl(hc *hexConfig, hexagons hexagons, pixelPath pixe
 			p, ok := current.getAnyPixelPos(hc)
 			if !ok {
 				panic("setup control, could not find any pixel position")
-			} else if !pixelPath[p].Walkable {
+			} else if !oLUT[p].Walkable {
 				continue
 			}
 
