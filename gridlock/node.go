@@ -248,14 +248,6 @@ func (nodes nodes) setupControl(hc *hexConfig, hexagons hexagons, pixelPath pixe
 	}
 }
 
-func (lookup nodeLookup) draw(dc drawConfig) {
-	distance := make(heatmap)
-	for pixelPos, nn := range lookup {
-		distance[pixelPos] = nn.ChebyshevDistance
-	}
-	distance.draw(dc)
-}
-
 func (n *node) drawNode(dc drawConfig) {
 	var red float32
 	var blue float32

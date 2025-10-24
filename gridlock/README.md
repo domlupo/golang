@@ -21,6 +21,8 @@ Is there a mobile equivalent for war/4x games?
 
 - Add toggles for debugger visualizations
 
+- Add mouse wheel override to lower max heatmap value
+
 - Determine if I need to add Ctrl+C handling for new file saves. This could lead to hard to debug issues.
 
 - Invest in look up tables 

@@ -9,10 +9,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-// A typical heatmap. Used for visual debugging.
-type heatmap map[PixelPosition]int
-
-// Drawing Configurations for game components
+// Drawing Configurations for game components which are shown to player
 type drawConfig struct {
 	screen *ebiten.Image
 	// windowMultiplier must only be used for drawing images and windows.
@@ -38,14 +35,7 @@ type drawConfig struct {
 	redPlayerNodeColor            color.RGBA
 	redPlayerUnitColor            color.RGBA
 	neutralNodeColor              color.RGBA
-	avgUnitPosRadius              int
-	avgUnitPosColor               color.Color
-	heatmapR                      uint8
-	heatmapG                      uint8
-	heatmapB                      uint8
-	heatmapAlphaMax               float64
 	drawTriangleDefaultImage      *ebiten.Image
-	roygbivColors                 []color.RGBA
 }
 
 func newDrawConfig() *drawConfig {
@@ -77,45 +67,9 @@ func newDrawConfig() *drawConfig {
 		redPlayerNodeColor:            color.RGBA{255, 0, 0, 100},
 		redPlayerUnitColor:            color.RGBA{255, 0, 0, 100},
 		neutralNodeColor:              color.RGBA{100, 60, 100, 200},
-		avgUnitPosRadius:              1,
-		avgUnitPosColor:               color.Black,
-		heatmapR:                      0,
-		heatmapG:                      0,
-		heatmapB:                      0,
-		heatmapAlphaMax:               200,
 		drawTriangleDefaultImage:      drawTriangleDefaultImage,
-		roygbivColors: []color.RGBA{
-			{200, 0, 0, 255},
-			{250, 150, 0, 255},
-			{250, 200, 0, 255},
-			{0, 200, 150, 255},
-			{0, 0, 250, 255},
-			{0, 0, 150, 255},
-			{150, 150, 250, 255},
-		},
 	}
 	return &dc
-}
-
-func (heatmap heatmap) draw(dc drawConfig) {
-	max := 0
-	for _, distance := range heatmap {
-		if distance > max {
-			max = distance
-		}
-	}
-
-	for pixelPos, distance := range heatmap {
-		color := color.RGBA{dc.heatmapR, dc.heatmapB, dc.heatmapG, uint8(float64(distance) / float64(max) * dc.heatmapAlphaMax)}
-		vector.DrawFilledRect(
-			dc.screen,
-			float32(pixelPos.X)*dc.windowMultiplier,
-			float32(pixelPos.Y)*dc.windowMultiplier,
-			1*dc.windowMultiplier,
-			1*dc.windowMultiplier,
-			color,
-			false)
-	}
 }
 
 func drawUnfilledBoxFloat32(dc drawConfig, color color.Color, initialX float32, initialY float32, finalX float32, finalY float32) {

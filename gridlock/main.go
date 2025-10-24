@@ -39,13 +39,7 @@ type Game struct {
 	paused                   bool
 	blueComputerActive       bool
 	redComputerActive        bool
-	drawPixelPath            bool
-	drawNodeLookup           bool
 	hotRestart               bool
-	drawBlueTargets          bool
-	drawRedTargets           bool
-	drawHexDebugGrid         bool
-	drawVisibilityGrids      bool
 	slowTick                 bool
 	cpuProfilerOn            bool
 	memoryProfilerOn         bool
@@ -131,7 +125,7 @@ func (g *Game) restart() {
 	}
 
 	g.gameState = newState(nodes, obstacles, hexagons, pixelPath, nodeLookup, &g.drawConfig.hexConfig, g.developerMode)
-	g.debugger = newDebugger(g.gameState)
+	g.debugger = newDebugger(g.gameState, g.developerToggleCooldown)
 	g.updateComputerTargetNodes()
 }
 
@@ -145,8 +139,11 @@ func (g *Game) Update() error {
 		slog.Float64("fps", ebiten.ActualFPS()), slog.Float64("tps", ebiten.ActualTPS()),
 	)
 
-	for _, toggle := range g.developerToggles {
-		toggle.checkToggle(g.currentTime)
+	for _, t := range g.developerToggles {
+		t.checkToggle(g.currentTime)
+	}
+	for _, t := range g.debugger.toggles {
+		t.checkToggle(g.currentTime)
 	}
 
 	// refresh
@@ -179,6 +176,7 @@ func (g *Game) Update() error {
 
 	// player actions
 	graphicalX, graphicalY := ebiten.CursorPosition()
+
 	x := float32(graphicalX) / g.windowMultiplier
 	y := float32(graphicalY) / g.windowMultiplier
 	pixelPos := PixelPosition{int(x), int(y)}
@@ -288,7 +286,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	screen.Fill(g.drawConfig.backgroundColor)
 	g.gameState.draw(*g.drawConfig)
-	g.debugger.draw(*g.drawConfig, g.drawHexDebugGrid, g.drawPixelPath, g.drawNodeLookup, g.drawVisibilityGrids, g.drawBlueTargets, g.drawRedTargets)
+	g.debugger.draw(*g.drawConfig)
 
 	if g.leftMouseHeld {
 		drawUnfilledBoxFloat32(
@@ -390,32 +388,6 @@ func main() {
 	g.developerToggles["selectedUnitLogType"] = newToggle(
 		ebiten.KeyU,
 		func() { logger.toggleType(selectedUnit) },
-		g.developerToggleCooldown)
-	g.developerToggles["drawAll"] = newToggle(
-		ebiten.KeyA,
-		func() {
-			var toggle = !(g.drawBlueTargets && g.drawRedTargets && g.drawHexDebugGrid && g.drawVisibilityGrids)
-			g.drawBlueTargets = toggle
-			g.drawRedTargets = toggle
-			g.drawHexDebugGrid = toggle
-			g.drawVisibilityGrids = toggle
-		},
-		g.developerToggleCooldown)
-	g.developerToggles["drawBlueTargets"] = newToggle(
-		ebiten.KeyB,
-		func() { g.drawBlueTargets = !g.drawBlueTargets },
-		g.developerToggleCooldown)
-	g.developerToggles["drawRedTargets"] = newToggle(
-		ebiten.KeyR,
-		func() { g.drawRedTargets = !g.drawRedTargets },
-		g.developerToggleCooldown)
-	g.developerToggles["drawDebugGrid"] = newToggle(
-		ebiten.KeyG,
-		func() { g.drawHexDebugGrid = !g.drawHexDebugGrid },
-		g.developerToggleCooldown)
-	g.developerToggles["drawVisibilityGrids"] = newToggle(
-		ebiten.KeyV,
-		func() { g.drawVisibilityGrids = !g.drawVisibilityGrids },
 		g.developerToggleCooldown)
 
 	if !g.developerMode {

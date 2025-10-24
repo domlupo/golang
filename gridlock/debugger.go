@@ -1,28 +1,112 @@
-// A debugger which outputs text logs and data visualizations to inspect game state.
+// A debugger for developers which outputs text logs and data visualizations to inspect game state.
 
 package main
 
 import (
 	"context"
+	"image/color"
 	"log/slog"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/gofrs/uuid/v5"
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
+
+// Debugger Configurations
+type debuggerConfig struct {
+	drawHexGrid             bool
+	drawPixelPath           bool
+	drawNodeLookup          bool
+	drawVisibilityGrids     bool
+	drawBlueTargets         bool
+	drawRedTargets          bool
+	debugGridWidth          int
+	debugGridIndexCount     int
+	debugGridColor          color.Color
+	visibilityGridLineWidth int
+	heatmapR                uint8
+	heatmapG                uint8
+	heatmapB                uint8
+	heatmapAlphaMaxLimit    float64
+	roygbivColors           []color.RGBA
+}
+
+func newDebuggerConfig() *debuggerConfig {
+	dc := debuggerConfig{
+		debugGridWidth:          1,
+		debugGridIndexCount:     32,
+		debugGridColor:          color.Black,
+		visibilityGridLineWidth: 1,
+		heatmapR:                0,
+		heatmapG:                0,
+		heatmapB:                0,
+		heatmapAlphaMaxLimit:    200,
+		roygbivColors: []color.RGBA{
+			{200, 0, 0, 255},
+			{250, 150, 0, 255},
+			{250, 200, 0, 255},
+			{0, 200, 150, 255},
+			{0, 0, 250, 255},
+			{0, 0, 150, 255},
+			{150, 150, 250, 255},
+		},
+	}
+	return &dc
+}
 
 // A debugger which outputs text logs and data visualizations to inspect game state.
 type debugger struct {
 	*state
+	*debuggerConfig
+	heatmapAlphaMax             float64
 	unitPathfind                heatmap
 	unitPathfindHeatmapComplete bool
+	toggles                     map[string]*toggle
 }
 
-func newDebugger(state *state) debugger {
+// A typical heatmap. Used for visual debugging.
+type heatmap map[PixelPosition]int
+
+func newDebugger(state *state, developerToggleCooldown time.Duration) debugger {
+	c := newDebuggerConfig()
+
+	toggles := make(map[string]*toggle)
+	toggles["drawAll"] = newToggle(
+		ebiten.KeyA,
+		func() {
+			var toggle = !(c.drawBlueTargets && c.drawRedTargets && c.drawHexGrid && c.drawVisibilityGrids)
+			c.drawBlueTargets = toggle
+			c.drawRedTargets = toggle
+			c.drawHexGrid = toggle
+			c.drawVisibilityGrids = toggle
+		},
+		developerToggleCooldown)
+	toggles["drawBlueTargets"] = newToggle(
+		ebiten.KeyB,
+		func() { c.drawBlueTargets = !c.drawBlueTargets },
+		developerToggleCooldown)
+	toggles["drawRedTargets"] = newToggle(
+		ebiten.KeyR,
+		func() { c.drawRedTargets = !c.drawRedTargets },
+		developerToggleCooldown)
+	toggles["drawDebugGrid"] = newToggle(
+		ebiten.KeyG,
+		func() { c.drawHexGrid = !c.drawHexGrid },
+		developerToggleCooldown)
+	toggles["drawVisibilityGrids"] = newToggle(
+		ebiten.KeyV,
+		func() { c.drawVisibilityGrids = !c.drawVisibilityGrids },
+		developerToggleCooldown)
+
 	return debugger{
-		state:        state,
-		unitPathfind: make(heatmap),
+		state:           state,
+		debuggerConfig:  c,
+		heatmapAlphaMax: c.heatmapAlphaMaxLimit,
+		unitPathfind:    make(heatmap),
+		toggles:         toggles,
 	}
 }
 
@@ -95,36 +179,52 @@ func (d *debugger) createUnitPathfindHeatmap() {
 	logger.log(infoLevel, devTool, "done creating pathfinding heatmap")
 }
 
-func (d debugger) draw(
-	dc drawConfig,
-	drawDebugGrid bool,
-	drawPixelPath bool,
-	drawNodeLookup bool,
-	drawVisibilityGrids bool,
-	drawBlueTargets bool,
-	drawRedTargets bool) {
-
-	if drawDebugGrid {
-		drawHexDebugGrid(dc)
+func (d debugger) draw(c drawConfig) {
+	if d.drawHexGrid {
+		drawHexGrid(c)
 	}
 
-	if drawPixelPath {
-		d.pixelPath.draw(dc)
+	if d.drawPixelPath {
+		unwalkable := make(heatmap)
+		for pixelPos, path := range d.pixelPath {
+			switch path.Walkable {
+			case true:
+				unwalkable[pixelPos] = 0
+			case false:
+				unwalkable[pixelPos] = 1
+			}
+		}
+
+		distance := make(heatmap)
+		for pixelPos, path := range d.pixelPath {
+			distance[pixelPos] = path.UnwalkableSmoothSum
+		}
+
+		unwalkable.draw(c, *d.debuggerConfig)
+		distance.draw(c, *d.debuggerConfig)
 	}
 
-	if drawNodeLookup {
-		d.nodeLookup.draw(dc)
+	if d.drawNodeLookup {
+		distance := make(heatmap)
+		for pixelPos, nn := range d.nodeLookup {
+			distance[pixelPos] = nn.ChebyshevDistance
+		}
+		distance.draw(c, *d.debuggerConfig)
 	}
 
 	if d.unitPathfindHeatmapComplete {
-		d.unitPathfind.draw(dc)
+		d.unitPathfind.draw(c, *d.debuggerConfig)
 	}
 
 	for _, n := range d.nodes {
-		n.drawTargets(dc, drawBlueTargets, drawRedTargets)
+		n.drawTargets(c, d.drawBlueTargets, d.drawRedTargets)
 	}
 
-	if drawVisibilityGrids {
+	for _, u := range d.units {
+		u.drawDebug(c, *d.debuggerConfig)
+	}
+
+	if d.drawVisibilityGrids {
 		visited := make(map[uuid.UUID]struct{})
 		for _, o := range d.obstacles {
 			g := *o.visibilityGrid
@@ -133,13 +233,103 @@ func (d debugger) draw(
 				continue
 			}
 			visited[op.visibilityGridId] = struct{}{}
-			o.drawVisibilityGrid(dc)
+			o.drawVisibilityGrid(c)
+		}
+	}
+}
+
+func (heatmap heatmap) draw(c drawConfig, dC debuggerConfig) {
+	max := 0
+	for _, distance := range heatmap {
+		if distance > max {
+			max = distance
+		}
+	}
+
+	for pixelPos, distance := range heatmap {
+		color := color.RGBA{dC.heatmapR, dC.heatmapB, dC.heatmapG, uint8(float64(distance) / float64(max) * dC.heatmapAlphaMaxLimit)}
+		vector.DrawFilledRect(
+			c.screen,
+			float32(pixelPos.X)*c.windowMultiplier,
+			float32(pixelPos.Y)*c.windowMultiplier,
+			1*c.windowMultiplier,
+			1*c.windowMultiplier,
+			color,
+			false)
+	}
+}
+
+func (o obstacle) drawVisibilityGrid(c drawConfig) {
+	for _, op := range *o.visibilityGrid {
+		vector.DrawFilledCircle(
+			c.screen,
+			float32(op.X)*c.windowMultiplier,
+			float32(op.Y)*c.windowMultiplier,
+			3*c.windowMultiplier,
+			c.highlightColor,
+			false)
+		vector.StrokeLine(
+			c.screen,
+			float32(op.X)*c.windowMultiplier,
+			float32(op.Y)*c.windowMultiplier,
+			float32(op.cw.X)*c.windowMultiplier,
+			float32(op.cw.Y)*c.windowMultiplier,
+			float32(c.visibilityGridLineWidth)*c.windowMultiplier,
+			c.highlightColor,
+			false)
+	}
+}
+
+func (u *unit) drawDebug(c drawConfig, dC debuggerConfig) {
+	if u.selected && !u.activeTarget.isZero() {
+		vector.StrokeLine(
+			c.screen,
+			float32(u.X)*c.windowMultiplier,
+			float32(u.Y)*c.windowMultiplier,
+			float32(u.activeTarget.X)*c.windowMultiplier,
+			float32(u.activeTarget.Y)*c.windowMultiplier,
+			float32(c.targetNodeLineWidth)*c.windowMultiplier,
+			color.Black,
+			false,
+		)
+
+		vector.StrokeLine(
+			c.screen,
+			float32(u.X)*c.windowMultiplier,
+			float32(u.Y)*c.windowMultiplier,
+			float32(u.activeTarget.X)*c.windowMultiplier,
+			float32(u.activeTarget.Y)*c.windowMultiplier,
+			float32(c.targetNodeLineWidth)*c.windowMultiplier,
+			color.Black,
+			false,
+		)
+
+		j := 0
+		for i := len(u.localTargets) - 1; i >= 0; i-- {
+			lt := u.localTargets[i]
+			color := dC.roygbivColors[j]
+
+			vector.StrokeLine(
+				c.screen,
+				float32(u.X)*c.windowMultiplier,
+				float32(u.Y)*c.windowMultiplier,
+				float32(lt.X)*c.windowMultiplier,
+				float32(lt.Y)*c.windowMultiplier,
+				float32(c.targetNodeLineWidth)*c.windowMultiplier,
+				color,
+				false,
+			)
+
+			j += 1
+			if j == len(dC.roygbivColors) {
+				j = 0
+			}
 		}
 	}
 }
 
 // This is likely to be become apart of game and then it should be removed from debugger.go
-func drawHexDebugGrid(dc drawConfig) {
+func drawHexGrid(dc drawConfig) {
 	// This is the pattern drawn.
 	//    / \
 	//   |

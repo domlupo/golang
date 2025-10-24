@@ -8,7 +8,6 @@ import (
 	"math"
 
 	"github.com/gofrs/uuid/v5"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 // All obstacles on map
@@ -513,45 +512,4 @@ func (o obstacle) drawObstacle(dc drawConfig) {
 	case highMountain:
 		drawHex(dc, o.gridPos, drawTriangleColor{red: 0.0, blue: 0.0, green: 0.0, alpha: 0.8}, false)
 	}
-}
-
-func (o obstacle) drawVisibilityGrid(dc drawConfig) {
-	for _, op := range *o.visibilityGrid {
-		vector.DrawFilledCircle(
-			dc.screen,
-			float32(op.X)*dc.windowMultiplier,
-			float32(op.Y)*dc.windowMultiplier,
-			3*dc.windowMultiplier,
-			dc.highlightColor,
-			false)
-		vector.StrokeLine(
-			dc.screen,
-			float32(op.X)*dc.windowMultiplier,
-			float32(op.Y)*dc.windowMultiplier,
-			float32(op.cw.X)*dc.windowMultiplier,
-			float32(op.cw.Y)*dc.windowMultiplier,
-			float32(dc.visibilityGridLineWidth)*dc.windowMultiplier,
-			dc.highlightColor,
-			false)
-	}
-}
-
-func (pp pixelPath) draw(dc drawConfig) {
-	unwalkable := make(heatmap)
-	for pixelPos, path := range pp {
-		switch path.Walkable {
-		case true:
-			unwalkable[pixelPos] = 0
-		case false:
-			unwalkable[pixelPos] = 1
-		}
-	}
-
-	distance := make(heatmap)
-	for pixelPos, path := range pp {
-		distance[pixelPos] = path.UnwalkableSmoothSum
-	}
-
-	unwalkable.draw(dc)
-	distance.draw(dc)
 }
