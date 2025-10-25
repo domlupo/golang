@@ -215,7 +215,13 @@ func (os obstacles) setupObstacleLUT(hc *hexConfig) obstacleLUT {
 	}
 
 	percent := float64(count) / float64(hc.windowWidth*hc.windowHeight) * 100
-	logger.log(infoLevel, setupLogic, fmt.Sprintf("setupObstacleLUT: %.0f%% total pixels not skipped with a distance limit of %d", percent, distanceLimit))
+	logger.log(
+		infoLevel,
+		setupLogic,
+		fmt.Sprintf(
+			"setupObstacleLUT: %.0f%% total pixels not skipped with a distance limit of %d",
+			percent,
+			distanceLimit))
 
 	logger.log(infoLevel, setupLogic, "setupObstacleLUT: start calculating weighted smooth distance")
 	for x := range hc.windowWidth {

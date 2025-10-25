@@ -184,7 +184,7 @@ func (pixelPos PixelPosition) adjacent(d direction, hc *hexConfig) (PixelPositio
 		x = -1
 		y = -1
 	default:
-		panic("cannot get adjacent pixel position unknown direction")
+		panic(fmt.Sprintf("cannot get adjacent pixel position for %s unknown direction: %d", pixelPos.log(), d))
 	}
 
 	p := PixelPosition{X: pixelPos.X + x, Y: pixelPos.Y + y}
