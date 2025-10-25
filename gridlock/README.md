@@ -127,6 +127,8 @@ Is there a mobile equivalent for war/4x games?
 
 - Log setup time so I can see lookup table creation regressions easily
 
+- Add checksum keys to cache multiple setups 
+
 - Fix Ctrl+C for ./game, it works for air but not ./game.
   - Primarily helps exiting a setup early
   - Fix memory profiler not saving to file when CTRL+C is used (works fine when game exists normally)
