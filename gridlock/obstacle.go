@@ -406,9 +406,9 @@ func (os obstacles) setupVisibilityGrid(oLUT obstacleLUT, hc *hexConfig) {
 func (points obstaclePoints) createAllPoints(os obstacles, hc *hexConfig) {
 	// TODO: don't hardcode offset values for infantry unit with radius of 3
 	nOffset := PixelPosition{0, -4}
-	neOffset := PixelPosition{5, -2}
-	seOffset := PixelPosition{5, 2}
-	sOffset := PixelPosition{0, 5}
+	neOffset := PixelPosition{4, -2}
+	seOffset := PixelPosition{4, 2}
+	sOffset := PixelPosition{0, 4}
 	swOffset := PixelPosition{-4, 2}
 	nwOffset := PixelPosition{-4, -2}
 
@@ -455,6 +455,7 @@ func (points obstaclePoints) createAllPoints(os obstacles, hc *hexConfig) {
 }
 
 func (points obstaclePoints) removeDuplicatePoints() {
+	duplicate := make(map[PixelPosition]struct{})
 	for _, op := range points {
 		for _, otherOp := range points {
 			if op.equals(otherOp.PixelPosition) {
@@ -468,22 +469,14 @@ func (points obstaclePoints) removeDuplicatePoints() {
 			yDelta := op.Y - otherOp.Y
 			rSum := 5 + 5
 			if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
-				if op.cw != nil {
-					op.cw.ccw = nil
-				}
-				if op.ccw != nil {
-					op.ccw.cw = nil
-				}
-				if otherOp.cw != nil {
-					otherOp.cw.ccw = nil
-				}
-				if otherOp.ccw != nil {
-					otherOp.ccw.cw = nil
-				}
-				delete(points, PixelPosition{X: op.X, Y: op.Y})
-				delete(points, PixelPosition{X: otherOp.X, Y: otherOp.Y})
+				duplicate[PixelPosition{X: op.X, Y: op.Y}] = struct{}{}
+				duplicate[PixelPosition{X: otherOp.X, Y: otherOp.Y}] = struct{}{}
 			}
 		}
+	}
+
+	for p := range duplicate {
+		delete(points, p)
 	}
 }
 
