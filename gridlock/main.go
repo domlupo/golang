@@ -179,7 +179,7 @@ func (g *Game) Update() error {
 	// player actions
 	graphicalX, graphicalY := ebiten.CursorPosition()
 	_, mouseWheelDelta := ebiten.Wheel()
-	g.debugger.updateHeatmapMax(int(mouseWheelDelta))
+	g.debugger.updateHeatmapPercent(-int(mouseWheelDelta))
 
 	x := float32(graphicalX) / g.windowMultiplier
 	y := float32(graphicalY) / g.windowMultiplier

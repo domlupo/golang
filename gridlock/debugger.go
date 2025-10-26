@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"image/color"
 	"log/slog"
 	"os"
@@ -14,6 +15,9 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
+
+const MaxPercent = 100
+const MinPercent = 0
 
 // Debugger Configurations
 type debuggerConfig struct {
@@ -32,9 +36,8 @@ type debuggerConfig struct {
 	heatmapG                uint8
 	heatmapB                uint8
 	heatmapAlphaMaxLimit    int
-	// TODO: Make heatmap max a percentage so it has same behavior across heatmaps
-	heatmapMax    int
-	roygbivColors []color.RGBA
+	heatmapPercent          int
+	roygbivColors           []color.RGBA
 }
 
 func newDebuggerConfig() *debuggerConfig {
@@ -48,7 +51,7 @@ func newDebuggerConfig() *debuggerConfig {
 		heatmapG:                0,
 		heatmapB:                0,
 		heatmapAlphaMaxLimit:    200,
-		heatmapMax:              250,
+		heatmapPercent:          MaxPercent,
 		roygbivColors: []color.RGBA{
 			{200, 0, 0, 255},
 			{250, 150, 0, 255},
@@ -225,9 +228,14 @@ func (d *debugger) createUnitPathfindHeatmap() {
 	logger.log(infoLevel, devTool, "done creating pathfinding heatmap")
 }
 
-func (d *debugger) updateHeatmapMax(delta int) {
-	d.heatmapMax = max(d.heatmapMax+delta, 1)
-	d.heatmapMax = min(d.heatmapMax, 1200)
+func (d *debugger) updateHeatmapPercent(delta int) {
+	if delta == 0 {
+		return
+	}
+	d.heatmapPercent = d.heatmapPercent + delta
+	d.heatmapPercent = max(d.heatmapPercent, MinPercent+1)
+	d.heatmapPercent = min(d.heatmapPercent, MaxPercent)
+	logger.log(infoLevel, devTool, fmt.Sprintf("updateHeatmapPercent: Set to %d", d.heatmapPercent))
 }
 
 func (d debugger) draw(c drawConfig) {
@@ -236,8 +244,8 @@ func (d debugger) draw(c drawConfig) {
 	}
 
 	if d.drawObstacleLUT {
-		d.obstacleLUTUnwalkable.draw(c, *d.debuggerConfig, d.heatmapMax)
-		d.obstacleLUTDistance.draw(c, *d.debuggerConfig, d.heatmapMax)
+		d.obstacleLUTUnwalkable.draw(c, *d.debuggerConfig, d.heatmapPercent)
+		d.obstacleLUTDistance.draw(c, *d.debuggerConfig, d.heatmapPercent)
 
 		if d.pixel != nil {
 			p := d.oLUT[*d.pixel].NearestUnwalkablesAvg
@@ -246,7 +254,7 @@ func (d debugger) draw(c drawConfig) {
 	}
 
 	if d.drawNodeLUT {
-		d.nodeLUTDistance.draw(c, *d.debuggerConfig, d.heatmapMax)
+		d.nodeLUTDistance.draw(c, *d.debuggerConfig, d.heatmapPercent)
 	}
 
 	if d.unitPathfindHeatmapComplete {
@@ -294,16 +302,19 @@ func (p PixelPosition) draw(c drawConfig, dC debuggerConfig) {
 		p.Y+dC.pixelSpotlightOffset)
 }
 
-func (heatmap heatmap) draw(c drawConfig, dC debuggerConfig, heatmapMax int) {
-	m := 0
-	for _, distance := range heatmap {
-		m = max(m, distance)
+func (heatmap heatmap) draw(c drawConfig, dC debuggerConfig, heatmapPercent int) {
+	var maxV int
+	for _, v := range heatmap {
+		maxV = max(maxV, v)
 	}
-	m = min(m, heatmapMax)
-
+	trimmedV := maxV * heatmapPercent / MaxPercent
 	for pixelPos, v := range heatmap {
-		v := min(v, heatmapMax)
-		color := color.RGBA{dC.heatmapR, dC.heatmapB, dC.heatmapG, uint8(float64(v) / float64(m) * float64(dC.heatmapAlphaMaxLimit))}
+		v := min(v, trimmedV)
+		color := color.RGBA{
+			dC.heatmapR,
+			dC.heatmapB,
+			dC.heatmapG,
+			uint8(float64(v) / float64(trimmedV) * float64(dC.heatmapAlphaMaxLimit))}
 		vector.DrawFilledRect(
 			c.screen,
 			float32(pixelPos.X)*c.windowMultiplier,
