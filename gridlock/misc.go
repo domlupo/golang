@@ -48,6 +48,10 @@ func (wc windowConfig) maxPixels() int {
 	return wc.height * wc.width
 }
 
+func (wc windowConfig) inbounds(p PixelPosition) bool {
+	return !(p.X < 0 || p.X > wc.width-1 || p.Y < 0 || p.Y > wc.height-1)
+}
+
 // All hexagons on map
 type hexagons map[GridPosition]*hexagon
 

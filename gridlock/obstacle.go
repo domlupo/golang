@@ -153,7 +153,7 @@ func (os obstacles) setupObstacleLUT(hc *hexConfig) obstacleLUT {
 					continue
 				}
 
-				adjacent := p.allAdjacent(hc)
+				adjacent := p.allAdjacent()
 
 				for _, a := range adjacent {
 					aInfo := oLUT[a]
@@ -225,13 +225,13 @@ func (os obstacles) setupObstacleLUT(hc *hexConfig) obstacleLUT {
 	for x := range wc.width {
 		for y := range wc.height {
 			p := PixelPosition{X: x, Y: y}
-			adjacent := p.allAdjacent(hc)
+			adjacent := p.allAdjacent()
 
 			sum := oLUT[p].UnwalkableChebyshevDistance
 			for _, a := range adjacent {
 				sum += oLUT[a].UnwalkableChebyshevDistance
 
-				otherAdjacent := a.allAdjacent(hc)
+				otherAdjacent := a.allAdjacent()
 				for _, oa := range otherAdjacent {
 					sum += oLUT[oa].UnwalkableChebyshevDistance
 				}
