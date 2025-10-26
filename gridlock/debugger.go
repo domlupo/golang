@@ -244,9 +244,10 @@ func (d debugger) draw(c drawConfig) {
 		d.obstacleLUTUnwalkable.draw(c, *d.debuggerConfig, d.heatmapPercent)
 		d.obstacleLUTDistance.draw(c, *d.debuggerConfig, d.heatmapPercent)
 
-		// TODO: Handle drawing obstacle LUT pixel when cursor if out of bounds
-		p := d.oLUT[d.pixel].NearestUnwalkablesAvg
-		p.draw(c, *d.debuggerConfig)
+		if newWindowConfig().inbounds(d.pixel) {
+			p := d.oLUT[d.pixel].NearestUnwalkablesAvg
+			p.draw(c, *d.debuggerConfig)
+		}
 	}
 
 	if d.drawNodeLUT {
