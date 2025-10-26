@@ -24,9 +24,7 @@ type hexConfig struct {
 func newHexConfig(wc windowConfig, hexWidth int, hexHeight int, xOffset int, yOffset int) hexConfig {
 	lut := setupHexLUT(hexWidth)
 	hc := hexConfig{
-		lut: lut,
-		// For 1280p * 720p resolution, a hexagon height of 40p is ideally 80/sqrt(3) wide.
-		// 80/sqrt(3) is 46.188 which is approximately 46p.
+		lut:       lut,
 		hexWidth:  hexWidth,
 		hexHeight: hexHeight,
 		xOffset:   xOffset,

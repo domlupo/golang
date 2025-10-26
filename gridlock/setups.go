@@ -14,11 +14,11 @@ const (
 	horizontalObstacle
 )
 
-func setupObstacles(setup obstacleSetup, hc *hexConfig) (obstacles, obstacleLUT) {
+func setupObstacles(setup obstacleSetup, g grid) (obstacles, obstacleLUT) {
 	obstacles := make(obstacles)
 	obstacles.setupBorder()
-	obstacles.setupInterior(setup, hc)
-	oLUT := obstacles.setup(hc)
+	obstacles.setupInterior(setup, g)
+	oLUT := obstacles.setup(g)
 	return obstacles, oLUT
 }
 
@@ -145,7 +145,7 @@ func (os obstacles) setupBorder() {
 	}
 }
 
-func (os obstacles) setupInterior(setup obstacleSetup, hc *hexConfig) {
+func (os obstacles) setupInterior(setup obstacleSetup, g grid) {
 	var GridPositions []GridPosition
 
 	switch setup {
@@ -392,16 +392,16 @@ type nodeSetupInput struct {
 	unitConfig unitConfig
 }
 
-func setupNodes(s nodeSetup, hc *hexConfig, initialNodeHealth int, h hexagons, oLUT obstacleLUT) (nodes, nodeLUT) {
+func setupNodes(s nodeSetup, g grid, initialNodeHealth int, h hexagons, oLUT obstacleLUT) (nodes, nodeLUT) {
 	nodes := make(nodes)
-	nodes.setupPositions(s, hc, initialNodeHealth)
-	nodes.setupControl(hc, h, oLUT)
+	nodes.setupPositions(s, g, initialNodeHealth)
+	nodes.setupControl(g, h, oLUT)
 	fileHandler := newFileHandler()
-	nodeLookup := fileHandler.readNodeLUT(nodes, oLUT, hc)
+	nodeLookup := fileHandler.readNodeLUT(nodes, oLUT, g)
 	return nodes, nodeLookup
 }
 
-func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth int) {
+func (nodes nodes) setupPositions(s nodeSetup, g grid, initialNodeHealth int) {
 	var nodeSetupInputs []nodeSetupInput
 
 	switch s {
@@ -694,7 +694,7 @@ func (nodes nodes) setupPositions(s nodeSetup, hc *hexConfig, initialNodeHealth 
 	}
 
 	for _, ni := range nodeSetupInputs {
-		node := newNode(ni.player, ni.gridPos, initialNodeHealth, hc, ni.unitConfig)
+		node := newNode(ni.player, ni.gridPos, initialNodeHealth, ni.unitConfig)
 		nodes[ni.gridPos] = &node
 	}
 }

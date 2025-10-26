@@ -62,11 +62,11 @@ type hexagon struct {
 	unitCount  int
 }
 
-func setupHexagons(hc *hexConfig) map[GridPosition]*hexagon {
+func setupHexagons(g grid) map[GridPosition]*hexagon {
 	hexagons := make(map[GridPosition]*hexagon)
-	for i := range hc.xIndexMax {
-		for j := range hc.yIndexMax {
-			if j%2 == 0 && i == hc.xIndexMax-1 {
+	for i := range g.xIndexMax {
+		for j := range g.yIndexMax {
+			if j%2 == 0 && i == g.xIndexMax-1 {
 				continue
 			}
 

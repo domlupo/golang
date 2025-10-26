@@ -7,8 +7,6 @@ import (
 
 func TestGetPixelPos(t *testing.T) {
 	t.Parallel()
-	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
-
 	var tests = []struct {
 		gridPos        GridPosition
 		hexPoint       hexPoint
@@ -102,8 +100,10 @@ func TestGetPixelPos(t *testing.T) {
 			tt.wantedPixelPos.Y,
 			sWantedOk)
 
+		hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
+		g := grid{&hc}
 		t.Run(testname, func(t *testing.T) {
-			pos, ok := tt.gridPos.getPixelPos(tt.hexPoint, &hc)
+			pos, ok := g.getPixelPos(tt.gridPos, tt.hexPoint)
 			if ok != tt.wantedOk {
 				t.Errorf("Wanted pixel position to %s", sWantedOk)
 			}
@@ -123,8 +123,6 @@ func TestGetPixelPos(t *testing.T) {
 
 func TestGetGridPos(t *testing.T) {
 	t.Parallel()
-	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
-
 	var tests = []struct {
 		pixelPos  PixelPosition
 		wantedPos GridPosition
@@ -858,8 +856,10 @@ func TestGetGridPos(t *testing.T) {
 			tt.wantedPos.Y,
 			sWantedOk)
 
+		hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
+		g := grid{&hc}
 		t.Run(testname, func(t *testing.T) {
-			pos, ok := tt.pixelPos.getGridPos(&hc)
+			pos, ok := g.getGridPos(tt.pixelPos)
 			if ok != tt.wantedOk {
 				t.Errorf("Wanted pixel position to %s", sWantedOk)
 			}
@@ -877,8 +877,6 @@ func TestGetGridPos(t *testing.T) {
 
 func TestGridPosAdjacent(t *testing.T) {
 	t.Parallel()
-	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
-
 	var tests = []struct {
 		gridPos       GridPosition
 		hexSide       hexSide
@@ -999,8 +997,10 @@ func TestGridPosAdjacent(t *testing.T) {
 			tt.wantedGridPos.Y,
 			sWantedOk)
 
+		hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
+		g := grid{&hc}
 		t.Run(testname, func(t *testing.T) {
-			pos, ok := tt.gridPos.adjacent(tt.hexSide, &hc)
+			pos, ok := g.adjacent(tt.gridPos, tt.hexSide)
 			if ok != tt.wantedOk {
 				t.Errorf("Wanted pixel position to %s", sWantedOk)
 			}

@@ -38,14 +38,11 @@ type node struct {
 	unitConfig    unitConfig
 }
 
-func newNode(p player, gridPos GridPosition, initialNodeHealth int, hexConfig *hexConfig, uc unitConfig) node {
+func newNode(p player, gridPos GridPosition, initialNodeHealth int, uc unitConfig) node {
 	n := node{
-		player:  p,
-		gridPos: gridPos,
-		control: []*hexagon{},
-		// HACK: "/ 9 * 2 is temporarily set until hexagon collision is implemented
-		// This value was chosen since it is large but still fully within hexagon.
-		radius:        (hexConfig.hexHeight + hexConfig.hexWidth) / 9 * 2,
+		player:        p,
+		gridPos:       gridPos,
+		control:       []*hexagon{},
 		maxHealth:     initialNodeHealth,
 		currentHealth: initialNodeHealth,
 		capturedBy:    noPlayer,
@@ -73,7 +70,7 @@ func (info nodeInfo) log() []slog.Attr {
 // probably can be optimized further but it is low priority since it it cached. The main optimization
 // is dynamic programming. The node pixels are processed first. Next, the pixels 1 pixel away are
 // processed. This continues until the all pixels are procesed.
-func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, hc *hexConfig) nodeLUT {
+func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 	wc := newWindowConfig()
 	distanceLimit := max(wc.width, wc.height)
 	nodeLUT := make(map[PixelPosition]nodeInfo, wc.maxPixels())
@@ -81,7 +78,7 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, hc *hexConfig) nodeLUT {
 	for x := range wc.width {
 		for y := range wc.height {
 			p := PixelPosition{X: x, Y: y}
-			gridPos, ok := p.getGridPos(hc)
+			gridPos, ok := g.getGridPos(p)
 			if !ok {
 				panic("setupNodeLUT: expected grid position to exist")
 			}
@@ -185,7 +182,7 @@ func (n node) selected() bool {
 	return n.singleSelect || n.multiSelect
 }
 
-func (nodes nodes) setupControl(hc *hexConfig, hexagons hexagons, oLUT obstacleLUT) {
+func (nodes nodes) setupControl(g grid, hexagons hexagons, oLUT obstacleLUT) {
 
 	for _, h := range hexagons {
 		q := []GridPosition{h.gridPos}
@@ -201,29 +198,29 @@ func (nodes nodes) setupControl(hc *hexConfig, hexagons hexagons, oLUT obstacleL
 
 			visited[current] = struct{}{}
 
-			p, ok := current.getAnyPixelPos(hc)
+			p, ok := g.getAnyPixelPos(current)
 			if !ok {
 				panic("setup control, could not find any pixel position")
 			} else if !oLUT[p].Walkable {
 				continue
 			}
 
-			if ne, ok := current.adjacent(hsNortheast, hc); ok {
+			if ne, ok := g.adjacent(current, hsNortheast); ok {
 				q = append(q, ne)
 			}
-			if e, ok := current.adjacent(hsEast, hc); ok {
+			if e, ok := g.adjacent(current, hsEast); ok {
 				q = append(q, e)
 			}
-			if se, ok := current.adjacent(hsSoutheast, hc); ok {
+			if se, ok := g.adjacent(current, hsSoutheast); ok {
 				q = append(q, se)
 			}
-			if sw, ok := current.adjacent(hsSouthwest, hc); ok {
+			if sw, ok := g.adjacent(current, hsSouthwest); ok {
 				q = append(q, sw)
 			}
-			if w, ok := current.adjacent(hsWest, hc); ok {
+			if w, ok := g.adjacent(current, hsWest); ok {
 				q = append(q, w)
 			}
-			if nw, ok := current.adjacent(hsNorthwest, hc); ok {
+			if nw, ok := g.adjacent(current, hsNorthwest); ok {
 				q = append(q, nw)
 			}
 
@@ -274,7 +271,7 @@ func (n *node) drawNode(dc drawConfig) {
 
 	drawHex(dc, n.gridPos, drawTriangleColor{red: red, blue: blue, green: green, alpha: alpha}, n.multiSelect)
 
-	c := n.gridPos.getPixelPosOutbounds(hpCenter, &dc.hexConfig)
+	c := dc.grid.getPixelPosOutbounds(n.gridPos, hpCenter)
 
 	if n.currentHealth != n.maxHealth {
 		var healthLineLength = (float32(n.currentHealth) / float32(n.maxHealth)) * float32(n.radius*2)
@@ -313,7 +310,7 @@ func (n *node) drawTargets(dc drawConfig, drawBlueTargets bool, drawRedTargets b
 	}
 
 	if !n.target.isZero() && ((n.player == bluePlayer && drawBlueTargets) || (n.player == redPlayer && drawRedTargets)) {
-		var center, ok = n.gridPos.getPixelPos(hpCenter, &dc.hexConfig)
+		var center, ok = dc.grid.getPixelPos(n.gridPos, hpCenter)
 		if !ok {
 			panic("could not get pixel pos for node draw targets")
 		}

@@ -75,12 +75,12 @@ func (os obstacles) insert(k GridPosition, v *obstacle) {
 	os[k] = v
 }
 
-func (os obstacles) setup(hc *hexConfig) obstacleLUT {
+func (os obstacles) setup(g grid) obstacleLUT {
 	fileHandler := newFileHandler()
-	oLUT := fileHandler.readObstacleLUT(os, hc)
-	groups := os.getGroups(hc)
+	oLUT := fileHandler.readObstacleLUT(os, g)
+	groups := os.getGroups(g)
 	for _, group := range groups {
-		group.setupVisibilityGrid(oLUT, hc)
+		group.setupVisibilityGrid(oLUT, g)
 	}
 	return oLUT
 }
@@ -95,7 +95,7 @@ func (os obstacles) setup(hc *hexConfig) obstacleLUT {
 // Can be optimized further but it is low priority since LUT is cached and optimizatons are error prone.
 // The main optimization currently used is dynamic programming. The unwalkable pixels are processed first. Next,
 // the pixels 1 pixel away are processed. This continues until all the pixels are processed.
-func (os obstacles) setupObstacleLUT(hc *hexConfig) obstacleLUT {
+func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 	wc := newWindowConfig()
 	distanceLimit := max(wc.width, wc.height)
 	nearestUnwalkables := make(map[PixelPosition][]PixelPosition)
@@ -104,7 +104,7 @@ func (os obstacles) setupObstacleLUT(hc *hexConfig) obstacleLUT {
 	for x := range wc.width {
 		for y := range wc.height {
 			p := PixelPosition{X: x, Y: y}
-			gridPos, ok := p.getGridPos(hc)
+			gridPos, ok := g.getGridPos(p)
 			if !ok {
 				panic("setupObstacleLUT: Could not setup obstacle lookup table")
 			}
@@ -246,7 +246,7 @@ func (os obstacles) setupObstacleLUT(hc *hexConfig) obstacleLUT {
 	return oLUT
 }
 
-func (os obstacles) getGroups(hc *hexConfig) []obstacles {
+func (os obstacles) getGroups(g grid) []obstacles {
 	needsGrouped := make(map[GridPosition]bool)
 	for k := range os {
 		needsGrouped[k] = true
@@ -266,32 +266,32 @@ func (os obstacles) getGroups(hc *hexConfig) []obstacles {
 			q = q[1:]
 			group[current] = os[current]
 
-			ne, neOk := current.adjacent(hsNortheast, hc)
+			ne, neOk := g.adjacent(current, hsNortheast)
 			if neOk && needsGrouped[ne] {
 				needsGrouped[ne] = false
 				q = append(q, ne)
 			}
-			e, eOk := current.adjacent(hsEast, hc)
+			e, eOk := g.adjacent(current, hsEast)
 			if eOk && needsGrouped[e] {
 				needsGrouped[e] = false
 				q = append(q, e)
 			}
-			se, seOk := current.adjacent(hsSoutheast, hc)
+			se, seOk := g.adjacent(current, hsSoutheast)
 			if seOk && needsGrouped[se] {
 				needsGrouped[se] = false
 				q = append(q, se)
 			}
-			sw, swOk := current.adjacent(hsSouthwest, hc)
+			sw, swOk := g.adjacent(current, hsSouthwest)
 			if swOk && needsGrouped[sw] {
 				needsGrouped[sw] = false
 				q = append(q, sw)
 			}
-			w, wOk := current.adjacent(hsWest, hc)
+			w, wOk := g.adjacent(current, hsWest)
 			if wOk && needsGrouped[w] {
 				needsGrouped[w] = false
 				q = append(q, w)
 			}
-			nw, nwOk := current.adjacent(hsNorthwest, hc)
+			nw, nwOk := g.adjacent(current, hsNorthwest)
 			if nwOk && needsGrouped[nw] {
 				needsGrouped[nw] = false
 				q = append(q, nw)
@@ -353,7 +353,7 @@ func (pos PixelPosition) lineOfSight(otherPos PixelPosition, oLUT obstacleLUT, r
 }
 
 // returns the obstacle point nearest to the line of sight block from start to end
-func (start PixelPosition) obstaclePoint(end PixelPosition, oLUT obstacleLUT, obstacles obstacles, hc *hexConfig) (obstaclePoint, bool) {
+func (start PixelPosition) obstaclePoint(end PixelPosition, oLUT obstacleLUT, obstacles obstacles, g grid) (obstaclePoint, bool) {
 	obstaclePixelPos, los := start.lineOfSight(end, oLUT, 0)
 
 	if los {
@@ -362,7 +362,7 @@ func (start PixelPosition) obstaclePoint(end PixelPosition, oLUT obstacleLUT, ob
 
 	nearest := math.MaxInt64
 	var nearestIndex int
-	gridPos, ok := obstaclePixelPos.getGridPos(hc)
+	gridPos, ok := g.getGridPos(obstaclePixelPos)
 	if !ok {
 		// occurs when cursor is off screen
 		return obstaclePoint{}, los
@@ -379,11 +379,11 @@ func (start PixelPosition) obstaclePoint(end PixelPosition, oLUT obstacleLUT, ob
 	return visibilityGrid[nearestIndex], los
 }
 
-func (os obstacles) setupVisibilityGrid(oLUT obstacleLUT, hc *hexConfig) {
+func (os obstacles) setupVisibilityGrid(oLUT obstacleLUT, g grid) {
 	points := make(obstaclePoints)
-	points.createAllPoints(os, hc)
+	points.createAllPoints(os, g)
 	points.removeDuplicatePoints()
-	points.connectPoints(oLUT, hc)
+	points.connectPoints(oLUT, g)
 
 	id, err := uuid.NewV4()
 	if err != nil {
@@ -401,7 +401,7 @@ func (os obstacles) setupVisibilityGrid(oLUT obstacleLUT, hc *hexConfig) {
 	}
 }
 
-func (points obstaclePoints) createAllPoints(os obstacles, hc *hexConfig) {
+func (points obstaclePoints) createAllPoints(os obstacles, g grid) {
 	// TODO: don't hardcode offset values for infantry unit with radius of 3
 	nOffset := PixelPosition{0, -4}
 	neOffset := PixelPosition{4, -2}
@@ -418,12 +418,12 @@ func (points obstaclePoints) createAllPoints(os obstacles, hc *hexConfig) {
 		swObstaclePoint := &obstaclePoint{source: o.gridPos}
 		nwObstaclePoint := &obstaclePoint{source: o.gridPos}
 
-		n := o.gridPos.getPixelPosOutbounds(hpNorth, hc)
-		ne := o.gridPos.getPixelPosOutbounds(hpNortheast, hc)
-		se := o.gridPos.getPixelPosOutbounds(hpSoutheast, hc)
-		s := o.gridPos.getPixelPosOutbounds(hpSouth, hc)
-		sw := o.gridPos.getPixelPosOutbounds(hpSouthwest, hc)
-		nw := o.gridPos.getPixelPosOutbounds(hpNorthwest, hc)
+		n := g.getPixelPosOutbounds(o.gridPos, hpNorth)
+		ne := g.getPixelPosOutbounds(o.gridPos, hpNortheast)
+		se := g.getPixelPosOutbounds(o.gridPos, hpSoutheast)
+		s := g.getPixelPosOutbounds(o.gridPos, hpSouth)
+		sw := g.getPixelPosOutbounds(o.gridPos, hpSouthwest)
+		nw := g.getPixelPosOutbounds(o.gridPos, hpNorthwest)
 
 		if nPoint, ok := n.add(nOffset); ok {
 			nObstaclePoint.PixelPosition = nPoint
@@ -478,7 +478,7 @@ func (points obstaclePoints) removeDuplicatePoints() {
 	}
 }
 
-func (points obstaclePoints) connectPoints(oLUT obstacleLUT, hc *hexConfig) {
+func (points obstaclePoints) connectPoints(oLUT obstacleLUT, g grid) {
 	var notConnected []*obstaclePoint
 	for _, op := range points {
 		notConnected = append(notConnected, op)
@@ -507,7 +507,7 @@ func (points obstaclePoints) connectPoints(oLUT obstacleLUT, hc *hexConfig) {
 
 			if !foundFirstCwConnection &&
 				current.source.equals(op.source) &&
-				orientation(current.PixelPosition, current.source.getPixelPosOutbounds(hpCenter, hc), op.PixelPosition) == clockwise {
+				orientation(current.PixelPosition, g.getPixelPosOutbounds(current.source, hpCenter), op.PixelPosition) == clockwise {
 				foundFirstCwConnection = true
 			}
 
@@ -515,7 +515,7 @@ func (points obstaclePoints) connectPoints(oLUT obstacleLUT, hc *hexConfig) {
 				continue
 			}
 
-			isAdjacent := current.source.isAdjacent(op.source, hc)
+			isAdjacent := g.isAdjacent(current.source, op.source)
 			distance := current.chebyshevDistance(op.PixelPosition)
 			switch {
 			case isAdjacent:

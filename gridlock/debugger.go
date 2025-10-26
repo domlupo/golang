@@ -162,7 +162,7 @@ func (d *debugger) debug(p PixelPosition) {
 
 func (d *debugger) logPixel(p PixelPosition) {
 	attrs := []slog.Attr{nest("PixelPosition", p.log())}
-	if gridPos, ok := p.getGridPos(d.hc); ok {
+	if gridPos, ok := d.g.getGridPos(p); ok {
 		attrs = append(attrs, nest("GridPosition", gridPos.log()))
 	} else {
 		attrs = append(attrs, slog.String("GridPosition", "notFound"))
@@ -215,7 +215,7 @@ func (d *debugger) createUnitPathfindHeatmap() {
 
 			if info.Walkable {
 				unit.updateTarget(globalTarget, position{layer: unit.layer, PixelPosition: pixelPos})
-				distance := unit.pathfindGlobalTarget(d.obstacles, d.oLUT, d.hc)
+				distance := unit.pathfindGlobalTarget(d.obstacles, d.oLUT, d.g)
 				d.unitPathfind[pixelPos] = distance
 			}
 		}
@@ -409,28 +409,28 @@ func drawHexGrid(c drawConfig, dC debuggerConfig) {
 	//   |   |
 	//   |   |
 
-	for i := 0; i < c.xIndexMax; i++ {
-		for j := 0; j < c.yIndexMax; j++ {
-			if j%2 == 0 && i == c.xIndexMax-1 {
+	for i := 0; i < c.grid.xIndexMax; i++ {
+		for j := 0; j < c.grid.yIndexMax; j++ {
+			if j%2 == 0 && i == c.grid.xIndexMax-1 {
 				continue
 			}
 
 			lineWidth := float32(dC.debugGridWidth) * c.windowMultiplier
-			pos := GridPosition{i, j}
+			p := GridPosition{i, j}
 
-			n := pos.getPixelPosOutbounds(hpNorth, &c.hexConfig)
+			n := c.grid.getPixelPosOutbounds(p, hpNorth)
 			nX := float32(n.X) * c.windowMultiplier
 			nY := float32(n.Y) * c.windowMultiplier
 
-			nw := pos.getPixelPosOutbounds(hpNorthwest, &c.hexConfig)
+			nw := c.grid.getPixelPosOutbounds(p, hpNorthwest)
 			nwX := float32(nw.X) * c.windowMultiplier
 			nwY := float32(nw.Y) * c.windowMultiplier
 
-			ne := pos.getPixelPosOutbounds(hpNortheast, &c.hexConfig)
+			ne := c.grid.getPixelPosOutbounds(p, hpNortheast)
 			neX := float32(ne.X+1) * c.windowMultiplier
 			neY := float32(ne.Y) * c.windowMultiplier
 
-			sw := pos.getPixelPosOutbounds(hpSouthwest, &c.hexConfig)
+			sw := c.grid.getPixelPosOutbounds(p, hpSouthwest)
 			swX := float32(sw.X) * c.windowMultiplier
 			swY := float32(sw.Y+1) * c.windowMultiplier
 

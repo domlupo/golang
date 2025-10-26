@@ -35,12 +35,12 @@ type nodeLUTEntry struct {
 	Value nodeInfo      `json:"value"`
 }
 
-func (f fileHandler) readObstacleLUT(obstacles obstacles, hc *hexConfig) obstacleLUT {
+func (f fileHandler) readObstacleLUT(obstacles obstacles, g grid) obstacleLUT {
 	wc := newWindowConfig()
 	file, err := os.Open(fmt.Sprintf("%s/%s", f.directoryName, f.obstacleLUTFileName))
 	if errors.Is(err, os.ErrNotExist) {
 		logger.log(infoLevel, setupLogic, "readObstacleLUT: create look up table file since it does not exist")
-		return f.writeObstacleLUT(obstacles, hc)
+		return f.writeObstacleLUT(obstacles, g)
 	} else if err != nil {
 		logger.log(errorLevel, setupLogic, fmt.Sprintf("readObstacleLUT: file handler could not read json file: %v", err))
 	}
@@ -49,7 +49,7 @@ func (f fileHandler) readObstacleLUT(obstacles obstacles, hc *hexConfig) obstacl
 	bytes, err := io.ReadAll(file)
 	if err != nil {
 		logger.log(errorLevel, setupLogic, fmt.Sprintf("readObstacleLUT: file handler could not read json file: %e", err))
-		return f.writeObstacleLUT(obstacles, hc)
+		return f.writeObstacleLUT(obstacles, g)
 	}
 
 	entries := make([]obstacleLUTEntry, wc.maxPixels())
@@ -62,7 +62,7 @@ func (f fileHandler) readObstacleLUT(obstacles obstacles, hc *hexConfig) obstacl
 
 	if len(oLUT) != wc.maxPixels() {
 		logger.log(errorLevel, setupLogic, "readObstacleLUT: cannot read obstacle look up table since loaded obstacle look up was invalid size")
-		return f.writeObstacleLUT(obstacles, hc)
+		return f.writeObstacleLUT(obstacles, g)
 	}
 
 	logger.log(infoLevel, setupLogic, "readObstacleLUT: loaded obstacle look up table, skipped creating it.")
@@ -70,8 +70,8 @@ func (f fileHandler) readObstacleLUT(obstacles obstacles, hc *hexConfig) obstacl
 	return oLUT
 }
 
-func (f fileHandler) writeObstacleLUT(obstacles obstacles, hc *hexConfig) obstacleLUT {
-	oLUT := obstacles.setupObstacleLUT(hc)
+func (f fileHandler) writeObstacleLUT(obstacles obstacles, g grid) obstacleLUT {
+	oLUT := obstacles.setupObstacleLUT(g)
 
 	entries := make([]obstacleLUTEntry, newWindowConfig().maxPixels())
 	for k, v := range oLUT {
@@ -87,11 +87,11 @@ func (f fileHandler) writeObstacleLUT(obstacles obstacles, hc *hexConfig) obstac
 	return oLUT
 }
 
-func (f fileHandler) readNodeLUT(nodes nodes, obstacleLUT obstacleLUT, hc *hexConfig) nodeLUT {
+func (f fileHandler) readNodeLUT(nodes nodes, obstacleLUT obstacleLUT, g grid) nodeLUT {
 	file, err := os.Open(fmt.Sprintf("%s/%s", f.directoryName, f.nodeLUTFileName))
 	if errors.Is(err, os.ErrNotExist) {
 		logger.log(infoLevel, setupLogic, "readNodeLUT: cannot create node lookup table file since it does not exist")
-		return f.writeNodeLUT(nodes, obstacleLUT, hc)
+		return f.writeNodeLUT(nodes, obstacleLUT, g)
 	} else if err != nil {
 		logger.log(errorLevel, setupLogic, fmt.Sprintf("readNodeLUT: file handler could not read json file: %v", err))
 	}
@@ -100,7 +100,7 @@ func (f fileHandler) readNodeLUT(nodes nodes, obstacleLUT obstacleLUT, hc *hexCo
 	bytes, err := io.ReadAll(file)
 	if err != nil {
 		logger.log(errorLevel, setupLogic, fmt.Sprintf("readNodeLUT: file handler could not read json file: %e", err))
-		return f.writeNodeLUT(nodes, obstacleLUT, hc)
+		return f.writeNodeLUT(nodes, obstacleLUT, g)
 	}
 
 	wc := newWindowConfig()
@@ -114,7 +114,7 @@ func (f fileHandler) readNodeLUT(nodes nodes, obstacleLUT obstacleLUT, hc *hexCo
 
 	if len(nLUT) != wc.maxPixels() {
 		logger.log(errorLevel, setupLogic, "readNodeLUT: create node lookup table since loaded node lookup table was invalid size")
-		return f.writeNodeLUT(nodes, obstacleLUT, hc)
+		return f.writeNodeLUT(nodes, obstacleLUT, g)
 	}
 
 	logger.log(infoLevel, setupLogic, "readNodeLUT: loaded node lookup table, skipped creating it.")
@@ -122,8 +122,8 @@ func (f fileHandler) readNodeLUT(nodes nodes, obstacleLUT obstacleLUT, hc *hexCo
 	return nLUT
 }
 
-func (f fileHandler) writeNodeLUT(nodes nodes, obstacleLUT obstacleLUT, hc *hexConfig) nodeLUT {
-	nLUT := nodes.setupNodeLUT(obstacleLUT, hc)
+func (f fileHandler) writeNodeLUT(nodes nodes, obstacleLUT obstacleLUT, g grid) nodeLUT {
+	nLUT := nodes.setupNodeLUT(obstacleLUT, g)
 
 	entries := make([]nodeLUTEntry, newWindowConfig().maxPixels())
 	for k, v := range nLUT {

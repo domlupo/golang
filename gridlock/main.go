@@ -114,9 +114,11 @@ func (g *Game) restart() {
 	g.compOne = *newComputer(bluePlayer)
 	g.compTwo = *newComputer(redPlayer)
 
-	hexagons := setupHexagons(&g.drawConfig.hexConfig)
-	obstacles, oLUT := setupObstacles(multiObstacle, &g.drawConfig.hexConfig)
-	nodes, nodeLookup := setupNodes(leftVsRightVerticalOffset, &g.drawConfig.hexConfig, g.initialNodeHealth, hexagons, oLUT)
+	// TODO: Determine if grid being passed here is correct. It might be best to have both lower level grid
+	// for positions and a higher level struct for the grid components
+	hexagons := setupHexagons(g.drawConfig.grid)
+	obstacles, oLUT := setupObstacles(multiObstacle, g.drawConfig.grid)
+	nodes, nLUT := setupNodes(leftVsRightVerticalOffset, g.drawConfig.grid, g.initialNodeHealth, hexagons, oLUT)
 
 	for nPos := range nodes {
 		for oPos := range obstacles {
@@ -126,7 +128,7 @@ func (g *Game) restart() {
 		}
 	}
 
-	g.gameState = newState(nodes, obstacles, hexagons, oLUT, nodeLookup, &g.drawConfig.hexConfig, g.developerMode)
+	g.gameState = newState(nodes, obstacles, hexagons, oLUT, nLUT, g.drawConfig.grid, g.developerMode)
 	g.debugger = newDebugger(g.gameState, g.developerToggleCooldown)
 	g.updateComputerTargetNodes()
 }

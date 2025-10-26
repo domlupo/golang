@@ -221,7 +221,7 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 // A smaller issue is when the desired final position is within a visbility grid, but the los check from
 // the position to unit immediately jumps to a different obstacle visibility grid when the first
 // visibility grid should have been traveled.
-func (u *unit) pathfindGlobalTarget(obstacles obstacles, oLUT obstacleLUT, hc *hexConfig) int {
+func (u *unit) pathfindGlobalTarget(obstacles obstacles, oLUT obstacleLUT, g grid) int {
 	var foundPath bool
 	tries := [][]position{{u.globalTarget}}
 	nextTries := [][]position{}
@@ -229,7 +229,7 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, oLUT obstacleLUT, hc *h
 	for !foundPath {
 		for _, path := range tries {
 			start := path[len(path)-1]
-			obstaclePoint, los := start.obstaclePoint(u.PixelPosition, oLUT, obstacles, hc)
+			obstaclePoint, los := start.obstaclePoint(u.PixelPosition, oLUT, obstacles, g)
 
 			if los {
 				foundPath = true
@@ -242,8 +242,8 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, oLUT obstacleLUT, hc *h
 				break
 			}
 
-			cwPath := u.getPath(obstaclePoint, cw, oLUT, obstacles, hc)
-			ccwPath := u.getPath(obstaclePoint, ccw, oLUT, obstacles, hc)
+			cwPath := u.getPath(obstaclePoint, cw, oLUT, obstacles, g)
+			ccwPath := u.getPath(obstaclePoint, ccw, oLUT, obstacles, g)
 
 			nextTries = append(nextTries, slices.Concat(path, cwPath))
 			nextTries = append(nextTries, slices.Concat(path, ccwPath))
@@ -306,7 +306,7 @@ func (u *unit) getPath(
 	direction pathDirection,
 	oLUT obstacleLUT,
 	obstacles obstacles,
-	hc *hexConfig) []position {
+	g grid) []position {
 
 	path := []position{}
 
@@ -322,7 +322,7 @@ func (u *unit) getPath(
 
 	for current != end {
 		path = append(path, position{layer: u.layer, PixelPosition: current.PixelPosition})
-		obstaclePoint, los := current.obstaclePoint(u.PixelPosition, oLUT, obstacles, hc)
+		obstaclePoint, los := current.obstaclePoint(u.PixelPosition, oLUT, obstacles, g)
 
 		if los || current.visibilityGridId != obstaclePoint.visibilityGridId {
 			break

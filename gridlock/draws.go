@@ -12,11 +12,11 @@ import (
 // Drawing Configurations for game components which are shown to player
 type drawConfig struct {
 	screen *ebiten.Image
+	grid   grid
 	// windowMultiplier must only be used for drawing images and windows.
 	// Never use for game logic. float32 rather than idiomatic float64
 	// because alot of Ebiten draw APIs use float32
-	windowMultiplier float32
-	hexConfig
+	windowMultiplier              float32
 	selectectionBoxLineWidth      int
 	missileExplodeRadiusLineWidth int
 	healthLineWidth               int
@@ -40,11 +40,13 @@ func newDrawConfig() *drawConfig {
 	drawTriangleDefaultImage := ebiten.NewImage(1, 1)
 	drawTriangleDefaultImage.Fill(color.White)
 	highlightColor := color.RGBA{70, 255, 0, 200}
+	// For 1280p * 720p resolution, a hexagon height of 40p is ideally 80/sqrt(3) wide.
+	// 80/sqrt(3) is 46.188 which is approximately 46p.
+	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
 	dc := drawConfig{
-		screen:           nil,
-		windowMultiplier: 2.5,
-		// aspect ratio config (16:9 aspect ratio)
-		hexConfig:                     newHexConfig(newWindowConfig(), 46, 40, 19, 10),
+		screen:                        nil,
+		windowMultiplier:              2.5,
+		grid:                          grid{&hc},
 		selectectionBoxLineWidth:      1,
 		missileExplodeRadiusLineWidth: 1,
 		healthLineWidth:               2,
@@ -128,14 +130,14 @@ type drawTriangleColor struct {
 	alpha float32
 }
 
-func drawHex(dc drawConfig, gridPos GridPosition, color drawTriangleColor, selected bool) {
-	center := gridPos.getPixelPosOutbounds(hpCenter, &dc.hexConfig)
-	north := gridPos.getPixelPosOutbounds(hpNorth, &dc.hexConfig)
-	northeast := gridPos.getPixelPosOutbounds(hpNortheast, &dc.hexConfig)
-	southeast := gridPos.getPixelPosOutbounds(hpSoutheast, &dc.hexConfig)
-	southwest := gridPos.getPixelPosOutbounds(hpSouthwest, &dc.hexConfig)
-	south := gridPos.getPixelPosOutbounds(hpSouth, &dc.hexConfig)
-	northwest := gridPos.getPixelPosOutbounds(hpNorthwest, &dc.hexConfig)
+func drawHex(dc drawConfig, p GridPosition, color drawTriangleColor, selected bool) {
+	center := dc.grid.getPixelPosOutbounds(p, hpCenter)
+	north := dc.grid.getPixelPosOutbounds(p, hpNorth)
+	northeast := dc.grid.getPixelPosOutbounds(p, hpNortheast)
+	southeast := dc.grid.getPixelPosOutbounds(p, hpSoutheast)
+	southwest := dc.grid.getPixelPosOutbounds(p, hpSouthwest)
+	south := dc.grid.getPixelPosOutbounds(p, hpSouth)
+	northwest := dc.grid.getPixelPosOutbounds(p, hpNorthwest)
 
 	// The one pixel offsets for inclusive or exclusive hex points are handled at the game logic layer.
 	// The window multiplier offsets are handled here since window multiplier is a draw concept.
@@ -163,27 +165,27 @@ func drawHex(dc drawConfig, gridPos GridPosition, color drawTriangleColor, selec
 	if selected {
 		lineWidth := float32(dc.hexLineWidth) * dc.windowMultiplier
 
-		north := gridPos.getPixelPosOutbounds(hpNorth, &dc.hexConfig)
+		north := dc.grid.getPixelPosOutbounds(p, hpNorth)
 		nX := float32(north.X) * dc.windowMultiplier
 		nY := float32(north.Y) * dc.windowMultiplier
 
-		nw := gridPos.getPixelPosOutbounds(hpNorthwest, &dc.hexConfig)
+		nw := dc.grid.getPixelPosOutbounds(p, hpNorthwest)
 		nwX := float32(nw.X) * dc.windowMultiplier
 		nwY := float32(nw.Y) * dc.windowMultiplier
 
-		ne := gridPos.getPixelPosOutbounds(hpNortheast, &dc.hexConfig)
+		ne := dc.grid.getPixelPosOutbounds(p, hpNortheast)
 		neX := float32(ne.X+1) * dc.windowMultiplier
 		neY := float32(ne.Y) * dc.windowMultiplier
 
-		sw := gridPos.getPixelPosOutbounds(hpSouthwest, &dc.hexConfig)
+		sw := dc.grid.getPixelPosOutbounds(p, hpSouthwest)
 		swX := float32(sw.X) * dc.windowMultiplier
 		swY := float32(sw.Y+1) * dc.windowMultiplier
 
-		se := gridPos.getPixelPosOutbounds(hpSoutheast, &dc.hexConfig)
+		se := dc.grid.getPixelPosOutbounds(p, hpSoutheast)
 		seX := float32(se.X+1) * dc.windowMultiplier
 		seY := float32(se.Y+1) * dc.windowMultiplier
 
-		s := gridPos.getPixelPosOutbounds(hpSouth, &dc.hexConfig)
+		s := dc.grid.getPixelPosOutbounds(p, hpSouth)
 		sX := float32(s.X) * dc.windowMultiplier
 		sY := float32(s.Y+1) * dc.windowMultiplier
 

@@ -1,4 +1,4 @@
-// General position utility functions. Most are pure functions. Used across many different files.
+// A position represents a point in 2d (PixelPosition) or 3d space (position)
 
 package main
 
@@ -6,12 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 )
-
-// low resolution position used for grid items such as nodes, obstacles, hexagons, etc
-type GridPosition struct {
-	X int `json:"x"`
-	Y int `json:"y"`
-}
 
 // high resolution position.
 type PixelPosition struct {
@@ -33,30 +27,6 @@ type position struct {
 	layer
 	PixelPosition
 }
-
-type hexPoint int
-
-const (
-	hpCenter hexPoint = iota
-	hpNorth
-	hpNortheast
-	hpSoutheast
-	hpSouth
-	hpSouthwest
-	hpNorthwest
-)
-
-type hexSide int
-
-const (
-	hsNone hexSide = iota
-	hsNortheast
-	hsEast
-	hsSoutheast
-	hsSouthwest
-	hsWest
-	hsNorthwest
-)
 
 type direction int
 
@@ -88,10 +58,6 @@ const (
 
 func directions() []direction {
 	return []direction{north, northeast, east, southeast, south, southwest, west, northwest}
-}
-
-func hexPoints() []hexPoint {
-	return []hexPoint{hpCenter, hpNorth, hpNortheast, hpSoutheast, hpSouth, hpSouthwest, hpNorthwest}
 }
 
 func (d direction) String() string {
@@ -130,13 +96,6 @@ func (pixelPos PixelPosition) log() []slog.Attr {
 	return a
 }
 
-func (gridPos GridPosition) log() []slog.Attr {
-	var a = []slog.Attr{}
-	a = append(a, slog.Int("x", gridPos.X))
-	a = append(a, slog.Int("y", gridPos.Y))
-	return a
-}
-
 func (pos PixelPosition) chebyshevDistance(otherPos PixelPosition) int {
 	xDelta := pos.X - otherPos.X
 	if xDelta < 0 {
@@ -147,10 +106,6 @@ func (pos PixelPosition) chebyshevDistance(otherPos PixelPosition) int {
 		yDelta *= -1
 	}
 	return max(xDelta, yDelta)
-}
-
-func (gridPos GridPosition) equals(other GridPosition) bool {
-	return gridPos.X == other.X && gridPos.Y == other.Y
 }
 
 func (pixelPos PixelPosition) equals(other PixelPosition) bool {
@@ -204,63 +159,6 @@ func (pixelPos PixelPosition) allAdjacent() []PixelPosition {
 	return a
 }
 
-func (gridPos GridPosition) adjacent(side hexSide, hc *hexConfig) (GridPosition, bool) {
-	x := gridPos.X
-	y := gridPos.Y
-	switch side {
-	case hsNone:
-		panic("need a direction to find adjacent grid position")
-	case hsNortheast:
-		y--
-		if gridPos.Y%2 == 0 {
-			x++
-		}
-	case hsEast:
-		x++
-	case hsSoutheast:
-		y++
-		if gridPos.Y%2 == 0 {
-			x++
-		}
-	case hsWest:
-		x--
-	case hsSouthwest:
-		y++
-		if gridPos.Y%2 == 1 {
-			x--
-		}
-	case hsNorthwest:
-		y--
-		if gridPos.Y%2 == 1 {
-			x--
-		}
-	default:
-		panic("Cannot find adjacent grid position. Unknown hex side.")
-	}
-
-	if x < 0 || y < 0 || y >= hc.yIndexMax || (y%2 == 0 && x >= hc.xIndexMax-1) || (y%2 == 1 && x >= hc.xIndexMax) {
-		return GridPosition{}, false
-	} else {
-		return GridPosition{x, y}, true
-	}
-}
-
-func (gridPos GridPosition) isAdjacent(other GridPosition, hc *hexConfig) bool {
-	ne, neOk := gridPos.adjacent(hsNortheast, hc)
-	e, eOk := gridPos.adjacent(hsEast, hc)
-	se, seOk := gridPos.adjacent(hsSoutheast, hc)
-	sw, swOk := gridPos.adjacent(hsSouthwest, hc)
-	w, wOk := gridPos.adjacent(hsWest, hc)
-	nw, nwOk := gridPos.adjacent(hsNorthwest, hc)
-
-	return (neOk && ne.equals(other)) ||
-		(eOk && e.equals(other)) ||
-		(seOk && se.equals(other)) ||
-		(swOk && sw.equals(other)) ||
-		(wOk && w.equals(other)) ||
-		(nwOk && nw.equals(other))
-}
-
 func (pos position) log() []slog.Attr {
 	var a = []slog.Attr{}
 	var layer string
@@ -286,136 +184,6 @@ func (p1 PixelPosition) add(p2 PixelPosition) (PixelPosition, bool) {
 	} else {
 		return p, true
 	}
-}
-
-func (gridPos GridPosition) getPixelPos(hexPoint hexPoint, hc *hexConfig) (PixelPosition, bool) {
-	p := gridPos.getPixelPosOutbounds(hexPoint, hc)
-	if !newWindowConfig().inbounds(p) {
-		return PixelPosition{}, false
-	} else {
-		return p, true
-	}
-}
-
-func (gridPos GridPosition) getAnyPixelPos(hc *hexConfig) (PixelPosition, bool) {
-	for _, hp := range hexPoints() {
-		if p, ok := gridPos.getPixelPos(hp, hc); ok {
-			return p, true
-		}
-	}
-	return PixelPosition{}, false
-}
-
-func (gridPos GridPosition) getPixelPosOutbounds(hexPoint hexPoint, hc *hexConfig) PixelPosition {
-	x := gridPos.X * hc.hexWidth
-	y := gridPos.Y * (hc.hexHeight / 4 * 3)
-	if gridPos.Y%2 == 1 {
-		x -= (hc.hexWidth) / 2
-	}
-
-	// The values are found from the 1. hex look up table defined in hexConfig.go
-	// and 2. arbitrary rule of hexagons sides are left inclusive and right exclusive.
-	// These offsets are found from the hex look up table start point which is
-	// located at (xOffset, yOffset).
-	switch hexPoint {
-	case hpCenter:
-		y -= hc.hexHeight / 4
-	case hpNorth:
-		y -= hc.hexHeight / 4 * 3
-	case hpNorthwest:
-		x -= hc.hexWidth / 2
-		y -= hc.hexHeight / 2
-	case hpNortheast:
-		x += hc.hexWidth/2 - 1
-		y -= hc.hexHeight / 2
-	case hpSouth:
-		y += hc.hexHeight/4 - 1
-	case hpSouthwest:
-		x -= hc.hexWidth / 2
-		y -= 1
-	case hpSoutheast:
-		x += hc.hexWidth/2 - 1
-		y -= 1
-	}
-
-	return PixelPosition{x + hc.xOffset, y + hc.yOffset}
-}
-
-func (p PixelPosition) getGridPos(hc *hexConfig) (GridPosition, bool) {
-	wc := newWindowConfig()
-	if !wc.inbounds(p) {
-		return GridPosition{}, false
-	}
-	return p.getGridPosOutbounds(hc)
-}
-
-func (pixelPos PixelPosition) getGridPosOutbounds(hc *hexConfig) (GridPosition, bool) {
-	xIndex := (pixelPos.X+hc.hexWidth-hc.xOffset)/hc.hexWidth - 1
-	yIndex := (pixelPos.Y+(hc.hexHeight/4*3)-hc.yOffset)/(hc.hexHeight/4*3) - 2
-	innerX := (pixelPos.X + hc.hexWidth - hc.xOffset) % hc.hexWidth
-	innerY := (pixelPos.Y + (hc.hexHeight * 3 / 2) - hc.yOffset) % (hc.hexHeight * 3 / 2)
-
-	firstYSectionStart := 0
-	secondYSectionStart := firstYSectionStart + hc.hexHeight/4
-	thirdYSectionStart := secondYSectionStart + hc.hexHeight/2
-	fourthYSectionStart := thirdYSectionStart + hc.hexHeight/4
-
-	var xIndexOffset int
-	var yIndexOffset int
-	switch {
-	case innerY >= firstYSectionStart && innerY < secondYSectionStart:
-		triangle := hc.lut[innerX+innerY*hc.hexWidth]
-		switch triangle {
-		case leftHexTriangle:
-			xIndexOffset = 0
-			yIndexOffset = 1
-		case middleHexTriangle:
-			xIndexOffset = 1
-			yIndexOffset = 2
-		case rightHexTriangle:
-			xIndexOffset = 1
-			yIndexOffset = 1
-		}
-	case innerY >= secondYSectionStart && innerY < thirdYSectionStart:
-		xIndexOffset = 1
-		yIndexOffset = 2
-	case innerY >= thirdYSectionStart && innerY < fourthYSectionStart:
-		hexLookUpYOffset := (hc.hexWidth * hc.hexHeight / 4) * 3
-		var hexLookUpXOffset int
-		if innerX >= 0 && innerX < (hc.hexWidth/2) {
-			hexLookUpXOffset = (hc.hexWidth / 2)
-		} else {
-			hexLookUpXOffset = -(hc.hexWidth / 2)
-		}
-
-		triangle := hc.lut[innerX+(innerY*hc.hexWidth)+hexLookUpXOffset-hexLookUpYOffset]
-		switch {
-		case triangle == leftHexTriangle:
-			xIndexOffset = 1
-			yIndexOffset = 1
-		case triangle == middleHexTriangle && innerX < (hc.hexWidth/2):
-			xIndexOffset = 0
-			yIndexOffset = 2
-		case triangle == middleHexTriangle && innerX >= (hc.hexWidth/2):
-			xIndexOffset = 1
-			yIndexOffset = 2
-		case triangle == rightHexTriangle:
-			xIndexOffset = 1
-			yIndexOffset = 1
-		}
-	case innerY >= fourthYSectionStart && innerY < (hc.hexHeight*3/2):
-		if innerX >= 0 && innerX < (hc.hexWidth/2) {
-			xIndexOffset = 0
-			yIndexOffset = 2
-		} else {
-			xIndexOffset = 1
-			yIndexOffset = 2
-		}
-	default:
-		panic(fmt.Sprintf("getHexGridPostion could not find a y section for the inner y: %d for pixel position %s", innerY, pixelPos.log()))
-	}
-
-	return GridPosition{xIndex + xIndexOffset, yIndex + yIndexOffset}, true
 }
 
 // The point directions are p -> q -> r.
