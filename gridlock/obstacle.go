@@ -177,7 +177,7 @@ func (os obstacles) setupObstacleLUT(hc *hexConfig) obstacleLUT {
 			}
 		}
 
-		percent := float64(count) / float64(wc.maxPixels()) * MaxPercent
+		percent := float64(count) / float64(wc.maxPixels()) * maxPercent
 		logger.log(
 			infoLevel,
 			setupLogic,
@@ -212,7 +212,7 @@ func (os obstacles) setupObstacleLUT(hc *hexConfig) obstacleLUT {
 		distance++
 	}
 
-	percent := float64(count) / float64(wc.maxPixels()) * MaxPercent
+	percent := float64(count) / float64(wc.maxPixels()) * maxPercent
 	logger.log(
 		infoLevel,
 		setupLogic,

@@ -4,8 +4,8 @@ package main
 
 import "fmt"
 
-const MaxPercent = 100
-const MinPercent = 0
+const maxPercent = 100
+const minPercent = 0
 
 type player int
 

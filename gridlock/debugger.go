@@ -48,7 +48,7 @@ func newDebuggerConfig() *debuggerConfig {
 		heatmapG:                0,
 		heatmapB:                0,
 		heatmapAlphaMaxLimit:    200,
-		heatmapPercent:          MaxPercent,
+		heatmapPercent:          maxPercent,
 		roygbivColors: []color.RGBA{
 			{200, 0, 0, 255},
 			{250, 150, 0, 255},
@@ -208,8 +208,8 @@ func (d *debugger) createUnitPathfindHeatmap() {
 			return
 		default:
 			pixelCount++
-			if pixelCount%(wc.maxPixels()/MaxPercent) == 0 {
-				percentProgess := pixelCount / (wc.maxPixels() / MaxPercent)
+			if pixelCount%(wc.maxPixels()/maxPercent) == 0 {
+				percentProgess := pixelCount / (wc.maxPixels() / maxPercent)
 				logger.log(infoLevel, devTool, "pathfind heatmap", slog.Int("pixel positions percent progress", percentProgess))
 			}
 
@@ -230,8 +230,8 @@ func (d *debugger) updateHeatmapPercent(delta int) {
 		return
 	}
 	d.heatmapPercent = d.heatmapPercent + delta
-	d.heatmapPercent = max(d.heatmapPercent, MinPercent+1)
-	d.heatmapPercent = min(d.heatmapPercent, MaxPercent)
+	d.heatmapPercent = max(d.heatmapPercent, minPercent+1)
+	d.heatmapPercent = min(d.heatmapPercent, maxPercent)
 	logger.log(infoLevel, devTool, fmt.Sprintf("updateHeatmapPercent: Set to %d", d.heatmapPercent))
 }
 
@@ -303,7 +303,7 @@ func (heatmap heatmap) draw(c drawConfig, dC debuggerConfig, heatmapPercent int)
 	for _, v := range heatmap {
 		maxV = max(maxV, v)
 	}
-	trimmedV := maxV * heatmapPercent / MaxPercent
+	trimmedV := maxV * heatmapPercent / maxPercent
 	for pixelPos, v := range heatmap {
 		v := min(v, trimmedV)
 		color := color.RGBA{

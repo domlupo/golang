@@ -149,7 +149,7 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, hc *hexConfig) nodeLUT {
 			}
 		}
 
-		percent := float64(count) / float64(wc.maxPixels()) * MaxPercent
+		percent := float64(count) / float64(wc.maxPixels()) * maxPercent
 		logger.log(
 			infoLevel,
 			setupLogic,
@@ -158,7 +158,7 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, hc *hexConfig) nodeLUT {
 		distance++
 	}
 
-	percent := float64(count) / float64(wc.maxPixels()) * MaxPercent
+	percent := float64(count) / float64(wc.maxPixels()) * maxPercent
 	logger.log(infoLevel, setupLogic, fmt.Sprintf("setupNodeLUT: %.0f%% total pixels not skipped with a distance limit of %d", percent, distanceLimit))
 
 	for x := range wc.width {
