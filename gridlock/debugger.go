@@ -165,7 +165,7 @@ func (d *debugger) debug(p PixelPosition) {
 
 func (d *debugger) logPixel(p PixelPosition) {
 	attrs := []slog.Attr{nest("PixelPosition", p.log())}
-	if gridPos, ok := p.getGridPos(d.hexConfig); ok {
+	if gridPos, ok := p.getGridPos(d.hc); ok {
 		attrs = append(attrs, nest("GridPosition", gridPos.log()))
 	} else {
 		attrs = append(attrs, slog.String("GridPosition", "notFound"))
@@ -210,14 +210,14 @@ func (d *debugger) createUnitPathfindHeatmap() {
 			return
 		default:
 			pixelCount++
-			if pixelCount%(d.windowWidth*d.windowHeight/100) == 0 {
-				percentProgess := pixelCount / (d.windowWidth * d.windowHeight / 100)
+			if pixelCount%(d.hc.windowWidth*d.hc.windowHeight/100) == 0 {
+				percentProgess := pixelCount / (d.hc.windowWidth * d.hc.windowHeight / 100)
 				logger.log(infoLevel, devTool, "pathfind heatmap", slog.Int("pixel positions percent progress", percentProgess))
 			}
 
 			if info.Walkable {
 				unit.updateTarget(globalTarget, position{layer: unit.layer, PixelPosition: pixelPos})
-				distance := unit.pathfindGlobalTarget(d.obstacles, d.oLUT, d.hexConfig)
+				distance := unit.pathfindGlobalTarget(d.obstacles, d.oLUT, d.hc)
 				d.unitPathfind[pixelPos] = distance
 			}
 		}

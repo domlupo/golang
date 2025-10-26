@@ -9,7 +9,7 @@ import (
 
 // not enforced but must be a singleton
 type state struct {
-	*hexConfig
+	hc *hexConfig
 	// TODO: The next largest optimization might be to split hexagon linked list
 	// into respective layers.
 	oLUT               obstacleLUT
@@ -23,9 +23,9 @@ type state struct {
 	unitsDeletedTotal  int
 }
 
-func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, hexConfig *hexConfig, developerMode bool) *state {
+func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, hc *hexConfig, developerMode bool) *state {
 	s := state{
-		hexConfig:     hexConfig,
+		hc:            hc,
 		obstacles:     o,
 		oLUT:          oLUT,
 		hexagons:      h,
@@ -71,7 +71,7 @@ func (s *state) analyzeTargets() {
 		u.updateTarget(enemyTarget, nearest)
 
 		if !u.globalTarget.isZero() && u.pathGlobalTarget {
-			u.pathfindGlobalTarget(s.obstacles, s.oLUT, s.hexConfig)
+			u.pathfindGlobalTarget(s.obstacles, s.oLUT, s.hc)
 		} else if len(u.localTargets) > 0 && u.atTerminalPosition {
 			u.localTargets = u.localTargets[:len(u.localTargets)-1]
 		}
@@ -84,26 +84,26 @@ func (s *state) steer(u *unit) position {
 	x1 := u.position.X + u.radius
 	y1 := u.position.Y + u.radius
 
-	gridPos, _ := u.PixelPosition.getGridPos(s.hexConfig)
+	gridPos, _ := u.PixelPosition.getGridPos(s.hc)
 	hex := s.hexagons[gridPos]
 	var neHex, eHex, seHex, swHex, wHex, nwHex *hexagon
 
-	if pos, ok := gridPos.adjacent(hsNortheast, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsNortheast, s.hc); ok {
 		neHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(hsEast, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsEast, s.hc); ok {
 		eHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(hsSoutheast, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsSoutheast, s.hc); ok {
 		seHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(hsSouthwest, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsSouthwest, s.hc); ok {
 		swHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(hsWest, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsWest, s.hc); ok {
 		wHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(hsNorthwest, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsNorthwest, s.hc); ok {
 		nwHex = s.hexagons[pos]
 	}
 
@@ -215,7 +215,7 @@ func (s *state) moveUnits() {
 			continue
 		}
 
-		collidesWithBorder := collidesWithBorder(newPos, u.radius, s.hexConfig)
+		collidesWithBorder := collidesWithBorder(newPos, u.radius, s.hc)
 
 		var collidedUnitPos, collidesWithUnit = s.collidesWithUnit(
 			newPos,
@@ -250,8 +250,8 @@ func (s *state) moveUnits() {
 			unitsMovedCount++
 			s.units[newPos] = s.units[position{u.layer, PixelPosition{u.X, u.Y}}]
 
-			oldGridPos, _ := u.PixelPosition.getGridPos(s.hexConfig)
-			newGridPos, _ := newPos.PixelPosition.getGridPos(s.hexConfig)
+			oldGridPos, _ := u.PixelPosition.getGridPos(s.hc)
+			newGridPos, _ := newPos.PixelPosition.getGridPos(s.hc)
 			if !oldGridPos.equals(newGridPos) {
 				oldHex := s.hexagons[oldGridPos]
 				newHex := s.hexagons[newGridPos]
@@ -319,26 +319,26 @@ func (s *state) nearestUnitWithinVision(u unit) (position, bool) {
 	x1 := u.position.X + u.radius
 	y1 := u.position.Y + u.radius
 
-	gridPos, _ := u.PixelPosition.getGridPos(s.hexConfig)
+	gridPos, _ := u.PixelPosition.getGridPos(s.hc)
 	hex := s.hexagons[gridPos]
 	var neHex, eHex, seHex, swHex, wHex, nwHex *hexagon
 
-	if pos, ok := gridPos.adjacent(hsNortheast, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsNortheast, s.hc); ok {
 		neHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(hsEast, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsEast, s.hc); ok {
 		eHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(hsSoutheast, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsSoutheast, s.hc); ok {
 		seHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(hsSouthwest, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsSouthwest, s.hc); ok {
 		swHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(hsWest, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsWest, s.hc); ok {
 		wHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(hsNorthwest, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsNorthwest, s.hc); ok {
 		nwHex = s.hexagons[pos]
 	}
 
@@ -417,26 +417,26 @@ func (s *state) collidesWithUnit(newPos position, unit unit) (position, bool) {
 	y1 := newPos.Y + unit.radius
 	r1 := unit.radius
 
-	gridPos, _ := newPos.PixelPosition.getGridPos(s.hexConfig)
+	gridPos, _ := newPos.PixelPosition.getGridPos(s.hc)
 	hex := s.hexagons[gridPos]
 	var neHex, eHex, seHex, swHex, wHex, nwHex *hexagon
 
-	if pos, ok := gridPos.adjacent(hsNortheast, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsNortheast, s.hc); ok {
 		neHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(hsEast, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsEast, s.hc); ok {
 		eHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(hsSoutheast, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsSoutheast, s.hc); ok {
 		seHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(hsSouthwest, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsSouthwest, s.hc); ok {
 		swHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(hsWest, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsWest, s.hc); ok {
 		wHex = s.hexagons[pos]
 	}
-	if pos, ok := gridPos.adjacent(hsNorthwest, s.hexConfig); ok {
+	if pos, ok := gridPos.adjacent(hsNorthwest, s.hc); ok {
 		nwHex = s.hexagons[pos]
 	}
 
@@ -555,7 +555,7 @@ func (s *state) attackUnits() {
 	for _, u := range s.units {
 		if u.health <= 0 {
 
-			gridPos, _ := u.PixelPosition.getGridPos(s.hexConfig)
+			gridPos, _ := u.PixelPosition.getGridPos(s.hc)
 			hex := s.hexagons[gridPos]
 			hex.unitCount--
 			if hex.linkedList.id == u.id && u.next.id != u.id {
@@ -627,7 +627,7 @@ func (s *state) updateNodeOwnership() bool {
 
 	for _, n := range s.nodes {
 		if n.currentHealth == 0 {
-			newNode := newNode(n.capturedBy, n.gridPos, n.maxHealth, s.hexConfig, n.unitConfig)
+			newNode := newNode(n.capturedBy, n.gridPos, n.maxHealth, s.hc, n.unitConfig)
 			newNode.control = s.nodes[n.gridPos].control
 			newNode.singleSelect = s.nodes[n.gridPos].singleSelect
 			newNode.multiSelect = s.nodes[n.gridPos].multiSelect
@@ -649,7 +649,7 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 		n.multiSelect = false
 	}
 
-	clickedGridPos, _ := clickPosition.getGridPos(s.hexConfig)
+	clickedGridPos, _ := clickPosition.getGridPos(s.hc)
 	clickedNode, nodeClicked := s.nodes[clickedGridPos]
 	if nodeClicked && clickPosition.equals(releasePosition) && clickedGridPos.equals(priorSingleSelect) {
 		for _, n := range s.nodes {
@@ -687,8 +687,8 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 	// usually causes too much selection to occur. The behavior is correct when
 	// the cursor ends right or below window. It is tricky and error prone to fix this
 	// due to hexagon LUT repetition, so I am punting it.
-	topLeftGridPos, _ := topLeftPixelPos.getGridPos(s.hexConfig)
-	bottomRightGridPos, _ := bottomRightPixelPos.getGridPosOutbounds(s.hexConfig)
+	topLeftGridPos, _ := topLeftPixelPos.getGridPos(s.hc)
+	bottomRightGridPos, _ := bottomRightPixelPos.getGridPosOutbounds(s.hc)
 
 	var firstSelectedNode *node
 	for _, n := range s.nodes {
@@ -798,7 +798,7 @@ func (s *state) produceUnits() {
 		}
 
 		// TODO: determine behavior for producing units during collision
-		pixelPos, ok := n.gridPos.getPixelPos(hpCenter, s.hexConfig)
+		pixelPos, ok := n.gridPos.getPixelPos(hpCenter, s.hc)
 		if !ok {
 			panic("could not get pixel pos for produce units")
 		}
