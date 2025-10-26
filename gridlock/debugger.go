@@ -107,7 +107,7 @@ func (d *debugger) setupHeatmaps() {
 	}
 
 	for pixelPos, info := range d.oLUT {
-		// TODO: Update this to unwalkable smooth sum once debugger supports percentages
+		// TODO: Revist once local path finding is more polished Should this be unwalkable or smooth sum?
 		d.obstacleLUTDistance[pixelPos] = info.UnwalkableChebyshevDistance
 	}
 
@@ -226,7 +226,7 @@ func (d *debugger) createUnitPathfindHeatmap() {
 }
 
 func (d *debugger) updateHeatmapPercent(delta int) {
-	if delta == 0 {
+	if delta == 0 || !(d.drawObstacleLUT || d.drawNodeLUT) {
 		return
 	}
 	d.heatmapPercent = d.heatmapPercent + delta

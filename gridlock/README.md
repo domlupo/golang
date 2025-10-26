@@ -141,9 +141,6 @@ Is there a mobile equivalent for war/4x games?
   - This is easy to add now that debugger.go exists and it is unaffected by pause
   - Clean up prior nested unit + unitConfig logging which is probably broke.
 
-- Update debugger to use percentages for heatmap max rather than an int
-  - Update obstacleLUT to sum distance rather than chebyshev distance? Not sure if this is needed.
-
 - save file: 
   - Will expose constraints
   - Will expose platform concerns
