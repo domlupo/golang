@@ -17,15 +17,11 @@ type drawConfig struct {
 	// because alot of Ebiten draw APIs use float32
 	windowMultiplier float32
 	hexConfig
-	debugGridWidth                int
-	debugGridIndexCount           int
-	debugGridColor                color.Color
 	selectectionBoxLineWidth      int
 	missileExplodeRadiusLineWidth int
 	healthLineWidth               int
 	targetNodeLineWidth           int
 	hexLineWidth                  int
-	visibilityGridLineWidth       int
 	backgroundColor               color.RGBA
 	highlightColor                color.RGBA
 	unitHealthColor               color.RGBA
@@ -49,15 +45,11 @@ func newDrawConfig() *drawConfig {
 		windowMultiplier: 2.5,
 		// aspect ratio config (16:9 aspect ratio)
 		hexConfig:                     newHexConfig(1280, 720, 46, 40, 19, 10),
-		debugGridWidth:                1,
-		debugGridIndexCount:           32,
-		debugGridColor:                color.Black,
 		selectectionBoxLineWidth:      1,
 		missileExplodeRadiusLineWidth: 1,
 		healthLineWidth:               2,
 		targetNodeLineWidth:           2,
 		hexLineWidth:                  2,
-		visibilityGridLineWidth:       1,
 		backgroundColor:               color.RGBA{200, 200, 200, 255},
 		highlightColor:                highlightColor,
 		unitHealthColor:               highlightColor,

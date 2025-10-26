@@ -239,7 +239,7 @@ func (d *debugger) updateHeatmapPercent(delta int) {
 
 func (d debugger) draw(c drawConfig) {
 	if d.drawHexGrid {
-		drawHexGrid(c)
+		drawHexGrid(c, *d.debuggerConfig)
 	}
 
 	if d.drawObstacleLUT {
@@ -276,7 +276,7 @@ func (d debugger) draw(c drawConfig) {
 				continue
 			}
 			visited[op.visibilityGridId] = struct{}{}
-			o.drawVisibilityGrid(c)
+			o.drawVisibilityGrid(c, *d.debuggerConfig)
 		}
 	}
 }
@@ -324,7 +324,7 @@ func (heatmap heatmap) draw(c drawConfig, dC debuggerConfig, heatmapPercent int)
 	}
 }
 
-func (o obstacle) drawVisibilityGrid(c drawConfig) {
+func (o obstacle) drawVisibilityGrid(c drawConfig, dC debuggerConfig) {
 	for _, op := range *o.visibilityGrid {
 		vector.DrawFilledCircle(
 			c.screen,
@@ -339,7 +339,7 @@ func (o obstacle) drawVisibilityGrid(c drawConfig) {
 			float32(op.Y)*c.windowMultiplier,
 			float32(op.cw.X)*c.windowMultiplier,
 			float32(op.cw.Y)*c.windowMultiplier,
-			float32(c.visibilityGridLineWidth)*c.windowMultiplier,
+			float32(dC.visibilityGridLineWidth)*c.windowMultiplier,
 			c.highlightColor,
 			false)
 	}
@@ -394,7 +394,7 @@ func (u *unit) drawDebug(c drawConfig, dC debuggerConfig) {
 }
 
 // This is likely to be become apart of game and then it should be removed from debugger.go
-func drawHexGrid(dc drawConfig) {
+func drawHexGrid(c drawConfig, dC debuggerConfig) {
 	// This is the pattern drawn.
 	//    / \
 	//   |
@@ -411,43 +411,43 @@ func drawHexGrid(dc drawConfig) {
 	//   |   |
 	//   |   |
 
-	for i := 0; i < dc.xIndexMax; i++ {
-		for j := 0; j < dc.yIndexMax; j++ {
-			if j%2 == 0 && i == dc.xIndexMax-1 {
+	for i := 0; i < c.xIndexMax; i++ {
+		for j := 0; j < c.yIndexMax; j++ {
+			if j%2 == 0 && i == c.xIndexMax-1 {
 				continue
 			}
 
-			lineWidth := float32(dc.debugGridWidth) * dc.windowMultiplier
+			lineWidth := float32(dC.debugGridWidth) * c.windowMultiplier
 			pos := GridPosition{i, j}
 
-			n := pos.getPixelPosOutbounds(hpNorth, &dc.hexConfig)
-			nX := float32(n.X) * dc.windowMultiplier
-			nY := float32(n.Y) * dc.windowMultiplier
+			n := pos.getPixelPosOutbounds(hpNorth, &c.hexConfig)
+			nX := float32(n.X) * c.windowMultiplier
+			nY := float32(n.Y) * c.windowMultiplier
 
-			nw := pos.getPixelPosOutbounds(hpNorthwest, &dc.hexConfig)
-			nwX := float32(nw.X) * dc.windowMultiplier
-			nwY := float32(nw.Y) * dc.windowMultiplier
+			nw := pos.getPixelPosOutbounds(hpNorthwest, &c.hexConfig)
+			nwX := float32(nw.X) * c.windowMultiplier
+			nwY := float32(nw.Y) * c.windowMultiplier
 
-			ne := pos.getPixelPosOutbounds(hpNortheast, &dc.hexConfig)
-			neX := float32(ne.X+1) * dc.windowMultiplier
-			neY := float32(ne.Y) * dc.windowMultiplier
+			ne := pos.getPixelPosOutbounds(hpNortheast, &c.hexConfig)
+			neX := float32(ne.X+1) * c.windowMultiplier
+			neY := float32(ne.Y) * c.windowMultiplier
 
-			sw := pos.getPixelPosOutbounds(hpSouthwest, &dc.hexConfig)
-			swX := float32(sw.X) * dc.windowMultiplier
-			swY := float32(sw.Y+1) * dc.windowMultiplier
+			sw := pos.getPixelPosOutbounds(hpSouthwest, &c.hexConfig)
+			swX := float32(sw.X) * c.windowMultiplier
+			swY := float32(sw.Y+1) * c.windowMultiplier
 
 			// draw west side
 			//    / \
 			//  *|*
 			//  *|*
 			vector.StrokeLine(
-				dc.screen,
+				c.screen,
 				nwX,
 				nwY,
 				swX,
 				swY,
 				lineWidth,
-				dc.debugGridColor,
+				dC.debugGridColor,
 				false)
 
 			// draw northwest
@@ -455,13 +455,13 @@ func drawHexGrid(dc drawConfig) {
 			//   |
 			//   |
 			vector.StrokeLine(
-				dc.screen,
+				c.screen,
 				nX,
 				nY,
 				nwX,
 				nwY,
 				lineWidth,
-				dc.debugGridColor,
+				dC.debugGridColor,
 				false)
 
 			// draw northeast
@@ -469,13 +469,13 @@ func drawHexGrid(dc drawConfig) {
 			//   |
 			//   |
 			vector.StrokeLine(
-				dc.screen,
+				c.screen,
 				nX,
 				nY,
 				neX,
 				neY,
 				lineWidth,
-				dc.debugGridColor,
+				dC.debugGridColor,
 				false)
 
 		}
