@@ -192,6 +192,7 @@ func (g *Game) Update() error {
 
 	g.currentSelectedX = x
 	g.currentSelectedY = y
+	g.debugger.pixel = pixelPos
 	if g.priorLeftMouseClicked && !g.leftMouseClicked {
 		g.leftMouseReleased = true
 	} else if !g.priorLeftMouseClicked && g.leftMouseClicked {
@@ -200,7 +201,6 @@ func (g *Game) Update() error {
 	} else if g.leftMouseClicked {
 		g.leftMouseHeld = true
 	}
-	g.debugger.pixel = nil
 	if g.developerMode && g.middleMouseScrollClicked {
 		g.debugger.debug(pixelPos)
 	}

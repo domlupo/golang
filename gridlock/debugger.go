@@ -69,7 +69,7 @@ func newDebuggerConfig() *debuggerConfig {
 type debugger struct {
 	*state
 	*debuggerConfig
-	pixel                       *PixelPosition
+	pixel                       PixelPosition
 	obstacleLUTUnwalkable       heatmap
 	obstacleLUTDistance         heatmap
 	nodeLUTDistance             heatmap
@@ -159,7 +159,6 @@ func (d *debugger) setupToggles(cooldown time.Duration) {
 }
 
 func (d *debugger) debug(p PixelPosition) {
-	d.pixel = &p
 	d.logPixel(p)
 	d.createUnitPathfindHeatmap()
 }
@@ -247,10 +246,9 @@ func (d debugger) draw(c drawConfig) {
 		d.obstacleLUTUnwalkable.draw(c, *d.debuggerConfig, d.heatmapPercent)
 		d.obstacleLUTDistance.draw(c, *d.debuggerConfig, d.heatmapPercent)
 
-		if d.pixel != nil {
-			p := d.oLUT[*d.pixel].NearestUnwalkablesAvg
-			p.draw(c, *d.debuggerConfig)
-		}
+		// TODO: Handle drawing obstacle LUT pixel when cursor if out of bounds
+		p := d.oLUT[d.pixel].NearestUnwalkablesAvg
+		p.draw(c, *d.debuggerConfig)
 	}
 
 	if d.drawNodeLUT {
