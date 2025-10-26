@@ -15,30 +15,26 @@ type hexConfig struct {
 	hexHeight int
 	// These offsets define the top left point for the most top left hex look up
 	// table pattern. It was chosen since both a positive x and y simplifies code.
-	xOffset      int
-	yOffset      int
-	windowWidth  int
-	windowHeight int
-	xIndexMax    int
-	yIndexMax    int
+	xOffset   int
+	yOffset   int
+	xIndexMax int
+	yIndexMax int
 }
 
-func newHexConfig(windowWidth int, windowHeight int, hexWidth int, hexHeight int, xOffset int, yOffset int) hexConfig {
+func newHexConfig(hexWidth int, hexHeight int, xOffset int, yOffset int) hexConfig {
 	lut := setupHexLUT(hexWidth)
-	xIndexMax := windowWidth/hexWidth + 2
-	yIndexMax := windowHeight/(hexHeight/4*3) + 1
+	xIndexMax := 1280/hexWidth + 2
+	yIndexMax := 720/(hexHeight/4*3) + 1
 	hc := hexConfig{
 		lut: lut,
 		// For 1280p * 720p resolution, a hexagon height of 40p is ideally 80/sqrt(3) wide.
 		// 80/sqrt(3) is 46.188 which is approximately 46p.
-		hexWidth:     hexWidth,
-		hexHeight:    hexHeight,
-		xOffset:      xOffset,
-		yOffset:      yOffset,
-		windowWidth:  windowWidth,
-		windowHeight: windowHeight,
-		xIndexMax:    xIndexMax,
-		yIndexMax:    yIndexMax,
+		hexWidth:  hexWidth,
+		hexHeight: hexHeight,
+		xOffset:   xOffset,
+		yOffset:   yOffset,
+		xIndexMax: xIndexMax,
+		yIndexMax: yIndexMax,
 	}
 	return hc
 }

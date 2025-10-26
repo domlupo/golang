@@ -4,6 +4,9 @@ package main
 
 import "fmt"
 
+const MaxPercent = 100
+const MinPercent = 0
+
 type player int
 
 const (
@@ -26,6 +29,23 @@ func (p player) String() string {
 	default:
 		panic(fmt.Sprintf("Cannot convert player to string: %d", p))
 	}
+}
+
+type windowConfig struct {
+	width  int
+	height int
+}
+
+func newWindowConfig() windowConfig {
+	wc := windowConfig{
+		width:  1280,
+		height: 720,
+	}
+	return wc
+}
+
+func (wc windowConfig) maxPixels() int {
+	return wc.height * wc.width
 }
 
 // All hexagons on map

@@ -215,7 +215,7 @@ func (s *state) moveUnits() {
 			continue
 		}
 
-		collidesWithBorder := collidesWithBorder(newPos, u.radius, s.hc)
+		collidesWithBorder := collidesWithBorder(newPos, u.radius)
 
 		var collidedUnitPos, collidesWithUnit = s.collidesWithUnit(
 			newPos,

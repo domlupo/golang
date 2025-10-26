@@ -306,7 +306,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return int(float32(g.windowWidth) * g.windowMultiplier), int(float32(g.windowHeight) * g.windowMultiplier)
+	wc := newWindowConfig()
+	return int(float32(wc.width) * g.windowMultiplier), int(float32(wc.height) * g.windowMultiplier)
 }
 
 func main() {
@@ -321,7 +322,8 @@ func main() {
 		}
 	}
 
-	ebiten.SetWindowSize(int(float32(g.windowWidth)*g.windowMultiplier), int(float32(g.windowHeight)*g.windowMultiplier))
+	wc := newWindowConfig()
+	ebiten.SetWindowSize(int(float32(wc.width)*g.windowMultiplier), int(float32(wc.height)*g.windowMultiplier))
 
 	logger = newLogger(g.loggerConfig)
 

@@ -16,9 +16,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-const MaxPercent = 100
-const MinPercent = 0
-
 // Debugger Configurations
 type debuggerConfig struct {
 	drawHexGrid             bool
@@ -204,14 +201,15 @@ func (d *debugger) createUnitPathfindHeatmap() {
 	defer stop()
 
 	pixelCount := 0
+	wc := newWindowConfig()
 	for pixelPos, info := range d.oLUT {
 		select {
 		case <-ctx.Done():
 			return
 		default:
 			pixelCount++
-			if pixelCount%(d.hc.windowWidth*d.hc.windowHeight/100) == 0 {
-				percentProgess := pixelCount / (d.hc.windowWidth * d.hc.windowHeight / 100)
+			if pixelCount%(wc.maxPixels()/MaxPercent) == 0 {
+				percentProgess := pixelCount / (wc.maxPixels() / MaxPercent)
 				logger.log(infoLevel, devTool, "pathfind heatmap", slog.Int("pixel positions percent progress", percentProgess))
 			}
 

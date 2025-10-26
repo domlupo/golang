@@ -36,6 +36,7 @@ type nodeLUTEntry struct {
 }
 
 func (f fileHandler) readObstacleLUT(obstacles obstacles, hc *hexConfig) obstacleLUT {
+	wc := newWindowConfig()
 	file, err := os.Open(fmt.Sprintf("%s/%s", f.directoryName, f.obstacleLUTFileName))
 	if errors.Is(err, os.ErrNotExist) {
 		logger.log(infoLevel, setupLogic, "readObstacleLUT: create look up table file since it does not exist")
@@ -51,15 +52,15 @@ func (f fileHandler) readObstacleLUT(obstacles obstacles, hc *hexConfig) obstacl
 		return f.writeObstacleLUT(obstacles, hc)
 	}
 
-	entries := make([]obstacleLUTEntry, hc.windowWidth*hc.windowHeight)
+	entries := make([]obstacleLUTEntry, wc.maxPixels())
 	json.Unmarshal(bytes, &entries)
 
-	oLUT := make(obstacleLUT, hc.windowWidth*hc.windowHeight)
+	oLUT := make(obstacleLUT, wc.maxPixels())
 	for _, e := range entries {
 		oLUT[e.Key] = e.Value
 	}
 
-	if len(oLUT) != hc.windowWidth*hc.windowHeight {
+	if len(oLUT) != wc.maxPixels() {
 		logger.log(errorLevel, setupLogic, "readObstacleLUT: cannot read obstacle look up table since loaded obstacle look up was invalid size")
 		return f.writeObstacleLUT(obstacles, hc)
 	}
@@ -72,7 +73,7 @@ func (f fileHandler) readObstacleLUT(obstacles obstacles, hc *hexConfig) obstacl
 func (f fileHandler) writeObstacleLUT(obstacles obstacles, hc *hexConfig) obstacleLUT {
 	oLUT := obstacles.setupObstacleLUT(hc)
 
-	entries := make([]obstacleLUTEntry, hc.windowWidth*hc.windowHeight)
+	entries := make([]obstacleLUTEntry, newWindowConfig().maxPixels())
 	for k, v := range oLUT {
 		entries = append(entries, obstacleLUTEntry{Key: k, Value: v})
 	}
@@ -102,15 +103,16 @@ func (f fileHandler) readNodeLUT(nodes nodes, obstacleLUT obstacleLUT, hc *hexCo
 		return f.writeNodeLUT(nodes, obstacleLUT, hc)
 	}
 
-	entries := make([]nodeLUTEntry, hc.windowWidth*hc.windowHeight)
+	wc := newWindowConfig()
+	entries := make([]nodeLUTEntry, wc.maxPixels())
 	json.Unmarshal(bytes, &entries)
 
-	nLUT := make(nodeLUT, hc.windowWidth*hc.windowHeight)
+	nLUT := make(nodeLUT, wc.maxPixels())
 	for _, e := range entries {
 		nLUT[e.Key] = e.Value
 	}
 
-	if len(nLUT) != hc.windowWidth*hc.windowHeight {
+	if len(nLUT) != wc.maxPixels() {
 		logger.log(errorLevel, setupLogic, "readNodeLUT: create node lookup table since loaded node lookup table was invalid size")
 		return f.writeNodeLUT(nodes, obstacleLUT, hc)
 	}
@@ -123,7 +125,7 @@ func (f fileHandler) readNodeLUT(nodes nodes, obstacleLUT obstacleLUT, hc *hexCo
 func (f fileHandler) writeNodeLUT(nodes nodes, obstacleLUT obstacleLUT, hc *hexConfig) nodeLUT {
 	nLUT := nodes.setupNodeLUT(obstacleLUT, hc)
 
-	entries := make([]nodeLUTEntry, hc.windowWidth*hc.windowHeight)
+	entries := make([]nodeLUTEntry, newWindowConfig().maxPixels())
 	for k, v := range nLUT {
 		entries = append(entries, nodeLUTEntry{Key: k, Value: v})
 	}

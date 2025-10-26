@@ -157,7 +157,7 @@ func (pixelPos PixelPosition) equals(other PixelPosition) bool {
 	return pixelPos.X == other.X && pixelPos.Y == other.Y
 }
 
-func (pixelPos PixelPosition) adjacent(d direction, hc *hexConfig) (PixelPosition, bool) {
+func (pixelPos PixelPosition) adjacent(d direction) (PixelPosition, bool) {
 	var x int
 	var y int
 
@@ -188,7 +188,8 @@ func (pixelPos PixelPosition) adjacent(d direction, hc *hexConfig) (PixelPositio
 	}
 
 	p := PixelPosition{X: pixelPos.X + x, Y: pixelPos.Y + y}
-	if p.X < 0 || p.X > hc.windowWidth-1 || p.Y < 0 || p.Y >= hc.windowHeight-1 {
+	wc := newWindowConfig()
+	if p.X < 0 || p.X > wc.width-1 || p.Y < 0 || p.Y >= wc.height-1 {
 		return PixelPosition{}, false
 	}
 	return p, true
@@ -197,7 +198,7 @@ func (pixelPos PixelPosition) adjacent(d direction, hc *hexConfig) (PixelPositio
 func (pixelPos PixelPosition) allAdjacent(hc *hexConfig) []PixelPosition {
 	a := []PixelPosition{}
 	for _, d := range directions() {
-		if p, ok := pixelPos.adjacent(d, hc); ok {
+		if p, ok := pixelPos.adjacent(d); ok {
 			a = append(a, p)
 		}
 	}
@@ -279,11 +280,12 @@ func (pos position) log() []slog.Attr {
 	return a
 }
 
-func (pos PixelPosition) add(other PixelPosition, hc *hexConfig) (PixelPosition, bool) {
+func (pos PixelPosition) add(other PixelPosition) (PixelPosition, bool) {
 	x := pos.X + other.X
 	y := pos.Y + other.Y
 
-	if x < 0 || x >= hc.windowWidth || y < 0 || y >= hc.windowHeight {
+	wc := newWindowConfig()
+	if x < 0 || x >= wc.width || y < 0 || y >= wc.height {
 		return PixelPosition{}, false
 	} else {
 		return PixelPosition{x, y}, true
@@ -294,7 +296,8 @@ func (gridPos GridPosition) getPixelPos(hexPoint hexPoint, hc *hexConfig) (Pixel
 	pixelPos := gridPos.getPixelPosOutbounds(hexPoint, hc)
 	x, y := pixelPos.X, pixelPos.Y
 
-	if x < 0 || x >= hc.windowWidth || y < 0 || y >= hc.windowHeight {
+	wc := newWindowConfig()
+	if x < 0 || x >= wc.width || y < 0 || y >= wc.height {
 		return PixelPosition{}, false
 	} else {
 		return PixelPosition{x, y}, true
@@ -346,7 +349,8 @@ func (gridPos GridPosition) getPixelPosOutbounds(hexPoint hexPoint, hc *hexConfi
 }
 
 func (pixelPos PixelPosition) getGridPos(hc *hexConfig) (GridPosition, bool) {
-	if pixelPos.X < 0 || pixelPos.X > hc.windowWidth-1 || pixelPos.Y < 0 || pixelPos.Y > hc.windowHeight-1 {
+	wc := newWindowConfig()
+	if pixelPos.X < 0 || pixelPos.X > wc.width-1 || pixelPos.Y < 0 || pixelPos.Y > wc.height-1 {
 		return GridPosition{}, false
 	}
 	return pixelPos.getGridPosOutbounds(hc)
@@ -463,10 +467,11 @@ func (l1 line) intersects(l2 line) bool {
 	}
 }
 
-func collidesWithBorder(pos position, offset int, hc *hexConfig) bool {
-	if pos.X+offset > hc.windowWidth ||
+func collidesWithBorder(pos position, offset int) bool {
+	wc := newWindowConfig()
+	if pos.X+offset > wc.width ||
 		pos.X-offset < 0 ||
-		pos.Y+offset > hc.windowHeight ||
+		pos.Y+offset > wc.height ||
 		pos.Y-offset < 0 {
 		return true
 	} else {

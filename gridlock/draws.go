@@ -44,7 +44,7 @@ func newDrawConfig() *drawConfig {
 		screen:           nil,
 		windowMultiplier: 2.5,
 		// aspect ratio config (16:9 aspect ratio)
-		hexConfig:                     newHexConfig(1280, 720, 46, 40, 19, 10),
+		hexConfig:                     newHexConfig(46, 40, 19, 10),
 		selectectionBoxLineWidth:      1,
 		missileExplodeRadiusLineWidth: 1,
 		healthLineWidth:               2,

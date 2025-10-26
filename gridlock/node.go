@@ -74,11 +74,12 @@ func (info nodeInfo) log() []slog.Attr {
 // is dynamic programming. The node pixels are processed first. Next, the pixels 1 pixel away are
 // processed. This continues until the all pixels are procesed.
 func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, hc *hexConfig) nodeLUT {
-	distanceLimit := max(hc.windowWidth, hc.windowHeight)
-	nodeLUT := make(map[PixelPosition]nodeInfo, hc.windowWidth*hc.windowHeight)
+	wc := newWindowConfig()
+	distanceLimit := max(wc.width, wc.height)
+	nodeLUT := make(map[PixelPosition]nodeInfo, wc.maxPixels())
 
-	for x := range hc.windowWidth {
-		for y := range hc.windowHeight {
+	for x := range wc.width {
+		for y := range wc.height {
 			p := PixelPosition{X: x, Y: y}
 			gridPos, ok := p.getGridPos(hc)
 			if !ok {
@@ -98,15 +99,12 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, hc *hexConfig) nodeLUT {
 	distance := 0
 	var priorCount int
 	var count int
-	for count != hc.windowWidth*hc.windowHeight {
-		if distance == distanceLimit {
-			break
-		}
+	for count != wc.maxPixels() {
 		priorCount = count
 		count = 0
 
-		for x := range hc.windowWidth {
-			for y := range hc.windowHeight {
+		for x := range wc.width {
+			for y := range wc.height {
 				p := PixelPosition{X: x, Y: y}
 				oInfo := oLUT[p]
 				nInfo := nodeLUT[p]
@@ -151,7 +149,7 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, hc *hexConfig) nodeLUT {
 			}
 		}
 
-		percent := float64(count) / float64(hc.windowWidth*hc.windowHeight) * 100
+		percent := float64(count) / float64(wc.maxPixels()) * MaxPercent
 		logger.log(
 			infoLevel,
 			setupLogic,
@@ -160,11 +158,11 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, hc *hexConfig) nodeLUT {
 		distance++
 	}
 
-	percent := float64(count) / float64(hc.windowWidth*hc.windowHeight) * 100
+	percent := float64(count) / float64(wc.maxPixels()) * MaxPercent
 	logger.log(infoLevel, setupLogic, fmt.Sprintf("setupNodeLUT: %.0f%% total pixels not skipped with a distance limit of %d", percent, distanceLimit))
 
-	for x := range hc.windowWidth {
-		for y := range hc.windowHeight {
+	for x := range wc.width {
+		for y := range wc.height {
 			p := PixelPosition{X: x, Y: y}
 			oInfo := oLUT[p]
 			if !oInfo.Walkable {
