@@ -133,10 +133,6 @@ Is there a mobile equivalent for war/4x games?
   - Primarily helps exiting a setup early
   - Fix memory profiler not saving to file when CTRL+C is used (works fine when game exists normally)
 
-- Add debugger node highlight for nearest nodes. (similar to pixel highlight for obstacle LUT)
- - Determine if I should also add nearest node pixel position to node LUT 
-  - If yes, I should probably also highlight the pixel like obstacle LUT
-
 - Add paused unit debugging 
   - This is easy to add now that debugger.go exists and it is unaffected by pause
   - Clean up prior nested unit + unitConfig logging which is probably broke.

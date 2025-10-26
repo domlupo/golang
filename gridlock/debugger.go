@@ -252,6 +252,10 @@ func (d debugger) draw(c drawConfig) {
 
 	if d.drawNodeLUT {
 		d.nodeLUTDistance.draw(c, *d.debuggerConfig, d.heatmapPercent)
+
+		for _, p := range d.nLUT[d.pixel].NearestNodes {
+			drawHexHighlight(c, p)
+		}
 	}
 
 	if d.unitPathfindHeatmapComplete {
