@@ -21,10 +21,8 @@ type hexConfig struct {
 	yIndexMax int
 }
 
-func newHexConfig(hexWidth int, hexHeight int, xOffset int, yOffset int) hexConfig {
+func newHexConfig(wc windowConfig, hexWidth int, hexHeight int, xOffset int, yOffset int) hexConfig {
 	lut := setupHexLUT(hexWidth)
-	xIndexMax := 1280/hexWidth + 2
-	yIndexMax := 720/(hexHeight/4*3) + 1
 	hc := hexConfig{
 		lut: lut,
 		// For 1280p * 720p resolution, a hexagon height of 40p is ideally 80/sqrt(3) wide.
@@ -33,8 +31,8 @@ func newHexConfig(hexWidth int, hexHeight int, xOffset int, yOffset int) hexConf
 		hexHeight: hexHeight,
 		xOffset:   xOffset,
 		yOffset:   yOffset,
-		xIndexMax: xIndexMax,
-		yIndexMax: yIndexMax,
+		xIndexMax: wc.width/hexWidth + 2,
+		yIndexMax: wc.height/(hexHeight/4*3) + 1,
 	}
 	return hc
 }

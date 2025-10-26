@@ -7,7 +7,7 @@ import (
 
 func TestGetPixelPos(t *testing.T) {
 	t.Parallel()
-	hc := newHexConfig(46, 40, 19, 10)
+	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
 
 	var tests = []struct {
 		gridPos        GridPosition
@@ -123,7 +123,7 @@ func TestGetPixelPos(t *testing.T) {
 
 func TestGetGridPos(t *testing.T) {
 	t.Parallel()
-	hc := newHexConfig(46, 40, 19, 10)
+	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
 
 	var tests = []struct {
 		pixelPos  PixelPosition
@@ -877,7 +877,7 @@ func TestGetGridPos(t *testing.T) {
 
 func TestGridPosAdjacent(t *testing.T) {
 	t.Parallel()
-	hc := newHexConfig(46, 40, 19, 10)
+	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
 
 	var tests = []struct {
 		gridPos       GridPosition
