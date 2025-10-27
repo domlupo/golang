@@ -7,6 +7,7 @@ import (
 	"image/color"
 	"log/slog"
 	"slices"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
@@ -71,6 +72,7 @@ func (info nodeInfo) log() []slog.Attr {
 // is dynamic programming. The node pixels are processed first. Next, the pixels 1 pixel away are
 // processed. This continues until the all pixels are procesed.
 func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
+	start := time.Now()
 	wc := newWindowConfig()
 	distanceLimit := max(wc.width, wc.height)
 	nodeLUT := make(map[PixelPosition]nodeInfo, wc.maxPixels())
@@ -170,6 +172,7 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 		}
 	}
 
+	logger.log(infoLevel, setupLogic, fmt.Sprintf("setupNodeLUT: required %d seconds", int(time.Since(start).Seconds())))
 	return nodeLUT
 }
 

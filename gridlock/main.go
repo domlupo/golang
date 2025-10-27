@@ -116,9 +116,11 @@ func (g *Game) restart() {
 
 	// TODO: Determine if grid being passed here is correct. It might be best to have both lower level grid
 	// for positions and a higher level struct for the grid components
+	start := time.Now()
 	hexagons := setupHexagons(g.drawConfig.grid)
 	obstacles, oLUT := setupObstacles(multiObstacle, g.drawConfig.grid)
 	nodes, nLUT := setupNodes(leftVsRightVerticalOffset, g.drawConfig.grid, g.initialNodeHealth, hexagons, oLUT)
+	logger.log(infoLevel, setupLogic, fmt.Sprintf("Setup required %0.2f seconds", float64(time.Since(start).Seconds())))
 
 	for nPos := range nodes {
 		for oPos := range obstacles {

@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"math"
 	"slices"
+	"time"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -96,6 +97,7 @@ func (os obstacles) setup(g grid) obstacleLUT {
 // The main optimization currently used is dynamic programming. The unwalkable pixels are processed first. Next,
 // the pixels 1 pixel away are processed. This continues until all the pixels are processed.
 func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
+	start := time.Now()
 	wc := newWindowConfig()
 	distanceLimit := max(wc.width, wc.height)
 	nearestUnwalkables := make(map[PixelPosition][]PixelPosition)
@@ -241,8 +243,8 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 			oLUT[p] = info
 		}
 	}
-	logger.log(infoLevel, setupLogic, "setupObstacleLUT: done calculating weighted smooth distance")
 
+	logger.log(infoLevel, setupLogic, fmt.Sprintf("setupObstacleLUT: required %d seconds", int(time.Since(start).Seconds())))
 	return oLUT
 }
 
