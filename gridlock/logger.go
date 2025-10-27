@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"time"
+
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type level int
@@ -44,13 +47,27 @@ type loggerConfig struct {
 	logDevTool                 bool
 }
 
+func newLoggerConfig() loggerConfig {
+	c := loggerConfig{
+		initialLogLevel:            slog.LevelInfo,
+		filterTimeAndLevelFromLogs: true,
+		logUndecidedBehavior:       true,
+		logSetupLogic:              true,
+		logDevTool:                 true,
+	}
+	return c
+}
+
 type l struct {
 	*slog.Logger
 	*slog.LevelVar
 	enabledLogTypes map[logType]bool
+	toggles         map[string]*toggle
 }
 
-func newLogger(lc loggerConfig) l {
+func setupLogger(toggleCooldown time.Duration) l {
+	lc := newLoggerConfig()
+
 	var levelVar = new(slog.LevelVar)
 	levelVar.Set(lc.initialLogLevel)
 	logOptions := &slog.HandlerOptions{
@@ -64,9 +81,8 @@ func newLogger(lc loggerConfig) l {
 		},
 	}
 
-	var logger = slog.New(slog.NewJSONHandler(os.Stderr, logOptions))
 	l := l{
-		Logger:   logger,
+		Logger:   slog.New(slog.NewJSONHandler(os.Stderr, logOptions)),
 		LevelVar: levelVar,
 		enabledLogTypes: map[logType]bool{
 			alwaysLogType:     true,
@@ -78,8 +94,32 @@ func newLogger(lc loggerConfig) l {
 			devTool:           lc.logDevTool,
 		},
 	}
-
+	l.setupToggles(toggleCooldown)
 	return l
+}
+
+func (l *l) setupToggles(cooldown time.Duration) {
+	toggles := make(map[string]*toggle)
+	toggles["logLevel"] = newToggle(
+		ebiten.KeyL,
+		func() {
+			fmt.Println("L")
+			l.toggleLevel()
+		},
+		cooldown)
+	toggles["mainLogType"] = newToggle(
+		ebiten.KeyM,
+		func() { l.toggleType(mainLogic) },
+		cooldown)
+	toggles["stateLogType"] = newToggle(
+		ebiten.KeyS,
+		func() { l.toggleType(stateLogic) },
+		cooldown)
+	toggles["selectedUnitLogType"] = newToggle(
+		ebiten.KeyU,
+		func() { l.toggleType(selectedUnit) },
+		cooldown)
+	l.toggles = toggles
 }
 
 // Overide the logger state and force log the data.

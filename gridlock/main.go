@@ -57,7 +57,6 @@ type Game struct {
 	developerToggles           map[string]*toggle
 	developerToggleCooldown    time.Duration
 	initialNodeHealth          int
-	loggerConfig               loggerConfig
 	outputDirectoryName        string
 	cpuProfilerToggleName      string
 	memProfilerToggleName      string
@@ -98,13 +97,6 @@ func newGame() Game {
 		outputDirectoryName:     "output",
 		cpuProfilerFileName:     "cpu.prof",
 		memProfilerFileName:     "mem.prof",
-		loggerConfig: loggerConfig{
-			initialLogLevel:            slog.LevelInfo,
-			filterTimeAndLevelFromLogs: true,
-			logUndecidedBehavior:       true,
-			logSetupLogic:              true,
-			logDevTool:                 true,
-		},
 	}
 	return g
 }
@@ -149,6 +141,9 @@ func (g *Game) Update() error {
 		t.checkToggle(g.currentTime)
 	}
 	for _, t := range g.debugger.toggles {
+		t.checkToggle(g.currentTime)
+	}
+	for _, t := range logger.toggles {
 		t.checkToggle(g.currentTime)
 	}
 
@@ -329,7 +324,7 @@ func main() {
 	wc := newWindowConfig()
 	ebiten.SetWindowSize(int(float32(wc.width)*g.windowMultiplier), int(float32(wc.height)*g.windowMultiplier))
 
-	logger = newLogger(g.loggerConfig)
+	logger = setupLogger(g.developerToggleCooldown)
 
 	os.Mkdir(g.outputDirectoryName, 0755)
 
@@ -383,22 +378,6 @@ func main() {
 	g.developerToggles["slowTick"] = newToggle(
 		ebiten.KeyT,
 		func() { g.slowTick = !g.slowTick },
-		g.developerToggleCooldown)
-	g.developerToggles["logLevel"] = newToggle(
-		ebiten.KeyL,
-		func() { logger.toggleLevel() },
-		g.developerToggleCooldown)
-	g.developerToggles["mainLogType"] = newToggle(
-		ebiten.KeyM,
-		func() { logger.toggleType(mainLogic) },
-		g.developerToggleCooldown)
-	g.developerToggles["stateLogType"] = newToggle(
-		ebiten.KeyS,
-		func() { logger.toggleType(stateLogic) },
-		g.developerToggleCooldown)
-	g.developerToggles["selectedUnitLogType"] = newToggle(
-		ebiten.KeyU,
-		func() { logger.toggleType(selectedUnit) },
 		g.developerToggleCooldown)
 
 	if !g.developerMode {
