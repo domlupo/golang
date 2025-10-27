@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"log/slog"
 	"math"
@@ -38,30 +39,27 @@ type units map[position]*unit
 type unit struct {
 	position
 	unitConfig
-	id                  uuid.UUID
-	player              player
-	activeTarget        position
-	steerTarget         position
-	enemyTarget         position
-	localTarget         position
-	localTargets        []position
-	globalTarget        position
-	pathGlobalTarget    bool
-	atTerminalPosition  bool
-	bresenhamError      *int
-	nextBresenhamError  *int
-	steerTurnCount      int
-	steerTurnCountLimit int
-	health              int
-	movedThisTurn       bool
-	attackedThisTurn    bool
-	AtCollision         bool
-	canReachNode        node
-	selected            bool
-	prior               *unit
-	next                *unit
-	producedAt          int
-	debugFlag           bool
+	id                 uuid.UUID
+	player             player
+	activeTarget       position
+	steerTarget        position
+	enemyTarget        position
+	localTarget        position
+	localTargets       []position
+	globalTarget       position
+	pathGlobalTarget   bool
+	atTerminalPosition bool
+	bresenhamError     *int
+	nextBresenhamError *int
+	health             int
+	movedThisTurn      bool
+	attackedThisTurn   bool
+	AtCollision        bool
+	canReachNode       node
+	selected           bool
+	prior              *unit
+	next               *unit
+	producedAt         int
 }
 
 func newUnit(p player, globalTarget position, uc unitConfig, pos position, producedOrder int, selected bool) unit {
@@ -72,16 +70,15 @@ func newUnit(p player, globalTarget position, uc unitConfig, pos position, produ
 	}
 
 	u := unit{
-		id:                  id,
-		position:            pos,
-		player:              p,
-		globalTarget:        globalTarget,
-		pathGlobalTarget:    true,
-		unitConfig:          uc,
-		health:              uc.maxHealth,
-		selected:            selected,
-		producedAt:          producedOrder,
-		steerTurnCountLimit: 20,
+		id:               id,
+		position:         pos,
+		player:           p,
+		globalTarget:     globalTarget,
+		pathGlobalTarget: true,
+		unitConfig:       uc,
+		health:           uc.maxHealth,
+		selected:         selected,
+		producedAt:       producedOrder,
 	}
 
 	return u
@@ -95,21 +92,20 @@ func (u *unit) refresh() {
 }
 
 func (u *unit) prioritizeTargets() {
-	u.steerTurnCount++
-	if !u.steerTarget.isZero() && u.steerTurnCount < u.steerTurnCountLimit {
-		u.localTargets = []position{}
+	if !u.steerTarget.isZero() {
+		if u.selected {
+			fmt.Println("STEER")
+		}
+		//u.localTargets = []position{}
 		u.updateTarget(activeTarget, u.steerTarget)
 	} else if !u.enemyTarget.isZero() {
-		u.steerTurnCount = 0
 		u.steerTarget = position{}
 		u.localTargets = []position{}
 		u.updateTarget(activeTarget, u.enemyTarget)
 	} else if len(u.localTargets) > 0 {
-		u.steerTurnCount = 0
 		u.steerTarget = position{}
 		u.updateTarget(activeTarget, u.localTargets[len(u.localTargets)-1])
 	} else {
-		u.steerTurnCount = 0
 		u.steerTarget = position{}
 		// TODO: determine behavior. Right now this path may occur for multiple reasons or only one.
 		// The reason I am sure of is it occurs after a targeted unit dies off since there is no path
@@ -159,6 +155,12 @@ func (u *unit) getNewPos() (position, func()) {
 		bErrorCopy := dx + dy
 		u.bresenhamError = &bError
 		u.nextBresenhamError = &bErrorCopy
+	}
+	if u.selected && x0 == x1 {
+		fmt.Println("X0 == X1")
+	}
+	if u.selected && y0 == y1 {
+		fmt.Println("Y0 == Y1")
 	}
 	doubleError := *u.bresenhamError * 2
 	u.atTerminalPosition = true
@@ -409,7 +411,6 @@ func (u unit) log() []slog.Attr {
 	a = append(a, slog.Bool("attackedThisTurn", u.attackedThisTurn))
 	a = append(a, slog.Any("canReachNode", u.canReachNode))
 	a = append(a, slog.Bool("selected", u.selected))
-	a = append(a, slog.Bool("debugFlag", u.debugFlag))
 	return a
 }
 

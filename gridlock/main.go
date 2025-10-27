@@ -75,7 +75,7 @@ func newGame() Game {
 		drawConfig:              drawConfig,
 		backgroundColor:         color.RGBA{200, 200, 200, 255},
 		produceWait:             1_000_000 * time.Second,
-		produceInterval:         3 * time.Second,
+		produceInterval:         30 * time.Second,
 		slowTickInterval:        1 * time.Second,
 		slowTickTime:            time.Now(),
 		priorTime:               time.Now(),
