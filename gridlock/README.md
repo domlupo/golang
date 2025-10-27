@@ -19,6 +19,8 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Add visibilty grid debugging (selectable and outputs pos)
+
 - Design and Determine best way for boids to avoid obstacles
   - There are multiple options to handle velocity:
     - I can refactor code to use velocity and then trim it to magnitude 1.

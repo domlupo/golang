@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"math"
 )
@@ -53,6 +54,8 @@ func (s *state) analyzeTargets() {
 		steer := s.steer(u)
 		if !u.position.equals(steer.PixelPosition) {
 			u.updateTarget(steerTarget, steer)
+		} else if u.position.equals(steer.PixelPosition) {
+			u.updateTarget(steerTarget, position{})
 		}
 
 		u.canReachNode = node{}
@@ -72,11 +75,12 @@ func (s *state) analyzeTargets() {
 
 		if !u.globalTarget.isZero() && u.pathGlobalTarget {
 			u.pathfindGlobalTarget(s.obstacles, s.oLUT, s.g)
-		} else if len(u.localTargets) > 0 && u.atTerminalPosition {
-			u.localTargets = u.localTargets[:len(u.localTargets)-1]
+			if u.selected {
+				fmt.Println("---path find global targets")
+			}
 		}
 
-		u.prioritizeTargets()
+		u.prioritizeTargets(s.oLUT)
 	}
 }
 
@@ -111,6 +115,24 @@ func (s *state) steer(u *unit) position {
 
 	var xSteer int
 	var ySteer int
+	var shortestDistance int
+	lowestSmoothSum := s.oLUT[u.PixelPosition].UnwalkableSmoothSum
+	// I believe there is some bugs here or it behaves differently than I expect. Need to
+	// look into this.
+	if len(u.localTargets) > 0 {
+		lt := u.localTargets[len(u.localTargets)-1]
+		shortestDistance = u.chebyshevDistance(lt.PixelPosition)
+	}
+
+	xSum := u.X
+	ySum := u.Y
+	hexUnitCount := 1
+	unitCount := 1
+	var unitsNorth int
+	var unitsSouth int
+	var unitsWest int
+	var unitsEast int
+
 	for _, hex := range hexagons {
 		if hex == nil {
 			continue
@@ -134,15 +156,33 @@ func (s *state) steer(u *unit) position {
 				break
 			}
 
+			if len(current.localTargets) > 0 {
+				lt := current.localTargets[len(current.localTargets)-1]
+				shortestDistance = min(shortestDistance, current.chebyshevDistance(lt.PixelPosition))
+			}
+
+			gridPos, _ := s.g.getGridPos(u.PixelPosition)
+			currentGridPos, _ := s.g.getGridPos(current.PixelPosition)
+			if gridPos.equals(currentGridPos) {
+				hexUnitCount++
+				xSum += current.X
+				ySum += current.Y
+				lowestSmoothSum = min(lowestSmoothSum, s.oLUT[current.PixelPosition].UnwalkableSmoothSum)
+			}
+
 			if current.id == u.id {
 				current = current.next
 				continue
 			}
 
+			unitCount++
 			checkOccurred = true
 
 			if u.player != current.player {
 				current = current.next
+				unitCount--
+				xSum -= current.X
+				ySum -= current.Y
 				continue
 			}
 
@@ -151,27 +191,152 @@ func (s *state) steer(u *unit) position {
 
 			xDelta := x2 - x1
 			yDelta := y2 - y1
-			rSum := u.radius + current.radius + 1
-			if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
-				magnitude := 1
-
+			if xDelta*xDelta+yDelta*yDelta <= u.vision*u.vision {
 				switch {
 				case u.X > current.X:
-					xSteer += magnitude
-				case u.X < current.X:
-					xSteer -= magnitude
+					unitsWest++
+				case u.X > current.X:
+					unitsEast++
 				}
 
 				switch {
 				case u.Y > current.Y:
-					ySteer += magnitude
-				case u.Y < current.Y:
-					ySteer -= magnitude
+					unitsSouth++
+				case u.Y > current.Y:
+					unitsNorth++
 				}
 			}
 
 			current = current.next
 		}
+	}
+
+	xCenter := xSum / hexUnitCount
+	yCenter := ySum / hexUnitCount
+
+	// TODO: right now seek is only used for global target and pathing to it.
+	// should unit targetting be included in seek or separate?
+	// TODO: I can use the steer value to effect how often or how long steering effects
+	// take place before global pathfinding or enemy pathfinding takes over.
+	var cohesionFactor int
+	var avoidanceFactor int
+	var separationFactor int
+	var seekFactor int
+
+	if u.X < u.globalTarget.X && u.globalTarget.X < xCenter && u.Y < u.globalTarget.Y && u.globalTarget.Y < yCenter {
+		//cohesionFactor = 1
+	}
+	// TODO: Should this be smooth sum? I forget why i needed higher resolution here
+	avoidanceFactor = max(4-s.oLUT[u.PixelPosition].UnwalkableChebyshevDistance, 0)
+	if unitCount > 2 {
+		separationFactor = 1
+	}
+	//seekFactor = 5
+
+	if u.selected {
+		gridPos, _ := s.g.getGridPos(u.PixelPosition)
+		h := s.hexagons[gridPos]
+		fmt.Println()
+		fmt.Println(h.gridPos)
+		fmt.Println("shortest distance: ", shortestDistance)
+		fmt.Println("lowest smooth sum", lowestSmoothSum)
+		fmt.Println("hex unit count", hexUnitCount)
+		fmt.Println("unit smooth sum", s.oLUT[u.PixelPosition].UnwalkableSmoothSum)
+		fmt.Println("unit pos", u.PixelPosition)
+		fmt.Printf("avg pos: {%d, %d}", xCenter, yCenter)
+		fmt.Println("walkable ", s.oLUT[u.PixelPosition].Walkable)
+		fmt.Println("cheb dis", s.oLUT[u.PixelPosition].UnwalkableChebyshevDistance)
+		fmt.Println("local targets", u.localTargets)
+		fmt.Println("log", u.log())
+		fmt.Println("cohesion", cohesionFactor)
+		fmt.Println("avoidance", avoidanceFactor)
+		fmt.Println("separation", separationFactor)
+		fmt.Println("seek", seekFactor)
+	}
+
+	// cohesion
+	cohesionDelta := PixelPosition{}
+	switch {
+	case u.X < xCenter:
+		cohesionDelta.X += 1 * cohesionFactor
+	case u.X > xCenter:
+		cohesionDelta.X -= 1 * cohesionFactor
+	}
+	switch {
+	case u.Y < yCenter:
+		cohesionDelta.Y += 1 * cohesionFactor
+	case u.Y > yCenter:
+		cohesionDelta.Y -= 1 * cohesionFactor
+	}
+
+	// separation
+	switch {
+	case u.X < xCenter:
+		xSteer -= 1 * separationFactor
+	case u.X > xCenter:
+		xSteer += 1 * separationFactor
+	}
+	switch {
+	case u.Y < yCenter:
+		ySteer -= 1 * separationFactor
+	case u.Y > yCenter:
+		ySteer += 1 * separationFactor
+	}
+
+	// avoidance
+	switch {
+	case u.X < s.oLUT[u.PixelPosition].NearestUnwalkablesAvg.X:
+		xSteer -= 1 * avoidanceFactor
+	case u.X > s.oLUT[u.PixelPosition].NearestUnwalkablesAvg.X:
+		xSteer += 1 * avoidanceFactor
+	}
+	switch {
+	case u.Y < s.oLUT[u.PixelPosition].NearestUnwalkablesAvg.Y:
+		ySteer -= 1 * avoidanceFactor
+	case u.Y > s.oLUT[u.PixelPosition].NearestUnwalkablesAvg.Y:
+		ySteer += 1 * avoidanceFactor
+	}
+
+	// seek factor
+	if len(u.localTargets) > 0 {
+		switch {
+		case u.X > u.localTargets[len(u.localTargets)-1].X:
+			xSteer -= 1 * seekFactor
+		case u.X < u.localTargets[len(u.localTargets)-1].X:
+			xSteer += 1 * seekFactor
+		}
+		switch {
+		case u.Y > u.localTargets[len(u.localTargets)-1].Y:
+			ySteer -= 1 * seekFactor
+		case u.Y < u.localTargets[len(u.localTargets)-1].Y:
+			ySteer += 1 * seekFactor
+		}
+	}
+
+	if u.selected {
+		fmt.Println("x steer: ", xSteer)
+		fmt.Println("y steer: ", ySteer)
+	}
+
+	steerDeltaMax := 1
+	if xSteer >= steerDeltaMax {
+		xSteer = 1
+	} else if xSteer <= -steerDeltaMax {
+		xSteer = -1
+	} else {
+		xSteer = 0
+	}
+	if ySteer >= steerDeltaMax {
+		ySteer = 1
+	} else if ySteer <= -steerDeltaMax {
+		ySteer = -1
+	} else {
+		ySteer = 0
+	}
+
+	if u.selected {
+		fmt.Println("trimmed x steer: ", xSteer)
+		fmt.Println("trimmed y steer: ", ySteer)
 	}
 
 	return position{layer: u.layer, PixelPosition: PixelPosition{X: u.X + xSteer, Y: u.Y + ySteer}}
@@ -199,20 +364,69 @@ func (s *state) moveUnits() {
 			continue
 		}
 
-		newPos, completeMove := u.getNewPos()
-
 		if u.activeTarget.isZero() {
+			if u.selected {
+				fmt.Println("active target is zero")
+			}
 			unitsWithoutTarget++
 		}
 
+		moves := u.getMoves()
+
+		if len(moves) == 0 {
+			if u.selected {
+				fmt.Println("unit returned no moves")
+			}
+			continue
+		}
+
+		newPos := moves[0].suggest
+		confirmMove := moves[0].confirm
+
 		if u.equals(newPos.PixelPosition) {
+			if u.selected {
+				fmt.Println(" at final position")
+			}
 			unitsAtFinalPosition++
 			continue
 		}
 
-		if !s.oLUT[newPos.PixelPosition].Walkable || s.oLUT[newPos.PixelPosition].UnwalkableChebyshevDistance < u.radius+1 {
+		// TODO: Determine, debug and fix unit clipping on right side. Not sure what is going on.
+		// Might be draw hex incorrectly.
+		if !s.oLUT[newPos.PixelPosition].Walkable || s.oLUT[newPos.PixelPosition].UnwalkableChebyshevDistance < u.radius {
 			unitsAtUnwalkable++
-			continue
+
+			if u.selected {
+				fmt.Println(" old pos: ", u.position)
+				fmt.Println(" at unwalkble attempt other moves if possible: ", newPos)
+			}
+
+			if len(moves) > 1 {
+				newPos = moves[1].suggest
+
+				if u.selected {
+					fmt.Println(" try second option: ", newPos)
+				}
+				confirmMove = moves[1].confirm
+			}
+
+			if !s.oLUT[newPos.PixelPosition].Walkable || s.oLUT[newPos.PixelPosition].UnwalkableChebyshevDistance < u.radius {
+				if len(moves) > 2 {
+					newPos = moves[2].suggest
+
+					if u.selected {
+						fmt.Println("try third option: ", newPos)
+					}
+					confirmMove = moves[2].confirm
+				}
+			}
+
+			if !s.oLUT[newPos.PixelPosition].Walkable || s.oLUT[newPos.PixelPosition].UnwalkableChebyshevDistance < u.radius {
+				if u.selected {
+					fmt.Println("continue")
+				}
+				continue
+			}
 		}
 
 		collidesWithBorder := collidesWithBorder(newPos, u.radius)
@@ -273,7 +487,7 @@ func (s *state) moveUnits() {
 			}
 
 			delete(s.units, u.position)
-			completeMove()
+			confirmMove()
 		}
 	}
 

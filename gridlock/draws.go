@@ -45,7 +45,7 @@ func newDrawConfig() *drawConfig {
 	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
 	dc := drawConfig{
 		screen:                        nil,
-		windowMultiplier:              2.5,
+		windowMultiplier:              5,
 		grid:                          grid{&hc},
 		selectectionBoxLineWidth:      1,
 		missileExplodeRadiusLineWidth: 1,

@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"log/slog"
 	"math"
@@ -38,30 +39,28 @@ type units map[position]*unit
 type unit struct {
 	position
 	unitConfig
-	id                  uuid.UUID
-	player              player
-	activeTarget        position
-	steerTarget         position
-	enemyTarget         position
-	localTarget         position
-	localTargets        []position
-	globalTarget        position
-	pathGlobalTarget    bool
-	atTerminalPosition  bool
-	bresenhamError      *int
-	nextBresenhamError  *int
-	steerTurnCount      int
-	steerTurnCountLimit int
-	health              int
-	movedThisTurn       bool
-	attackedThisTurn    bool
-	AtCollision         bool
-	canReachNode        node
-	selected            bool
-	prior               *unit
-	next                *unit
-	producedAt          int
-	debugFlag           bool
+	id                 uuid.UUID
+	player             player
+	activeTarget       position
+	steerTarget        position
+	enemyTarget        position
+	localTarget        position
+	localTargets       []position
+	globalTarget       position
+	pathGlobalTarget   bool
+	atTerminalPosition bool
+	bresenhamError     int
+	bresenhamErrorDy   int
+	bresenhamErrorDx   int
+	health             int
+	movedThisTurn      bool
+	attackedThisTurn   bool
+	AtCollision        bool
+	canReachNode       node
+	selected           bool
+	prior              *unit
+	next               *unit
+	producedAt         int
 }
 
 func newUnit(p player, globalTarget position, uc unitConfig, pos position, producedOrder int, selected bool) unit {
@@ -72,16 +71,15 @@ func newUnit(p player, globalTarget position, uc unitConfig, pos position, produ
 	}
 
 	u := unit{
-		id:                  id,
-		position:            pos,
-		player:              p,
-		globalTarget:        globalTarget,
-		pathGlobalTarget:    true,
-		unitConfig:          uc,
-		health:              uc.maxHealth,
-		selected:            selected,
-		producedAt:          producedOrder,
-		steerTurnCountLimit: 20,
+		id:               id,
+		position:         pos,
+		player:           p,
+		globalTarget:     globalTarget,
+		pathGlobalTarget: true,
+		unitConfig:       uc,
+		health:           uc.maxHealth,
+		selected:         selected,
+		producedAt:       producedOrder,
 	}
 
 	return u
@@ -94,22 +92,42 @@ func (u *unit) refresh() {
 	u.AtCollision = false
 }
 
-func (u *unit) prioritizeTargets() {
-	u.steerTurnCount++
-	if !u.steerTarget.isZero() && u.steerTurnCount < u.steerTurnCountLimit {
-		u.localTargets = []position{}
+func (u *unit) prioritizeTargets(oLUT obstacleLUT) {
+	if !u.steerTarget.isZero() {
+		if u.selected {
+			fmt.Println("STEER")
+		}
 		u.updateTarget(activeTarget, u.steerTarget)
 	} else if !u.enemyTarget.isZero() {
-		u.steerTurnCount = 0
 		u.steerTarget = position{}
 		u.localTargets = []position{}
 		u.updateTarget(activeTarget, u.enemyTarget)
 	} else if len(u.localTargets) > 0 {
-		u.steerTurnCount = 0
-		u.steerTarget = position{}
+		if u.selected {
+			fmt.Println("---check local target")
+		}
+		if len(u.localTargets) > 1 && u.atTerminalPosition {
+			if u.selected {
+				fmt.Println("---trim due to term pos")
+			}
+			u.localTargets = u.localTargets[:len(u.localTargets)-1]
+			u.updateTarget(localTarget, u.localTargets[len(u.localTargets)-1])
+		} else if len(u.localTargets) > 1 {
+			if u.selected {
+				fmt.Println("---check LOS")
+			}
+			next := u.localTargets[len(u.localTargets)-2]
+			_, los := u.PixelPosition.lineOfSight(next.PixelPosition, oLUT, u.radius)
+			if los {
+				if u.selected {
+					fmt.Println("---trim due to LOS")
+				}
+				u.localTargets = u.localTargets[:len(u.localTargets)-1]
+				u.updateTarget(localTarget, u.localTargets[len(u.localTargets)-1])
+			}
+		}
 		u.updateTarget(activeTarget, u.localTargets[len(u.localTargets)-1])
 	} else {
-		u.steerTurnCount = 0
 		u.steerTarget = position{}
 		// TODO: determine behavior. Right now this path may occur for multiple reasons or only one.
 		// The reason I am sure of is it occurs after a targeted unit dies off since there is no path
@@ -119,16 +137,22 @@ func (u *unit) prioritizeTargets() {
 	}
 }
 
+type Move struct {
+	suggest position
+	confirm func()
+}
+
 // Uses Bresenham's line algorithm https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 // Specifically, the integer incremental error form where error is stored over mulitple moves
 // This algorithm prioritizes straight line movement. It is not guaranteed the final position is reached.
-func (u *unit) getNewPos() (position, func()) {
-	logger.logSelected(u.selected, infoLevel, selectedUnit, "getNewPos", u.position.log()...)
+func (u *unit) getMoves() []Move {
+	logger.logSelected(u.selected, infoLevel, selectedUnit, "getMoves: ", u.position.log()...)
 
-	if u.activeTarget.isZero() {
-		return u.position, func() {}
-	}
+	u.atTerminalPosition = true
+	u.bresenhamErrorDy = 0
+	u.bresenhamErrorDx = 0
 
+	moves := make([]Move, 0)
 	x1 := u.activeTarget.X
 	y1 := u.activeTarget.Y
 	x0 := u.X
@@ -154,27 +178,101 @@ func (u *unit) getNewPos() (position, func()) {
 	} else {
 		sy = -1
 	}
-	if u.bresenhamError == nil {
-		bError := dx + dy
-		bErrorCopy := dx + dy
-		u.bresenhamError = &bError
-		u.nextBresenhamError = &bErrorCopy
+	if u.bresenhamError == 0 {
+		u.bresenhamError = dx + dy
 	}
-	doubleError := *u.bresenhamError * 2
-	u.atTerminalPosition = true
+	if u.selected && x0 == x1 {
+		fmt.Println("X0 == X1")
+	}
+	if u.selected && y0 == y1 {
+		fmt.Println("Y0 == Y1")
+	}
+	doubleError := u.bresenhamError * 2
 	if doubleError >= dy && x0 != x1 {
 		u.atTerminalPosition = false
-		*u.nextBresenhamError += dy
+		u.bresenhamErrorDy = dy
 		x0 += sx
 	}
 	if doubleError <= dx && y0 != y1 {
 		u.atTerminalPosition = false
-		*u.nextBresenhamError += dx
+		u.bresenhamErrorDx = dx
 		y0 += sy
 	}
 
+	if u.atTerminalPosition {
+		return moves
+	}
+
 	newPos := position{u.layer, PixelPosition{x0, y0}}
-	return newPos, func() { u.completeMove(newPos) }
+	moves = append(moves, Move{suggest: newPos, confirm: func() { u.confirmMove(newPos) }})
+
+	if u.selected {
+		fmt.Println("first: ", newPos)
+	}
+
+	// reset
+	if u.X != x0 {
+		x0 -= sx
+	}
+	if u.Y != y0 {
+		y0 -= sy
+	}
+
+	// arbitrarily pick second option
+	if u.bresenhamErrorDy != 0 {
+		newPos := position{u.layer, PixelPosition{x0, y0 + sy}}
+		if u.selected {
+			fmt.Println("second: ", newPos)
+		}
+		moves = append(moves, Move{suggest: newPos, confirm: func() { u.confirmMove(newPos) }})
+	} else {
+		newPos := position{u.layer, PixelPosition{x0 + sx, y0 + sy}}
+		if u.selected {
+			fmt.Println("second: ", newPos)
+		}
+		moves = append(moves, Move{suggest: newPos, confirm: func() { u.confirmMove(newPos) }})
+	}
+
+	// reset
+	if u.X != x0 {
+		x0 -= sx
+	}
+	if u.Y != y0 {
+		y0 -= sy
+	}
+
+	// arbitrarily pick third option
+	if u.bresenhamErrorDx != 0 {
+		newPos := position{u.layer, PixelPosition{x0 + sx, y0}}
+		if u.selected {
+			fmt.Println("third: ", newPos)
+		}
+		moves = append(moves, Move{suggest: newPos, confirm: func() { u.confirmMove(newPos) }})
+	} else {
+		newPos := position{u.layer, PixelPosition{x0 + sx, y0 + sy}}
+		if u.selected {
+			fmt.Println("third: ", newPos)
+		}
+		moves = append(moves, Move{suggest: newPos, confirm: func() { u.confirmMove(newPos) }})
+	}
+
+	if u.selected {
+		fmt.Println("moves length: ", len(moves))
+	}
+
+	return moves
+}
+
+func (u *unit) confirmMove(p position) {
+	if u.position.X != p.X {
+		u.bresenhamError += u.bresenhamErrorDy
+	}
+	if u.position.Y != p.Y {
+
+		u.bresenhamError += u.bresenhamErrorDx
+	}
+	u.position = p
+	u.movedThisTurn = true
 }
 
 func (u *unit) updateTarget(ut unitTarget, target position) {
@@ -182,8 +280,7 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 	switch ut {
 	case activeTarget:
 		if !u.activeTarget.equals(target.PixelPosition) {
-			u.bresenhamError = nil
-			u.nextBresenhamError = nil
+			u.bresenhamError = 0
 		}
 		u.activeTarget = target
 		unitTarget = "activeTarget"
@@ -341,13 +438,6 @@ func (u *unit) getPath(
 	return path
 }
 
-func (u *unit) completeMove(pos position) {
-	u.position = pos
-	u.movedThisTurn = true
-	intCopy := &u.nextBresenhamError
-	u.bresenhamError = *intCopy
-}
-
 func (u unit) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, slog.Any("id", u.id))
@@ -387,29 +477,30 @@ func (u unit) log() []slog.Attr {
 	} else {
 		a = append(a, slog.String("localTarget", "nil"))
 	}
+	localtargets := []slog.Attr{}
+	for _, p := range u.localTargets {
+		localtargets = append(localtargets, p.log()...)
+	}
+	if len(localtargets) == 0 {
+		a = append(a, slog.String("localTargets", "none"))
+	} else {
+		a = append(a, nest("localTargets", localtargets))
+	}
 	if !u.globalTarget.isZero() {
 		a = append(a, slog.Any("globalTarget", u.globalTarget.log()))
 	} else {
 		a = append(a, slog.String("globalTarget", "nil"))
 	}
 	a = append(a, slog.Bool("atTerminalPosition", u.atTerminalPosition))
-	if u.bresenhamError != nil {
-		a = append(a, slog.Int("bresenhamError", *u.bresenhamError))
-	} else {
-		a = append(a, slog.String("bresenhamError", "nil"))
-	}
-	if u.nextBresenhamError != nil {
-		a = append(a, slog.Int("nextBresenhamError", *u.nextBresenhamError))
-	} else {
-		a = append(a, slog.String("nextBresenhamError", "nil"))
-	}
+	a = append(a, slog.Int("bresenhamError", u.bresenhamError))
+	a = append(a, slog.Int("bresenhamErrorDx", u.bresenhamErrorDx))
+	a = append(a, slog.Int("bresenhamErrorDy", u.bresenhamErrorDy))
 	a = append(a, u.unitConfig.log()...)
 	a = append(a, slog.Int("health", u.health))
 	a = append(a, slog.Bool("movedThisTurn", u.movedThisTurn))
 	a = append(a, slog.Bool("attackedThisTurn", u.attackedThisTurn))
 	a = append(a, slog.Any("canReachNode", u.canReachNode))
 	a = append(a, slog.Bool("selected", u.selected))
-	a = append(a, slog.Bool("debugFlag", u.debugFlag))
 	return a
 }
 
