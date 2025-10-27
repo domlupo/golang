@@ -19,10 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Look into optimize heatmap draws.
-  - heatmaps are causing large stutters. I highly doubt this cannot be optimized.
-  - I believe I need to use shaders https://ebitengine.org/en/documents/shader.html#Shading_language_Kage
-
 - Design and Determine best way for boids to avoid obstacles
   - There are multiple options to handle velocity:
     - I can refactor code to use velocity and then trim it to magnitude 1.
@@ -38,15 +34,11 @@ Is there a mobile equivalent for war/4x games?
   - testing has shown boids model to be the easiest to tune, most flexible, beset results
   - continue implementing flocking and steering behaviors 
 
-- Determine if I need to add Ctrl+C handling for new file saves. This could lead to hard to debug issues.
-
 - Design and Determine best way for boids to avoid obstacles
   - direction to and from seemed like the wrong approach
   - Can determine which pixel position on each hexagon sides are fathest from obstacles
   - Probably want to use global pathing influence as well
   - How do units perform slides agaisnt obstacles and units in other games?
-
-- Optimize CPU usage via low hanging fruit if it is high enough to slow development
 
 - Improve guided air missile
   - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.
@@ -125,9 +117,16 @@ Is there a mobile equivalent for war/4x games?
 
 ### Future Checkpoints
 
-- Log setup time so I can see lookup table creation regressions easily
+- Optimize CPU usage via low hanging fruit if it is high enough to slow development
 
-- Add checksum keys to cache multiple setups 
+- (See bullet points before starting) Add checksum keys to cache multiple setups 
+  - I should complete this after I marshall/unmarshall global path finding grid position <-> grid position
+
+- Look into optimize heatmap draws.
+  - heatmaps are causing large stutters. I highly doubt this cannot be optimized.
+  - I believe I need to use shaders https://ebitengine.org/en/documents/shader.html#Shading_language_Kage
+
+- Determine if I need to add Ctrl+C handling for new file saves. This could lead to hard to debug issues.
 
 - Fix Ctrl+C for ./game, it works for air but not ./game.
   - Primarily helps exiting a setup early
@@ -146,8 +145,6 @@ Is there a mobile equivalent for war/4x games?
 - Determine if I need to implement separating axis theorem for collision other than (circle <-> circle)
   - static collisions should most likely use a look up table
   - dynamic collisions may be needed for certain units e.g. tanks
-
-- When all nodes are selected, newly captured nodes should become selected as well.
 
 - Determine if LOS algorithm should be updated from bresenham to check obstacle line intersects
   - obstacleLUT neareset obstacle check for los probably made this less useful but it still could be useful enough to implement.
@@ -256,6 +253,8 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Punted Checkpoints
+
+- When all nodes are selected, newly captured nodes should become selected as well.
 
 - A performance gain might be possible from investing in hex lookup 
  - I am unsure if this is needed because this code is already performant, but it is in
