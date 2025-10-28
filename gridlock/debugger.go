@@ -18,14 +18,14 @@ import (
 
 // Debugger Configurations
 type debuggerConfig struct {
-	drawHexGrid                   bool
-	drawObstacleLUT               bool
-	drawNodeLUT                   bool
-	drawVisibilityGrids           bool
-	drawBlueTargets               bool
-	drawRedTargets                bool
-	debugGridWidth                int
-	debugGridIndexCount           int
+	debugHexGrid                  bool
+	debugObstacleLUT              bool
+	debugNodeLUT                  bool
+	debugVisibilityGrids          bool
+	debugBlueTargets              bool
+	debugRedTargets               bool
+	hexGridLineWidth              int
+	hexGridIndexCount             int
 	debugGridColor                color.Color
 	visibilityGridLineWidth       int
 	visibilityGridPointRadius     int
@@ -41,8 +41,8 @@ type debuggerConfig struct {
 
 func newDebuggerConfig() *debuggerConfig {
 	dc := debuggerConfig{
-		debugGridWidth:                1,
-		debugGridIndexCount:           32,
+		hexGridLineWidth:              1,
+		hexGridIndexCount:             32,
 		debugGridColor:                color.Black,
 		visibilityGridLineWidth:       1,
 		visibilityGridPointRadius:     3,
@@ -125,36 +125,36 @@ func (d *debugger) setupToggles(cooldown time.Duration) {
 	toggles["drawAll"] = newToggle(
 		ebiten.KeyA,
 		func() {
-			var toggle = !(d.drawBlueTargets && d.drawRedTargets && d.drawHexGrid && d.drawVisibilityGrids)
-			d.drawBlueTargets = toggle
-			d.drawRedTargets = toggle
-			d.drawHexGrid = toggle
-			d.drawVisibilityGrids = toggle
+			var toggle = !(d.debugBlueTargets && d.debugRedTargets && d.debugHexGrid && d.debugVisibilityGrids)
+			d.debugBlueTargets = toggle
+			d.debugRedTargets = toggle
+			d.debugHexGrid = toggle
+			d.debugVisibilityGrids = toggle
 		},
 		cooldown)
 	toggles["drawBlueTargets"] = newToggle(
 		ebiten.KeyB,
-		func() { d.drawBlueTargets = !d.drawBlueTargets },
+		func() { d.debugBlueTargets = !d.debugBlueTargets },
 		cooldown)
 	toggles["drawRedTargets"] = newToggle(
 		ebiten.KeyR,
-		func() { d.drawRedTargets = !d.drawRedTargets },
+		func() { d.debugRedTargets = !d.debugRedTargets },
 		cooldown)
 	toggles["drawDebugGrid"] = newToggle(
 		ebiten.KeyG,
-		func() { d.drawHexGrid = !d.drawHexGrid },
+		func() { d.debugHexGrid = !d.debugHexGrid },
 		cooldown)
 	toggles["drawVisibilityGrids"] = newToggle(
 		ebiten.KeyV,
-		func() { d.drawVisibilityGrids = !d.drawVisibilityGrids },
+		func() { d.debugVisibilityGrids = !d.debugVisibilityGrids },
 		cooldown)
 	toggles["drawObstacleLUT"] = newToggle(
 		ebiten.KeyQ,
-		func() { d.drawObstacleLUT = !d.drawObstacleLUT },
+		func() { d.debugObstacleLUT = !d.debugObstacleLUT },
 		cooldown)
 	toggles["drawNodeLUT"] = newToggle(
 		ebiten.KeyW,
-		func() { d.drawNodeLUT = !d.drawNodeLUT },
+		func() { d.debugNodeLUT = !d.debugNodeLUT },
 		cooldown)
 	d.toggles = toggles
 }
@@ -178,7 +178,7 @@ func (d *debugger) logPixel(p PixelPosition) {
 }
 
 func (d *debugger) logVisbilityGrid() {
-	if d.drawVisibilityGrids {
+	if d.debugVisibilityGrids {
 		visited := make(map[uuid.UUID]struct{})
 		for _, o := range d.obstacles {
 			g := *o.visibilityGrid
@@ -250,7 +250,7 @@ func (d *debugger) createUnitPathfindHeatmap() {
 }
 
 func (d *debugger) updateHeatmapPercent(delta int) {
-	if delta == 0 || !(d.drawObstacleLUT || d.drawNodeLUT) {
+	if delta == 0 || !(d.debugObstacleLUT || d.debugNodeLUT) {
 		return
 	}
 	d.heatmapPercent = d.heatmapPercent + delta
@@ -260,11 +260,11 @@ func (d *debugger) updateHeatmapPercent(delta int) {
 }
 
 func (d debugger) draw(c drawConfig) {
-	if d.drawHexGrid {
+	if d.debugHexGrid {
 		drawHexGrid(c, *d.debuggerConfig)
 	}
 
-	if d.drawObstacleLUT {
+	if d.debugObstacleLUT {
 		d.obstacleLUTUnwalkable.draw(c, *d.debuggerConfig, d.heatmapPercent)
 		d.obstacleLUTDistance.draw(c, *d.debuggerConfig, d.heatmapPercent)
 
@@ -274,7 +274,7 @@ func (d debugger) draw(c drawConfig) {
 		}
 	}
 
-	if d.drawNodeLUT {
+	if d.debugNodeLUT {
 		d.nodeLUTDistance.draw(c, *d.debuggerConfig, d.heatmapPercent)
 
 		for _, p := range d.nLUT[d.pixel].NearestNodes {
@@ -287,14 +287,14 @@ func (d debugger) draw(c drawConfig) {
 	}
 
 	for _, n := range d.nodes {
-		n.drawTargets(c, d.drawBlueTargets, d.drawRedTargets)
+		n.drawTargets(c, d.debugBlueTargets, d.debugRedTargets)
 	}
 
 	for _, u := range d.units {
 		u.drawDebug(c, *d.debuggerConfig)
 	}
 
-	if d.drawVisibilityGrids {
+	if d.debugVisibilityGrids {
 		visited := make(map[uuid.UUID]struct{})
 		for _, o := range d.obstacles {
 			g := *o.visibilityGrid
@@ -456,7 +456,6 @@ func drawHexGrid(c drawConfig, dC debuggerConfig) {
 				continue
 			}
 
-			lineWidth := float32(dC.debugGridWidth) * c.windowMultiplier
 			p := GridPosition{i, j}
 
 			n := c.grid.getPixelPosOutbounds(p, hpNorth)
@@ -485,7 +484,7 @@ func drawHexGrid(c drawConfig, dC debuggerConfig) {
 				nwY,
 				swX,
 				swY,
-				lineWidth,
+				float32(dC.hexGridLineWidth)*c.windowMultiplier,
 				dC.debugGridColor,
 				false)
 
@@ -499,7 +498,7 @@ func drawHexGrid(c drawConfig, dC debuggerConfig) {
 				nY,
 				nwX,
 				nwY,
-				lineWidth,
+				float32(dC.hexGridLineWidth)*c.windowMultiplier,
 				dC.debugGridColor,
 				false)
 
@@ -513,7 +512,7 @@ func drawHexGrid(c drawConfig, dC debuggerConfig) {
 				nY,
 				neX,
 				neY,
-				lineWidth,
+				float32(dC.hexGridLineWidth)*c.windowMultiplier,
 				dC.debugGridColor,
 				false)
 
