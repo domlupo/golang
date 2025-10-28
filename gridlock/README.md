@@ -21,8 +21,6 @@ Is there a mobile equivalent for war/4x games?
 
 - Don't global pathfind unless needed. (CPU usage is high due to this)
 
-- Add keys for node setup
-
 - Refactor state.moveUnits (after boids?) since it is a mess
 
 - Debug why units clip into right side of obstacles but not left side

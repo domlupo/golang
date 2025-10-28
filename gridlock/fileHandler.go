@@ -15,14 +15,14 @@ import (
 type fileHandler struct {
 	directoryName             string
 	obstacleLUTFileNamePrefix string
-	nodeLUTFileName           string
+	nodeLUTFileNamePrefix     string
 }
 
 func newFileHandler() fileHandler {
 	return fileHandler{
 		directoryName:             "output",
 		obstacleLUTFileNamePrefix: "obstacleLUT",
-		nodeLUTFileName:           "nodeLUT.json",
+		nodeLUTFileNamePrefix:     "nodeLUT",
 	}
 }
 
@@ -102,7 +102,9 @@ func (f fileHandler) writeObstacleLUT(obstacles obstacles, g grid) obstacleLUT {
 }
 
 func (f fileHandler) readNodeLUT(nodes nodes, obstacleLUT obstacleLUT, g grid) nodeLUT {
-	file, err := os.Open(fmt.Sprintf("%s/%s", f.directoryName, f.nodeLUTFileName))
+	fileName := f.fileName(fNode, nodes.key())
+	file, err := os.Open(fmt.Sprintf("%s/%s", f.directoryName, fileName))
+
 	if errors.Is(err, os.ErrNotExist) {
 		logger.log(infoLevel, setupLogic, "readNodeLUT: cannot create node lookup table file since it does not exist")
 		return f.writeNodeLUT(nodes, obstacleLUT, g)
@@ -145,7 +147,8 @@ func (f fileHandler) writeNodeLUT(nodes nodes, obstacleLUT obstacleLUT, g grid) 
 	}
 
 	data, _ := json.Marshal(entries)
-	err := os.WriteFile(fmt.Sprintf("%s/%s", f.directoryName, f.nodeLUTFileName), data, 0644)
+	fileName := f.fileName(fNode, nodes.key())
+	err := os.WriteFile(fmt.Sprintf("%s/%s", f.directoryName, fileName), data, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -158,6 +161,8 @@ func (f fileHandler) fileName(file file, bytes []byte) string {
 	switch file {
 	case fObstacle:
 		prefix = f.obstacleLUTFileNamePrefix
+	case fNode:
+		prefix = f.nodeLUTFileNamePrefix
 	default:
 		panic(fmt.Sprintf("Cannot get file name since unkonw file: %d", file))
 	}
