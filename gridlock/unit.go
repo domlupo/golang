@@ -102,7 +102,6 @@ func (u *unit) refresh() {
 func (u *unit) prioritizeTargets() {
 	u.steerTurnCount++
 	if !u.steerTarget.isZero() && u.steerTurnCount < u.steerTurnCountLimit {
-		u.localTargets = []position{}
 		u.updateTarget(activeTarget, u.steerTarget)
 	} else if !u.enemyTarget.isZero() {
 		u.steerTurnCount = 0
@@ -270,6 +269,8 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 // the position to unit immediately jumps to a different obstacle visibility grid when the first
 // visibility grid should have been traveled.
 func (u *unit) pathfindGlobalTarget(obstacles obstacles, oLUT obstacleLUT, g grid) int {
+	logger.logSelected(u.selected, infoLevel, selectedUnit, "pathfindGlobalTarget")
+
 	var foundPath bool
 	tries := [][]position{{u.globalTarget}}
 	nextTries := [][]position{}

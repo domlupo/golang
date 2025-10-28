@@ -19,9 +19,12 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Don't global pathfind unless needed. (CPU usage is high due to this)
+
 - Design and implement checksum keys to cache multiple setups 
   - minimal setups take ~4 mins to construct which is long
   - the minmal setups are usually used for minimal reproducible example so debug loop is too long
+  - This is not blocked by global path finding LUT
 
 - Add visibilty grid debugging (selectable and outputs pos)
 
@@ -136,6 +139,8 @@ Is there a mobile equivalent for war/4x games?
   - pixel <-> pixel would require too much computation and memory. Need to verify I can do grid pos <-> grid pos
   - Need to verify grid pos -> pixel pos at runtime is possible
   - Should be optimal path
+  - Is there a need to do a line of sight LUT? I don't think a Line of sight LUT is needed since
+    most LOS checks that would benefit are the ones from global path find anway.
 
 - Look into optimize heatmap draws.
   - heatmaps are causing large stutters. I highly doubt this cannot be optimized.
