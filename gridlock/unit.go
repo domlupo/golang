@@ -48,8 +48,9 @@ type unit struct {
 	globalTarget        position
 	pathGlobalTarget    bool
 	atTerminalPosition  bool
-	bresenhamError      *int
-	nextBresenhamError  *int
+	bresenhamError      int
+	bresenhamErrorDy    int
+	bresenhamErrorDx    int
 	steerTurnCount      int
 	steerTurnCountLimit int
 	health              int
@@ -61,6 +62,11 @@ type unit struct {
 	prior               *unit
 	next                *unit
 	producedAt          int
+}
+
+type Move struct {
+	suggest position
+	confirm func()
 }
 
 func newUnit(p player, globalTarget position, uc unitConfig, pos position, producedOrder int, selected bool) unit {
@@ -121,12 +127,13 @@ func (u *unit) prioritizeTargets() {
 // Uses Bresenham's line algorithm https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 // Specifically, the integer incremental error form where error is stored over mulitple moves
 // This algorithm prioritizes straight line movement. It is not guaranteed the final position is reached.
-func (u *unit) getNewPos() (position, func()) {
-	logger.logSelected(u.selected, infoLevel, selectedUnit, "getNewPos", u.position.log()...)
+func (u *unit) getMoves() []Move {
+	logger.logSelected(u.selected, infoLevel, selectedUnit, "getMoves: ", u.position.log()...)
 
-	if u.activeTarget.isZero() {
-		return u.position, func() {}
-	}
+	moves := make([]Move, 0)
+	u.atTerminalPosition = true
+	u.bresenhamErrorDy = 0
+	u.bresenhamErrorDx = 0
 
 	x1 := u.activeTarget.X
 	y1 := u.activeTarget.Y
@@ -153,27 +160,70 @@ func (u *unit) getNewPos() (position, func()) {
 	} else {
 		sy = -1
 	}
-	if u.bresenhamError == nil {
-		bError := dx + dy
-		bErrorCopy := dx + dy
-		u.bresenhamError = &bError
-		u.nextBresenhamError = &bErrorCopy
+	if u.bresenhamError == 0 {
+		u.bresenhamError = dx + dy
 	}
-	doubleError := *u.bresenhamError * 2
-	u.atTerminalPosition = true
+	doubleError := u.bresenhamError * 2
 	if doubleError >= dy && x0 != x1 {
 		u.atTerminalPosition = false
-		*u.nextBresenhamError += dy
+		u.bresenhamErrorDy = dy
 		x0 += sx
 	}
 	if doubleError <= dx && y0 != y1 {
 		u.atTerminalPosition = false
-		*u.nextBresenhamError += dx
+		u.bresenhamErrorDx = dx
 		y0 += sy
 	}
 
-	newPos := position{u.layer, PixelPosition{x0, y0}}
-	return newPos, func() { u.completeMove(newPos) }
+	if u.atTerminalPosition {
+		return moves
+	}
+
+	first := position{u.layer, PixelPosition{x0, y0}}
+	moves = append(moves, Move{suggest: first, confirm: func() { u.confirmMove(first) }})
+
+	// TODO: instead of arbitrarily picking second and third option, prioritize to minimize error
+	x0 = u.X
+	y0 = u.Y
+	if u.bresenhamErrorDy != 0 && u.bresenhamErrorDx != 0 {
+		x0 += sx
+		second := position{u.layer, PixelPosition{x0, y0}}
+		moves = append(moves, Move{suggest: second, confirm: func() { u.confirmMove(second) }})
+		x0 -= sx
+		y0 += sy
+		third := position{u.layer, PixelPosition{x0, y0}}
+		moves = append(moves, Move{suggest: third, confirm: func() { u.confirmMove(third) }})
+	} else if u.bresenhamErrorDy != 0 {
+		y0 += sy
+		second := position{u.layer, PixelPosition{x0, y0}}
+		moves = append(moves, Move{suggest: second, confirm: func() { u.confirmMove(second) }})
+		x0 += sx
+		third := position{u.layer, PixelPosition{x0, y0}}
+		moves = append(moves, Move{suggest: third, confirm: func() { u.confirmMove(third) }})
+	} else if u.bresenhamErrorDx != 0 {
+		x0 += sx
+		second := position{u.layer, PixelPosition{x0, y0}}
+		moves = append(moves, Move{suggest: second, confirm: func() { u.confirmMove(second) }})
+		y0 += sy
+		third := position{u.layer, PixelPosition{x0, y0}}
+		moves = append(moves, Move{suggest: third, confirm: func() { u.confirmMove(third) }})
+	}
+
+	u.bresenhamErrorDy = dy
+	u.bresenhamErrorDx = dx
+	return moves
+}
+
+func (u *unit) confirmMove(p position) {
+	if u.position.X != p.X {
+		u.bresenhamError += u.bresenhamErrorDy
+	}
+	if u.position.Y != p.Y {
+
+		u.bresenhamError += u.bresenhamErrorDx
+	}
+	u.position = p
+	u.movedThisTurn = true
 }
 
 func (u *unit) updateTarget(ut unitTarget, target position) {
@@ -181,8 +231,7 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 	switch ut {
 	case activeTarget:
 		if !u.activeTarget.equals(target.PixelPosition) {
-			u.bresenhamError = nil
-			u.nextBresenhamError = nil
+			u.bresenhamError = 0
 		}
 		u.activeTarget = target
 		unitTarget = "activeTarget"
@@ -340,13 +389,6 @@ func (u *unit) getPath(
 	return path
 }
 
-func (u *unit) completeMove(pos position) {
-	u.position = pos
-	u.movedThisTurn = true
-	intCopy := &u.nextBresenhamError
-	u.bresenhamError = *intCopy
-}
-
 func (u unit) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, slog.Any("id", u.id))
@@ -401,16 +443,9 @@ func (u unit) log() []slog.Attr {
 		a = append(a, slog.String("globalTarget", "nil"))
 	}
 	a = append(a, slog.Bool("atTerminalPosition", u.atTerminalPosition))
-	if u.bresenhamError != nil {
-		a = append(a, slog.Int("bresenhamError", *u.bresenhamError))
-	} else {
-		a = append(a, slog.String("bresenhamError", "nil"))
-	}
-	if u.nextBresenhamError != nil {
-		a = append(a, slog.Int("nextBresenhamError", *u.nextBresenhamError))
-	} else {
-		a = append(a, slog.String("nextBresenhamError", "nil"))
-	}
+	a = append(a, slog.Int("bresenhamError", u.bresenhamError))
+	a = append(a, slog.Int("bresenhamErrorDx", u.bresenhamErrorDx))
+	a = append(a, slog.Int("bresenhamErrorDy", u.bresenhamErrorDy))
 	a = append(a, u.unitConfig.log()...)
 	a = append(a, slog.Int("health", u.health))
 	a = append(a, slog.Bool("movedThisTurn", u.movedThisTurn))

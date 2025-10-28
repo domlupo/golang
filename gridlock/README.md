@@ -19,11 +19,15 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Design and implemnt checksum keys to cache multiple setups 
+- Design and implement checksum keys to cache multiple setups 
   - minimal setups take ~4 mins to construct which is long
   - the minmal setups are usually used for minimal reproducible example so debug loop is too long
 
 - Add visibilty grid debugging (selectable and outputs pos)
+
+- Refactor state.moveUnits (after boids?) since it is a mess
+
+- Debug why units clip into right side of obstacles but not left side
 
 - Design and Determine best way for boids to avoid obstacles
   - There are multiple options to handle velocity:
@@ -124,6 +128,9 @@ Is there a mobile equivalent for war/4x games?
 ### Future Checkpoints
 
 - Optimize CPU usage via low hanging fruit if it is high enough to slow development
+
+- Verify that unit movement using any 3 Bresenham's movements which reduce error is fine.
+  - I am not 100% certain choosing the second or third option does not cause issues with the algorithm.
 
 - Design global path finding LUT
   - pixel <-> pixel would require too much computation and memory. Need to verify I can do grid pos <-> grid pos

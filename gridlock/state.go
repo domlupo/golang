@@ -199,18 +199,27 @@ func (s *state) moveUnits() {
 			continue
 		}
 
-		newPos, completeMove := u.getNewPos()
+		moves := u.getMoves()
+		if len(moves) == 0 {
+			continue
+		}
 
 		if u.activeTarget.isZero() {
 			unitsWithoutTarget++
 		}
 
-		if u.equals(newPos.PixelPosition) {
-			unitsAtFinalPosition++
-			continue
+		var newPos position
+		var confirmMove = func() {}
+		for _, m := range moves {
+			p := m.suggest
+			if s.oLUT[p.PixelPosition].UnwalkableChebyshevDistance >= u.radius {
+				newPos = p
+				confirmMove = m.confirm
+				break
+			}
 		}
 
-		if !s.oLUT[newPos.PixelPosition].Walkable || s.oLUT[newPos.PixelPosition].UnwalkableChebyshevDistance < u.radius+1 {
+		if newPos.isZero() {
 			unitsAtUnwalkable++
 			continue
 		}
@@ -273,7 +282,7 @@ func (s *state) moveUnits() {
 			}
 
 			delete(s.units, u.position)
-			completeMove()
+			confirmMove()
 		}
 	}
 
