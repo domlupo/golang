@@ -10,6 +10,11 @@ cover:
 c:
 	rm -rf output
 co:
-	rm -rf output/obstacleLUT.json
+	rm -rf output/obstacleLUT-*.json
 cn:
-	rm -rf output/nodeLUT.json
+	rm -rf output/nodeLUT-*.json
+cl:
+	find . -maxdepth 2 -name "*.json" -print0 | while IFS= read -r -d $$'\0' file; \
+	do size_bytes=$$(wc -c < "$$file") size_mb=$$(awk "BEGIN {printf \"%.2f\", $$size_bytes / (1024*1024)}"); \
+ 	echo "$$size_mb MB $$file"; \
+	done | sort -h
