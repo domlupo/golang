@@ -386,6 +386,15 @@ func (u unit) log() []slog.Attr {
 	} else {
 		a = append(a, slog.String("localTarget", "nil"))
 	}
+	localtargets := []slog.Attr{}
+	for _, p := range u.localTargets {
+		localtargets = append(localtargets, p.log()...)
+	}
+	if len(localtargets) == 0 {
+		a = append(a, slog.String("localTargets", "none"))
+	} else {
+		a = append(a, nest("localTargets", localtargets))
+	}
 	if !u.globalTarget.isZero() {
 		a = append(a, slog.Any("globalTarget", u.globalTarget.log()))
 	} else {
