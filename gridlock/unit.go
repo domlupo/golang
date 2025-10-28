@@ -61,7 +61,6 @@ type unit struct {
 	prior               *unit
 	next                *unit
 	producedAt          int
-	debugFlag           bool
 }
 
 func newUnit(p player, globalTarget position, uc unitConfig, pos position, producedOrder int, selected bool) unit {
@@ -409,7 +408,6 @@ func (u unit) log() []slog.Attr {
 	a = append(a, slog.Bool("attackedThisTurn", u.attackedThisTurn))
 	a = append(a, slog.Any("canReachNode", u.canReachNode))
 	a = append(a, slog.Bool("selected", u.selected))
-	a = append(a, slog.Bool("debugFlag", u.debugFlag))
 	return a
 }
 
