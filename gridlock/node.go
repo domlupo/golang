@@ -29,7 +29,6 @@ type node struct {
 	player        player
 	gridPos       GridPosition
 	control       []*hexagon
-	radius        int
 	singleSelect  bool
 	multiSelect   bool
 	maxHealth     int
@@ -274,15 +273,18 @@ func (n *node) drawNode(dc drawConfig) {
 
 	drawHex(dc, n.gridPos, drawTriangleColor{red: red, blue: blue, green: green, alpha: alpha}, n.multiSelect)
 
-	c := dc.grid.getPixelPosOutbounds(n.gridPos, hpCenter)
-
 	if n.currentHealth != n.maxHealth {
-		var healthLineLength = (float32(n.currentHealth) / float32(n.maxHealth)) * float32(n.radius*2)
+		c := dc.grid.getPixelPosOutbounds(n.gridPos, hpCenter)
+		ne := dc.grid.getPixelPosOutbounds(n.gridPos, hpNortheast)
+		nw := dc.grid.getPixelPosOutbounds(n.gridPos, hpNorthwest)
+		width := ne.X - nw.X
+		healthLineLength := (float32(n.currentHealth) / float32(n.maxHealth)) * float32(width)
+
 		vector.StrokeLine(
 			dc.screen,
-			float32(c.X-n.radius)*dc.windowMultiplier,
+			float32(c.X-(width/2))*dc.windowMultiplier,
 			float32(c.Y)*dc.windowMultiplier,
-			(float32(c.X-n.radius)+healthLineLength)*dc.windowMultiplier,
+			(float32(c.X-(width/2))+healthLineLength)*dc.windowMultiplier,
 			float32(c.Y)*dc.windowMultiplier,
 			float32(dc.healthLineWidth)*dc.windowMultiplier,
 			dc.nodeHealthColor,

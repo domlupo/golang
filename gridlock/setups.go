@@ -394,14 +394,14 @@ type nodeSetupInput struct {
 
 func setupNodes(s nodeSetup, g grid, initialNodeHealth int, h hexagons, oLUT obstacleLUT) (nodes, nodeLUT) {
 	nodes := make(nodes)
-	nodes.setupPositions(s, g, initialNodeHealth)
+	nodes.setupPositions(s, initialNodeHealth)
 	nodes.setupControl(g, h, oLUT)
 	fileHandler := newFileHandler()
 	nodeLookup := fileHandler.readNodeLUT(nodes, oLUT, g)
 	return nodes, nodeLookup
 }
 
-func (nodes nodes) setupPositions(s nodeSetup, g grid, initialNodeHealth int) {
+func (nodes nodes) setupPositions(s nodeSetup, initialNodeHealth int) {
 	var nodeSetupInputs []nodeSetupInput
 
 	switch s {

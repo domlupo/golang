@@ -19,8 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Debug and fix node health bars not showing
-
 - Don't global pathfind unless needed. (CPU usage is high due to this)
 
 - Design and implement checksum keys to cache multiple setups 
