@@ -26,8 +26,6 @@ Is there a mobile equivalent for war/4x games?
   - the minmal setups are usually used for minimal reproducible example so debug loop is too long
   - This is not blocked by global path finding LUT
 
-- Add visibilty grid debugging (selectable and outputs pos)
-
 - Refactor state.moveUnits (after boids?) since it is a mess
 
 - Debug why units clip into right side of obstacles but not left side
@@ -273,6 +271,13 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Punted Checkpoints
+
+- Obstacles are `type obstacles map[GridPosition]*obstacle` but this is a bit strange
+  - iterating through visbility grids is not ideal
+  - It seems relating a specific grid pos to an obstacle is never needed.
+  - Probably should be refactored to a higher level obstacle which groups grid pos together
+  - This is low priority now, but it may become more needed over time.
+  - Do other types like hexagons and nodes have a similar issue?
 
 - When all nodes are selected, newly captured nodes should become selected as well.
 

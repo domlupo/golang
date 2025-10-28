@@ -18,37 +18,41 @@ import (
 
 // Debugger Configurations
 type debuggerConfig struct {
-	drawHexGrid             bool
-	drawObstacleLUT         bool
-	drawNodeLUT             bool
-	drawVisibilityGrids     bool
-	drawBlueTargets         bool
-	drawRedTargets          bool
-	debugGridWidth          int
-	debugGridIndexCount     int
-	debugGridColor          color.Color
-	visibilityGridLineWidth int
-	pixelSpotlightOffset    int
-	heatmapR                uint8
-	heatmapG                uint8
-	heatmapB                uint8
-	heatmapAlphaMaxLimit    int
-	heatmapPercent          int
-	roygbivColors           []color.RGBA
+	drawHexGrid                   bool
+	drawObstacleLUT               bool
+	drawNodeLUT                   bool
+	drawVisibilityGrids           bool
+	drawBlueTargets               bool
+	drawRedTargets                bool
+	debugGridWidth                int
+	debugGridIndexCount           int
+	debugGridColor                color.Color
+	visibilityGridLineWidth       int
+	visibilityGridPointRadius     int
+	visibilityGridHighlightOffset int
+	pixelSpotlightOffset          int
+	heatmapR                      uint8
+	heatmapG                      uint8
+	heatmapB                      uint8
+	heatmapAlphaMaxLimit          int
+	heatmapPercent                int
+	roygbivColors                 []color.RGBA
 }
 
 func newDebuggerConfig() *debuggerConfig {
 	dc := debuggerConfig{
-		debugGridWidth:          1,
-		debugGridIndexCount:     32,
-		debugGridColor:          color.Black,
-		visibilityGridLineWidth: 1,
-		pixelSpotlightOffset:    5,
-		heatmapR:                0,
-		heatmapG:                0,
-		heatmapB:                0,
-		heatmapAlphaMaxLimit:    200,
-		heatmapPercent:          maxPercent,
+		debugGridWidth:                1,
+		debugGridIndexCount:           32,
+		debugGridColor:                color.Black,
+		visibilityGridLineWidth:       1,
+		visibilityGridPointRadius:     3,
+		visibilityGridHighlightOffset: 3,
+		pixelSpotlightOffset:          5,
+		heatmapR:                      0,
+		heatmapG:                      0,
+		heatmapB:                      0,
+		heatmapAlphaMaxLimit:          200,
+		heatmapPercent:                maxPercent,
 		roygbivColors: []color.RGBA{
 			{200, 0, 0, 255},
 			{250, 150, 0, 255},
@@ -157,6 +161,7 @@ func (d *debugger) setupToggles(cooldown time.Duration) {
 
 func (d *debugger) debug(p PixelPosition) {
 	d.logPixel(p)
+	d.logVisbilityGrid()
 	d.createUnitPathfindHeatmap()
 }
 
@@ -169,7 +174,26 @@ func (d *debugger) logPixel(p PixelPosition) {
 	}
 	attrs = append(attrs, nest("ObsacleLUT", d.oLUT[p].log()))
 	attrs = append(attrs, nest("NodeLUT", d.nLUT[p].log()))
-	logger.log(infoLevel, devTool, "debugPixel", attrs...)
+	logger.log(infoLevel, devTool, "pixel", attrs...)
+}
+
+func (d *debugger) logVisbilityGrid() {
+	if d.drawVisibilityGrids {
+		visited := make(map[uuid.UUID]struct{})
+		for _, o := range d.obstacles {
+			g := *o.visibilityGrid
+			op := g[0]
+			if _, ok := visited[op.visibilityGridId]; ok {
+				continue
+			}
+			visited[op.visibilityGridId] = struct{}{}
+			for _, point := range *o.visibilityGrid {
+				if point.selected {
+					logger.log(infoLevel, devTool, "obstaclePoint", point.log()...)
+				}
+			}
+		}
+	}
 }
 
 func (d *debugger) createUnitPathfindHeatmap() {
@@ -333,7 +357,7 @@ func (o obstacle) drawVisibilityGrid(c drawConfig, dC debuggerConfig) {
 			c.screen,
 			float32(op.X)*c.windowMultiplier,
 			float32(op.Y)*c.windowMultiplier,
-			3*c.windowMultiplier,
+			float32(dC.visibilityGridPointRadius)*c.windowMultiplier,
 			c.highlightColor,
 			false)
 		vector.StrokeLine(
@@ -345,6 +369,18 @@ func (o obstacle) drawVisibilityGrid(c drawConfig, dC debuggerConfig) {
 			float32(dC.visibilityGridLineWidth)*c.windowMultiplier,
 			c.highlightColor,
 			false)
+
+		if op.selected {
+			offset := dC.visibilityGridPointRadius + dC.visibilityGridHighlightOffset
+			drawUnfilledBoxInt(
+				c,
+				c.highlightColor,
+				op.X-offset,
+				op.Y-offset,
+				op.X+offset,
+				op.Y+offset,
+			)
+		}
 	}
 }
 

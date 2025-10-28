@@ -34,6 +34,7 @@ type obstaclePoint struct {
 	cwDistance       int
 	ccw              *obstaclePoint
 	ccwDistance      int
+	selected         bool
 }
 
 // Lookup table for processed obstacle information.
@@ -54,6 +55,18 @@ const (
 	lowMountain
 	highMountain
 )
+
+func (op obstaclePoint) log() []slog.Attr {
+	var a = []slog.Attr{}
+	a = append(a, nest("PixelPosition", op.PixelPosition.log()))
+	a = append(a, nest("source", op.source.log()))
+	a = append(a, slog.String("visibilityGridId", op.visibilityGridId.String()))
+	a = append(a, nest("cw", op.cw.PixelPosition.log()))
+	a = append(a, slog.Int("cwDistance", op.cwDistance))
+	a = append(a, nest("ccw", op.ccw.PixelPosition.log()))
+	a = append(a, slog.Int("ccwDistance", op.ccwDistance))
+	return a
+}
 
 func (info obstacleInfo) log() []slog.Attr {
 	var a = []slog.Attr{}

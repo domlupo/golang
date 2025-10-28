@@ -5,6 +5,8 @@ package main
 import (
 	"log/slog"
 	"math"
+
+	"github.com/gofrs/uuid/v5"
 )
 
 // not enforced but must be a singleton
@@ -729,6 +731,28 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 				u.selected = false
 			}
 			s.units[u.position] = u
+		}
+
+		visited := make(map[uuid.UUID]struct{})
+		for _, o := range s.obstacles {
+			g := *o.visibilityGrid
+			obstaclePoint := g[0]
+			if _, ok := visited[obstaclePoint.visibilityGridId]; ok {
+				continue
+			}
+			visited[obstaclePoint.visibilityGridId] = struct{}{}
+			for i, op := range *o.visibilityGrid {
+				if (topLeftPixelPos.X < op.X) &&
+					(op.X < bottomRightPixelPos.X) &&
+					(topLeftPixelPos.Y < op.Y) &&
+					(op.Y < bottomRightPixelPos.Y) {
+					op.selected = true
+				} else {
+					op.selected = false
+				}
+				ops := *o.visibilityGrid
+				ops[i] = op
+			}
 		}
 	}
 
