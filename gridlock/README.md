@@ -19,6 +19,12 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Design and implemnt checksum keys to cache multiple setups 
+  - minimal setups take ~4 mins to construct which is long
+  - the minmal setups are usually used for minimal reproducible example so debug loop is too long
+
+- Add visibilty grid debugging (selectable and outputs pos)
+
 - Design and Determine best way for boids to avoid obstacles
   - There are multiple options to handle velocity:
     - I can refactor code to use velocity and then trim it to magnitude 1.
@@ -119,8 +125,10 @@ Is there a mobile equivalent for war/4x games?
 
 - Optimize CPU usage via low hanging fruit if it is high enough to slow development
 
-- (See bullet points before starting) Add checksum keys to cache multiple setups 
-  - I should complete this after I marshall/unmarshall global path finding grid position <-> grid position
+- Design global path finding LUT
+  - pixel <-> pixel would require too much computation and memory. Need to verify I can do grid pos <-> grid pos
+  - Need to verify grid pos -> pixel pos at runtime is possible
+  - Should be optimal path
 
 - Look into optimize heatmap draws.
   - heatmaps are causing large stutters. I highly doubt this cannot be optimized.
