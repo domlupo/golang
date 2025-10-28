@@ -6,23 +6,33 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"hash/crc32"
 	"io"
+	"math"
 	"os"
 )
 
 type fileHandler struct {
-	directoryName       string
-	obstacleLUTFileName string
-	nodeLUTFileName     string
+	directoryName             string
+	obstacleLUTFileNamePrefix string
+	nodeLUTFileName           string
 }
 
 func newFileHandler() fileHandler {
 	return fileHandler{
-		directoryName:       "output",
-		obstacleLUTFileName: "obstacleLUT.json",
-		nodeLUTFileName:     "nodeLUT.json",
+		directoryName:             "output",
+		obstacleLUTFileNamePrefix: "obstacleLUT",
+		nodeLUTFileName:           "nodeLUT.json",
 	}
 }
+
+type file int
+
+const (
+	fNone file = iota
+	fObstacle
+	fNode
+)
 
 // Golang encoding/json does not support direct marshall/unmarshall for custom types
 // Multiple intermediate entry types are defined.
@@ -37,7 +47,10 @@ type nodeLUTEntry struct {
 
 func (f fileHandler) readObstacleLUT(obstacles obstacles, g grid) obstacleLUT {
 	wc := newWindowConfig()
-	file, err := os.Open(fmt.Sprintf("%s/%s", f.directoryName, f.obstacleLUTFileName))
+
+	fileName := f.fileName(fObstacle, obstacles.key())
+	file, err := os.Open(fmt.Sprintf("%s/%s", f.directoryName, fileName))
+
 	if errors.Is(err, os.ErrNotExist) {
 		logger.log(infoLevel, setupLogic, "readObstacleLUT: create look up table file since it does not exist")
 		return f.writeObstacleLUT(obstacles, g)
@@ -79,7 +92,8 @@ func (f fileHandler) writeObstacleLUT(obstacles obstacles, g grid) obstacleLUT {
 	}
 
 	data, _ := json.Marshal(entries)
-	err := os.WriteFile(fmt.Sprintf("%s/%s", f.directoryName, f.obstacleLUTFileName), data, 0644)
+	fileName := f.fileName(fObstacle, obstacles.key())
+	err := os.WriteFile(fmt.Sprintf("%s/%s", f.directoryName, fileName), data, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -139,6 +153,21 @@ func (f fileHandler) writeNodeLUT(nodes nodes, obstacleLUT obstacleLUT, g grid) 
 	return nLUT
 }
 
-func (f fileHandler) key(obstacles obstacles, hc hexConfig) {
-	// TODO: Add CRC32 key
+func (f fileHandler) fileName(file file, bytes []byte) string {
+	var prefix string
+	switch file {
+	case fObstacle:
+		prefix = f.obstacleLUTFileNamePrefix
+	default:
+		panic(fmt.Sprintf("Cannot get file name since unkonw file: %d", file))
+	}
+
+	return fmt.Sprintf("%s-%d.json", prefix, crc32.ChecksumIEEE(bytes))
+}
+
+func truncate(i int) byte {
+	if i > math.MaxUint8 || i < 0 {
+		panic(fmt.Sprintf("Cannot key obstacles due to byte truncation: %d", i))
+	}
+	return byte(i)
 }

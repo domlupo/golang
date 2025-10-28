@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"math"
 	"slices"
+	"sort"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -87,6 +88,30 @@ func (os obstacles) insert(k GridPosition, v *obstacle) {
 		panic(fmt.Sprintf("grid position {%d, %d} already contains obstacle: ", k.X, k.Y))
 	}
 	os[k] = v
+}
+
+// Returns a unique and determinite slice of bytes from the passed obstacles.
+func (os obstacles) key() []byte {
+	var keys []GridPosition
+	for k := range os {
+		keys = append(keys, k)
+	}
+
+	sort.Slice(keys, func(i, j int) bool {
+		if keys[i].X == keys[j].X {
+			return keys[i].Y < keys[j].Y
+		}
+		return keys[i].X < keys[j].X
+	})
+
+	var b []byte
+	for i := 0; i < len(keys); i++ {
+		o := os[keys[i]]
+		b = append(b, truncate(o.gridPos.X))
+		b = append(b, truncate(o.gridPos.Y))
+		b = append(b, truncate(int(o.kind)))
+	}
+	return b
 }
 
 func (os obstacles) setup(g grid) obstacleLUT {

@@ -21,10 +21,7 @@ Is there a mobile equivalent for war/4x games?
 
 - Don't global pathfind unless needed. (CPU usage is high due to this)
 
-- Design and implement checksum keys to cache multiple setups 
-  - minimal setups take ~4 mins to construct which is long
-  - the minmal setups are usually used for minimal reproducible example so debug loop is too long
-  - This is not blocked by global path finding LUT
+- Add keys for node setup
 
 - Refactor state.moveUnits (after boids?) since it is a mess
 
@@ -271,6 +268,8 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Punted Checkpoints
+
+- Once game is released, need to either force user cache clears or use directories for cache versioning.
 
 - Obstacles are `type obstacles map[GridPosition]*obstacle` but this is a bit strange
   - iterating through visbility grids is not ideal
