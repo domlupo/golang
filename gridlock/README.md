@@ -15,9 +15,10 @@ Is there a mobile equivalent for war/4x games?
 2. Faster iteration from better inspection and debugging tooling. -> Don't waste engineering effort due to poor prioritization.
 3. Playtesting MVP. -> Don't invest major engineering effort into wrong tasks.
 
-## Checkpoints : Purposes
+## Checkpoints
 
 ### Next Checkpoints
+
 
 - Improve guided air missile
   - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.
@@ -25,26 +26,23 @@ Is there a mobile equivalent for war/4x games?
   - auto despawns for non computer players. This is probably wrong behavior.
   - Determine target locking behavior for human player and computer player.
 
-- Design and Determine best way for boids to avoid obstacles
+- Merge steer branch
+  - I don't think I need to prototype boids in a separate setup. I would rather use the current game
+    setup that has collision, global target, etc .
+  - Don't do all factors at once, start small. 
+    - First get obstacle avoidance working 
+    - Then get unit avoidance working
+    - Then get seeking
+    - Then cohesion, etc
   - There are multiple options to handle velocity:
     - I can refactor code to use velocity and then trim it to magnitude 1.
     - I can store velocity as state in unit from prior steers and steer updates this saved state.
     - I can reduce "turn delay" or turns between steeers so more steering turns occur
       together or apart.
-  - direction to and from seemed like the wrong approach
-  - Can determine which pixel position on each hexagon sides are fathest from obstacles
   - Probably want to use global pathing influence as well
-  - How do units perform slides agaisnt obstacles and units in other games?
-
-- Update local pathfinding to boids model
-  - testing has shown boids model to be the easiest to tune, most flexible, beset results
-  - continue implementing flocking and steering behaviors 
-
-- Design and Determine best way for boids to avoid obstacles
-  - direction to and from seemed like the wrong approach
-  - Can determine which pixel position on each hexagon sides are fathest from obstacles
-  - Probably want to use global pathing influence as well
-  - How do units perform slides agaisnt obstacles and units in other games?
+  - These seem a bit hacky and unneded but:
+    - Can add to obstacle LUT, for the given hexagon, what pixel is further from all obstacles
+   - Can add to obstacle LUT, for the given hexagon side, what pixel is furthest from all obstacles
 
 - Add more ground units for local path finding iteration
   - Determine what units I want to remove. i think most ground units are unneeded.
