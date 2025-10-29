@@ -23,6 +23,8 @@ var logger l
 
 type Game struct {
 	*drawConfig
+	nodeSetup                  nodeSetup
+	obstacleSetup              obstacleSetup
 	backgroundColor            color.RGBA
 	produceWait                time.Duration
 	produceInterval            time.Duration
@@ -64,6 +66,7 @@ type Game struct {
 	memProfilerFileName        string
 	cpuProfilerStartBeforeGame bool
 	memProfilerStartBeforeGame bool
+	cacheSetups                bool
 	cpuProfilerFile            *os.File
 	memoryProfilerFile         *os.File
 }
@@ -72,6 +75,8 @@ func newGame() Game {
 	drawConfig := newDrawConfig()
 	g := Game{
 		developerMode:           true,
+		obstacleSetup:           multiObstacle,
+		nodeSetup:               leftVsRightVerticalOffset,
 		drawConfig:              drawConfig,
 		backgroundColor:         color.RGBA{200, 200, 200, 255},
 		produceWait:             1_000_000 * time.Second,
@@ -101,7 +106,7 @@ func newGame() Game {
 	return g
 }
 
-func (g *Game) restart() {
+func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify bool) {
 	// TODO: Need to restart timers, etc
 	g.compOne = *newComputer(bluePlayer)
 	g.compTwo = *newComputer(redPlayer)
@@ -110,14 +115,16 @@ func (g *Game) restart() {
 	// for positions and a higher level struct for the grid components
 	start := time.Now()
 	hexagons := setupHexagons(g.drawConfig.grid)
-	obstacles, oLUT := setupObstacles(multiObstacle, g.drawConfig.grid)
-	nodes, nLUT := setupNodes(leftVsRightVerticalOffset, g.drawConfig.grid, g.initialNodeHealth, hexagons, oLUT)
+	obstacles, oLUT := setupObstacles(obstacleSetup, g.drawConfig.grid)
+	nodes, nLUT := setupNodes(nodeSetup, g.drawConfig.grid, g.initialNodeHealth, hexagons, oLUT)
 	logger.log(infoLevel, setupLogic, fmt.Sprintf("Setup required %0.2f seconds", float64(time.Since(start).Seconds())))
 
-	for nPos := range nodes {
-		for oPos := range obstacles {
-			if nPos.equals(oPos) {
-				panic("grid position conflict between node and obstacle")
+	if verify {
+		for nPos := range nodes {
+			for oPos := range obstacles {
+				if nPos.equals(oPos) {
+					panic("grid position conflict between node and obstacle")
+				}
 			}
 		}
 	}
@@ -265,7 +272,7 @@ func (g *Game) Update() error {
 		if g.hotRestart {
 			logger.log(infoLevel, mainLogic, "restartGame")
 
-			g.restart()
+			g.restart(g.nodeSetup, g.obstacleSetup, true)
 		} else {
 			return errors.New("regular termination")
 		}
@@ -400,7 +407,35 @@ func main() {
 		g.developerToggles[g.memProfilerToggleName].callBack()
 	}
 
-	g.restart()
+	if g.cacheSetups {
+		logger.log(infoLevel, setupLogic, "cacheSetups: cache all missing setups")
+		start := time.Now()
+		n := nodeSetups()
+		o := obstacleSetups()
+		m := max(len(n), len(o))
+		for i := range m {
+			oI := i
+			nI := i
+			if i > len(obstacleSetups())-1 {
+				oI = 0
+			} else {
+				logger.log(infoLevel, setupLogic, fmt.Sprintf("cacheSetups: cache obstacle %s", o[oI].String()))
+			}
+			if i > len(nodeSetups())-1 {
+				nI = 0
+			} else {
+				logger.log(infoLevel, setupLogic, fmt.Sprintf("cacheSetups: cache node %s", n[nI].String()))
+			}
+			g.restart(n[nI], o[oI], false)
+		}
+		logger.log(
+			infoLevel,
+			setupLogic,
+			fmt.Sprintf("cacheSetups: caching all missing setups required %d seconds", int(time.Since(start).Seconds())))
+		return
+	}
+
+	g.restart(g.nodeSetup, g.obstacleSetup, true)
 
 	if err := ebiten.RunGame(&g); err != nil {
 		logger.log(errorLevel, mainLogic, err.Error())

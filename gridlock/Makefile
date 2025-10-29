@@ -8,7 +8,7 @@ cover:
 	go test -v -cover -coverprofile=cover.out; \
         go tool cover -html=cover.out
 c:
-	rm -rf output
+	rm -rf output/*
 co:
 	rm -rf output/obstacleLUT-*.json
 cn:

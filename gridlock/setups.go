@@ -14,6 +14,38 @@ const (
 	horizontalObstacle
 )
 
+func obstacleSetups() []obstacleSetup {
+	return []obstacleSetup{
+		noObstacle,
+		singleObstacle,
+		doubleObstacle,
+		tripleObstacle,
+		multiObstacle,
+		borderObstacle,
+		horizontalObstacle}
+}
+
+func (os obstacleSetup) String() string {
+	switch os {
+	case noObstacle:
+		return "noObstacle"
+	case singleObstacle:
+		return "singleObstacle"
+	case doubleObstacle:
+		return "doubleObstacle"
+	case tripleObstacle:
+		return "tripleObstacle"
+	case multiObstacle:
+		return "multiObstacle"
+	case borderObstacle:
+		return "borderObstacle"
+	case horizontalObstacle:
+		return "horizontalObstacle"
+	default:
+		panic("Unknown obstacle setup, cannot get string")
+	}
+}
+
 func setupObstacles(setup obstacleSetup, g grid) (obstacles, obstacleLUT) {
 	obstacles := make(obstacles)
 	obstacles.setupBorder()
@@ -383,8 +415,63 @@ const (
 	topVsBottom
 	topVsBottomHorizontalOffset
 	zoomHorizontal
-	zoomVertical
 )
+
+func nodeSetups() []nodeSetup {
+	return []nodeSetup{
+		//noNodes, TODO: debug why this hangs
+		nodeSurrounded,
+		northWest,
+		horizontal,
+		horizontalMissile,
+		//vertical, TODO debug why this hangs
+		diagonal,
+		lowNodeCount,
+		noNeutral,
+		leftVsRight,
+		leftVsRightHorizontalOffset,
+		leftVsRightVerticalOffset,
+		topVsBottom,
+		topVsBottomHorizontalOffset,
+		zoomHorizontal}
+}
+
+func (ns nodeSetup) String() string {
+	switch ns {
+	case noNodes:
+		return "noNodes"
+	case nodeSurrounded:
+		return "nodeSurrounded"
+	case northWest:
+		return "northWest"
+	case horizontal:
+		return "horizontal"
+	case horizontalMissile:
+		return "horizontalMissile"
+	case vertical:
+		return "vertical"
+	case diagonal:
+		return "diagonal"
+	case lowNodeCount:
+		return "lowNodeCount"
+	case noNeutral:
+		return "noNeutral"
+	case leftVsRight:
+		return "leftVsRight"
+	case leftVsRightHorizontalOffset:
+		return "leftVsRightHorizontalOffset"
+	case leftVsRightVerticalOffset:
+		return "leftVsRightVerticalOffset"
+	case topVsBottom:
+		return "topVsBottom"
+	case topVsBottomHorizontalOffset:
+		return "topVsBottomHorizontalOffset"
+	case zoomHorizontal:
+		return "zoomHorizontal"
+	default:
+		panic("Unknown node setup, cannot get string")
+	}
+}
 
 type nodeSetupInput struct {
 	gridPos    GridPosition

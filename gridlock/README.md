@@ -123,6 +123,8 @@ Is there a mobile equivalent for war/4x games?
 
 ### Future Checkpoints
 
+- Debug why certain node setups are hanging
+
 - Optimize CPU usage via low hanging fruit if it is high enough to slow development
 
 - Verify that unit movement using any 3 Bresenham's movements which reduce error is fine.
