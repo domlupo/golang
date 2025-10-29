@@ -19,11 +19,11 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Don't global pathfind unless needed. (CPU usage is high due to this)
-
-- Refactor state.moveUnits (after boids?) since it is a mess
-
-- Debug why units clip into right side of obstacles but not left side
+- Improve guided air missile
+  - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.
+  - Fix bug where ground missile (not air missile) is not moving for computer player
+  - auto despawns for non computer players. This is probably wrong behavior.
+  - Determine target locking behavior for human player and computer player.
 
 - Design and Determine best way for boids to avoid obstacles
   - There are multiple options to handle velocity:
@@ -45,12 +45,6 @@ Is there a mobile equivalent for war/4x games?
   - Can determine which pixel position on each hexagon sides are fathest from obstacles
   - Probably want to use global pathing influence as well
   - How do units perform slides agaisnt obstacles and units in other games?
-
-- Improve guided air missile
-  - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.
-  - Fix bug where ground missile (not air missile) is not moving for computer player
-  - auto despawns for non computer players. This is probably wrong behavior.
-  - Determine target locking behavior for human player and computer player.
 
 - Add more ground units for local path finding iteration
   - Determine what units I want to remove. i think most ground units are unneeded.
@@ -122,6 +116,12 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Future Checkpoints
+
+- Don't global pathfind unless needed. (CPU usage is high due to this)
+
+- Refactor state.moveUnits (after boids?) since it is a mess
+
+- Debug why units clip into right side of obstacles but not left side
 
 - Debug why certain node setups are hanging
 
