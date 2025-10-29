@@ -53,7 +53,7 @@ var infantryConfig = unitConfig{
 // TODO: Figure out better attack conventions e.g. direct, vs explosion, etc
 var unguidedGroundMissileConfig = unitConfig{
 	name:                 unguidedGroundMissile,
-	radius:               3,
+	radius:               5,
 	maxHealth:            100,
 	attack:               1,
 	vision:               100,
@@ -70,7 +70,7 @@ var unguidedGroundMissileConfig = unitConfig{
 
 var guidedAirMissileConfig = unitConfig{
 	name:                 guidedAirMissile,
-	radius:               3,
+	radius:               5,
 	maxHealth:            100,
 	attack:               1000,
 	vision:               250,

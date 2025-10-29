@@ -49,7 +49,7 @@ func (os obstacleSetup) String() string {
 func setupObstacles(setup obstacleSetup, g grid) (obstacles, obstacleLUT) {
 	obstacles := make(obstacles)
 	obstacles.setupBorder()
-	obstacles.setupInterior(setup, g)
+	obstacles.setupInterior(setup)
 	oLUT := obstacles.setup(g)
 	return obstacles, oLUT
 }
@@ -177,7 +177,7 @@ func (os obstacles) setupBorder() {
 	}
 }
 
-func (os obstacles) setupInterior(setup obstacleSetup, g grid) {
+func (os obstacles) setupInterior(setup obstacleSetup) {
 	var GridPositions []GridPosition
 
 	switch setup {
@@ -412,6 +412,7 @@ const (
 	leftVsRight
 	leftVsRightHorizontalOffset
 	leftVsRightVerticalOffset
+	leftVsRightVerticalOffsetMissile
 	topVsBottom
 	topVsBottomHorizontalOffset
 	zoomHorizontal
@@ -431,6 +432,7 @@ func nodeSetups() []nodeSetup {
 		leftVsRight,
 		leftVsRightHorizontalOffset,
 		leftVsRightVerticalOffset,
+		leftVsRightVerticalOffsetMissile,
 		topVsBottom,
 		topVsBottomHorizontalOffset,
 		zoomHorizontal}
@@ -462,6 +464,8 @@ func (ns nodeSetup) String() string {
 		return "leftVsRightHorizontalOffset"
 	case leftVsRightVerticalOffset:
 		return "leftVsRightVerticalOffset"
+	case leftVsRightVerticalOffsetMissile:
+		return "leftVsRightVerticalOffsetMissile"
 	case topVsBottom:
 		return "topVsBottom"
 	case topVsBottomHorizontalOffset:
@@ -673,6 +677,44 @@ func (nodes nodes) setupPositions(s nodeSetup, initialNodeHealth int) {
 			{GridPosition{16, 14}, neutralPlayer, unitConfig},
 			{GridPosition{21, 13}, redPlayer, unitConfig},
 			{GridPosition{26, 13}, redPlayer, unitConfig},
+
+			{GridPosition{1, 16}, bluePlayer, unitConfig},
+			{GridPosition{6, 16}, bluePlayer, unitConfig},
+			{GridPosition{11, 17}, neutralPlayer, unitConfig},
+			{GridPosition{16, 19}, neutralPlayer, unitConfig},
+			{GridPosition{21, 18}, redPlayer, unitConfig},
+			{GridPosition{26, 18}, redPlayer, unitConfig},
+
+			{GridPosition{1, 21}, bluePlayer, unitConfig},
+			{GridPosition{6, 21}, bluePlayer, unitConfig},
+			{GridPosition{11, 22}, neutralPlayer, unitConfig},
+			{GridPosition{16, 22}, neutralPlayer, unitConfig},
+			{GridPosition{21, 23}, redPlayer, unitConfig},
+			{GridPosition{26, 23}, redPlayer, unitConfig},
+		}
+	case leftVsRightVerticalOffsetMissile:
+		unitConfig := infantryConfig
+		nodeSetupInputs = []nodeSetupInput{
+			{GridPosition{2, 2}, bluePlayer, unitConfig},
+			{GridPosition{6, 1}, bluePlayer, unitConfig},
+			{GridPosition{11, 2}, neutralPlayer, unitConfig},
+			{GridPosition{16, 4}, neutralPlayer, unitConfig},
+			{GridPosition{21, 3}, redPlayer, unitConfig},
+			{GridPosition{26, 3}, redPlayer, unitConfig},
+
+			{GridPosition{1, 6}, bluePlayer, unitConfig},
+			{GridPosition{6, 6}, bluePlayer, unitConfig},
+			{GridPosition{11, 7}, neutralPlayer, unitConfig},
+			{GridPosition{16, 9}, neutralPlayer, unitConfig},
+			{GridPosition{21, 8}, redPlayer, unitConfig},
+			{GridPosition{26, 8}, redPlayer, unitConfig},
+
+			{GridPosition{1, 11}, bluePlayer, unguidedGroundMissileConfig},
+			{GridPosition{6, 11}, bluePlayer, unitConfig},
+			{GridPosition{11, 12}, neutralPlayer, unitConfig},
+			{GridPosition{16, 14}, neutralPlayer, unitConfig},
+			{GridPosition{21, 13}, redPlayer, unitConfig},
+			{GridPosition{26, 13}, redPlayer, guidedAirMissileConfig},
 
 			{GridPosition{1, 16}, bluePlayer, unitConfig},
 			{GridPosition{6, 16}, bluePlayer, unitConfig},
