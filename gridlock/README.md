@@ -121,8 +121,6 @@ Is there a mobile equivalent for war/4x games?
 
 - Refactor state.moveUnits (after boids?) since it is a mess
 
-- Debug why units clip into right side of obstacles but not left side
-
 - Debug why certain node setups are hanging
 
 - Optimize CPU usage via low hanging fruit if it is high enough to slow development

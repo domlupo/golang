@@ -214,7 +214,7 @@ func (s *state) moveUnits() {
 		var confirmMove = func() {}
 		for _, m := range moves {
 			p := m.suggest
-			if s.oLUT[p.PixelPosition].UnwalkableChebyshevDistance >= u.radius {
+			if s.oLUT[p.PixelPosition].UnwalkableChebyshevDistance > u.radius {
 				newPos = p
 				confirmMove = m.confirm
 				break
