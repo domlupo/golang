@@ -19,6 +19,25 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Split state.units into 2/3 different layers
+  - Close on 2 or 3 layer game. Initial thought are 3 are needed.
+  - Implement 2 layer first, even if 3 layer is the end state.
+  - Update hexagon to have 3 linked lists
+  - More performant draws
+  - Can test small number of air units without linked list optimization, keep ground units optimized
+
+- Design and implement global path finding LUT
+  - Need to check size and performance for final game.
+  - gobal path finding isn't optimal at the moment. Make sure to not rely on this in design but 
+    the final game will have optimal global pathfinding.
+
+- Determine if air obstacles should be in game or not?
+  - I am concerned about LUT performance (heap memory consumption and time to generate)
+  - May need to add a global path finding LUT
+  - I can also use a tricks here to avoid LUT need:
+     - Infantry LUT for global path finding but air obstacles only ever have 1 or 2 so calculate
+       at runtime with small cw and ccw depth.
+    - more dense obstacls should generate quicker
 
 - Improve guided air missile
   - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.
@@ -266,6 +285,10 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Punted Checkpoints
+
+- LUT tables are rather large for end game(100-300MB)
+  - I may need to use something smaller for final game (especially if mobile release)
+  - Also, players will not want long seed generations
 
 - Determine if splitting hexagon spatial partitions into layers is needed for performance.
 
