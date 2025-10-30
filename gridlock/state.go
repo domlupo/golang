@@ -266,8 +266,8 @@ func (s *state) moveUnits() {
 			if !oldGridPos.equals(newGridPos) {
 				oldHex := s.hexagons[oldGridPos]
 				newHex := s.hexagons[newGridPos]
-				oldHex.unitCount--
-				newHex.unitCount++
+				oldHex.subtract(u.player)
+				newHex.add(u.player)
 
 				if u.next.id == u.id && u.prior.id == u.id {
 					oldHex.linkedList = nil
@@ -568,7 +568,7 @@ func (s *state) attackUnits() {
 
 			gridPos, _ := s.g.getGridPos(u.PixelPosition)
 			hex := s.hexagons[gridPos]
-			hex.unitCount--
+			hex.subtract(u.player)
 			if hex.linkedList.id == u.id && u.next.id != u.id {
 				hex.linkedList = u.next
 			} else if hex.linkedList.id == u.id && u.next.id == u.id {
@@ -846,7 +846,7 @@ func (s *state) produceUnits() {
 			hex.updatePointers(&newUnit)
 
 			s.units[uPos] = &newUnit
-			hex.unitCount++
+			hex.add(newUnit.player)
 			s.unitsProducedTotal++
 		}
 	}
