@@ -73,7 +73,7 @@ func (s *state) analyzeTargets() {
 		u.updateTarget(enemyTarget, nearest)
 
 		// TODO: Remove this hack once guided missile is fixed
-		if u.layer == ground {
+		if u.layer == land {
 			if !u.globalTarget.isZero() && u.pathGlobalTarget {
 				u.pathfindGlobalTarget(s.obstacles, s.oLUT, s.g)
 			} else if len(u.localTargets) > 0 && u.atTerminalPosition {
@@ -218,7 +218,7 @@ func (s *state) moveUnits() {
 		for _, m := range moves {
 			p := m.suggest
 
-			if u.layer != ground {
+			if u.layer != land {
 				newPos = p
 				confirmMove = m.confirm
 				break
@@ -258,7 +258,7 @@ func (s *state) moveUnits() {
 			unitsBorderCollideCount++
 		} else if collidesWithUnit {
 			unitsCollideCount++
-			if u.layer == lowAltitude || u.layer == highAltitude {
+			if u.layer == lowAir || u.layer == highAir {
 				otherUnit := s.units[collidedUnitPos]
 				otherUnit.health = 0
 				s.units[collidedUnitPos] = s.units[position{collidedUnitPos.layer, PixelPosition{collidedUnitPos.X, collidedUnitPos.Y}}]
@@ -318,7 +318,7 @@ func (s *state) explode(pos position, blastRadius int, units units) {
 	r1 := blastRadius
 
 	for _, otherUnit := range units {
-		if otherUnit.layer != ground {
+		if otherUnit.layer != land {
 			continue
 		}
 
@@ -403,9 +403,9 @@ func (s *state) nearestUnitWithinVision(u unit) (position, bool) {
 				continue
 			}
 
-			if !u.attacksGround && current.layer == ground ||
-				!u.attacksLowAltitude && current.layer == lowAltitude ||
-				!u.attacksHighAltitude && current.layer == highAltitude {
+			if !u.attacksGround && current.layer == land ||
+				!u.attacksLowAltitude && current.layer == lowAir ||
+				!u.attacksHighAltitude && current.layer == highAir {
 				current = current.next
 				continue
 			}
@@ -902,17 +902,17 @@ func (s *state) draw(dc drawConfig) {
 
 	// TODO: Store units by layer for better performance
 	for _, u := range s.units {
-		if u.layer == highAltitude {
+		if u.layer == highAir {
 			u.draw(dc, u.selected)
 		}
 	}
 	for _, u := range s.units {
-		if u.layer == lowAltitude {
+		if u.layer == lowAir {
 			u.draw(dc, u.selected)
 		}
 	}
 	for _, u := range s.units {
-		if u.layer == ground {
+		if u.layer == land {
 			u.draw(dc, u.selected)
 		}
 	}

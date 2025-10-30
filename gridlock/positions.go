@@ -17,9 +17,9 @@ type layer int
 
 const (
 	noLayer layer = iota
-	ground
-	lowAltitude
-	highAltitude
+	land
+	lowAir
+	highAir
 )
 
 // globally unique position
@@ -96,6 +96,21 @@ func (pixelPos PixelPosition) log() []slog.Attr {
 	return a
 }
 
+func (l layer) log() slog.Attr {
+	var layer string
+	switch l {
+	case noLayer:
+		layer = "noLayer"
+	case land:
+		layer = "land"
+	case lowAir:
+		layer = "lowAir"
+	case highAir:
+		layer = "HighAir"
+	}
+	return slog.String("layer", layer)
+}
+
 func (pos PixelPosition) chebyshevDistance(otherPos PixelPosition) int {
 	xDelta := pos.X - otherPos.X
 	if xDelta < 0 {
@@ -161,18 +176,7 @@ func (pixelPos PixelPosition) allAdjacent() []PixelPosition {
 
 func (pos position) log() []slog.Attr {
 	var a = []slog.Attr{}
-	var layer string
-	switch pos.layer {
-	case noLayer:
-		layer = "noLayer"
-	case ground:
-		layer = "ground"
-	case lowAltitude:
-		layer = "lowAltitude"
-	case highAltitude:
-		layer = "highAltitude"
-	}
-	a = append(a, slog.String("layer", layer))
+	a = append(a, pos.layer.log())
 	a = append(a, pos.PixelPosition.log()...)
 	return a
 }

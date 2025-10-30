@@ -50,10 +50,10 @@ func (c *computer) updateNodeTargets(s state, nodeCapture bool, avgUnitPos Pixel
 		selfNode := n
 		switch n.unitConfig.name {
 		case unguidedGroundMissile:
-			selfNode.target = position{ground, p}
+			selfNode.target = position{land, p}
 			continue
 		case guidedAirMissile:
-			selfNode.target = position{ground, avgUnitPos}
+			selfNode.target = position{land, avgUnitPos}
 		}
 	}
 }
@@ -91,7 +91,7 @@ func (c *computer) updateForNodeCapture(s state) {
 					panic("could not get pixel pos for update computer node targets")
 				}
 
-				selfNode.target = position{ground, targetPixelPos}
+				selfNode.target = position{land, targetPixelPos}
 			}
 
 		}
@@ -123,7 +123,7 @@ func (c *computer) updateForNodeCapture(s state) {
 
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
-				u.updateTarget(globalTarget, position{ground, nPixelPos})
+				u.updateTarget(globalTarget, position{land, nPixelPos})
 			}
 		}
 	}

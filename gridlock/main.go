@@ -213,7 +213,7 @@ func (g *Game) Update() error {
 	if g.rightMouseClicked {
 		// TODO: Determine behavior. Should player choose which layer they target or handle it via game logic?
 		// TODO: It seems a bit hacky that I need to pass computer active here. Determine if this is right behavior.
-		g.gameState.updateTargets(position{ground, pixelPos}, g.blueComputerActive, g.redComputerActive)
+		g.gameState.updateTargets(position{land, pixelPos}, g.blueComputerActive, g.redComputerActive)
 	}
 
 	// update game state after player actions

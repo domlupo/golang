@@ -39,7 +39,7 @@ var infantryConfig = unitConfig{
 	attack:               1,
 	vision:               30,
 	reach:                5,
-	produceLayer:         ground,
+	produceLayer:         land,
 	staticTarget:         false,
 	attacksGround:        true,
 	attacksLowAltitude:   false,
@@ -58,7 +58,7 @@ var unguidedGroundMissileConfig = unitConfig{
 	attack:               1,
 	vision:               100,
 	reach:                0,
-	produceLayer:         lowAltitude,
+	produceLayer:         lowAir,
 	staticTarget:         true,
 	attacksGround:        false,
 	attacksLowAltitude:   false,
@@ -75,7 +75,7 @@ var guidedAirMissileConfig = unitConfig{
 	attack:               1000,
 	vision:               40,
 	reach:                0,
-	produceLayer:         lowAltitude,
+	produceLayer:         lowAir,
 	staticTarget:         false,
 	attacksGround:        false,
 	attacksLowAltitude:   true,
@@ -106,18 +106,7 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.Int("attack", uc.attack))
 	a = append(a, slog.Int("vision", uc.vision))
 	a = append(a, slog.Int("reach", uc.reach))
-	var layer string
-	switch uc.produceLayer {
-	case noLayer:
-		layer = "noLayer"
-	case ground:
-		layer = "ground"
-	case lowAltitude:
-		layer = "lowAltitude"
-	case highAltitude:
-		layer = "highAltitude"
-	}
-	a = append(a, slog.String("produceLayer", layer))
+	a = append(a, uc.produceLayer.log())
 	a = append(a, slog.Bool("staticTarget", uc.staticTarget))
 	a = append(a, slog.Bool("attacksGround", uc.attacksGround))
 	a = append(a, slog.Bool("attacksLowAltitude", uc.attacksLowAltitude))
