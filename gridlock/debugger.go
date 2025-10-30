@@ -24,6 +24,7 @@ type debuggerConfig struct {
 	debugVisibilityGrids          bool
 	debugBlueTargets              bool
 	debugRedTargets               bool
+	debugHexagons                 bool
 	hexGridLineWidth              int
 	hexGridIndexCount             int
 	debugGridColor                color.Color
@@ -125,43 +126,50 @@ func (d *debugger) setupToggles(cooldown time.Duration) {
 	toggles["drawAll"] = newToggle(
 		ebiten.KeyA,
 		func() {
-			var toggle = !(d.debugBlueTargets && d.debugRedTargets && d.debugHexGrid && d.debugVisibilityGrids)
+			var toggle = !(d.debugBlueTargets && d.debugRedTargets && d.debugHexGrid && d.debugVisibilityGrids && d.debugHexagons)
 			d.debugBlueTargets = toggle
 			d.debugRedTargets = toggle
 			d.debugHexGrid = toggle
 			d.debugVisibilityGrids = toggle
+			d.debugHexagons = toggle
+
 		},
 		cooldown)
-	toggles["drawBlueTargets"] = newToggle(
+	toggles["debugBlueTargets"] = newToggle(
 		ebiten.KeyB,
 		func() { d.debugBlueTargets = !d.debugBlueTargets },
 		cooldown)
-	toggles["drawRedTargets"] = newToggle(
+	toggles["debugRedTargets"] = newToggle(
 		ebiten.KeyR,
 		func() { d.debugRedTargets = !d.debugRedTargets },
 		cooldown)
-	toggles["drawDebugGrid"] = newToggle(
+	toggles["debugHexGrid"] = newToggle(
 		ebiten.KeyG,
 		func() { d.debugHexGrid = !d.debugHexGrid },
 		cooldown)
-	toggles["drawVisibilityGrids"] = newToggle(
+	toggles["debugVisibilityGrids"] = newToggle(
 		ebiten.KeyV,
 		func() { d.debugVisibilityGrids = !d.debugVisibilityGrids },
 		cooldown)
-	toggles["drawObstacleLUT"] = newToggle(
+	toggles["debugObstacleLUT"] = newToggle(
 		ebiten.KeyQ,
 		func() { d.debugObstacleLUT = !d.debugObstacleLUT },
 		cooldown)
-	toggles["drawNodeLUT"] = newToggle(
+	toggles["debugNodeLUT"] = newToggle(
 		ebiten.KeyW,
 		func() { d.debugNodeLUT = !d.debugNodeLUT },
+		cooldown)
+	toggles["debugHexagons"] = newToggle(
+		ebiten.KeyH,
+		func() { d.debugHexagons = !d.debugHexagons },
 		cooldown)
 	d.toggles = toggles
 }
 
 func (d *debugger) debug(p PixelPosition) {
 	d.logPixel(p)
-	d.logVisbilityGrid()
+	d.logVisibilityGridObstaclePoints()
+	d.logHexagons()
 	d.createUnitPathfindHeatmap()
 }
 
@@ -177,7 +185,7 @@ func (d *debugger) logPixel(p PixelPosition) {
 	logger.log(infoLevel, devTool, "pixel", attrs...)
 }
 
-func (d *debugger) logVisbilityGrid() {
+func (d *debugger) logVisibilityGridObstaclePoints() {
 	if d.debugVisibilityGrids {
 		visited := make(map[uuid.UUID]struct{})
 		for _, o := range d.obstacles {
@@ -191,6 +199,16 @@ func (d *debugger) logVisbilityGrid() {
 				if point.selected {
 					logger.log(infoLevel, devTool, "obstaclePoint", point.log()...)
 				}
+			}
+		}
+	}
+}
+
+func (d *debugger) logHexagons() {
+	if d.debugHexagons {
+		for _, h := range d.hexagons {
+			if h.selected {
+				logger.log(infoLevel, devTool, "hexagon", h.log()...)
 			}
 		}
 	}
@@ -270,7 +288,7 @@ func (d debugger) draw(c drawConfig) {
 
 		if newWindowConfig().inbounds(d.pixel) {
 			p := d.oLUT[d.pixel].NearestUnwalkablesAvg
-			p.draw(c, *d.debuggerConfig)
+			p.draw(c, *d.debuggerConfig, c.highlightColor, true)
 		}
 	}
 
@@ -294,6 +312,17 @@ func (d debugger) draw(c drawConfig) {
 		u.drawDebug(c, *d.debuggerConfig)
 	}
 
+	if d.debugHexagons {
+		for _, h := range d.hexagons {
+			center := d.g.getPixelPosOutbounds(h.gridPos, hpCenter)
+			center.draw(c, *d.debuggerConfig, color.Black, false)
+
+			if h.selected {
+				drawHexHighlight(c, h.gridPos)
+			}
+		}
+	}
+
 	if d.debugVisibilityGrids {
 		visited := make(map[uuid.UUID]struct{})
 		for _, o := range d.obstacles {
@@ -308,23 +337,25 @@ func (d debugger) draw(c drawConfig) {
 	}
 }
 
-func (p PixelPosition) draw(c drawConfig, dC debuggerConfig) {
+func (p PixelPosition) draw(c drawConfig, dC debuggerConfig, color color.Color, spotlight bool) {
 	vector.DrawFilledRect(
 		c.screen,
 		float32(p.X)*c.windowMultiplier,
 		float32(p.Y)*c.windowMultiplier,
-		1*c.windowMultiplier,
-		1*c.windowMultiplier,
-		c.highlightColor,
+		float32(c.pixelSize)*c.windowMultiplier,
+		float32(c.pixelSize)*c.windowMultiplier,
+		color,
 		false)
 
-	drawUnfilledBoxInt(
-		c,
-		c.highlightColor,
-		p.X-dC.pixelSpotlightOffset,
-		p.Y-dC.pixelSpotlightOffset,
-		p.X+dC.pixelSpotlightOffset,
-		p.Y+dC.pixelSpotlightOffset)
+	if spotlight {
+		drawUnfilledBoxInt(
+			c,
+			c.highlightColor,
+			p.X-dC.pixelSpotlightOffset,
+			p.Y-dC.pixelSpotlightOffset,
+			p.X+dC.pixelSpotlightOffset,
+			p.Y+dC.pixelSpotlightOffset)
+	}
 }
 
 func (heatmap heatmap) draw(c drawConfig, dC debuggerConfig, heatmapPercent int) {

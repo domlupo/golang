@@ -22,6 +22,7 @@ type drawConfig struct {
 	healthLineWidth               int
 	targetNodeLineWidth           int
 	hexLineWidth                  int
+	pixelSize                     int
 	backgroundColor               color.RGBA
 	highlightColor                color.RGBA
 	unitHealthColor               color.RGBA
@@ -52,6 +53,7 @@ func newDrawConfig() *drawConfig {
 		healthLineWidth:               2,
 		targetNodeLineWidth:           2,
 		hexLineWidth:                  2,
+		pixelSize:                     1,
 		backgroundColor:               color.RGBA{200, 200, 200, 255},
 		highlightColor:                highlightColor,
 		unitHealthColor:               highlightColor,

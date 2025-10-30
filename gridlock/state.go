@@ -703,6 +703,7 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 
 	var firstSelectedNode *node
 	for _, n := range s.nodes {
+		// TODO: Fix broken code or remove it? Not sure if this is still needed.
 		if (topLeftGridPos.X < n.gridPos.X) &&
 			(n.gridPos.X < bottomRightGridPos.X) &&
 			(topLeftGridPos.Y < n.gridPos.Y) &&
@@ -731,6 +732,18 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 				u.selected = false
 			}
 			s.units[u.position] = u
+		}
+
+		for _, h := range s.hexagons {
+			p := s.g.getPixelPosOutbounds(h.gridPos, hpCenter)
+			if (topLeftPixelPos.X < p.X) &&
+				(p.X < bottomRightPixelPos.X) &&
+				(topLeftPixelPos.Y < p.Y) &&
+				(p.Y < bottomRightPixelPos.Y) {
+				h.selected = true
+			} else {
+				h.selected = false
+			}
 		}
 
 		visited := make(map[uuid.UUID]struct{})

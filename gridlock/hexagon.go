@@ -2,7 +2,10 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"log/slog"
+)
 
 // All hexagons on map
 type hexagons map[GridPosition]*hexagon
@@ -14,6 +17,21 @@ type hexagon struct {
 	unitCount     int
 	unitCountRed  int
 	unitCountBlue int
+	selected      bool
+}
+
+func (h hexagon) log() []slog.Attr {
+	var a = []slog.Attr{}
+	a = append(a, nest("GridPosition", h.gridPos.log()))
+	if h.linkedList == nil {
+		a = append(a, slog.String("linkedlist", "none"))
+	} else {
+		a = append(a, nest("linkedList", h.linkedList.PixelPosition.log()))
+	}
+	a = append(a, slog.Int("unitCount", h.unitCount))
+	a = append(a, slog.Int("unitCountRed", h.unitCountRed))
+	a = append(a, slog.Int("unitCountBlue", h.unitCountBlue))
+	return a
 }
 
 func setupHexagons(g grid) map[GridPosition]*hexagon {
