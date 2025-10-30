@@ -13,3 +13,9 @@ needed, close the timer. The next time the timer is launched without arguements 
 `./focusTimer`, progress is loaded from  the log file.
 
 Command to start a fresh 5 minute timer `./focusTimer 5`
+
+## TODO
+
+- Think of a better user experience for CLI input.
+  - Accidental log file overwrites are occuring
+  - Initial thought is CLI input only works for no or completed log file 
