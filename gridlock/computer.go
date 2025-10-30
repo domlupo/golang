@@ -33,7 +33,7 @@ func (c *computer) updateNodeTargets(s state, nodeCapture bool, avgUnitPos Pixel
 		panic(fmt.Sprintf("updateNodeTargets: unknown player: %d", c.player))
 	}
 
-	gridPos := s.hexagons.maxUnitDifferential(opponent)
+	gridPos := s.hexagons.maxUnitDifferential(opponent, land)
 	if gridPos.equals(GridPosition{}) {
 		return
 	}

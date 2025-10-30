@@ -20,9 +20,10 @@ Is there a mobile equivalent for war/4x games?
 ### Next Checkpoints
 
 - Split state.units into 2 different layers
-  - Update hexagon to have land and lowAir linked lists
   - abstract logic for (pos, radius) -> get a list of units to check
     - This is needed when the radius is larger than hex (counter missile)
+  - Fix unit selection for single node and multi node. Right now air unit are ignored.
+    - Need to add an iter to hexagon which iters through all layers
 
 - Design and implement global path finding LUT
   - To start probably want to create like existing LUT (useful for debugging issues with pathfinding)
