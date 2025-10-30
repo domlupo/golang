@@ -27,6 +27,14 @@ Is there a mobile equivalent for war/4x games?
   - Can test small number of air units without linked list optimization, keep ground units optimized
 
 - Design and implement global path finding LUT
+  - To start probably want to create like existing LUT (useful for debugging issues with pathfinding)
+    - Fixes issue with debugger unit path find heat map (poor UI, requires several minutes)
+  - Long term, probably want to add flags for different LUT generation For example:
+    - max obstacle distance
+    - max node distance
+    - create global path find during game start and cache misses
+  - A long term optmization for global pathfinding is probably: Generate while game starts up. 
+    Also it can use runtime cach hit/miss. I dobut most pixels will be used but I can also test this. 
   - Need to check size and performance for final game.
   - gobal path finding isn't optimal at the moment. Make sure to not rely on this in design but 
     the final game will have optimal global pathfinding.
@@ -133,8 +141,6 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Future Checkpoints
-
-- Add unit pathfind heatmap cancel or make it it harder to start it
 
 - Don't global pathfind unless needed. (CPU usage is high due to this)
 
