@@ -11,8 +11,6 @@ import (
 
 // not enforced but must be a singleton
 type state struct {
-	// TODO: The next largest optimization might be to split hexagon linked list
-	// into respective layers.
 	g                  grid
 	oLUT               obstacleLUT
 	nLUT               nodeLUT

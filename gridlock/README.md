@@ -115,6 +115,8 @@ Is there a mobile equivalent for war/4x games?
 
 ### Future Checkpoints
 
+- Add unit pathfind heatmap cancel or make it it harder to start it
+
 - Don't global pathfind unless needed. (CPU usage is high due to this)
 
 - Refactor state.moveUnits (after boids?) since it is a mess
@@ -264,6 +266,8 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Punted Checkpoints
+
+- Determine if splitting hexagon spatial partitions into layers is needed for performance.
 
 - Once game is released, need to either force user cache clears or use directories for cache versioning.
 
@@ -459,6 +463,11 @@ Is there a mobile equivalent for war/4x games?
   - gridlocked
 - Replay feature where you can see a battle recap?
 - Should unit behavior be toggable on a global scale? E.g. tanks have fire mode vs push mode
+- Should nodes produce multiple units e.g. Nodes always create infatry, then get upgraded over time.
+  - Initially, this seems awesome but makes unit production harder
+  - Capturing nodes is more swingy? which is good?
+  - Risk vs Reward?
+  - Can add a sabotage mechanic.
 
 ---
 
