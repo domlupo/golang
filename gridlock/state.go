@@ -46,7 +46,7 @@ func (s *state) refresh() {
 
 func (s *state) analyzeTargets() {
 	for _, u := range s.units {
-		if u.staticTarget {
+		if u.staticTarget || u.unitConfig.name == guidedAirMissile {
 			u.localTargets = []position{u.globalTarget}
 			u.prioritizeTargets()
 			continue
@@ -563,6 +563,10 @@ func (s *state) attackUnits() {
 		}
 
 		var nearestVisibleUnit = s.units[u.enemyTarget]
+		if nearestVisibleUnit == nil {
+			logger.force("bug", u.log()...)
+			continue
+		}
 		var rSum = u.reach + nearestVisibleUnit.radius
 		if rSum*rSum >= xDelta*xDelta+yDelta*yDelta {
 			nearestVisibleUnit.health = nearestVisibleUnit.health - u.attack

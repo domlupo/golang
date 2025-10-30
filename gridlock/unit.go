@@ -226,6 +226,9 @@ func (u *unit) confirmMove(p position) {
 }
 
 func (u *unit) updateTarget(ut unitTarget, target position) {
+	// TODO: Determine if this should be refactored to protect itself from zero value updates.
+	// I think it should, but it breaks other code.
+
 	var unitTarget string
 	switch ut {
 	case activeTarget:

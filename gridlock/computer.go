@@ -18,7 +18,7 @@ func newComputer(p player) *computer {
 	return &c
 }
 
-func (c *computer) updateNodeTargets(s state, nodeCapture bool) {
+func (c *computer) updateNodeTargets(s state, nodeCapture bool, avgUnitPos PixelPosition) {
 	if nodeCapture {
 		c.updateForNodeCapture(s)
 	}
@@ -47,10 +47,13 @@ func (c *computer) updateNodeTargets(s state, nodeCapture bool) {
 			continue
 		}
 
-		if n.unitConfig == unguidedGroundMissileConfig {
-			selfNode := n
+		selfNode := n
+		switch n.unitConfig.name {
+		case unguidedGroundMissile:
 			selfNode.target = position{ground, p}
 			continue
+		case guidedAirMissile:
+			selfNode.target = position{ground, avgUnitPos}
 		}
 	}
 }
@@ -66,7 +69,7 @@ func (c *computer) updateForNodeCapture(s state) {
 		selfNode.target = position{}
 		nearestTargetDistanceSquared := math.MaxInt
 
-		if n.unitConfig == unguidedGroundMissileConfig {
+		if n.unitConfig.name == unguidedGroundMissile || n.unitConfig.name == guidedAirMissile {
 			continue
 		}
 
@@ -95,7 +98,7 @@ func (c *computer) updateForNodeCapture(s state) {
 	}
 
 	for _, u := range s.units {
-		if u.staticTarget {
+		if u.staticTarget || u.unitConfig.name == guidedAirMissile {
 			continue
 		}
 

@@ -131,7 +131,7 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 
 	g.gameState = newState(nodes, obstacles, hexagons, oLUT, nLUT, g.drawConfig.grid, g.developerMode)
 	g.debugger = newDebugger(g.gameState, g.developerToggleCooldown)
-	g.updateComputerTargetNodes(true)
+	g.updateComputerTargetNodes(true, PixelPosition{})
 }
 
 func (g *Game) Update() error {
@@ -223,17 +223,17 @@ func (g *Game) Update() error {
 			PixelPosition{int(g.currentSelectedX), int(g.currentSelectedY)})
 	}
 
-	// play computer moves. Computers currently affect game state directly rather
-	// than the same game state being sent to each one before a final update occurs.
-	// This is a hack, but will probably be fine for awhile.
-	nodeCapture := g.gameState.updateForNodeCapture()
-	g.updateComputerTargetNodes(nodeCapture)
-
+	var xSum int
+	var ySum int
+	var totalCount int
 	var infantryCount int
 	var unguidedGroundMissileCount int
 	var guidedAirMissileCount int
 	var unknownCount int
 	for _, u := range g.gameState.units {
+		xSum += u.X
+		ySum += u.Y
+		totalCount++
 		switch u.name {
 		case infantry:
 			infantryCount++
@@ -245,6 +245,7 @@ func (g *Game) Update() error {
 			unknownCount++
 		}
 	}
+	avgUnitPos := PixelPosition{X: xSum / totalCount, Y: ySum / totalCount}
 	logger.log(infoLevel, mainLogic, "unit counts",
 		slog.Int("total_units", len(g.gameState.units)),
 		slog.Int("infantryCount", infantryCount),
@@ -252,6 +253,12 @@ func (g *Game) Update() error {
 		slog.Int("guidedAirMissile", guidedAirMissileCount),
 		slog.Int("unknownCount", unknownCount),
 	)
+
+	// play computer moves. Computers currently affect game state directly rather
+	// than the same game state being sent to each one before a final update occurs.
+	// This is a hack, but will probably be fine for awhile.
+	nodeCapture := g.gameState.updateForNodeCapture()
+	g.updateComputerTargetNodes(nodeCapture, avgUnitPos)
 
 	var blueNodeCount int
 	var redNodeCount int
@@ -278,12 +285,12 @@ func (g *Game) Update() error {
 	return nil
 }
 
-func (g *Game) updateComputerTargetNodes(nodeCaptureOccurred bool) {
+func (g *Game) updateComputerTargetNodes(nodeCaptureOccurred bool, avgUnitPos PixelPosition) {
 	if g.blueComputerActive {
-		g.compOne.updateNodeTargets(*g.gameState, nodeCaptureOccurred)
+		g.compOne.updateNodeTargets(*g.gameState, nodeCaptureOccurred, avgUnitPos)
 	}
 	if g.redComputerActive {
-		g.compTwo.updateNodeTargets(*g.gameState, nodeCaptureOccurred)
+		g.compTwo.updateNodeTargets(*g.gameState, nodeCaptureOccurred, avgUnitPos)
 	}
 }
 

@@ -73,7 +73,7 @@ var guidedAirMissileConfig = unitConfig{
 	radius:               5,
 	maxHealth:            100,
 	attack:               1000,
-	vision:               250,
+	vision:               40,
 	reach:                0,
 	produceLayer:         lowAltitude,
 	staticTarget:         false,
