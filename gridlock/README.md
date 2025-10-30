@@ -149,6 +149,16 @@ Is there a mobile equivalent for war/4x games?
 
 - Optimize CPU usage via low hanging fruit if it is high enough to slow development
 
+- I believe long term state will be split into 3 parts (dynamic, static, player input)
+  - static:
+    look up tables,
+    obstacles (I don't think this is needed if global path find is always used?)
+  - dynamic:
+    units
+    hex
+  - player input is stuff like unit selection. I think dynamic will be automated / simulatiomn updates only
+  - nodes should maybe be split into static and non static parts... not sure
+
 - Verify that unit movement using any 3 Bresenham's movements which reduce error is fine.
   - I am not 100% certain choosing the second or third option does not cause issues with the algorithm.
 
