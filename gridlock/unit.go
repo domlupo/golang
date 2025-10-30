@@ -32,8 +32,8 @@ const (
 	globalTarget
 )
 
-// All units on map
-type units map[position]*unit
+// All units within a 2 dimensioinal layer
+type units map[PixelPosition]*unit
 
 type unit struct {
 	position

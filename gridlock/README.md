@@ -19,11 +19,8 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Split state.units into 2/3 different layers
-  - Close on 2 or 3 layer game. Initial thought are 3 are needed.
-  - Implement 2 layer first, even if 3 layer is the end state.
+- Split state.units into 2 different layers
   - Update hexagon to have 3 linked lists
-  - More performant draws
   - Can test small number of air units without linked list optimization, keep ground units optimized
 
 - Design and implement global path finding LUT

@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"math"
 
@@ -54,6 +55,41 @@ func (s state) units() func(yield func(u *unit) bool) {
 				return
 			}
 		}
+	}
+}
+
+func (s *state) addUnit(u *unit) {
+	switch u.layer {
+	case land:
+		s.landUnits[u.PixelPosition] = u
+	case lowAir:
+		s.lowAirUnits[u.PixelPosition] = u
+	default:
+		panic(fmt.Sprintf("addUnit: unknown layer %d", u.layer))
+	}
+}
+
+func (s *state) moveUnit(u *unit, p position, confirm func()) {
+	s.deleteUnit(u.position)
+	confirm()
+	switch p.layer {
+	case land:
+		s.landUnits[u.PixelPosition] = u
+	case lowAir:
+		s.lowAirUnits[u.PixelPosition] = u
+	default:
+		panic(fmt.Sprintf("moveUnit: unknown layer %d", p.layer))
+	}
+}
+
+func (s *state) deleteUnit(p position) {
+	switch p.layer {
+	case land:
+		delete(s.landUnits, p.PixelPosition)
+	case lowAir:
+		delete(s.lowAirUnits, p.PixelPosition)
+	default:
+		panic(fmt.Sprintf("deleteUnit: unknown layer %d", p.layer))
 	}
 }
 
@@ -276,18 +312,16 @@ func (s *state) moveUnits() {
 		} else if collidesWithUnit {
 			unitsCollideCount++
 			if u.layer == lowAir || u.layer == highAir {
-				otherUnit := s.landUnits[collidedUnitPos]
+				otherUnit := s.lowAirUnits[collidedUnitPos.PixelPosition]
 				otherUnit.health = 0
-				s.landUnits[collidedUnitPos] = s.landUnits[position{collidedUnitPos.layer, PixelPosition{collidedUnitPos.X, collidedUnitPos.Y}}]
+				s.lowAirUnits[collidedUnitPos.PixelPosition] = s.lowAirUnits[PixelPosition{collidedUnitPos.X, collidedUnitPos.Y}]
 				u.health = 0
-				s.landUnits[u.position] = s.landUnits[position{u.layer, PixelPosition{u.X, u.Y}}]
+				s.lowAirUnits[u.position.PixelPosition] = s.lowAirUnits[PixelPosition{u.X, u.Y}]
 			}
 		} else if !u.canReachNode.isZero() {
 			unitsAtNode++
 		} else {
 			unitsMovedCount++
-			s.landUnits[newPos] = s.landUnits[position{u.layer, PixelPosition{u.X, u.Y}}]
-
 			oldGridPos, _ := s.g.getGridPos(u.PixelPosition)
 			newGridPos, _ := s.g.getGridPos(newPos.PixelPosition)
 			if !oldGridPos.equals(newGridPos) {
@@ -309,9 +343,7 @@ func (s *state) moveUnits() {
 
 				newHex.updatePointers(u)
 			}
-
-			delete(s.landUnits, u.position)
-			confirmMove()
+			s.moveUnit(u, newPos, confirmMove)
 		}
 	}
 
@@ -329,16 +361,12 @@ func (s *state) moveUnits() {
 	)
 }
 
-func (s *state) explode(pos position, blastRadius int, units units) {
+func (s *state) explode(pos position, blastRadius int) {
 	x1 := pos.X
 	y1 := pos.Y
 	r1 := blastRadius
 
-	for _, otherUnit := range units {
-		if otherUnit.layer != land {
-			continue
-		}
-
+	for _, otherUnit := range s.landUnits {
 		x2 := otherUnit.X + otherUnit.radius
 		y2 := otherUnit.Y + otherUnit.radius
 		r2 := otherUnit.radius
@@ -348,7 +376,7 @@ func (s *state) explode(pos position, blastRadius int, units units) {
 		rSum := r1 + r2
 		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
 			otherUnit.health = 0
-			s.landUnits[otherUnit.position] = otherUnit
+			s.landUnits[otherUnit.PixelPosition] = otherUnit
 		}
 	}
 }
@@ -534,18 +562,18 @@ func (s *state) collidesWithUnit(newPos position, unit unit) (position, bool) {
 }
 
 func (s *state) processTerminalPositions() {
-	for u := range s.units() {
+	for _, u := range s.lowAirUnits {
 		if !u.explodeAtTerminalPos {
 			continue
 		}
 
 		if u.attacksPosition && u.atTerminalPosition {
 			u.health = 0
-			s.landUnits[u.position] = u
-			s.explode(u.position, u.explodeRadius, s.landUnits)
+			s.lowAirUnits[u.PixelPosition] = u
+			s.explode(u.position, u.explodeRadius)
 		} else if u.atTerminalPosition {
 			u.health = 0
-			s.landUnits[u.position] = u
+			s.lowAirUnits[u.PixelPosition] = u
 		}
 
 	}
@@ -555,7 +583,7 @@ func (s *state) attackUnits() {
 	var unitsDeletedCount int
 	var unitAttackedOtherUnitCount int
 
-	for u := range s.units() {
+	for _, u := range s.landUnits {
 		// TODO: This may be wrong behavior but I am not sure if the issue is occurring
 		// e.g. the target was killed by another unit this unit should probably find a potential new target.
 		// Then attack that rather than not attack for a turn
@@ -579,7 +607,7 @@ func (s *state) attackUnits() {
 			yDelta = u.Y - yTargetPixelPos
 		}
 
-		var nearestVisibleUnit = s.landUnits[u.enemyTarget]
+		var nearestVisibleUnit = s.landUnits[u.enemyTarget.PixelPosition]
 		if nearestVisibleUnit == nil {
 			logger.force("bug", u.log()...)
 			continue
@@ -589,8 +617,8 @@ func (s *state) attackUnits() {
 			nearestVisibleUnit.health = nearestVisibleUnit.health - u.attack
 			u.attackedThisTurn = true
 			unitAttackedOtherUnitCount++
-			s.landUnits[u.enemyTarget] = nearestVisibleUnit
-			s.landUnits[u.position] = u
+			s.landUnits[u.enemyTarget.PixelPosition] = nearestVisibleUnit
+			s.landUnits[u.position.PixelPosition] = u
 		}
 	}
 
@@ -608,7 +636,7 @@ func (s *state) attackUnits() {
 
 			u.next.prior = u.prior
 			u.prior.next = u.next
-			delete(s.landUnits, u.position)
+			s.deleteUnit(u.position)
 			s.unitsDeletedTotal++
 			unitsDeletedCount++
 		}
@@ -753,7 +781,7 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 	}
 
 	if s.developerMode {
-		for _, u := range s.landUnits {
+		for u := range s.units() {
 			if (topLeftPixelPos.X < u.X) &&
 				(u.X < bottomRightPixelPos.X) &&
 				(topLeftPixelPos.Y < u.Y) &&
@@ -761,18 +789,6 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 				u.selected = true
 			} else {
 				u.selected = false
-			}
-		}
-
-		for _, h := range s.hexagons {
-			p := s.g.getPixelPosOutbounds(h.gridPos, hpCenter)
-			if (topLeftPixelPos.X < p.X) &&
-				(p.X < bottomRightPixelPos.X) &&
-				(topLeftPixelPos.Y < p.Y) &&
-				(p.Y < bottomRightPixelPos.Y) {
-				h.selected = true
-			} else {
-				h.selected = false
 			}
 		}
 
@@ -900,7 +916,7 @@ func (s *state) produceUnits() {
 
 			hex.updatePointers(&newUnit)
 
-			s.landUnits[uPos] = &newUnit
+			s.addUnit(&newUnit)
 			hex.add(newUnit.player)
 			s.unitsProducedTotal++
 		}
@@ -918,7 +934,9 @@ func (s *state) draw(dc drawConfig) {
 	}
 
 	// TODO: first draw high air
-	// TODO: next draw low air
+	for _, u := range s.lowAirUnits {
+		u.draw(dc, u.selected)
+	}
 	for _, u := range s.landUnits {
 		u.draw(dc, u.selected)
 	}
