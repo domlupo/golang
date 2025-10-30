@@ -46,7 +46,6 @@ type obstacleInfo struct {
 	Walkable                    bool          `json:"walkable"`
 	NearestUnwalkablesAvg       PixelPosition `json:"nearestUnwalkablesAvg"`
 	UnwalkableChebyshevDistance int           `json:"unwalkableChebyshevDistance"`
-	UnwalkableSmoothSum         int           `json:"unwalkableSmoothSum"`
 }
 
 type obstacleKind int
@@ -74,7 +73,6 @@ func (info obstacleInfo) log() []slog.Attr {
 	a = append(a, slog.Bool("Walkable", info.Walkable))
 	a = append(a, nest("nearestUnwalkablesAvg", info.NearestUnwalkablesAvg.log()))
 	a = append(a, slog.Int("UnwalkableChebyshevDistance", info.UnwalkableChebyshevDistance))
-	a = append(a, slog.Int("UnwalkableSmoothSum", info.UnwalkableSmoothSum))
 	return a
 }
 
@@ -260,27 +258,6 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 			"setupObstacleLUT: %.0f%% total pixels not skipped with a distance limit of %d",
 			percent,
 			distanceLimit))
-
-	logger.log(infoLevel, setupLogic, "setupObstacleLUT: start calculating weighted smooth distance")
-	for x := range wc.width {
-		for y := range wc.height {
-			p := PixelPosition{X: x, Y: y}
-			adjacent := p.allAdjacent()
-
-			sum := oLUT[p].UnwalkableChebyshevDistance
-			for _, a := range adjacent {
-				sum += oLUT[a].UnwalkableChebyshevDistance
-
-				otherAdjacent := a.allAdjacent()
-				for _, oa := range otherAdjacent {
-					sum += oLUT[oa].UnwalkableChebyshevDistance
-				}
-			}
-			info := oLUT[p]
-			info.UnwalkableSmoothSum = sum
-			oLUT[p] = info
-		}
-	}
 
 	logger.log(infoLevel, setupLogic, fmt.Sprintf("setupObstacleLUT: required %d seconds", int(time.Since(start).Seconds())))
 	return oLUT
