@@ -21,7 +21,6 @@ Is there a mobile equivalent for war/4x games?
 
 - Split state.units into 2 different layers
   - Update hexagon to have land and lowAir linked lists
-  - move code which sync hex unit pointers into state.moveUnit()
   - abstract logic for (pos, radius) -> get a list of units to check
     - This is needed when the radius is larger than hex (counter missile)
 

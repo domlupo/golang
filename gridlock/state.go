@@ -70,6 +70,31 @@ func (s *state) addUnit(u *unit) {
 }
 
 func (s *state) moveUnit(u *unit, p position, confirm func()) {
+	old, pOk := s.g.getGridPos(u.PixelPosition)
+	new, nOk := s.g.getGridPos(p.PixelPosition)
+	if !pOk || !nOk {
+		panic(fmt.Sprintf("moveUnit: cannot move unit %s %s", u.PixelPosition.log(), p.PixelPosition.log()))
+	}
+	if !old.equals(new) {
+		oldHex := s.hexagons[old]
+		newHex := s.hexagons[new]
+		oldHex.subtract(u.player)
+		newHex.add(u.player)
+
+		if u.next.id == u.id && u.prior.id == u.id {
+			oldHex.linkedList = nil
+		} else if u.next.id == u.id || u.prior.id == u.id {
+			panic("unit is in an invalid state")
+		} else {
+			oldHex.linkedList = u.next
+		}
+
+		u.next.prior = u.prior
+		u.prior.next = u.next
+
+		newHex.updatePointers(u)
+	}
+
 	s.deleteUnit(u.position)
 	confirm()
 	switch p.layer {
@@ -322,27 +347,6 @@ func (s *state) moveUnits() {
 			unitsAtNode++
 		} else {
 			unitsMovedCount++
-			oldGridPos, _ := s.g.getGridPos(u.PixelPosition)
-			newGridPos, _ := s.g.getGridPos(newPos.PixelPosition)
-			if !oldGridPos.equals(newGridPos) {
-				oldHex := s.hexagons[oldGridPos]
-				newHex := s.hexagons[newGridPos]
-				oldHex.subtract(u.player)
-				newHex.add(u.player)
-
-				if u.next.id == u.id && u.prior.id == u.id {
-					oldHex.linkedList = nil
-				} else if u.next.id == u.id || u.prior.id == u.id {
-					panic("unit is in an invalid state")
-				} else {
-					oldHex.linkedList = u.next
-				}
-
-				u.next.prior = u.prior
-				u.prior.next = u.next
-
-				newHex.updatePointers(u)
-			}
 			s.moveUnit(u, newPos, confirmMove)
 		}
 	}
