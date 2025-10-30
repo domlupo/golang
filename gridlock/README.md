@@ -19,11 +19,16 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Split state.units into 2 different layers
+- Add bomber
+
+- Add fighter
+
+- Improve guided air missile
   - abstract logic for (pos, radius) -> get a list of units to check
     - This is needed when the radius is larger than hex (counter missile)
-  - Fix unit selection for single node and multi node. Right now air unit are ignored.
-    - Need to add an iter to hexagon which iters through all layers
+  - Fix bug where ground missile (not air missile) is not moving for computer player
+  - auto despawns for non computer players. This is probably wrong behavior.
+  - Determine target locking behavior for human player and computer player.
 
 - Design and implement global path finding LUT
   - To start probably want to create like existing LUT (useful for debugging issues with pathfinding)
@@ -37,6 +42,12 @@ Is there a mobile equivalent for war/4x games?
   - Need to check size and performance for final game.
   - gobal path finding isn't optimal at the moment. Make sure to not rely on this in design but 
     the final game will have optimal global pathfinding.
+- Prior notes
+  - pixel <-> pixel would require too much computation and memory. Need to verify I can do grid pos <-> grid pos
+  - Need to verify grid pos -> pixel pos at runtime is possible
+  - Should be optimal path
+  - Is there a need to do a line of sight LUT? I don't think a Line of sight LUT is needed since
+    most LOS checks that would benefit are the ones from global path find anway.
 
 - Determine if air obstacles should be in game or not?
   - I am concerned about LUT performance (heap memory consumption and time to generate)
@@ -45,12 +56,6 @@ Is there a mobile equivalent for war/4x games?
      - Infantry LUT for global path finding but air obstacles only ever have 1 or 2 so calculate
        at runtime with small cw and ccw depth.
     - more dense obstacls should generate quicker
-
-- Improve guided air missile
-  - If analyze target is migrated to linked list, need to update number of hexagons checked based on missile vision.
-  - Fix bug where ground missile (not air missile) is not moving for computer player
-  - auto despawns for non computer players. This is probably wrong behavior.
-  - Determine target locking behavior for human player and computer player.
 
 - Merge steer branch
   - I don't think I need to prototype boids in a separate setup. I would rather use the current game
@@ -69,24 +74,6 @@ Is there a mobile equivalent for war/4x games?
   - These seem a bit hacky and unneded but:
     - Can add to obstacle LUT, for the given hexagon, what pixel is further from all obstacles
    - Can add to obstacle LUT, for the given hexagon side, what pixel is furthest from all obstacles
-
-- Add more ground units for local path finding iteration
-  - Determine what units I want to remove. i think most ground units are unneeded.
-  - tank (counters infantry, secondary mode to push unit?)
-  - mobile SAM (counters missiles)
-    - Ground missile exploding in air does no damage?
-    - Should air missile exploding in air do damage?
-    - Should air missile only get one retarget on missle? An upgrade could allow multiple retargets besides the first?
-    - Units may need different pathing algorithm
-      - How to avoid this?
-      - How to simplify this?
-      - How to make this CPU performant?
-    - Targets different layer than it moves
-    - How will AI handle placement? 
-      - An easy implementation might be to be near node.
-      - An easy implementation might be to stay away from infantry
-      - Counter missile will either need to travel faster than tracked missile or anticipate movement?
-    - Added guided missile variant will probably help but might be low priority?
 
 - Fix Bresenham's algorithm edge cases:
   - Bresenham error needs to reset itself for several reasons. I still need to handle:
@@ -141,6 +128,29 @@ Is there a mobile equivalent for war/4x games?
 
 ### Future Checkpoints
 
+- Determine if more than only infantry should exist for ground (tank, SAM, etc) 
+  - Focusing efforts elsewhere (air units, tech tree, nodes, art) might be easier and better for player experience.
+  - Local path finding is very difficult. Adding more types might make it much more complex.
+  - Determine what units I want to remove. i think most ground units are unneeded.
+  - tank (counters infantry, secondary mode to push unit?)
+  - mobile SAM (counters missiles)
+    - Ground missile exploding in air does no damage?
+    - Should air missile exploding in air do damage?
+    - Should air missile only get one retarget on missle? An upgrade could allow multiple retargets besides the first?
+    - Units may need different pathing algorithm
+      - How to avoid this?
+      - How to simplify this?
+      - How to make this CPU performant?
+    - Targets different layer than it moves
+    - How will AI handle placement? 
+      - An easy implementation might be to be near node.
+      - An easy implementation might be to stay away from infantry
+      - Counter missile will either need to travel faster than tracked missile or anticipate movement?
+    - Added guided missile variant will probably help but might be low priority?
+
+ - Fix unit selection for single node and multi node. Right now air unit are ignored.
+   - Need to add an iter to hexagon which iters through all layers
+
 - Don't global pathfind unless needed. (CPU usage is high due to this)
 
 - Refactor state.moveUnits (after boids?) since it is a mess
@@ -161,13 +171,6 @@ Is there a mobile equivalent for war/4x games?
 
 - Verify that unit movement using any 3 Bresenham's movements which reduce error is fine.
   - I am not 100% certain choosing the second or third option does not cause issues with the algorithm.
-
-- Design global path finding LUT
-  - pixel <-> pixel would require too much computation and memory. Need to verify I can do grid pos <-> grid pos
-  - Need to verify grid pos -> pixel pos at runtime is possible
-  - Should be optimal path
-  - Is there a need to do a line of sight LUT? I don't think a Line of sight LUT is needed since
-    most LOS checks that would benefit are the ones from global path find anway.
 
 - Look into optimize heatmap draws.
   - heatmaps are causing large stutters. I highly doubt this cannot be optimized.
@@ -435,6 +438,14 @@ Is there a mobile equivalent for war/4x games?
   - Go standard library support
   - Go standard library does not support toml or yaml
   - Avoids cross platform issues with sqlite
+15. Use 3 layers (land, lowAir, higAir) instead of only two layers (land, air)
+  - I suspect 3 layers are easier to code and understand, but cannot think it through clearly.
+  - I revisiting htis and there is not a clear answer. Need to move forward.
+  - If I am wrong, probably easier to go 3 -> 2 than 2 -> 3.
+16. No side to side camera movement
+  - I still might add camera zoom out (think mini metro or mini motorways) during game start.
+  - I don't think this is needed for the game experience I am trying to create.
+  - Add a lot of complexity (programming, UI, player , etc) with no proveable benefit.
 
 ---
 
@@ -445,15 +456,13 @@ Is there a mobile equivalent for war/4x games?
   more units to matter. It might also be nice to allow bimodal behavior. E.g. Charge infantry vs infantry shoots
   from far away. This affects all infantry to keep game controls simple.
 - Having different constraints on layers may help optimize. e.g. ground layer restricts unit movement to 1 pixel
-  but low altitude and high altitude units allow more than 1 pixel movement. Can aslo sub tick only 1 layer
+  but low altitude and high altitude units allow more than 1 pixel movement. Can also sub tick only 1 layer
   and regular tick the others.
-- Using 3 layers instead of 2 may help with spatial partitioning
 - It looks visually nice when units in combat vs out of combat have different animations. It also clearly shows
   game state. In final game, perhaps there should be an attack animations for infantry and a non attack animation.
 - Should air units have impassable terrain e.g. high mountain? Will make path finding harder for air units
 - Stopping node unit production in order to advance tech tree, improve node is probably a good form of risk -> reward.
 - Should nodes support unit cycling e.g. produce missile, then produce infantry, then produce tank, etc
-- Are both low altitude and high altitude needed or would a single air layer be sufficient?
 - Chemical gas can push enemies back unless they have gas masks
 - Should nodes have a max unit capacity e.g. This node stops producing since 10 units it produced are still alive
 - Should bombs dropped from planes have health and can die?
@@ -464,10 +473,8 @@ Is there a mobile equivalent for war/4x games?
   - e.g. A tank being hit should explode damaging nearby units. Can use unit explode radius variable for this.
   - A missile detonating should detonate other missiles in air
   - This could create interesting explosion chains
-- Should there be a game camera:
-  - No camera can easily be the best option
-  - One option is starcraft / civ where it panes around a larger area
-  - One option is mini metro and mini motorways style that slowly zooms out to the full area?
+- Should there be a zoom out camera:
+  - Think mini metro and mini motorways style that slowly zooms out to the full area.
 - Should the focus of the game be positioning, logistics and decisions rather than micro?
   - It seems interesting whens units get into long term fights
   - Reminds me of the board game go RISK and Catan
@@ -595,7 +602,7 @@ Post Work Reflection:
 
 ---
 
-### Brainstorm Implementation for Local Pathfinding with Spatial Partioning
+### Brainstorm Implementation for Local Pathfinding with Spatial Partitioning
 
 Overall Thoughts:
 
