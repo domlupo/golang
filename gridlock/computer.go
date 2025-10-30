@@ -97,7 +97,7 @@ func (c *computer) updateForNodeCapture(s state) {
 		}
 	}
 
-	for _, u := range s.units {
+	for u := range s.units() {
 		if u.staticTarget || u.unitConfig.name == guidedAirMissile {
 			continue
 		}

@@ -230,7 +230,7 @@ func (g *Game) Update() error {
 	var unguidedGroundMissileCount int
 	var guidedAirMissileCount int
 	var unknownCount int
-	for _, u := range g.gameState.units {
+	for u := range g.gameState.units() {
 		xSum += u.X
 		ySum += u.Y
 		totalCount++
@@ -247,7 +247,7 @@ func (g *Game) Update() error {
 	}
 	avgUnitPos := PixelPosition{X: xSum / totalCount, Y: ySum / totalCount}
 	logger.log(infoLevel, mainLogic, "unit counts",
-		slog.Int("total_units", len(g.gameState.units)),
+		slog.Int("total_units", totalCount),
 		slog.Int("infantryCount", infantryCount),
 		slog.Int("unguidedGroundMissile", unguidedGroundMissileCount),
 		slog.Int("guidedAirMissile", guidedAirMissileCount),

@@ -222,7 +222,7 @@ func (d *debugger) createUnitPathfindHeatmap() {
 	}
 
 	var unit *unit
-	for _, u := range d.units {
+	for u := range d.units() {
 		if u.selected && unit != nil {
 			logger.log(debugLevel, devTool, "can only select one unit when creating heatmap")
 			return
@@ -307,7 +307,7 @@ func (d debugger) draw(c drawConfig) {
 		n.drawTargets(c, d.debugBlueTargets, d.debugRedTargets)
 	}
 
-	for _, u := range d.units {
+	for u := range d.units() {
 		u.drawDebug(c, *d.debuggerConfig)
 	}
 

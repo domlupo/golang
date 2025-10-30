@@ -17,7 +17,8 @@ type state struct {
 	hexagons           hexagons
 	obstacles          obstacles
 	nodes              nodes
-	units              units
+	landUnits          units
+	lowAirUnits        units
 	developerMode      bool
 	unitsProducedTotal int
 	unitsDeletedTotal  int
@@ -31,21 +32,39 @@ func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, 
 		hexagons:      h,
 		nodes:         n,
 		nLUT:          nLUT,
-		units:         make(units),
+		landUnits:     make(units),
+		lowAirUnits:   make(units),
 		developerMode: developerMode,
 	}
 
 	return &s
 }
 
+func (s state) units() func(yield func(u *unit) bool) {
+	return func(yield func(u *unit) bool) {
+		for _, u := range s.landUnits {
+			// May be wrong way to use yield, but there are false positive. Not sure.
+			// https://github.com/golang/go/issues/70598
+			if !yield(u) {
+				break
+			}
+		}
+		for _, u := range s.lowAirUnits {
+			if !yield(u) {
+				return
+			}
+		}
+	}
+}
+
 func (s *state) refresh() {
-	for _, u := range s.units {
+	for u := range s.units() {
 		u.refresh()
 	}
 }
 
 func (s *state) analyzeTargets() {
-	for _, u := range s.units {
+	for u := range s.units() {
 		if u.staticTarget || u.unitConfig.name == guidedAirMissile {
 			u.localTargets = []position{u.globalTarget}
 			u.prioritizeTargets()
@@ -183,8 +202,6 @@ func (s *state) steer(u *unit) position {
 }
 
 func (s *state) moveUnits() {
-	logger.log(infoLevel, stateLogic, "moveUnits", slog.Int("unitCount", len(s.units)))
-
 	var unitsMovedCount int
 	var unitsAlreadyAttacked int
 	var unitsWithoutTarget int
@@ -194,7 +211,7 @@ func (s *state) moveUnits() {
 	var unitsCollideCount int
 	var unitsBorderCollideCount int
 
-	for _, u := range s.units {
+	for u := range s.units() {
 		if u.movedThisTurn {
 			continue
 		}
@@ -259,17 +276,17 @@ func (s *state) moveUnits() {
 		} else if collidesWithUnit {
 			unitsCollideCount++
 			if u.layer == lowAir || u.layer == highAir {
-				otherUnit := s.units[collidedUnitPos]
+				otherUnit := s.landUnits[collidedUnitPos]
 				otherUnit.health = 0
-				s.units[collidedUnitPos] = s.units[position{collidedUnitPos.layer, PixelPosition{collidedUnitPos.X, collidedUnitPos.Y}}]
+				s.landUnits[collidedUnitPos] = s.landUnits[position{collidedUnitPos.layer, PixelPosition{collidedUnitPos.X, collidedUnitPos.Y}}]
 				u.health = 0
-				s.units[u.position] = s.units[position{u.layer, PixelPosition{u.X, u.Y}}]
+				s.landUnits[u.position] = s.landUnits[position{u.layer, PixelPosition{u.X, u.Y}}]
 			}
 		} else if !u.canReachNode.isZero() {
 			unitsAtNode++
 		} else {
 			unitsMovedCount++
-			s.units[newPos] = s.units[position{u.layer, PixelPosition{u.X, u.Y}}]
+			s.landUnits[newPos] = s.landUnits[position{u.layer, PixelPosition{u.X, u.Y}}]
 
 			oldGridPos, _ := s.g.getGridPos(u.PixelPosition)
 			newGridPos, _ := s.g.getGridPos(newPos.PixelPosition)
@@ -293,7 +310,7 @@ func (s *state) moveUnits() {
 				newHex.updatePointers(u)
 			}
 
-			delete(s.units, u.position)
+			delete(s.landUnits, u.position)
 			confirmMove()
 		}
 	}
@@ -331,7 +348,7 @@ func (s *state) explode(pos position, blastRadius int, units units) {
 		rSum := r1 + r2
 		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
 			otherUnit.health = 0
-			s.units[otherUnit.position] = otherUnit
+			s.landUnits[otherUnit.position] = otherUnit
 		}
 	}
 }
@@ -517,18 +534,18 @@ func (s *state) collidesWithUnit(newPos position, unit unit) (position, bool) {
 }
 
 func (s *state) processTerminalPositions() {
-	for _, u := range s.units {
+	for u := range s.units() {
 		if !u.explodeAtTerminalPos {
 			continue
 		}
 
 		if u.attacksPosition && u.atTerminalPosition {
 			u.health = 0
-			s.units[u.position] = u
-			s.explode(u.position, u.explodeRadius, s.units)
+			s.landUnits[u.position] = u
+			s.explode(u.position, u.explodeRadius, s.landUnits)
 		} else if u.atTerminalPosition {
 			u.health = 0
-			s.units[u.position] = u
+			s.landUnits[u.position] = u
 		}
 
 	}
@@ -538,7 +555,7 @@ func (s *state) attackUnits() {
 	var unitsDeletedCount int
 	var unitAttackedOtherUnitCount int
 
-	for _, u := range s.units {
+	for u := range s.units() {
 		// TODO: This may be wrong behavior but I am not sure if the issue is occurring
 		// e.g. the target was killed by another unit this unit should probably find a potential new target.
 		// Then attack that rather than not attack for a turn
@@ -562,7 +579,7 @@ func (s *state) attackUnits() {
 			yDelta = u.Y - yTargetPixelPos
 		}
 
-		var nearestVisibleUnit = s.units[u.enemyTarget]
+		var nearestVisibleUnit = s.landUnits[u.enemyTarget]
 		if nearestVisibleUnit == nil {
 			logger.force("bug", u.log()...)
 			continue
@@ -572,12 +589,12 @@ func (s *state) attackUnits() {
 			nearestVisibleUnit.health = nearestVisibleUnit.health - u.attack
 			u.attackedThisTurn = true
 			unitAttackedOtherUnitCount++
-			s.units[u.enemyTarget] = nearestVisibleUnit
-			s.units[u.position] = u
+			s.landUnits[u.enemyTarget] = nearestVisibleUnit
+			s.landUnits[u.position] = u
 		}
 	}
 
-	for _, u := range s.units {
+	for u := range s.units() {
 		if u.health <= 0 {
 
 			gridPos, _ := s.g.getGridPos(u.PixelPosition)
@@ -591,7 +608,7 @@ func (s *state) attackUnits() {
 
 			u.next.prior = u.prior
 			u.prior.next = u.next
-			delete(s.units, u.position)
+			delete(s.landUnits, u.position)
 			s.unitsDeletedTotal++
 			unitsDeletedCount++
 		}
@@ -612,7 +629,7 @@ func (s *state) attackNodes() {
 	var attackedNodeThisTurnCount int
 	var cannotReachNodeCount int
 
-	for _, u := range s.units {
+	for _, u := range s.landUnits {
 		if u.globalTarget.isZero() {
 			noTargetNodeCount++
 			continue
@@ -736,7 +753,7 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 	}
 
 	if s.developerMode {
-		for _, u := range s.units {
+		for _, u := range s.landUnits {
 			if (topLeftPixelPos.X < u.X) &&
 				(u.X < bottomRightPixelPos.X) &&
 				(topLeftPixelPos.Y < u.Y) &&
@@ -812,7 +829,7 @@ func (s *state) updateTargets(target position, blueComputerActive bool, redCompu
 		}
 
 		if s.developerMode {
-			for _, u := range s.units {
+			for _, u := range s.landUnits {
 				if u.selected {
 					u.updateTarget(globalTarget, target)
 				}
@@ -883,7 +900,7 @@ func (s *state) produceUnits() {
 
 			hex.updatePointers(&newUnit)
 
-			s.units[uPos] = &newUnit
+			s.landUnits[uPos] = &newUnit
 			hex.add(newUnit.player)
 			s.unitsProducedTotal++
 		}
@@ -900,20 +917,9 @@ func (s *state) draw(dc drawConfig) {
 		o.drawObstacle(dc)
 	}
 
-	// TODO: Store units by layer for better performance
-	for _, u := range s.units {
-		if u.layer == highAir {
-			u.draw(dc, u.selected)
-		}
-	}
-	for _, u := range s.units {
-		if u.layer == lowAir {
-			u.draw(dc, u.selected)
-		}
-	}
-	for _, u := range s.units {
-		if u.layer == land {
-			u.draw(dc, u.selected)
-		}
+	// TODO: first draw high air
+	// TODO: next draw low air
+	for _, u := range s.landUnits {
+		u.draw(dc, u.selected)
 	}
 }
