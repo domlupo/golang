@@ -131,7 +131,7 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 
 	g.gameState = newState(nodes, obstacles, hexagons, oLUT, nLUT, g.drawConfig.grid, g.developerMode)
 	g.debugger = newDebugger(g.gameState, g.developerToggleCooldown)
-	g.updateComputerTargetNodes()
+	g.updateComputerTargetNodes(true)
 }
 
 func (g *Game) Update() error {
@@ -222,15 +222,12 @@ func (g *Game) Update() error {
 			PixelPosition{int(g.initialSelectedX), int(g.initialSelectedY)},
 			PixelPosition{int(g.currentSelectedX), int(g.currentSelectedY)})
 	}
-	nodeOwnershipChanged := g.gameState.updateNodeOwnership()
 
 	// play computer moves. Computers currently affect game state directly rather
 	// than the same game state being sent to each one before a final update occurs.
 	// This is a hack, but will probably be fine for awhile.
-	if nodeOwnershipChanged {
-		logger.log(infoLevel, mainLogic, "nodeOwnershipChanged")
-		g.updateComputerTargetNodes()
-	}
+	nodeCapture := g.gameState.updateForNodeCapture()
+	g.updateComputerTargetNodes(nodeCapture)
 
 	var infantryCount int
 	var unguidedGroundMissileCount int
@@ -281,12 +278,12 @@ func (g *Game) Update() error {
 	return nil
 }
 
-func (g *Game) updateComputerTargetNodes() {
+func (g *Game) updateComputerTargetNodes(nodeCaptureOccurred bool) {
 	if g.blueComputerActive {
-		g.compOne.updateTargetNodes(*g.gameState)
+		g.compOne.updateNodeTargets(*g.gameState, nodeCaptureOccurred)
 	}
 	if g.redComputerActive {
-		g.compTwo.updateTargetNodes(*g.gameState)
+		g.compTwo.updateNodeTargets(*g.gameState, nodeCaptureOccurred)
 	}
 }
 

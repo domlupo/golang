@@ -132,7 +132,6 @@ func (d *debugger) setupToggles(cooldown time.Duration) {
 			d.debugHexGrid = toggle
 			d.debugVisibilityGrids = toggle
 			d.debugHexagons = toggle
-
 		},
 		cooldown)
 	toggles["debugBlueTargets"] = newToggle(

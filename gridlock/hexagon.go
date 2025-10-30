@@ -49,6 +49,27 @@ func setupHexagons(g grid) map[GridPosition]*hexagon {
 	return hexagons
 }
 
+// Returns the hexagon GridPosition which has largest unit count differential for the
+// passed player. If multiple grid positions share a max unit count, a random one is selected.
+func (hs hexagons) maxUnitDifferential(player player) GridPosition {
+	var p GridPosition
+	m := 0
+	for _, h := range hs {
+		var d int
+		switch player {
+		case redPlayer:
+			d = h.unitCountRed - h.unitCountBlue
+		case bluePlayer:
+			d = h.unitCountBlue - h.unitCountRed
+		}
+		m = max(m, d)
+		if d == m {
+			p = h.gridPos
+		}
+	}
+	return p
+}
+
 func (h *hexagon) updatePointers(u *unit) {
 	if h.linkedList == nil {
 		h.linkedList = u

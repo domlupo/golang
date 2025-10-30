@@ -11,9 +11,9 @@ import (
 
 // not enforced but must be a singleton
 type state struct {
-	g grid
 	// TODO: The next largest optimization might be to split hexagon linked list
 	// into respective layers.
+	g                  grid
 	oLUT               obstacleLUT
 	nLUT               nodeLUT
 	hexagons           hexagons
@@ -49,6 +49,8 @@ func (s *state) refresh() {
 func (s *state) analyzeTargets() {
 	for _, u := range s.units {
 		if u.staticTarget {
+			u.localTargets = []position{u.globalTarget}
+			u.prioritizeTargets()
 			continue
 		}
 
@@ -72,10 +74,13 @@ func (s *state) analyzeTargets() {
 		nearest, _ := s.nearestUnitWithinVision(*u)
 		u.updateTarget(enemyTarget, nearest)
 
-		if !u.globalTarget.isZero() && u.pathGlobalTarget {
-			u.pathfindGlobalTarget(s.obstacles, s.oLUT, s.g)
-		} else if len(u.localTargets) > 0 && u.atTerminalPosition {
-			u.localTargets = u.localTargets[:len(u.localTargets)-1]
+		// TODO: Remove this hack once guided missile is fixed
+		if u.layer == ground {
+			if !u.globalTarget.isZero() && u.pathGlobalTarget {
+				u.pathfindGlobalTarget(s.obstacles, s.oLUT, s.g)
+			} else if len(u.localTargets) > 0 && u.atTerminalPosition {
+				u.localTargets = u.localTargets[:len(u.localTargets)-1]
+			}
 		}
 
 		u.prioritizeTargets()
@@ -214,6 +219,13 @@ func (s *state) moveUnits() {
 		var confirmMove = func() {}
 		for _, m := range moves {
 			p := m.suggest
+
+			if u.layer != ground {
+				newPos = p
+				confirmMove = m.confirm
+				break
+			}
+
 			if s.oLUT[p.PixelPosition].UnwalkableChebyshevDistance > u.radius {
 				newPos = p
 				confirmMove = m.confirm
@@ -633,7 +645,7 @@ func (s *state) attackNodes() {
 	)
 }
 
-func (s *state) updateNodeOwnership() bool {
+func (s *state) updateForNodeCapture() bool {
 	var nodeOwnershipChanged bool
 
 	for _, n := range s.nodes {
@@ -731,7 +743,18 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 			} else {
 				u.selected = false
 			}
-			s.units[u.position] = u
+		}
+
+		for _, h := range s.hexagons {
+			p := s.g.getPixelPosOutbounds(h.gridPos, hpCenter)
+			if (topLeftPixelPos.X < p.X) &&
+				(p.X < bottomRightPixelPos.X) &&
+				(topLeftPixelPos.Y < p.Y) &&
+				(p.Y < bottomRightPixelPos.Y) {
+				h.selected = true
+			} else {
+				h.selected = false
+			}
 		}
 
 		for _, h := range s.hexagons {

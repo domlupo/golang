@@ -2,7 +2,10 @@
 
 package main
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
 
 type computer struct {
 	player player
@@ -15,7 +18,44 @@ func newComputer(p player) *computer {
 	return &c
 }
 
-func (c *computer) updateTargetNodes(s state) {
+func (c *computer) updateNodeTargets(s state, nodeCapture bool) {
+	if nodeCapture {
+		c.updateForNodeCapture(s)
+	}
+
+	var opponent player
+	switch c.player {
+	case bluePlayer:
+		opponent = redPlayer
+	case redPlayer:
+		opponent = bluePlayer
+	default:
+		panic(fmt.Sprintf("updateNodeTargets: unknown player: %d", c.player))
+	}
+
+	gridPos := s.hexagons.maxUnitDifferential(opponent)
+	if gridPos.equals(GridPosition{}) {
+		return
+	}
+	p, ok := s.g.getAnyPixelPos(gridPos)
+	if !ok {
+		panic(fmt.Sprintf("updateNodeTargets: cannot getPixelPos: %s", gridPos.log()))
+	}
+
+	for _, n := range s.nodes {
+		if n.player != c.player {
+			continue
+		}
+
+		if n.unitConfig == unguidedGroundMissileConfig {
+			selfNode := n
+			selfNode.target = position{ground, p}
+			continue
+		}
+	}
+}
+
+func (c *computer) updateForNodeCapture(s state) {
 	for _, n := range s.nodes {
 		if n.player != c.player {
 			continue
@@ -25,6 +65,10 @@ func (c *computer) updateTargetNodes(s state) {
 		selfNode := n
 		selfNode.target = position{}
 		nearestTargetDistanceSquared := math.MaxInt
+
+		if n.unitConfig == unguidedGroundMissileConfig {
+			continue
+		}
 
 		for _, n := range s.nodes {
 			if n.player == c.player {

@@ -9,6 +9,7 @@ const minPercent = 0
 
 type player int
 
+// TODO: Update this to be idiomatic (bluePlayer -> pBlue, etc)
 const (
 	noPlayer player = iota
 	bluePlayer

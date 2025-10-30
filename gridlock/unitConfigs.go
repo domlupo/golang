@@ -65,7 +65,7 @@ var unguidedGroundMissileConfig = unitConfig{
 	attacksHighAltitude:  false,
 	attacksPosition:      true,
 	explodeAtTerminalPos: true,
-	explodeRadius:        100,
+	explodeRadius:        20,
 }
 
 var guidedAirMissileConfig = unitConfig{
