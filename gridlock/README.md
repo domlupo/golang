@@ -468,6 +468,9 @@ Is there a mobile equivalent for war/4x games?
   - Capturing nodes is more swingy? which is good?
   - Risk vs Reward?
   - Can add a sabotage mechanic.
+- Missile upgrade can guarantee different areas are targeted or not. Right now missile sends out
+  multiple missile which hit the same area since it doesn't factor in it will kill units.
+  Another upgrade could be missile coordination e.g. multiple noes coordinate.
 
 ---
 
