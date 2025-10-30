@@ -114,8 +114,16 @@ func (s *state) refresh() {
 
 func (s *state) analyzeTargets() {
 	for u := range s.units() {
-		if u.staticTarget || u.unitConfig.name == guidedAirMissile {
+		if u.staticTarget {
 			u.localTargets = []position{u.globalTarget}
+			u.prioritizeTargets()
+			continue
+		}
+
+		if u.unitConfig.name == guidedAirMissile {
+			u.localTargets = []position{u.globalTarget}
+			nearest, _ := s.nearestUnitWithinVision(*u)
+			u.updateTarget(enemyTarget, nearest)
 			u.prioritizeTargets()
 			continue
 		}
