@@ -22,8 +22,6 @@ Is there a mobile equivalent for war/4x games?
 - Fix guided air missile bug 
   - It only retargets to missil when both the final position and other missile are within its range.
 
-  - Spawn bomber 
-    - Add highAir layer
   - draw basic bomber with vector graphics
     - Basically make it not a circle as fast as possible
     - Make it transparent

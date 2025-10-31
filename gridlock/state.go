@@ -20,6 +20,7 @@ type state struct {
 	nodes              nodes
 	landUnits          units
 	lowAirUnits        units
+	highAirUnits       units
 	developerMode      bool
 	unitsProducedTotal int
 	unitsDeletedTotal  int
@@ -35,6 +36,7 @@ func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, 
 		nLUT:          nLUT,
 		landUnits:     make(units),
 		lowAirUnits:   make(units),
+		highAirUnits:  make(units),
 		developerMode: developerMode,
 	}
 
@@ -52,9 +54,15 @@ func (s state) units() func(yield func(u *unit) bool) {
 		}
 		for _, u := range s.lowAirUnits {
 			if !yield(u) {
+				break
+			}
+		}
+		for _, u := range s.highAirUnits {
+			if !yield(u) {
 				return
 			}
 		}
+
 	}
 }
 
@@ -64,6 +72,8 @@ func (s *state) addUnit(u *unit) {
 		s.landUnits[u.PixelPosition] = u
 	case lowAir:
 		s.lowAirUnits[u.PixelPosition] = u
+	case highAir:
+		s.highAirUnits[u.PixelPosition] = u
 	default:
 		panic(fmt.Sprintf("addUnit: unknown layer %d", u.layer))
 	}
@@ -90,6 +100,8 @@ func (s *state) moveUnit(u *unit, p position, confirm func()) {
 		s.landUnits[u.PixelPosition] = u
 	case lowAir:
 		s.lowAirUnits[u.PixelPosition] = u
+	case highAir:
+		s.highAirUnits[u.PixelPosition] = u
 	default:
 		panic(fmt.Sprintf("moveUnit: unknown layer %d", p.layer))
 	}
@@ -101,6 +113,8 @@ func (s *state) deleteUnit(p position) {
 		delete(s.landUnits, p.PixelPosition)
 	case lowAir:
 		delete(s.lowAirUnits, p.PixelPosition)
+	case highAir:
+		delete(s.highAirUnits, p.PixelPosition)
 	default:
 		panic(fmt.Sprintf("deleteUnit: unknown layer %d", p.layer))
 	}
@@ -332,13 +346,20 @@ func (s *state) moveUnits() {
 			unitsBorderCollideCount++
 		} else if collidesWithUnit {
 			unitsCollideCount++
-			if u.layer == lowAir || u.layer == highAir {
-				otherUnit := s.lowAirUnits[collidedUnitPos.PixelPosition]
-				otherUnit.health = 0
-				s.lowAirUnits[collidedUnitPos.PixelPosition] = s.lowAirUnits[PixelPosition{collidedUnitPos.X, collidedUnitPos.Y}]
-				u.health = 0
-				s.lowAirUnits[u.position.PixelPosition] = s.lowAirUnits[PixelPosition{u.X, u.Y}]
+			var units units
+			switch u.layer {
+			case land:
+				continue
+			case lowAir:
+				units = s.lowAirUnits
+			case highAir:
+				units = s.highAirUnits
 			}
+			otherUnit := units[collidedUnitPos.PixelPosition]
+			otherUnit.health = 0
+			units[collidedUnitPos.PixelPosition] = units[PixelPosition{collidedUnitPos.X, collidedUnitPos.Y}]
+			u.health = 0
+			units[u.position.PixelPosition] = units[PixelPosition{u.X, u.Y}]
 		} else if !u.canReachNode.isZero() {
 			unitsAtNode++
 		} else {
@@ -918,16 +939,15 @@ func (s *state) produceUnits() {
 }
 
 func (s *state) draw(dc drawConfig) {
-
 	for _, n := range s.nodes {
 		n.drawNode(dc)
 	}
-
 	for _, o := range s.obstacles {
 		o.drawObstacle(dc)
 	}
-
-	// TODO: first draw high air
+	for _, u := range s.highAirUnits {
+		u.draw(dc, u.selected)
+	}
 	for _, u := range s.lowAirUnits {
 		u.draw(dc, u.selected)
 	}
