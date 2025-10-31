@@ -245,7 +245,10 @@ func (g *Game) Update() error {
 			unknownCount++
 		}
 	}
-	avgUnitPos := PixelPosition{X: xSum / totalCount, Y: ySum / totalCount}
+	var avgUnitPos PixelPosition
+	if totalCount != 0 {
+		avgUnitPos = PixelPosition{X: xSum / totalCount, Y: ySum / totalCount}
+	}
 	logger.log(infoLevel, mainLogic, "unit counts",
 		slog.Int("total_units", totalCount),
 		slog.Int("infantryCount", infantryCount),
