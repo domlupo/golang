@@ -337,7 +337,7 @@ func (d debugger) draw(c drawConfig) {
 }
 
 func (p PixelPosition) draw(c drawConfig, dC debuggerConfig, color color.Color, spotlight bool) {
-	vector.DrawFilledRect(
+	vector.FillRect(
 		c.screen,
 		float32(p.X)*c.windowMultiplier,
 		float32(p.Y)*c.windowMultiplier,
@@ -370,7 +370,7 @@ func (heatmap heatmap) draw(c drawConfig, dC debuggerConfig, heatmapPercent int)
 			dC.heatmapB,
 			dC.heatmapG,
 			uint8(float64(v) / float64(trimmedV) * float64(dC.heatmapAlphaMaxLimit))}
-		vector.DrawFilledRect(
+		vector.FillRect(
 			c.screen,
 			float32(pixelPos.X)*c.windowMultiplier,
 			float32(pixelPos.Y)*c.windowMultiplier,
@@ -383,7 +383,7 @@ func (heatmap heatmap) draw(c drawConfig, dC debuggerConfig, heatmapPercent int)
 
 func (o obstacle) drawVisibilityGrid(c drawConfig, dC debuggerConfig) {
 	for _, op := range *o.visibilityGrid {
-		vector.DrawFilledCircle(
+		vector.FillCircle(
 			c.screen,
 			float32(op.X)*c.windowMultiplier,
 			float32(op.Y)*c.windowMultiplier,

@@ -470,7 +470,7 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 		panic("unit needs a color")
 	}
 
-	vector.DrawFilledCircle(
+	vector.FillCircle(
 		dc.screen,
 		float32(u.X)*dc.windowMultiplier,
 		float32(u.Y)*dc.windowMultiplier,
@@ -519,7 +519,7 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 	if u.health != u.maxHealth {
 		var healthLineLength = (float32(u.health) / float32(u.maxHealth)) * float32(u.radius*2)
 
-		vector.DrawFilledRect(
+		vector.FillRect(
 			dc.screen,
 			float32(u.X-u.radius)*dc.windowMultiplier,
 			float32(u.Y-u.radius)*dc.windowMultiplier,
