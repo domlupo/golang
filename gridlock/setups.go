@@ -413,6 +413,7 @@ const (
 	leftVsRightHorizontalOffset
 	leftVsRightVerticalOffset
 	leftVsRightVerticalOffsetMissile
+	leftVsRightVerticalOffsetBomber
 	topVsBottom
 	topVsBottomHorizontalOffset
 	zoomHorizontal
@@ -433,6 +434,7 @@ func nodeSetups() []nodeSetup {
 		leftVsRightHorizontalOffset,
 		leftVsRightVerticalOffset,
 		leftVsRightVerticalOffsetMissile,
+		leftVsRightVerticalOffsetBomber,
 		topVsBottom,
 		topVsBottomHorizontalOffset,
 		zoomHorizontal}
@@ -466,6 +468,8 @@ func (ns nodeSetup) String() string {
 		return "leftVsRightVerticalOffset"
 	case leftVsRightVerticalOffsetMissile:
 		return "leftVsRightVerticalOffsetMissile"
+	case leftVsRightVerticalOffsetBomber:
+		return "leftVsRightVerticalOffsetBomber"
 	case topVsBottom:
 		return "topVsBottom"
 	case topVsBottomHorizontalOffset:
@@ -710,6 +714,44 @@ func (nodes nodes) setupPositions(s nodeSetup, initialNodeHealth int) {
 			{GridPosition{26, 8}, redPlayer, unitConfig},
 
 			{GridPosition{1, 11}, bluePlayer, unguidedGroundMissileConfig},
+			{GridPosition{6, 11}, bluePlayer, unitConfig},
+			{GridPosition{11, 12}, neutralPlayer, unitConfig},
+			{GridPosition{16, 14}, neutralPlayer, unitConfig},
+			{GridPosition{21, 13}, redPlayer, unitConfig},
+			{GridPosition{26, 13}, redPlayer, guidedAirMissileConfig},
+
+			{GridPosition{1, 16}, bluePlayer, unitConfig},
+			{GridPosition{6, 16}, bluePlayer, unitConfig},
+			{GridPosition{11, 17}, neutralPlayer, unitConfig},
+			{GridPosition{16, 19}, neutralPlayer, unitConfig},
+			{GridPosition{21, 18}, redPlayer, unitConfig},
+			{GridPosition{26, 18}, redPlayer, unitConfig},
+
+			{GridPosition{1, 21}, bluePlayer, unitConfig},
+			{GridPosition{6, 21}, bluePlayer, unitConfig},
+			{GridPosition{11, 22}, neutralPlayer, unitConfig},
+			{GridPosition{16, 22}, neutralPlayer, unitConfig},
+			{GridPosition{21, 23}, redPlayer, unitConfig},
+			{GridPosition{26, 23}, redPlayer, unitConfig},
+		}
+	case leftVsRightVerticalOffsetBomber:
+		unitConfig := infantryConfig
+		nodeSetupInputs = []nodeSetupInput{
+			{GridPosition{2, 2}, bluePlayer, unitConfig},
+			{GridPosition{6, 1}, bluePlayer, unitConfig},
+			{GridPosition{11, 2}, neutralPlayer, unitConfig},
+			{GridPosition{16, 4}, neutralPlayer, unitConfig},
+			{GridPosition{21, 3}, redPlayer, unitConfig},
+			{GridPosition{26, 3}, redPlayer, unitConfig},
+
+			{GridPosition{1, 6}, bluePlayer, unitConfig},
+			{GridPosition{6, 6}, bluePlayer, unitConfig},
+			{GridPosition{11, 7}, neutralPlayer, unitConfig},
+			{GridPosition{16, 9}, neutralPlayer, unitConfig},
+			{GridPosition{21, 8}, redPlayer, unitConfig},
+			{GridPosition{26, 8}, redPlayer, unitConfig},
+
+			{GridPosition{1, 11}, bluePlayer, bomberConfig},
 			{GridPosition{6, 11}, bluePlayer, unitConfig},
 			{GridPosition{11, 12}, neutralPlayer, unitConfig},
 			{GridPosition{16, 14}, neutralPlayer, unitConfig},

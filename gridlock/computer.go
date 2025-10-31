@@ -54,6 +54,12 @@ func (c *computer) updateNodeTargets(s state, nodeCapture bool, avgUnitPos Pixel
 			continue
 		case guidedAirMissile:
 			selfNode.target = position{land, avgUnitPos}
+		case bomber:
+			nodeP, ok := s.g.getPixelPos(n.gridPos, hpCenter)
+			if !ok {
+				panic(fmt.Sprintf("updateNodeTargets: cannot getPixelPos for bomber: %s", gridPos.log()))
+			}
+			selfNode.target = position{layer: bomberConfig.produceLayer, PixelPosition: nodeP}
 		}
 	}
 }
@@ -98,7 +104,7 @@ func (c *computer) updateForNodeCapture(s state) {
 	}
 
 	for u := range s.units() {
-		if u.staticTarget || u.unitConfig.name == guidedAirMissile {
+		if u.staticTarget || u.unitConfig.name == guidedAirMissile || u.unitConfig.name == bomber {
 			continue
 		}
 

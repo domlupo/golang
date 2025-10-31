@@ -76,7 +76,7 @@ func newGame() Game {
 	g := Game{
 		developerMode:           true,
 		obstacleSetup:           multiObstacle,
-		nodeSetup:               leftVsRightVerticalOffsetMissile,
+		nodeSetup:               leftVsRightVerticalOffsetBomber,
 		drawConfig:              drawConfig,
 		backgroundColor:         color.RGBA{200, 200, 200, 255},
 		produceWait:             1_000_000 * time.Second,

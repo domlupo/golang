@@ -11,7 +11,7 @@ const (
 	infantry
 	unguidedGroundMissile
 	guidedAirMissile
-	mobileSAM
+	bomber
 )
 
 type unitConfig struct {
@@ -82,6 +82,23 @@ var guidedAirMissileConfig = unitConfig{
 	attacksHighAltitude:  true,
 	attacksPosition:      false,
 	explodeAtTerminalPos: true,
+	explodeRadius:        100,
+}
+
+var bomberConfig = unitConfig{
+	name:                 bomber,
+	radius:               20,
+	maxHealth:            100,
+	attack:               0,
+	vision:               40,
+	reach:                0,
+	produceLayer:         highAir,
+	staticTarget:         false,
+	attacksGround:        false,
+	attacksLowAltitude:   false,
+	attacksHighAltitude:  false,
+	attacksPosition:      false,
+	explodeAtTerminalPos: false,
 	explodeRadius:        100,
 }
 

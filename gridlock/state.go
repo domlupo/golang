@@ -142,6 +142,11 @@ func (s *state) analyzeTargets() {
 			continue
 		}
 
+		if u.unitConfig.name == bomber {
+			u.localTargets = []position{u.globalTarget}
+			u.prioritizeTargets()
+		}
+
 		steer := s.steer(u)
 		if !u.position.equals(steer.PixelPosition) {
 			u.updateTarget(steerTarget, steer)
