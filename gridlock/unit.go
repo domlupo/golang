@@ -4,11 +4,14 @@ package main
 
 import (
 	"image/color"
+	"log"
 	"log/slog"
 	"math"
 	"slices"
 
 	"github.com/gofrs/uuid/v5"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -470,14 +473,27 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 		panic("unit needs a color")
 	}
 
-	vector.FillCircle(
-		dc.screen,
-		float32(u.X)*dc.windowMultiplier,
-		float32(u.Y)*dc.windowMultiplier,
-		float32(u.radius)*dc.windowMultiplier,
-		unitColor,
-		false,
-	)
+	if u.name == bomber {
+		img, _, err := ebitenutil.NewImageFromFile("assets/bomber.png")
+		if err != nil {
+			log.Fatal(err)
+		}
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Translate(float64(u.X-u.radius), float64(u.Y-u.radius))
+		// TOODO: Revisit this issue in the future once fix is more understood
+		// https:github.com/hajimehoshi/ebiten/issues/3335
+		op.GeoM.Scale(float64(dc.windowMultiplier)-0.01, float64(dc.windowMultiplier)-0.01)
+		dc.screen.DrawImage(img, op)
+	} else {
+		vector.FillCircle(
+			dc.screen,
+			float32(u.X)*dc.windowMultiplier,
+			float32(u.Y)*dc.windowMultiplier,
+			float32(u.radius)*dc.windowMultiplier,
+			unitColor,
+			false,
+		)
+	}
 
 	if selected {
 		drawUnfilledBoxInt(

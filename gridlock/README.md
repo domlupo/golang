@@ -23,11 +23,7 @@ Is there a mobile equivalent for war/4x games?
   - It only retargets to missil when both the final position and other missile are within its range.
 
   - draw basic bomber with vector graphics
-    - Basically make it not a circle as fast as possible
-    - Make it transparent
     - Determine how unit will control its directional heading
-    - Bomber spawns on node in highAir layer but does not move
-    - Don't worry about collision yet, can easily fix draw later to work with collision system.
  - bomber pathing
     - Determine if I need a new target type (Should this use local targets or new type of queue target)
     - How does turn radius work?
