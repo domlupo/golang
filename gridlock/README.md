@@ -20,8 +20,10 @@ Is there a mobile equivalent for war/4x games?
 ### Next Checkpoints
 
 - Add bomber
+  - first brainstorm bomber to scope work
 
 - Add fighter
+  - first brainstorm fighter to scope work
 
 - Improve guided air missile
   - abstract logic for (pos, radius) -> get a list of units to check
@@ -506,6 +508,13 @@ Is there a mobile equivalent for war/4x games?
   - choke points
   - gridlock
   - gridlocked
+  - hawk nest
+  - eagle eye
+  - iron wing
+  - sky claw
+  - talon strike
+  - hawk point
+  - over watch
 - Replay feature where you can see a battle recap?
 - Should unit behavior be toggable on a global scale? E.g. tanks have fire mode vs push mode
 - Should nodes produce multiple units e.g. Nodes always create infatry, then get upgraded over time.
@@ -527,7 +536,7 @@ Is there a mobile equivalent for war/4x games?
 
 ---
 
-###  Brainstorm Spatial Partitioning
+### Brainstorm Spatial Partitioning
 
 In general:
 
@@ -836,5 +845,47 @@ Have read through several college publications and game ai pro articles not link
     - artillery shell (low altitude)
     - chemical gas
     - jet flare
+
+#### Brainstorm Bomber Unit
+
+- size
+  - what basic size should it be?
+  - relative scale to other art (nodes, infantry, etc)
+  - collision shape (I don't think circle will work here long term)
+  - turn radius size
+- behavior?
+  - is it going to be harder to target corners?
+  - is it going to be harder to target edges?
+  - When it crashes does it do ground damage? I think it should.
+  - Does crashing pre or post bomb differ? I think it should.
+  - Should be less maneuverable than a fighter
+- control
+  - multi click for path to bombing run
+    - highlight cone shows potential next clicks
+  - click + drag + release for bomb run. 
+    - the bombs auto space out based on the number
+  - Then multi click return path same as prior control
+  - This means only one bomb run can happen. This seems fine. It is complex and hard to allow multiple bomb 
+    runs to occur since a future run would change the auto targets of the prior run. 
+  - Should bomber path and bominb update after it has taken off if viable?
+  - Need to display current and future path irrespective off how often update occurs.
+- targetting
+  - X bombs, dragging shows path
+- programming
+  - bomb as a separate unit?
+  - bomb created at take off or during destruction / bomb drop? 
+  - multiple types of bomb? (should this change flight path?)
+    - gravity (drops right below aircraft)
+    - glide (drop at angle? I am not sure the benefit here unless multiple drop a)
+    - guided (JDAM)
+    - missile
+  - targetting is much different than other units will help understand long term goal here.
+- upgrades?
+  - bomb types
+  - speed
+  - bomb count
+  - turn radius
+  - faster bomb drop
+  - (should bomb accuracy not be exact, but upgradable to be better?)
 
 ---
