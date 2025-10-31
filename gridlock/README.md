@@ -228,7 +228,12 @@ Is there a mobile equivalent for war/4x games?
 
 - Look into optimize heatmap draws.
   - heatmaps are causing large stutters. I highly doubt this cannot be optimized.
-  - I believe I need to use shaders https://ebitengine.org/en/documents/shader.html#Shading_language_Kage
+  - These two approaches might be easier than shaders:
+    - https://ebitengine.org/en/examples/noise.html
+    - https://ebitengine.org/en/examples/particles.html
+  - If I need to use shaders:
+    - https://ebitengine.org/en/examples/shader.html 
+    - https://ebitengine.org/en/documents/shader.html#Shading_language_Kage
 
 - Determine if I need to add Ctrl+C handling for new file saves. This could lead to hard to debug issues.
 
