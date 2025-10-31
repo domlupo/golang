@@ -19,11 +19,65 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Add bomber
-  - first brainstorm bomber to scope work
+- Fix guided air missile bug 
+  - It only retargets to missil when both the final position and other missile are within its range.
+
+  - Spawn bomber 
+    - Add highAir layer
+  - draw basic bomber with vector graphics
+    - Basically make it not a circle as fast as possible
+    - Make it transparent
+    - Determine how unit will control its directional heading
+    - Bomber spawns on node in highAir layer but does not move
+    - Don't worry about collision yet, can easily fix draw later to work with collision system.
+ - bomber pathing
+    - Determine if I need a new target type (Should this use local targets or new type of queue target)
+    - How does turn radius work?
+    - Need to draw cone for next possible movements
+      - how is this performant, can't draw every pixel probably need to draw two outer lines.
+    - single clicks arc together based on turn radius
+      - arcs appear on screen
+    - one drag click allowed for bombs
+    - click on node to confirm path
+    - should the pathing be saved on unit config or the node? 
+      - unit config should be for static info. I think node target needs updated to handle more complex targets.
+   - When node is selected, draw path
+   - When bomber is selected, draw path
+   - Probably need to add logging for debugging
+     - max turns to complete movement
+  - bomber movement (global)
+    - Only spawn one bomer at once for now (Eventually will probably need a spawn limit mechanic but can hack for now)
+    - Don't worry about steer yet. Steer is polish.
+    - Follow arc (Saving path is probably wrong, probably want to use the same algo to create path here)
+  - bomber collision
+    - Can be punted since missiles are in lower layer.
+    - verify other missiles don't hit
+    - Attempt to use existing circle <-> circle.
+      - I want to punt more advanced collision detection till art direction is more known. 
+  - bomber attack
+    - draw gravity bombs
+      - how do I Indicate they are falling easiest?
+        - circle that shrinks? 
+        - circle that fades?
+    - reuse explode code
+    - Probably should add new unit time destruction logic  
+  - computer AI
+    - This is far away so scope this later but it will be hard and require a lot of work.
+      - easy part is finding hexs to drop bombs
+      - hard part is determing path to get there especially out of bounds concerns.
+  - Punted
+    - bomber crashing
+    - bomber flares
+    - bomber stealth
+    - bomber bombs as separate units attached to it
 
 - Add fighter
   - first brainstorm fighter to scope work
+
+- Determine if this is correct player experience
+  - high air is transparent
+  - anything not transparent or infantry is low air
+  - infantry is land
 
 - Improve guided air missile
   - abstract logic for (pos, radius) -> get a list of units to check
@@ -887,5 +941,6 @@ Have read through several college publications and game ai pro articles not link
   - turn radius
   - faster bomb drop
   - (should bomb accuracy not be exact, but upgradable to be better?)
+  - fuel (longer distance). This is hard because targetting UI becomes more complex and can fail.
 
 ---
