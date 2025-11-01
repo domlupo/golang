@@ -24,23 +24,10 @@ Is there a mobile equivalent for war/4x games?
 
  - bomber pathing
     - Determine if I need a new target type (Should this use local targets or new type of queue target)
-    - How does turn radius work?
-    - Need to draw cone for next possible movements
-      - how is this performant, can't draw every pixel probably need to draw two outer lines.
-    - single clicks arc together based on turn radius
-      - arcs appear on screen
-    - one drag click allowed for bombs
-    - click on node to confirm path
-    - should the pathing be saved on unit config or the node? 
-      - unit config should be for static info. I think node target needs updated to handle more complex targets.
-   - When node is selected, draw path
-   - When bomber is selected, draw path
-   - Probably need to add logging for debugging
-     - max turns to complete movement
+    - Click on node to confirm path. Also allow click off to confirm path?
   - bomber movement (global)
     - Only spawn one bomer at once for now (Eventually will probably need a spawn limit mechanic but can hack for now)
     - Don't worry about steer yet. Steer is polish.
-    - Follow arc (Saving path is probably wrong, probably want to use the same algo to create path here)
   - bomber collision
     - Can be punted since missiles are in lower layer.
     - verify other missiles don't hit
@@ -58,10 +45,17 @@ Is there a mobile equivalent for war/4x games?
       - easy part is finding hexs to drop bombs
       - hard part is determing path to get there especially out of bounds concerns.
   - Punted
+    - player experience when spam clicking bomber path targets?
     - bomber crashing
     - bomber flares
     - bomber stealth
     - bomber bombs as separate units attached to it
+    - bomb draws
+    - turn radius + paths that arc (not sure if I even want this for player experience)
+
+- Add better target drawing
+  - nodes should show all targets
+  - need to differentiate between multi global and multi local targets
 
 - Add fighter
   - first brainstorm fighter to scope work
