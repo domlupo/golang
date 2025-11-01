@@ -741,7 +741,7 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 	clickedNode, nodeClicked := s.nodes[clickedGridPos]
 	if nodeClicked && clickPosition.equals(releasePosition) && clickedGridPos.equals(priorSingleSelect) {
 		for _, n := range s.nodes {
-			if n.player == clickedNode.player {
+			if n.player == clickedNode.player && n.unitConfig == clickedNode.unitConfig {
 				n.multiSelect = true
 			}
 		}
