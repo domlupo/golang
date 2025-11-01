@@ -33,15 +33,22 @@ func (c *computer) updateNodeTargets(s state, nodeCapture bool, avgUnitPos Pixel
 		panic(fmt.Sprintf("updateNodeTargets: unknown player: %d", c.player))
 	}
 
-	gridPos := s.hexagons.maxUnitDifferential(opponent, land)
-	if gridPos.equals(GridPosition{}) {
-		return
+	maxDiffs := s.hexagons.maxUnitDifferential(opponent, land)
+	var p1 PixelPosition
+	var p2 PixelPosition
+	for _, pos := range maxDiffs {
+		p, ok := s.g.getPixelPos(pos, hpCenter)
+		if !ok {
+			continue
+		}
+		if p1.equals(PixelPosition{}) {
+			p1 = p
+		} else if p2.equals(PixelPosition{}) {
+			p2 = p
+		} else {
+			break
+		}
 	}
-	p, ok := s.g.getAnyPixelPos(gridPos)
-	if !ok {
-		panic(fmt.Sprintf("updateNodeTargets: cannot getPixelPos: %s", gridPos.log()))
-	}
-
 	for _, n := range s.nodes {
 		if n.player != c.player {
 			continue
@@ -52,17 +59,17 @@ func (c *computer) updateNodeTargets(s state, nodeCapture bool, avgUnitPos Pixel
 		case infantry:
 			continue
 		case unguidedGroundMissile:
-			selfNode.targets = []position{{land, p}}
+			selfNode.targets = []position{{land, p1}}
 		case guidedAirMissile:
 			selfNode.targets = []position{{land, avgUnitPos}}
 		case bomber:
 			nodeP, ok := s.g.getPixelPos(n.gridPos, hpCenter)
 			if !ok {
-				panic(fmt.Sprintf("updateNodeTargets: cannot getPixelPos for bomber: %s", gridPos.log()))
+				panic(fmt.Sprintf("updateNodeTargets: cannot getPixelPos for bomber: %s", n.gridPos.log()))
 			}
 			selfNode.targets = []position{}
-			selfNode.targets = append(selfNode.targets, position{land, avgUnitPos})
-			selfNode.targets = append(selfNode.targets, position{land, p})
+			selfNode.targets = append(selfNode.targets, position{land, p1})
+			selfNode.targets = append(selfNode.targets, position{land, p2})
 			selfNode.targets = append(selfNode.targets, position{layer: bomberConfig.produceLayer, PixelPosition: nodeP})
 		}
 	}

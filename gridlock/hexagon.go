@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"log/slog"
+	"sort"
 )
 
 // All hexagons on map
@@ -77,26 +78,31 @@ func setupHexagons(g grid) map[GridPosition]*hexagon {
 	return hexagons
 }
 
-// Returns the hexagon GridPosition which has largest unit count differential for the
-// passed player. If multiple grid positions share a max unit count, a random one is selected.
-func (hs hexagons) maxUnitDifferential(player player, l layer) GridPosition {
-	var p GridPosition
-	m := 0
-	for _, h := range hs {
-		hl := h.get(l)
-		var d int
+// Returns all hexagon GridPositions sorted by largest unit count differential for the passed player.
+// No guaranteed sort for multiple grid positions with equal differential.
+func (hs hexagons) maxUnitDifferential(player player, l layer) []GridPosition {
+	var positions = []GridPosition{}
+	for p := range hs {
+		positions = append(positions, p)
+	}
+
+	sort.Slice(positions, func(i, j int) bool {
+		hlI := hs[positions[i]].get(l)
+		hlJ := hs[positions[j]].get(l)
+		dI := 0
+		dJ := 0
 		switch player {
 		case redPlayer:
-			d = hl.unitCountRed - hl.unitCountBlue
+			dI = hlI.unitCountRed - hlI.unitCountBlue
+			dJ = hlJ.unitCountRed - hlJ.unitCountBlue
 		case bluePlayer:
-			d = hl.unitCountBlue - hl.unitCountRed
+			dI = hlI.unitCountBlue - hlI.unitCountRed
+			dJ = hlJ.unitCountBlue - hlJ.unitCountRed
 		}
-		m = max(m, d)
-		if d == m {
-			p = h.gridPos
-		}
-	}
-	return p
+		return dI > dJ
+	})
+
+	return positions
 }
 
 func (h *hexagon) updatePointers(u *unit) {
