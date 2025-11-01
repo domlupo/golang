@@ -479,7 +479,11 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 			log.Fatal(err)
 		}
 		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(float64(u.X-u.radius), float64(u.Y-u.radius))
+		angle := 1.0
+		xMult := math.Sin(angle) - math.Cos(angle)
+		yMult := -math.Sqrt2 * math.Sin(angle+(math.Pi/4))
+		op.GeoM.Rotate(angle)
+		op.GeoM.Translate(float64(u.X)+float64(u.radius)*xMult, float64(u.Y)+float64(u.radius)*yMult)
 		// TOODO: Revisit this issue in the future once fix is more understood
 		// https:github.com/hajimehoshi/ebiten/issues/3335
 		op.GeoM.Scale(float64(dc.windowMultiplier)-0.01, float64(dc.windowMultiplier)-0.01)
