@@ -165,21 +165,29 @@ func (g *Game) Update() error {
 		}
 		g.slowTickTime = time.Now()
 
+		logger.log(debugLevel, mainLogic, "start state automated steps")
+		logger.log(debugLevel, mainLogic, "analyzeTargets")
 		g.gameState.analyzeTargets()
+		logger.log(debugLevel, mainLogic, "processTerminalPositions")
 		g.gameState.processTerminalPositions()
+		logger.log(debugLevel, mainLogic, "refresh")
 		g.gameState.refresh()
+		logger.log(debugLevel, mainLogic, "attackUnits")
 		g.gameState.attackUnits()
+		logger.log(debugLevel, mainLogic, "attackNodes")
 		g.gameState.attackNodes()
+		logger.log(debugLevel, mainLogic, "moveUnits")
 		if g.moveUnits {
 			g.gameState.moveUnits()
 		}
-
+		logger.log(debugLevel, mainLogic, "produceUnits")
 		if g.produceWait < g.produceInterval {
 			g.produceWait = g.produceWait + g.currentTime.Sub(g.priorTime)
 		} else if g.produceUnits {
 			g.produceWait = 0
 			g.gameState.produceUnits()
 		}
+		logger.log(debugLevel, mainLogic, "done state automated steps")
 	}
 
 	// player actions
