@@ -18,3 +18,6 @@ cl:
 	do size_bytes=$$(wc -c < "$$file") size_mb=$$(awk "BEGIN {printf \"%.2f\", $$size_bytes / (1024*1024)}"); \
  	echo "$$size_mb MB $$file"; \
 	done | sort -h
+u:
+	go get -u ./...; \
+	go mod tidy
