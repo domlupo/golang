@@ -35,7 +35,7 @@ type node struct {
 	maxHealth     int
 	currentHealth int
 	capturedBy    player
-	target        position
+	targets       []position
 	unitConfig    unitConfig
 }
 
@@ -202,7 +202,7 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 
 func (n node) isZero() bool {
 	// TODO: fix implementation
-	return n.player == noPlayer && n.gridPos.X == 0 && n.gridPos.Y == 0 && n.target.layer == noLayer
+	return n.player == noPlayer && n.gridPos.X == 0 && n.gridPos.Y == 0
 }
 
 func (n node) selected() bool {
@@ -339,20 +339,22 @@ func (n *node) drawTargets(dc drawConfig, drawBlueTargets bool, drawRedTargets b
 		panic("unknown player for drawTargets")
 	}
 
-	if !n.target.isZero() && ((n.player == bluePlayer && drawBlueTargets) || (n.player == redPlayer && drawRedTargets)) {
+	if !n.isZero() && ((n.player == bluePlayer && drawBlueTargets) || (n.player == redPlayer && drawRedTargets)) {
 		var center, ok = dc.grid.getPixelPos(n.gridPos, hpCenter)
 		if !ok {
 			panic("could not get pixel pos for node draw targets")
 		}
-		vector.StrokeLine(
-			dc.screen,
-			float32(center.X)*dc.windowMultiplier,
-			float32(center.Y)*dc.windowMultiplier,
-			float32(n.target.X)*dc.windowMultiplier,
-			float32(n.target.Y)*dc.windowMultiplier,
-			float32(dc.targetNodeLineWidth)*dc.windowMultiplier,
-			nodeColor,
-			false,
-		)
+		for _, t := range n.targets {
+			vector.StrokeLine(
+				dc.screen,
+				float32(center.X)*dc.windowMultiplier,
+				float32(center.Y)*dc.windowMultiplier,
+				float32(t.X)*dc.windowMultiplier,
+				float32(t.Y)*dc.windowMultiplier,
+				float32(dc.targetNodeLineWidth)*dc.windowMultiplier,
+				nodeColor,
+				false,
+			)
+		}
 	}
 }

@@ -48,7 +48,7 @@ type unit struct {
 	enemyTarget         position
 	localTarget         position
 	localTargets        []position
-	globalTarget        position
+	globalTargets       []position
 	pathGlobalTarget    bool
 	atTerminalPosition  bool
 	bresenhamError      int
@@ -72,7 +72,7 @@ type Move struct {
 	confirm func()
 }
 
-func newUnit(p player, globalTarget position, uc unitConfig, pos position, producedOrder int, selected bool) unit {
+func newUnit(p player, globalTargets []position, uc unitConfig, pos position, producedOrder int, selected bool) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
 		logger.log(errorLevel, selectedUnit, "newUnit", slog.String("failed to generate UUID", err.Error()))
@@ -83,7 +83,7 @@ func newUnit(p player, globalTarget position, uc unitConfig, pos position, produ
 		id:                  id,
 		position:            pos,
 		player:              p,
-		globalTarget:        globalTarget,
+		globalTargets:       globalTargets,
 		pathGlobalTarget:    true,
 		unitConfig:          uc,
 		health:              uc.maxHealth,
@@ -250,9 +250,9 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 		u.localTarget = target
 		unitTarget = "localTarget"
 	case globalTarget:
-		u.globalTarget = target
+		u.globalTargets = []position{target}
 		u.pathGlobalTarget = true
-		unitTarget = "globalTarget"
+		unitTarget = "globalTargets"
 	default:
 		panic("Need to set a unit target")
 	}
@@ -278,7 +278,7 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, oLUT obstacleLUT, g gri
 	logger.logSelected(u.selected, infoLevel, selectedUnit, "pathfindGlobalTarget")
 
 	var foundPath bool
-	tries := [][]position{{u.globalTarget}}
+	tries := [][]position{{u.globalTargets[0]}}
 	nextTries := [][]position{}
 
 	for !foundPath {
@@ -444,10 +444,14 @@ func (u unit) log() []slog.Attr {
 	} else {
 		a = append(a, nest("localTargets", localtargets))
 	}
-	if !u.globalTarget.isZero() {
-		a = append(a, slog.Any("globalTarget", u.globalTarget.log()))
+	globalTargets := []slog.Attr{}
+	for _, p := range u.globalTargets {
+		globalTargets = append(globalTargets, p.log()...)
+	}
+	if len(globalTargets) == 0 {
+		a = append(a, slog.String("globalTargets", "none"))
 	} else {
-		a = append(a, slog.String("globalTarget", "nil"))
+		a = append(a, nest("globalTargets", globalTargets))
 	}
 	a = append(a, slog.Bool("atTerminalPosition", u.atTerminalPosition))
 	a = append(a, slog.Int("bresenhamError", u.bresenhamError))

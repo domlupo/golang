@@ -47,20 +47,23 @@ func (c *computer) updateNodeTargets(s state, nodeCapture bool, avgUnitPos Pixel
 			continue
 		}
 
+		var t position
 		selfNode := n
 		switch n.unitConfig.name {
-		case unguidedGroundMissile:
-			selfNode.target = position{land, p}
+		case infantry:
 			continue
+		case unguidedGroundMissile:
+			t = position{land, p}
 		case guidedAirMissile:
-			selfNode.target = position{land, avgUnitPos}
+			t = position{land, avgUnitPos}
 		case bomber:
 			nodeP, ok := s.g.getPixelPos(n.gridPos, hpCenter)
 			if !ok {
 				panic(fmt.Sprintf("updateNodeTargets: cannot getPixelPos for bomber: %s", gridPos.log()))
 			}
-			selfNode.target = position{layer: bomberConfig.produceLayer, PixelPosition: nodeP}
+			t = position{layer: bomberConfig.produceLayer, PixelPosition: nodeP}
 		}
+		selfNode.targets = []position{t}
 	}
 }
 
@@ -72,7 +75,7 @@ func (c *computer) updateForNodeCapture(s state) {
 
 		selfNodePos := n.gridPos
 		selfNode := n
-		selfNode.target = position{}
+		selfNode.targets = []position{}
 		nearestTargetDistanceSquared := math.MaxInt
 
 		if n.unitConfig.name == unguidedGroundMissile || n.unitConfig.name == guidedAirMissile {
@@ -97,7 +100,7 @@ func (c *computer) updateForNodeCapture(s state) {
 					panic("could not get pixel pos for update computer node targets")
 				}
 
-				selfNode.target = position{land, targetPixelPos}
+				selfNode.targets = []position{position{land, targetPixelPos}}
 			}
 
 		}

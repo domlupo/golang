@@ -129,13 +129,13 @@ func (s *state) refresh() {
 func (s *state) analyzeTargets() {
 	for u := range s.units() {
 		if u.staticTarget {
-			u.localTargets = []position{u.globalTarget}
+			u.localTargets = []position{u.globalTargets[0]}
 			u.prioritizeTargets()
 			continue
 		}
 
 		if u.unitConfig.name == guidedAirMissile {
-			u.localTargets = []position{u.globalTarget}
+			u.localTargets = []position{u.globalTargets[0]}
 			nearest, _ := s.nearestUnitWithinVision(*u)
 			u.updateTarget(enemyTarget, nearest)
 			u.prioritizeTargets()
@@ -143,7 +143,7 @@ func (s *state) analyzeTargets() {
 		}
 
 		if u.unitConfig.name == bomber {
-			u.localTargets = []position{u.globalTarget}
+			u.localTargets = []position{u.globalTargets[0]}
 			u.prioritizeTargets()
 		}
 
@@ -167,13 +167,10 @@ func (s *state) analyzeTargets() {
 		nearest, _ := s.nearestUnitWithinVision(*u)
 		u.updateTarget(enemyTarget, nearest)
 
-		// TODO: Remove this hack once guided missile is fixed
-		if u.layer == land {
-			if !u.globalTarget.isZero() && u.pathGlobalTarget {
-				u.pathfindGlobalTarget(s.obstacles, s.oLUT, s.g)
-			} else if len(u.localTargets) > 0 && u.atTerminalPosition {
-				u.localTargets = u.localTargets[:len(u.localTargets)-1]
-			}
+		if len(u.globalTargets) > 0 && u.pathGlobalTarget {
+			u.pathfindGlobalTarget(s.obstacles, s.oLUT, s.g)
+		} else if len(u.localTargets) > 0 && u.atTerminalPosition {
+			u.localTargets = u.localTargets[:len(u.localTargets)-1]
 		}
 
 		u.prioritizeTargets()
@@ -676,7 +673,7 @@ func (s *state) attackNodes() {
 	var cannotReachNodeCount int
 
 	for _, u := range s.landUnits {
-		if u.globalTarget.isZero() {
+		if len(u.globalTargets) == 0 {
 			noTargetNodeCount++
 			continue
 		}
@@ -859,7 +856,7 @@ func (s *state) updateTargets(target position, blueComputerActive bool, redCompu
 		}
 
 		if n.selected() {
-			n.target = target
+			n.targets = append(n.targets, target)
 		}
 
 		if s.developerMode {
@@ -927,7 +924,7 @@ func (s *state) produceUnits() {
 			panic("could not get pixel pos for produce units")
 		}
 		uPos := position{n.unitConfig.produceLayer, pixelPos}
-		newUnit := newUnit(n.player, n.target, n.unitConfig, uPos, s.unitsProducedTotal, n.selected() && s.developerMode)
+		newUnit := newUnit(n.player, n.targets, n.unitConfig, uPos, s.unitsProducedTotal, n.selected() && s.developerMode)
 		if _, collides := s.collidesWithUnit(uPos, newUnit); !collides {
 			hex := s.hexagons[n.gridPos]
 			hl := hex.get(newUnit.layer)
