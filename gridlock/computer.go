@@ -47,23 +47,24 @@ func (c *computer) updateNodeTargets(s state, nodeCapture bool, avgUnitPos Pixel
 			continue
 		}
 
-		var t position
 		selfNode := n
 		switch n.unitConfig.name {
 		case infantry:
 			continue
 		case unguidedGroundMissile:
-			t = position{land, p}
+			selfNode.targets = []position{{land, p}}
 		case guidedAirMissile:
-			t = position{land, avgUnitPos}
+			selfNode.targets = []position{{land, avgUnitPos}}
 		case bomber:
 			nodeP, ok := s.g.getPixelPos(n.gridPos, hpCenter)
 			if !ok {
 				panic(fmt.Sprintf("updateNodeTargets: cannot getPixelPos for bomber: %s", gridPos.log()))
 			}
-			t = position{layer: bomberConfig.produceLayer, PixelPosition: nodeP}
+			selfNode.targets = []position{}
+			selfNode.targets = append(selfNode.targets, position{land, avgUnitPos})
+			selfNode.targets = append(selfNode.targets, position{land, p})
+			selfNode.targets = append(selfNode.targets, position{layer: bomberConfig.produceLayer, PixelPosition: nodeP})
 		}
-		selfNode.targets = []position{t}
 	}
 }
 

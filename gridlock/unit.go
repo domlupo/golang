@@ -65,6 +65,7 @@ type unit struct {
 	prior               *unit
 	next                *unit
 	producedAt          int
+	angle               float64
 }
 
 type Move struct {
@@ -483,10 +484,9 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 			log.Fatal(err)
 		}
 		op := &ebiten.DrawImageOptions{}
-		angle := 1.0
-		xMult := math.Sin(angle) - math.Cos(angle)
-		yMult := -math.Sqrt2 * math.Sin(angle+(math.Pi/4))
-		op.GeoM.Rotate(angle)
+		xMult := math.Sin(u.angle) - math.Cos(u.angle)
+		yMult := -math.Sqrt2 * math.Sin(u.angle+(math.Pi/4))
+		op.GeoM.Rotate(u.angle)
 		op.GeoM.Translate(float64(u.X)+float64(u.radius)*xMult, float64(u.Y)+float64(u.radius)*yMult)
 		// TOODO: Revisit this issue in the future once fix is more understood
 		// https:github.com/hajimehoshi/ebiten/issues/3335

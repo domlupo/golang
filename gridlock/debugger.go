@@ -459,6 +459,28 @@ func (u *unit) drawDebug(c drawConfig, dC debuggerConfig) {
 				j = 0
 			}
 		}
+
+		j = 0
+		for i := len(u.globalTargets) - 1; i >= 0; i-- {
+			gt := u.globalTargets[i]
+			color := dC.roygbivColors[j]
+
+			vector.StrokeLine(
+				c.screen,
+				float32(u.X)*c.windowMultiplier,
+				float32(u.Y)*c.windowMultiplier,
+				float32(gt.X)*c.windowMultiplier,
+				float32(gt.Y)*c.windowMultiplier,
+				float32(c.targetNodeLineWidth)*c.windowMultiplier,
+				color,
+				false,
+			)
+
+			j += 1
+			if j == len(dC.roygbivColors) {
+				j = 0
+			}
+		}
 	}
 }
 

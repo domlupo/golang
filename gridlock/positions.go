@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"log/slog"
+	"math"
 )
 
 // high resolution position.
@@ -109,6 +110,11 @@ func (l layer) log() slog.Attr {
 		layer = "HighAir"
 	}
 	return slog.String("layer", layer)
+}
+
+// Returns the angle in radians from p1 -> p2 clockwise from the north axis.
+func (p1 PixelPosition) angle(p2 PixelPosition) float64 {
+	return math.Atan2(float64(p2.Y-p1.Y), float64(p2.X-p1.X)) + math.Pi/2
 }
 
 func (pos PixelPosition) chebyshevDistance(otherPos PixelPosition) int {

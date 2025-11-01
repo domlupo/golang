@@ -22,8 +22,6 @@ Is there a mobile equivalent for war/4x games?
 - Fix guided air missile bug 
   - It only retargets to missil when both the final position and other missile are within its range.
 
-  - draw basic bomber with vector graphics
-    - Determine how unit will control its directional heading
  - bomber pathing
     - Determine if I need a new target type (Should this use local targets or new type of queue target)
     - How does turn radius work?
