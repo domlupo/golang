@@ -579,6 +579,13 @@ Is there a mobile equivalent for war/4x games?
   multiple missile which hit the same area since it doesn't factor in it will kill units.
   Another upgrade could be missile coordination e.g. multiple noes coordinate.
 - Should obstacles be higher resolution than hexagonal? e.g. allow non node hexs to have partial obstacles.
+- It would be good polish to have end game stats/summary
+  - infantry killed
+  - infantry died
+  - node control
+  - units with the most kills
+    - a single bomer had X kills
+- It would be good polish to allow players to config certain aspects e.g. highlight widths
 
 ---
 
