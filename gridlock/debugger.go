@@ -27,7 +27,7 @@ type debuggerConfig struct {
 	debugHexagons                 bool
 	hexGridLineWidth              int
 	hexGridIndexCount             int
-	debugGridColor                color.Color
+	hexGridColor                  color.Color
 	visibilityGridLineWidth       int
 	visibilityGridPointRadius     int
 	visibilityGridHighlightOffset int
@@ -44,7 +44,7 @@ func newDebuggerConfig() *debuggerConfig {
 	dc := debuggerConfig{
 		hexGridLineWidth:              1,
 		hexGridIndexCount:             32,
-		debugGridColor:                color.Black,
+		hexGridColor:                  color.White,
 		visibilityGridLineWidth:       1,
 		visibilityGridPointRadius:     3,
 		visibilityGridHighlightOffset: 3,
@@ -537,7 +537,7 @@ func drawHexGrid(c drawConfig, dC debuggerConfig) {
 				swX,
 				swY,
 				float32(dC.hexGridLineWidth)*c.windowMultiplier,
-				dC.debugGridColor,
+				dC.hexGridColor,
 				false)
 
 			// draw northwest
@@ -551,7 +551,7 @@ func drawHexGrid(c drawConfig, dC debuggerConfig) {
 				nwX,
 				nwY,
 				float32(dC.hexGridLineWidth)*c.windowMultiplier,
-				dC.debugGridColor,
+				dC.hexGridColor,
 				false)
 
 			// draw northeast
@@ -565,7 +565,7 @@ func drawHexGrid(c drawConfig, dC debuggerConfig) {
 				neX,
 				neY,
 				float32(dC.hexGridLineWidth)*c.windowMultiplier,
-				dC.debugGridColor,
+				dC.hexGridColor,
 				false)
 
 		}
