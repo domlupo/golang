@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"math"
 )
@@ -16,6 +17,23 @@ const (
 	guidedAirMissile
 	bomber
 )
+
+func (n name) String() string {
+	switch n {
+	case noName:
+		return "noName"
+	case infantry:
+		return "infantry"
+	case unguidedGroundMissile:
+		return "unguidedGroundMissile"
+	case guidedAirMissile:
+		return "guidedAirMissile"
+	case bomber:
+		return "bomber"
+	default:
+		panic(fmt.Sprintf("String name is unknown %d", n))
+	}
+}
 
 type unitConfig struct {
 	name                 name
@@ -112,20 +130,7 @@ var bomberConfig = unitConfig{
 
 func (uc unitConfig) log() []slog.Attr {
 	var a = []slog.Attr{}
-	var name string
-	switch uc.name {
-	case noName:
-		name = "no name"
-	case infantry:
-		name = "infantry"
-	case unguidedGroundMissile:
-		name = "unguidedGroundMissile"
-	case guidedAirMissile:
-		name = "guidedAirMissile"
-	default:
-		name = "unknown"
-	}
-	a = append(a, slog.String("name", name))
+	a = append(a, slog.String("name", uc.name.String()))
 	a = append(a, slog.Int("radius", uc.radius))
 	a = append(a, slog.Int("maxHealth", uc.maxHealth))
 	a = append(a, slog.Int("attack", uc.attack))

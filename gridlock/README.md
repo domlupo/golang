@@ -19,9 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Add node debugging to debugger 
-  - Needed since I can't easily verify unit count syncs
-
 - Fix bug where air units target off screen during first spawn
 
 - Fix guided air missile bug

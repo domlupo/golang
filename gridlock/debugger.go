@@ -19,8 +19,9 @@ import (
 // Debugger Configurations
 type debuggerConfig struct {
 	debugHexGrid                  bool
-	debugObstacleLUT              bool
+	debugNodes                    bool
 	debugNodeLUT                  bool
+	debugObstacleLUT              bool
 	debugVisibilityGrids          bool
 	debugBlueTargets              bool
 	debugRedTargets               bool
@@ -123,15 +124,21 @@ func (d *debugger) setupHeatmaps() {
 
 func (d *debugger) setupToggles(cooldown time.Duration) {
 	toggles := make(map[string]*toggle)
-	toggles["drawAll"] = newToggle(
+	toggles["debugAll"] = newToggle(
 		ebiten.KeyA,
 		func() {
-			var toggle = !(d.debugBlueTargets && d.debugRedTargets && d.debugHexGrid && d.debugVisibilityGrids && d.debugHexagons)
+			var toggle = !(d.debugBlueTargets &&
+				d.debugRedTargets &&
+				d.debugHexGrid &&
+				d.debugVisibilityGrids &&
+				d.debugHexagons &&
+				d.debugNodes)
 			d.debugBlueTargets = toggle
 			d.debugRedTargets = toggle
 			d.debugHexGrid = toggle
 			d.debugVisibilityGrids = toggle
 			d.debugHexagons = toggle
+			d.debugNodes = toggle
 		},
 		cooldown)
 	toggles["debugBlueTargets"] = newToggle(
@@ -150,13 +157,17 @@ func (d *debugger) setupToggles(cooldown time.Duration) {
 		ebiten.KeyV,
 		func() { d.debugVisibilityGrids = !d.debugVisibilityGrids },
 		cooldown)
-	toggles["debugObstacleLUT"] = newToggle(
-		ebiten.KeyQ,
-		func() { d.debugObstacleLUT = !d.debugObstacleLUT },
+	toggles["debugNodes"] = newToggle(
+		ebiten.KeyN,
+		func() { d.debugNodes = !d.debugNodes },
 		cooldown)
 	toggles["debugNodeLUT"] = newToggle(
 		ebiten.KeyW,
 		func() { d.debugNodeLUT = !d.debugNodeLUT },
+		cooldown)
+	toggles["debugObstacleLUT"] = newToggle(
+		ebiten.KeyQ,
+		func() { d.debugObstacleLUT = !d.debugObstacleLUT },
 		cooldown)
 	toggles["debugHexagons"] = newToggle(
 		ebiten.KeyH,
@@ -169,6 +180,7 @@ func (d *debugger) debug(p PixelPosition) {
 	d.logPixel(p)
 	d.logVisibilityGridObstaclePoints()
 	d.logHexagons()
+	d.logNodes()
 	d.createUnitPathfindHeatmap()
 }
 
@@ -208,6 +220,16 @@ func (d *debugger) logHexagons() {
 		for _, h := range d.hexagons {
 			if h.selected {
 				logger.log(infoLevel, devTool, "hexagon", h.log()...)
+			}
+		}
+	}
+}
+
+func (d *debugger) logNodes() {
+	if d.debugNodes {
+		for _, n := range d.nodes {
+			if n.selected {
+				logger.log(infoLevel, devTool, "node", n.log()...)
 			}
 		}
 	}

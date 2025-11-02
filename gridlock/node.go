@@ -27,8 +27,8 @@ type nodeInfo struct {
 
 // Game component which spawns units and is captured by opposing units
 type node struct {
-	player             player
 	gridPos            GridPosition
+	player             player
 	control            []*hexagon
 	singleSelect       bool
 	multiSelect        bool
@@ -39,6 +39,7 @@ type node struct {
 	unitConfig         unitConfig
 	blueUnitAliveCount int
 	redUnitAliveCount  int
+	selected           bool
 }
 
 func newNode(p player, gridPos GridPosition, initialNodeHealth int, uc unitConfig) node {
@@ -52,6 +53,39 @@ func newNode(p player, gridPos GridPosition, initialNodeHealth int, uc unitConfi
 		unitConfig:    uc,
 	}
 	return n
+}
+
+func (n node) log() []slog.Attr {
+	var a []slog.Attr
+	a = append(a, nest("gridPos", n.gridPos.log()))
+	a = append(a, slog.String("player", n.capturedBy.String()))
+	control := []slog.Attr{}
+	for _, c := range n.control {
+		control = append(control, c.gridPos.log()...)
+	}
+	if len(control) == 0 {
+		a = append(a, slog.String("control", "none"))
+	} else {
+		a = append(a, nest("control", control))
+	}
+	a = append(a, slog.Bool("singleSelect", n.singleSelect))
+	a = append(a, slog.Bool("multiSelect", n.multiSelect))
+	a = append(a, slog.Int("maxHealth", n.maxHealth))
+	a = append(a, slog.Int("currentHealth", n.currentHealth))
+	a = append(a, slog.String("capturedBy", n.capturedBy.String()))
+	targets := []slog.Attr{}
+	for _, t := range n.targets {
+		targets = append(targets, t.log()...)
+	}
+	if len(targets) == 0 {
+		a = append(a, slog.String("targets", "none"))
+	} else {
+		a = append(a, nest("targets", targets))
+	}
+	a = append(a, slog.String("unitConfig", n.unitConfig.name.String()))
+	a = append(a, slog.Int("blueUnitAliveCount", n.blueUnitAliveCount))
+	a = append(a, slog.Int("redUnitAliveCount", n.redUnitAliveCount))
+	return a
 }
 
 // Returns a unique and determinite slice of bytes from the passed nodes.
@@ -207,7 +241,7 @@ func (n node) isZero() bool {
 	return n.player == noPlayer && n.gridPos.X == 0 && n.gridPos.Y == 0
 }
 
-func (n node) selected() bool {
+func (n node) selectActive() bool {
 	return n.singleSelect || n.multiSelect
 }
 

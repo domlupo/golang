@@ -836,6 +836,18 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 			}
 		}
 
+		for _, n := range s.nodes {
+			p := s.g.getPixelPosOutbounds(n.gridPos, hpCenter)
+			if (topLeftPixelPos.X < p.X) &&
+				(p.X < bottomRightPixelPos.X) &&
+				(topLeftPixelPos.Y < p.Y) &&
+				(p.Y < bottomRightPixelPos.Y) {
+				n.selected = true
+			} else {
+				n.selected = false
+			}
+		}
+
 		visited := make(map[uuid.UUID]struct{})
 		for _, o := range s.obstacles {
 			g := *o.visibilityGrid
@@ -872,7 +884,7 @@ func (s *state) updateTargets(target position, blueComputerActive bool, redCompu
 			continue
 		}
 
-		if n.selected() {
+		if n.selectActive() {
 			n.targets = append(n.targets, target)
 		}
 
@@ -958,7 +970,7 @@ func (s *state) produceUnits() {
 			panic("could not get pixel pos for produce units")
 		}
 		uPos := position{n.unitConfig.produceLayer, pixelPos}
-		newUnit := newUnit(n.player, n.targets, n.unitConfig, uPos, s.unitsProducedTotal, n.selected() && s.developerMode, n.gridPos)
+		newUnit := newUnit(n.player, n.targets, n.unitConfig, uPos, s.unitsProducedTotal, n.selectActive() && s.developerMode, n.gridPos)
 		if _, collides := s.collidesWithUnit(uPos, newUnit); !collides {
 			hex := s.hexagons[n.gridPos]
 			hl := hex.get(newUnit.layer)
