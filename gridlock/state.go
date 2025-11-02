@@ -146,9 +146,12 @@ func (s *state) analyzeTargets() {
 			u.angle = u.PixelPosition.angle(u.globalTargets[0].PixelPosition)
 			if u.atTerminalPosition && len(u.globalTargets) > 1 {
 				u.globalTargets = u.globalTargets[1:]
+			} else if u.atTerminalPosition && len(u.globalTargets) == 1 {
+				u.globalTargets = s.nodes[u.producedFrom].targets
 			}
 			u.localTargets = []position{u.globalTargets[0]}
 			u.prioritizeTargets()
+
 			continue
 		}
 
@@ -981,13 +984,13 @@ func (s *state) draw(dc drawConfig) {
 	for _, o := range s.obstacles {
 		o.drawObstacle(dc)
 	}
-	for _, u := range s.highAirUnits {
+	for _, u := range s.landUnits {
 		u.draw(dc, u.selected)
 	}
 	for _, u := range s.lowAirUnits {
 		u.draw(dc, u.selected)
 	}
-	for _, u := range s.landUnits {
+	for _, u := range s.highAirUnits {
 		u.draw(dc, u.selected)
 	}
 }
