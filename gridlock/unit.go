@@ -406,9 +406,9 @@ func (u unit) log() []slog.Attr {
 	switch u.player {
 	case pNone:
 		player = "noPlayer"
-	case pBlue:
+	case pOne:
 		player = "bluePlayer"
-	case pRed:
+	case pTwo:
 		player = "redPlayer"
 	case pNeutral:
 		player = "neutralPlayer"
@@ -472,10 +472,10 @@ func (u unit) log() []slog.Attr {
 func (u *unit) draw(dc drawConfig, selected bool) {
 	var unitColor color.Color
 	switch u.player {
-	case pBlue:
-		unitColor = dc.bluePlayerUnitColor
-	case pRed:
-		unitColor = dc.redPlayerUnitColor
+	case pOne:
+		unitColor = dc.pOneUnitColor
+	case pTwo:
+		unitColor = dc.pTwoUnitColor
 	default:
 		panic("unit needs a color")
 	}

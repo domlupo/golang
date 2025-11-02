@@ -23,8 +23,8 @@ type debuggerConfig struct {
 	debugNodeLUT                  bool
 	debugObstacleLUT              bool
 	debugVisibilityGrids          bool
-	debugBlueTargets              bool
-	debugRedTargets               bool
+	debugPOneTargets              bool
+	debugPTwoTargets              bool
 	debugHexagons                 bool
 	hexGridLineWidth              int
 	hexGridIndexCount             int
@@ -127,14 +127,14 @@ func (d *debugger) setupToggles(cooldown time.Duration) {
 	toggles["debugAll"] = newToggle(
 		ebiten.KeyA,
 		func() {
-			var toggle = !(d.debugBlueTargets &&
-				d.debugRedTargets &&
+			var toggle = !(d.debugPOneTargets &&
+				d.debugPTwoTargets &&
 				d.debugHexGrid &&
 				d.debugVisibilityGrids &&
 				d.debugHexagons &&
 				d.debugNodes)
-			d.debugBlueTargets = toggle
-			d.debugRedTargets = toggle
+			d.debugPOneTargets = toggle
+			d.debugPTwoTargets = toggle
 			d.debugHexGrid = toggle
 			d.debugVisibilityGrids = toggle
 			d.debugHexagons = toggle
@@ -143,11 +143,11 @@ func (d *debugger) setupToggles(cooldown time.Duration) {
 		cooldown)
 	toggles["debugBlueTargets"] = newToggle(
 		ebiten.KeyB,
-		func() { d.debugBlueTargets = !d.debugBlueTargets },
+		func() { d.debugPOneTargets = !d.debugPOneTargets },
 		cooldown)
 	toggles["debugRedTargets"] = newToggle(
 		ebiten.KeyR,
-		func() { d.debugRedTargets = !d.debugRedTargets },
+		func() { d.debugPTwoTargets = !d.debugPTwoTargets },
 		cooldown)
 	toggles["debugHexGrid"] = newToggle(
 		ebiten.KeyG,
@@ -326,7 +326,7 @@ func (d debugger) draw(c drawConfig) {
 	}
 
 	for _, n := range d.nodes {
-		n.drawTargets(c, d.debugBlueTargets, d.debugRedTargets)
+		n.drawTargets(c, d.debugPOneTargets, d.debugPTwoTargets)
 	}
 
 	for u := range d.units() {

@@ -338,10 +338,7 @@ func (s *state) moveUnits() {
 			newPos,
 			*u)
 
-		switch {
-		case collidesWithUnit && u.player == pBlue:
-			u.AtCollision = true
-		case collidesWithUnit && u.player == pRed:
+		if collidesWithUnit {
 			u.AtCollision = true
 		}
 
@@ -660,10 +657,10 @@ func (s *state) attackUnits() {
 			s.deleteUnit(u.position)
 			n := s.nodes[u.producedFrom]
 			switch u.player {
-			case pBlue:
-				n.blueUnitAliveCount--
-			case pRed:
-				n.redUnitAliveCount--
+			case pOne:
+				n.pOneUnitAliveCount--
+			case pTwo:
+				n.pTwoUnitAliveCount--
 			default:
 				panic(fmt.Sprintf("attackUnits: unknown player %d", u.player))
 			}
@@ -731,8 +728,8 @@ func (s *state) updateForNodeCapture() bool {
 			newNode.control = n.control
 			newNode.singleSelect = n.singleSelect
 			newNode.multiSelect = n.multiSelect
-			newNode.blueUnitAliveCount = n.blueUnitAliveCount
-			newNode.redUnitAliveCount = n.redUnitAliveCount
+			newNode.pOneUnitAliveCount = n.pOneUnitAliveCount
+			newNode.pTwoUnitAliveCount = n.pTwoUnitAliveCount
 			s.nodes[n.gridPos] = &newNode
 			nodeOwnershipChanged = true
 		}
@@ -878,9 +875,9 @@ func (s *state) updateTargets(target position, blueComputerActive bool, redCompu
 		switch {
 		case n.player == pNeutral:
 			continue
-		case n.player == pBlue && blueComputerActive:
+		case n.player == pOne && blueComputerActive:
 			continue
-		case n.player == pRed && redComputerActive:
+		case n.player == pTwo && redComputerActive:
 			continue
 		}
 
@@ -950,12 +947,12 @@ func (s *state) produceUnits() {
 		var unitAliveCount int
 		var incrementAliveCount func()
 		switch n.player {
-		case pBlue:
-			unitAliveCount = n.blueUnitAliveCount
-			incrementAliveCount = func() { n.blueUnitAliveCount++ }
-		case pRed:
-			unitAliveCount = n.redUnitAliveCount
-			incrementAliveCount = func() { n.redUnitAliveCount++ }
+		case pOne:
+			unitAliveCount = n.pOneUnitAliveCount
+			incrementAliveCount = func() { n.pOneUnitAliveCount++ }
+		case pTwo:
+			unitAliveCount = n.pTwoUnitAliveCount
+			incrementAliveCount = func() { n.pTwoUnitAliveCount++ }
 		default:
 			panic(fmt.Sprintf("produceUnits: unknown player %d", n.player))
 		}

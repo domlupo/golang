@@ -108,8 +108,8 @@ func newGame() Game {
 
 func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify bool) {
 	// TODO: Need to restart timers, etc
-	g.compOne = *newComputer(pBlue)
-	g.compTwo = *newComputer(pRed)
+	g.compOne = *newComputer(pOne)
+	g.compTwo = *newComputer(pTwo)
 
 	// TODO: Determine if grid being passed here is correct. It might be best to have both lower level grid
 	// for positions and a higher level struct for the grid components
@@ -271,19 +271,19 @@ func (g *Game) Update() error {
 	nodeCapture := g.gameState.updateForNodeCapture()
 	g.updateComputerTargetNodes(nodeCapture, avgUnitPos)
 
-	var blueNodeCount int
-	var redNodeCount int
+	var pOneNodeCount int
+	var pTwoNodeCount int
 
 	for _, node := range g.gameState.nodes {
 		switch node.player {
-		case pBlue:
-			blueNodeCount++
-		case pRed:
-			redNodeCount++
+		case pOne:
+			pOneNodeCount++
+		case pTwo:
+			pTwoNodeCount++
 		}
 	}
 
-	if blueNodeCount == 0 || redNodeCount == 0 {
+	if pOneNodeCount == 0 || pTwoNodeCount == 0 {
 		if g.hotRestart {
 			logger.log(infoLevel, mainLogic, "restartGame")
 

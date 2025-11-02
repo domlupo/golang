@@ -25,10 +25,10 @@ func (c *computer) updateNodeTargets(s state, nodeCapture bool, avgUnitPos Pixel
 
 	var opponent player
 	switch c.player {
-	case pBlue:
-		opponent = pRed
-	case pRed:
-		opponent = pBlue
+	case pOne:
+		opponent = pTwo
+	case pTwo:
+		opponent = pOne
 	default:
 		panic(fmt.Sprintf("updateNodeTargets: unknown player: %d", c.player))
 	}

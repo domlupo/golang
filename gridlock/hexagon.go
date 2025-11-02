@@ -24,8 +24,8 @@ type hexagon struct {
 type hexLayer struct {
 	linkedList    *unit
 	unitCount     int
-	unitCountRed  int
-	unitCountBlue int
+	unitCountPOne int
+	unitCountPTwo int
 }
 
 func (h hexagon) log() []slog.Attr {
@@ -45,8 +45,8 @@ func (hl hexLayer) log() []slog.Attr {
 		a = append(a, nest("linkedList", hl.linkedList.PixelPosition.log()))
 	}
 	a = append(a, slog.Int("unitCount", hl.unitCount))
-	a = append(a, slog.Int("unitCountRed", hl.unitCountRed))
-	a = append(a, slog.Int("unitCountBlue", hl.unitCountBlue))
+	a = append(a, slog.Int("unitCountPOne", hl.unitCountPOne))
+	a = append(a, slog.Int("unitCountPTwo", hl.unitCountPTwo))
 	return a
 }
 
@@ -92,12 +92,12 @@ func (hs hexagons) maxUnitDifferential(player player, l layer) []GridPosition {
 		dI := 0
 		dJ := 0
 		switch player {
-		case pRed:
-			dI = hlI.unitCountRed - hlI.unitCountBlue
-			dJ = hlJ.unitCountRed - hlJ.unitCountBlue
-		case pBlue:
-			dI = hlI.unitCountBlue - hlI.unitCountRed
-			dJ = hlJ.unitCountBlue - hlJ.unitCountRed
+		case pOne:
+			dI = hlI.unitCountPOne - hlI.unitCountPTwo
+			dJ = hlJ.unitCountPOne - hlJ.unitCountPTwo
+		case pTwo:
+			dI = hlI.unitCountPTwo - hlI.unitCountPOne
+			dJ = hlJ.unitCountPTwo - hlJ.unitCountPOne
 		}
 		return dI > dJ
 	})
@@ -123,10 +123,10 @@ func (h *hexagon) add(u unit) {
 	hl := h.get(u.layer)
 	hl.unitCount++
 	switch u.player {
-	case pRed:
-		hl.unitCountRed++
-	case pBlue:
-		hl.unitCountBlue++
+	case pOne:
+		hl.unitCountPOne++
+	case pTwo:
+		hl.unitCountPTwo++
 	default:
 		panic(fmt.Sprintf("cannot add player %d to hexagon", u.player))
 	}
@@ -136,10 +136,10 @@ func (h *hexagon) subtract(u unit) {
 	hl := h.get(u.layer)
 	hl.unitCount--
 	switch u.player {
-	case pRed:
-		hl.unitCountRed--
-	case pBlue:
-		hl.unitCountBlue--
+	case pOne:
+		hl.unitCountPOne--
+	case pTwo:
+		hl.unitCountPTwo--
 	default:
 		panic(fmt.Sprintf("cannot subtract player %d to hexagon", u.player))
 	}

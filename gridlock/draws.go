@@ -9,6 +9,13 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+type drawTriangleColor struct {
+	red   float32
+	green float32
+	blue  float32
+	alpha float32
+}
+
 // Drawing Configurations for game components which are shown to player
 type drawConfig struct {
 	screen *ebiten.Image
@@ -27,12 +34,16 @@ type drawConfig struct {
 	highlightColor                color.RGBA
 	unitHealthColor               color.RGBA
 	nodeHealthColor               color.RGBA
-	bluePlayerNodeColor           color.RGBA
-	bluePlayerUnitColor           color.RGBA
-	redPlayerNodeColor            color.RGBA
-	redPlayerUnitColor            color.RGBA
-	neutralNodeColor              color.RGBA
+	pOneNodeTargetColor           color.RGBA
+	pOneUnitColor                 color.RGBA
+	pTwoNodeTargetColor           color.RGBA
+	pTwoUnitColor                 color.RGBA
+	pNeutralNodeTargetColor       color.RGBA
 	drawTriangleDefaultImage      *ebiten.Image
+	pOneNodeColor                 drawTriangleColor
+	pTwoNodeColor                 drawTriangleColor
+	pNeutralNodeColor             drawTriangleColor
+	nodeControlColor              drawTriangleColor
 }
 
 func newDrawConfig() *drawConfig {
@@ -58,12 +69,16 @@ func newDrawConfig() *drawConfig {
 		highlightColor:                highlightColor,
 		unitHealthColor:               highlightColor,
 		nodeHealthColor:               highlightColor,
-		bluePlayerNodeColor:           color.RGBA{0, 0, 255, 100},
-		bluePlayerUnitColor:           color.RGBA{0, 0, 255, 100},
-		redPlayerNodeColor:            color.RGBA{255, 0, 0, 100},
-		redPlayerUnitColor:            color.RGBA{255, 0, 0, 100},
-		neutralNodeColor:              color.RGBA{100, 60, 100, 200},
+		pOneNodeTargetColor:           color.RGBA{0, 0, 255, 100},
+		pOneUnitColor:                 color.RGBA{0, 0, 255, 100},
+		pTwoNodeTargetColor:           color.RGBA{255, 0, 0, 100},
+		pTwoUnitColor:                 color.RGBA{255, 0, 0, 100},
+		pNeutralNodeTargetColor:       color.RGBA{100, 60, 100, 200},
 		drawTriangleDefaultImage:      drawTriangleDefaultImage,
+		pOneNodeColor:                 drawTriangleColor{red: 0.5, blue: 1, green: 0.5, alpha: 1},
+		pTwoNodeColor:                 drawTriangleColor{red: 1, blue: 0.5, green: 0.5, alpha: 1},
+		pNeutralNodeColor:             drawTriangleColor{red: 0.5, blue: 0.5, green: 0.5, alpha: 1},
+		nodeControlColor:              drawTriangleColor{red: 0.7, blue: 0.7, green: 0.7, alpha: 1},
 	}
 	return &dc
 }
@@ -123,13 +138,6 @@ func drawUnfilledBoxFloat32(dc drawConfig, color color.Color, initialX float32, 
 
 func drawUnfilledBoxInt(dc drawConfig, color color.Color, initialX int, initialY int, finalX int, finalY int) {
 	drawUnfilledBoxFloat32(dc, color, float32(initialX), float32(initialY), float32(finalX), float32(finalY))
-}
-
-type drawTriangleColor struct {
-	red   float32
-	green float32
-	blue  float32
-	alpha float32
 }
 
 func drawHex(dc drawConfig, p GridPosition, color drawTriangleColor, selected bool) {

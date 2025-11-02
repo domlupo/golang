@@ -11,21 +11,21 @@ type player int
 
 const (
 	pNone player = iota
-	pBlue
-	pRed
 	pNeutral
+	pOne
+	pTwo
 )
 
 func (p player) String() string {
 	switch p {
 	case pNone:
 		return "pNone"
-	case pBlue:
-		return "pBlue"
-	case pRed:
-		return "pRed"
 	case pNeutral:
 		return "pNeutral"
+	case pOne:
+		return "pOne"
+	case pTwo:
+		return "pTwo"
 	default:
 		panic(fmt.Sprintf("Cannot convert player to string: %d", p))
 	}

@@ -37,8 +37,8 @@ type node struct {
 	capturedBy         player
 	targets            []position
 	unitConfig         unitConfig
-	blueUnitAliveCount int
-	redUnitAliveCount  int
+	pOneUnitAliveCount int
+	pTwoUnitAliveCount int
 	selected           bool
 }
 
@@ -83,8 +83,8 @@ func (n node) log() []slog.Attr {
 		a = append(a, nest("targets", targets))
 	}
 	a = append(a, slog.String("unitConfig", n.unitConfig.name.String()))
-	a = append(a, slog.Int("blueUnitAliveCount", n.blueUnitAliveCount))
-	a = append(a, slog.Int("redUnitAliveCount", n.redUnitAliveCount))
+	a = append(a, slog.Int("blueUnitAliveCount", n.pOneUnitAliveCount))
+	a = append(a, slog.Int("redUnitAliveCount", n.pTwoUnitAliveCount))
 	return a
 }
 
@@ -293,7 +293,7 @@ func (nodes nodes) setupControl(g grid, hexagons hexagons, oLUT obstacleLUT) {
 			}
 
 			switch n.player {
-			case pRed, pBlue, pNeutral:
+			case pOne, pTwo, pNeutral:
 				n.control = append(n.control, h)
 				// TODO: Need to determine behavior for same depth conflicts.
 				// Currently, code selects first enountered node which is not correct.
@@ -308,31 +308,18 @@ func (nodes nodes) setupControl(g grid, hexagons hexagons, oLUT obstacleLUT) {
 }
 
 func (n *node) drawNode(dc drawConfig) {
-	var red float32
-	var blue float32
-	var green float32
-	var alpha float32
+	var drawTriangleColor drawTriangleColor
 	switch n.player {
-	case pBlue:
-		red = 0.5
-		blue = 1
-		green = 0.5
-		alpha = 1
-	case pRed:
-		red = 1
-		blue = 0.5
-		green = 0.5
-		alpha = 1
+	case pOne:
+		drawTriangleColor = dc.pOneNodeColor
+	case pTwo:
+		drawTriangleColor = dc.pTwoNodeColor
 	case pNeutral:
-		red = 0.5
-		blue = 0.5
-		green = 0.5
-		alpha = 1
+		drawTriangleColor = dc.pNeutralNodeColor
 	default:
 		panic("unknown player cannot drawNode")
 	}
-
-	drawHex(dc, n.gridPos, drawTriangleColor{red: red, blue: blue, green: green, alpha: alpha}, n.multiSelect)
+	drawHex(dc, n.gridPos, drawTriangleColor, n.multiSelect)
 
 	if n.currentHealth != n.maxHealth {
 		c := dc.grid.getPixelPosOutbounds(n.gridPos, hpCenter)
@@ -355,27 +342,27 @@ func (n *node) drawNode(dc drawConfig) {
 	if n.singleSelect {
 		for _, h := range n.control {
 			if !n.gridPos.equals(h.gridPos) {
-				drawHex(dc, h.gridPos, drawTriangleColor{red: 0.7, blue: 0.7, green: 0.7, alpha: alpha}, false)
+				drawHex(dc, h.gridPos, dc.nodeControlColor, false)
 			}
 		}
 
 	}
 }
 
-func (n *node) drawTargets(dc drawConfig, drawBlueTargets bool, drawRedTargets bool) {
-	var nodeColor color.Color
+func (n *node) drawTargets(dc drawConfig, drawPOneTargets bool, drawPTwoTargets bool) {
+	var color color.Color
 	switch n.player {
-	case pBlue:
-		nodeColor = dc.bluePlayerNodeColor
-	case pRed:
-		nodeColor = dc.redPlayerNodeColor
+	case pOne:
+		color = dc.pOneNodeTargetColor
+	case pTwo:
+		color = dc.pTwoNodeTargetColor
 	case pNeutral:
-		nodeColor = dc.neutralNodeColor
+		color = dc.pNeutralNodeTargetColor
 	default:
 		panic("unknown player for drawTargets")
 	}
 
-	if !n.isZero() && ((n.player == pBlue && drawBlueTargets) || (n.player == pRed && drawRedTargets)) {
+	if !n.isZero() && ((n.player == pOne && drawPOneTargets) || (n.player == pTwo && drawPTwoTargets)) {
 		var center, ok = dc.grid.getPixelPos(n.gridPos, hpCenter)
 		if !ok {
 			panic("could not get pixel pos for node draw targets")
@@ -388,7 +375,7 @@ func (n *node) drawTargets(dc drawConfig, drawBlueTargets bool, drawRedTargets b
 				float32(t.X)*dc.windowMultiplier,
 				float32(t.Y)*dc.windowMultiplier,
 				float32(dc.targetNodeLineWidth)*dc.windowMultiplier,
-				nodeColor,
+				color,
 				false,
 			)
 		}
