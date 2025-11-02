@@ -78,31 +78,34 @@ func setupHexagons(g grid) map[GridPosition]*hexagon {
 	return hexagons
 }
 
+type unitDifferential struct {
+	GridPosition
+	diff int
+}
+
 // Returns all hexagon GridPositions sorted by largest unit count differential for the passed player.
 // No guaranteed sort for multiple grid positions with equal differential.
-func (hs hexagons) maxUnitDifferential(player player, l layer) []GridPosition {
-	var positions = []GridPosition{}
+func (hs hexagons) maxUnitDifferential(opponent player, l layer) []unitDifferential {
+	var diffs = []unitDifferential{}
 	for p := range hs {
-		positions = append(positions, p)
+		hl := hs[p].get(l)
+		var d int
+		switch opponent {
+		case pOne:
+			d = hl.unitCountPOne - hl.unitCountPTwo
+		case pTwo:
+			d = hl.unitCountPTwo - hl.unitCountPOne
+		default:
+			panic(fmt.Sprintf("maxUnitDifferential: unknown player %d", opponent))
+		}
+		diffs = append(diffs, unitDifferential{p, d})
 	}
 
-	sort.Slice(positions, func(i, j int) bool {
-		hlI := hs[positions[i]].get(l)
-		hlJ := hs[positions[j]].get(l)
-		dI := 0
-		dJ := 0
-		switch player {
-		case pOne:
-			dI = hlI.unitCountPOne - hlI.unitCountPTwo
-			dJ = hlJ.unitCountPOne - hlJ.unitCountPTwo
-		case pTwo:
-			dI = hlI.unitCountPTwo - hlI.unitCountPOne
-			dJ = hlJ.unitCountPTwo - hlJ.unitCountPOne
-		}
-		return dI > dJ
+	sort.Slice(diffs, func(i, j int) bool {
+		return diffs[i].diff > diffs[j].diff
 	})
 
-	return positions
+	return diffs
 }
 
 func (h *hexagon) updatePointers(u *unit) {

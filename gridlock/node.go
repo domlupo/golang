@@ -261,7 +261,7 @@ func (nodes nodes) setupControl(g grid, hexagons hexagons, oLUT obstacleLUT) {
 
 			visited[current] = struct{}{}
 
-			p, ok := g.getAnyPixelPos(current)
+			p, ok := g.getCenterWithFallback(current)
 			if !ok {
 				panic("setup control, could not find any pixel position")
 			} else if !oLUT[p].Walkable {

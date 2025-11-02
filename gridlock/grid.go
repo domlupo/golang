@@ -123,7 +123,11 @@ func (g grid) getPixelPos(pos GridPosition, hexPoint hexPoint) (PixelPosition, b
 	}
 }
 
-func (g grid) getAnyPixelPos(pos GridPosition) (PixelPosition, bool) {
+func (g grid) getCenterWithFallback(pos GridPosition) (PixelPosition, bool) {
+	if p, ok := g.getPixelPos(pos, hpCenter); ok {
+		return p, true
+	}
+
 	for _, hp := range hexPoints() {
 		if p, ok := g.getPixelPos(pos, hp); ok {
 			return p, true

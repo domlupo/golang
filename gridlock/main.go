@@ -163,7 +163,6 @@ func (g *Game) Update() error {
 		if g.slowTick {
 			logger.log(infoLevel, devTool, "slowTick")
 		}
-		g.slowTickTime = time.Now()
 
 		logger.log(debugLevel, mainLogic, "start state automated steps")
 		logger.log(debugLevel, mainLogic, "analyzeTargets")
@@ -268,8 +267,11 @@ func (g *Game) Update() error {
 	// play computer moves. Computers currently affect game state directly rather
 	// than the same game state being sent to each one before a final update occurs.
 	// This is a hack, but will probably be fine for awhile.
-	nodeCapture := g.gameState.updateForNodeCapture()
-	g.updateComputerTargetNodes(nodeCapture, avgUnitPos)
+	if !g.paused && !(g.slowTick && (g.currentTime.Sub(g.slowTickTime) < g.slowTickInterval)) {
+		nodeCapture := g.gameState.updateForNodeCapture()
+		g.updateComputerTargetNodes(nodeCapture, avgUnitPos)
+		g.slowTickTime = time.Now()
+	}
 
 	var pOneNodeCount int
 	var pTwoNodeCount int

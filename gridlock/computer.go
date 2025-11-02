@@ -33,11 +33,11 @@ func (c *computer) updateNodeTargets(s state, nodeCapture bool, avgUnitPos Pixel
 		panic(fmt.Sprintf("updateNodeTargets: unknown player: %d", c.player))
 	}
 
-	maxDiffs := s.hexagons.maxUnitDifferential(opponent, land)
+	diffs := s.hexagons.maxUnitDifferential(opponent, land)
 	var p1 PixelPosition
 	var p2 PixelPosition
-	for _, pos := range maxDiffs {
-		p, ok := s.g.getPixelPos(pos, hpCenter)
+	for _, diff := range diffs {
+		p, ok := s.g.getCenterWithFallback(diff.GridPosition)
 		if !ok {
 			continue
 		}
@@ -49,28 +49,39 @@ func (c *computer) updateNodeTargets(s state, nodeCapture bool, avgUnitPos Pixel
 			break
 		}
 	}
+
 	for _, n := range s.nodes {
 		if n.player != c.player {
 			continue
 		}
 
-		selfNode := n
-		switch n.unitConfig.name {
-		case infantry:
+		if n.unitConfig.name == infantry {
 			continue
+		}
+
+		nP, ok := s.g.getCenterWithFallback(n.gridPos)
+		if !ok {
+			panic(fmt.Sprintf("updateNodeTargets: cannot get node pixel position %s", nP.log()))
+		}
+
+		selfNode := n
+		selfNode.targets = []position{{land, nP}}
+		switch n.unitConfig.name {
 		case unguidedGroundMissile:
-			selfNode.targets = []position{{land, p1}}
-		case guidedAirMissile:
-			selfNode.targets = []position{{land, avgUnitPos}}
-		case bomber:
-			nodeP, ok := s.g.getPixelPos(n.gridPos, hpCenter)
-			if !ok {
-				panic(fmt.Sprintf("updateNodeTargets: cannot getPixelPos for bomber: %s", n.gridPos.log()))
+			if diffs[0].diff > 1 {
+				selfNode.targets = []position{{land, p1}}
 			}
-			selfNode.targets = []position{}
-			selfNode.targets = append(selfNode.targets, position{land, p1})
-			selfNode.targets = append(selfNode.targets, position{land, p2})
-			selfNode.targets = append(selfNode.targets, position{layer: bomberConfig.produceLayer, PixelPosition: nodeP})
+		case guidedAirMissile:
+			if !avgUnitPos.equals(PixelPosition{}) {
+				selfNode.targets = []position{{land, avgUnitPos}}
+			}
+		case bomber:
+			if diffs[0].diff > 2 && diffs[1].diff > 2 {
+				selfNode.targets = []position{}
+				selfNode.targets = append(selfNode.targets, position{land, p1})
+				selfNode.targets = append(selfNode.targets, position{land, p2})
+				selfNode.targets = append(selfNode.targets, position{layer: bomberConfig.produceLayer, PixelPosition: nP})
+			}
 		}
 	}
 }

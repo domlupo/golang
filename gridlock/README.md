@@ -19,8 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Fix bug where air units target off screen during first spawn
-
 - Fix guided air missile bug
   - It only retargets to missile when both the final position and other missile are within its range.
 
