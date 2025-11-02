@@ -1,4 +1,4 @@
-// A position represents a point in 2d (PixelPosition) or 3d space (position)
+// A position represents a two dimensional point (PixelPosition) or a three dimension point (position).
 
 package main
 
@@ -8,7 +8,7 @@ import (
 	"math"
 )
 
-// high resolution position.
+// Two dimensional point.
 type PixelPosition struct {
 	X int `json:"x"`
 	Y int `json:"y"`
@@ -23,7 +23,7 @@ const (
 	highAir
 )
 
-// globally unique position
+// Three dimensional point.
 type position struct {
 	layer
 	PixelPosition
@@ -90,10 +90,10 @@ func (pos position) isZero() bool {
 	return pos.layer == noLayer
 }
 
-func (pixelPos PixelPosition) log() []slog.Attr {
+func (p PixelPosition) log() []slog.Attr {
 	var a = []slog.Attr{}
-	a = append(a, slog.Int("x", pixelPos.X))
-	a = append(a, slog.Int("y", pixelPos.Y))
+	a = append(a, slog.Int("x", p.X))
+	a = append(a, slog.Int("y", p.Y))
 	return a
 }
 
@@ -117,27 +117,27 @@ func (p1 PixelPosition) angle(p2 PixelPosition) float64 {
 	return math.Atan2(float64(p2.Y-p1.Y), float64(p2.X-p1.X)) + math.Pi/2
 }
 
-func (pos PixelPosition) chebyshevDistance(otherPos PixelPosition) int {
-	xDelta := pos.X - otherPos.X
+func (p PixelPosition) chebyshevDistance(other PixelPosition) int {
+	xDelta := p.X - other.X
 	if xDelta < 0 {
 		xDelta *= -1
 	}
-	yDelta := pos.Y - otherPos.Y
+	yDelta := p.Y - other.Y
 	if yDelta < 0 {
 		yDelta *= -1
 	}
 	return max(xDelta, yDelta)
 }
 
-func (pixelPos PixelPosition) equals(other PixelPosition) bool {
-	return pixelPos.X == other.X && pixelPos.Y == other.Y
+func (p PixelPosition) equals(other PixelPosition) bool {
+	return p.X == other.X && p.Y == other.Y
 }
 
-func (pos position) equals(other position) bool {
-	return pos.layer == other.layer && pos.PixelPosition.equals(other.PixelPosition)
+func (p position) equals(other position) bool {
+	return p.layer == other.layer && p.PixelPosition.equals(other.PixelPosition)
 }
 
-func (pos PixelPosition) adjacent(d direction) (PixelPosition, bool) {
+func (p PixelPosition) adjacent(d direction) (PixelPosition, bool) {
 	var x int
 	var y int
 
@@ -164,30 +164,30 @@ func (pos PixelPosition) adjacent(d direction) (PixelPosition, bool) {
 		x = -1
 		y = -1
 	default:
-		panic(fmt.Sprintf("cannot get adjacent pixel position for %s unknown direction: %d", pos.log(), d))
+		panic(fmt.Sprintf("cannot get adjacent pixel position for %s unknown direction: %d", p.log(), d))
 	}
 
-	p := PixelPosition{X: pos.X + x, Y: pos.Y + y}
-	if !newWindowConfig().inbounds(p) {
+	a := PixelPosition{X: p.X + x, Y: p.Y + y}
+	if !newWindowConfig().inbounds(a) {
 		return PixelPosition{}, false
 	}
-	return p, true
+	return a, true
 }
 
-func (pixelPos PixelPosition) allAdjacent() []PixelPosition {
+func (p PixelPosition) allAdjacent() []PixelPosition {
 	a := []PixelPosition{}
 	for _, d := range directions() {
-		if p, ok := pixelPos.adjacent(d); ok {
-			a = append(a, p)
+		if pos, ok := p.adjacent(d); ok {
+			a = append(a, pos)
 		}
 	}
 	return a
 }
 
-func (pos position) log() []slog.Attr {
+func (p position) log() []slog.Attr {
 	var a = []slog.Attr{}
-	a = append(a, pos.layer.log())
-	a = append(a, pos.PixelPosition.log()...)
+	a = append(a, p.layer.log())
+	a = append(a, p.PixelPosition.log()...)
 	return a
 }
 
@@ -201,14 +201,14 @@ func (p1 PixelPosition) add(p2 PixelPosition) (PixelPosition, bool) {
 }
 
 // The point directions are p -> q -> r.
-func orientation(p PixelPosition, q PixelPosition, r PixelPosition) pointOrientation {
-	v := (q.Y-p.Y)*(r.X-q.X) - (q.X-p.X)*(r.Y-q.Y)
+func orientation(p1 PixelPosition, p2 PixelPosition, p3 PixelPosition) pointOrientation {
+	o := (p2.Y-p1.Y)*(p3.X-p2.X) - (p2.X-p1.X)*(p3.Y-p2.Y)
 	switch {
-	case v == 0:
+	case o == 0:
 		return collinear
-	case v > 0:
+	case o > 0:
 		return clockwise
-	case v < 0:
+	case o < 0:
 		return counterClockwise
 	default:
 		panic("cannot find pixel position orientation")
@@ -216,8 +216,8 @@ func orientation(p PixelPosition, q PixelPosition, r PixelPosition) pointOrienta
 	}
 }
 
-func onSegment(p PixelPosition, q PixelPosition, r PixelPosition) bool {
-	return q.X <= max(p.X, r.X) && q.X >= min(p.X, r.X) && q.Y <= max(p.Y, r.Y) && q.Y >= min(p.Y, r.Y)
+func onSegment(p1 PixelPosition, p2 PixelPosition, p3 PixelPosition) bool {
+	return p2.X <= max(p1.X, p3.X) && p2.X >= min(p1.X, p3.X) && p2.Y <= max(p1.Y, p3.Y) && p2.Y >= min(p1.Y, p3.Y)
 }
 
 func (l1 line) intersects(l2 line) bool {
@@ -242,12 +242,12 @@ func (l1 line) intersects(l2 line) bool {
 	}
 }
 
-func collidesWithBorder(pos position, offset int) bool {
+func collidesWithBorder(p position, offset int) bool {
 	wc := newWindowConfig()
-	if pos.X+offset > wc.width ||
-		pos.X-offset < 0 ||
-		pos.Y+offset > wc.height ||
-		pos.Y-offset < 0 {
+	if p.X+offset > wc.width ||
+		p.X-offset < 0 ||
+		p.Y+offset > wc.height ||
+		p.Y-offset < 0 {
 		return true
 	} else {
 		return false
