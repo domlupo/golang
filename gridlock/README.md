@@ -19,8 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Suppress yield lint warning that is distracting
-
 - Add node debugging to debugger 
   - Needed since I can't easily verify unit count syncs
 

@@ -46,8 +46,6 @@ func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, 
 func (s state) units() func(yield func(u *unit) bool) {
 	return func(yield func(u *unit) bool) {
 		for _, u := range s.landUnits {
-			// May be wrong way to use yield, but there are false positive. Not sure.
-			// https://github.com/golang/go/issues/70598
 			if !yield(u) {
 				break
 			}
