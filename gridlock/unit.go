@@ -109,9 +109,9 @@ func (u *unit) refresh() {
 
 func (u *unit) prioritizeTargets() {
 	u.steerTurnCount++
-	if !u.steerTarget.isZero() && u.steerTurnCount < u.steerTurnCountLimit {
+	if !u.steerTarget.equals(position{}) && u.steerTurnCount < u.steerTurnCountLimit {
 		u.updateTarget(activeTarget, u.steerTarget)
-	} else if !u.enemyTarget.isZero() {
+	} else if !u.enemyTarget.equals(position{}) {
 		u.steerTurnCount = 0
 		u.steerTarget = position{}
 		u.localTargets = []position{}
@@ -263,7 +263,7 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 	}
 
 	var targetLog = []slog.Attr{slog.String("unit target", unitTarget)}
-	if !target.isZero() {
+	if !target.equals(position{}) {
 		targetLog = append(targetLog, target.log()...)
 	}
 	logger.logSelected(u.selected, infoLevel, selectedUnit, "updateTarget", targetLog...)
@@ -420,22 +420,22 @@ func (u unit) log() []slog.Attr {
 	a = append(a, slog.Any("next", u.next.id))
 	a = append(a, slog.Any("prior", u.prior.id))
 	a = append(a, slog.Int("producedOrder", u.producedAt))
-	if !u.activeTarget.isZero() {
+	if !u.activeTarget.equals(position{}) {
 		a = append(a, slog.Any("activeTarget", u.activeTarget.log()))
 	} else {
 		a = append(a, slog.String("activeTarget", "nil"))
 	}
-	if !u.steerTarget.isZero() {
+	if !u.steerTarget.equals(position{}) {
 		a = append(a, slog.Any("steerTarget", u.steerTarget.log()))
 	} else {
 		a = append(a, slog.String("steerTarget", "nil"))
 	}
-	if !u.enemyTarget.isZero() {
+	if !u.enemyTarget.equals(position{}) {
 		a = append(a, slog.Any("enemyTarget", u.enemyTarget.log()))
 	} else {
 		a = append(a, slog.String("enemyTarget", "nil"))
 	}
-	if !u.localTarget.isZero() {
+	if !u.localTarget.equals(position{}) {
 		a = append(a, slog.Any("localTarget", u.localTarget.log()))
 	} else {
 		a = append(a, slog.String("localTarget", "nil"))
@@ -527,7 +527,7 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 		)
 	}
 
-	if selected && !u.activeTarget.isZero() {
+	if selected && !u.activeTarget.equals(position{}) {
 		if u.unitConfig.name == unguidedGroundMissile {
 			vector.StrokeCircle(
 				dc.screen,

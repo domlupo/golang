@@ -310,7 +310,7 @@ func (s *state) moveUnits() {
 			continue
 		}
 
-		if u.activeTarget.isZero() {
+		if u.activeTarget.equals(position{}) {
 			unitsWithoutTarget++
 		}
 
@@ -332,7 +332,7 @@ func (s *state) moveUnits() {
 			}
 		}
 
-		if newPos.isZero() {
+		if newPos.equals(position{}) {
 			unitsAtUnwalkable++
 			continue
 		}
@@ -618,7 +618,7 @@ func (s *state) attackUnits() {
 		// TODO: This may be wrong behavior but I am not sure if the issue is occurring
 		// e.g. the target was killed by another unit this unit should probably find a potential new target.
 		// Then attack that rather than not attack for a turn
-		if u.enemyTarget.isZero() {
+		if u.enemyTarget.equals(position{}) {
 			continue
 		}
 

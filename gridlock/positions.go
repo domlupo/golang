@@ -86,10 +86,6 @@ func (d direction) String() string {
 	}
 }
 
-func (pos position) isZero() bool {
-	return pos.layer == noLayer
-}
-
 func (p PixelPosition) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, slog.Int("x", p.X))

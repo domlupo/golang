@@ -437,7 +437,7 @@ func (o obstacle) drawVisibilityGrid(c drawConfig, dC debuggerConfig) {
 }
 
 func (u *unit) drawDebug(c drawConfig, dC debuggerConfig) {
-	if u.selected && !u.activeTarget.isZero() {
+	if u.selected && !u.activeTarget.equals(position{}) {
 		vector.StrokeLine(
 			c.screen,
 			float32(u.X)*c.windowMultiplier,
