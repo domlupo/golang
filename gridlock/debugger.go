@@ -113,7 +113,6 @@ func (d *debugger) setupHeatmaps() {
 	}
 
 	for pixelPos, info := range d.oLUT {
-		// TODO: Revist once local path finding is more polished Should this be unwalkable or smooth sum?
 		d.obstacleLUTDistance[pixelPos] = info.UnwalkableChebyshevDistance
 	}
 
