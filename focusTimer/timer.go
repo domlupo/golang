@@ -198,13 +198,9 @@ func main() {
 
 	ebiten.SetWindowSize(g.windowWidth*g.windowMultiplier, g.windowHeight*g.windowMultiplier)
 
-	intDurationStartFromCLI := readMinsFromCLI()
 	file, progressPercentFromLog, intDurationStartFromLog := readProgressFromLog(g.logFileName)
 
-	if intDurationStartFromCLI > 0 {
-		g.intDurationStart = intDurationStartFromCLI
-		g.startTimer()
-	} else if intDurationStartFromLog > 0 && progressPercentFromLog < 100 {
+	if intDurationStartFromLog > 0 && progressPercentFromLog < 100 {
 		g.file = file
 		g.progressLoadedFromLogFile = true
 		g.progressPercentStart = progressPercentFromLog
@@ -217,28 +213,6 @@ func main() {
 	}
 
 	g.file.Close()
-}
-
-func readMinsFromCLI() int {
-	args := os.Args
-	if len(args) > 2 {
-		panic("Invalid args passed, only a single arg is expected.")
-	}
-
-	if len(args) == 2 {
-		mins, convertMinsErr := strconv.Atoi(os.Args[1])
-
-		if convertMinsErr != nil {
-			panic("Invalid arg passed, an integer is expected.")
-		}
-		if mins < 1 || mins > minutesInADay {
-			panic("Invalid arg passed, expected a number between 1 and 1440.")
-		}
-
-		return mins
-	}
-
-	return 0
 }
 
 func readProgressFromLog(filename string) (*os.File, float64, int) {

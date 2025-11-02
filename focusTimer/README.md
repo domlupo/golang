@@ -11,11 +11,3 @@ the desired 1 minute.
 Pause functionality is not implemented. Completed time is logged in a file. If a break is 
 needed, close the timer. The next time the timer is launched without arguements via 
 `./focusTimer`, progress is loaded from  the log file.
-
-Command to start a fresh 5 minute timer `./focusTimer 5`
-
-## TODO
-
-- Think of a better user experience for CLI input.
-  - Accidental log file overwrites are occuring
-  - Initial thought is CLI input only works for no or completed log file 
