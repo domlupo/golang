@@ -336,7 +336,7 @@ func (d debugger) draw(c drawConfig) {
 	if d.debugHexagons {
 		for _, h := range d.hexagons {
 			center := d.g.getPixelPosOutbounds(h.gridPos, hpCenter)
-			center.draw(c, *d.debuggerConfig, color.Black, false)
+			center.draw(c, *d.debuggerConfig, color.White, false)
 
 			if h.selected {
 				drawHexHighlight(c, h.gridPos)
