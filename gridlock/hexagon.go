@@ -92,10 +92,10 @@ func (hs hexagons) maxUnitDifferential(player player, l layer) []GridPosition {
 		dI := 0
 		dJ := 0
 		switch player {
-		case redPlayer:
+		case pRed:
 			dI = hlI.unitCountRed - hlI.unitCountBlue
 			dJ = hlJ.unitCountRed - hlJ.unitCountBlue
-		case bluePlayer:
+		case pBlue:
 			dI = hlI.unitCountBlue - hlI.unitCountRed
 			dJ = hlJ.unitCountBlue - hlJ.unitCountRed
 		}
@@ -123,9 +123,9 @@ func (h *hexagon) add(u unit) {
 	hl := h.get(u.layer)
 	hl.unitCount++
 	switch u.player {
-	case redPlayer:
+	case pRed:
 		hl.unitCountRed++
-	case bluePlayer:
+	case pBlue:
 		hl.unitCountBlue++
 	default:
 		panic(fmt.Sprintf("cannot add player %d to hexagon", u.player))
@@ -136,9 +136,9 @@ func (h *hexagon) subtract(u unit) {
 	hl := h.get(u.layer)
 	hl.unitCount--
 	switch u.player {
-	case redPlayer:
+	case pRed:
 		hl.unitCountRed--
-	case bluePlayer:
+	case pBlue:
 		hl.unitCountBlue--
 	default:
 		panic(fmt.Sprintf("cannot subtract player %d to hexagon", u.player))

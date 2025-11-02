@@ -404,13 +404,13 @@ func (u unit) log() []slog.Attr {
 	a = append(a, slog.Any("id", u.id))
 	var player string
 	switch u.player {
-	case noPlayer:
+	case pNone:
 		player = "noPlayer"
-	case bluePlayer:
+	case pBlue:
 		player = "bluePlayer"
-	case redPlayer:
+	case pRed:
 		player = "redPlayer"
-	case neutralPlayer:
+	case pNeutral:
 		player = "neutralPlayer"
 	}
 	a = append(a, slog.String("player", player))
@@ -472,9 +472,9 @@ func (u unit) log() []slog.Attr {
 func (u *unit) draw(dc drawConfig, selected bool) {
 	var unitColor color.Color
 	switch u.player {
-	case bluePlayer:
+	case pBlue:
 		unitColor = dc.bluePlayerUnitColor
-	case redPlayer:
+	case pRed:
 		unitColor = dc.redPlayerUnitColor
 	default:
 		panic("unit needs a color")

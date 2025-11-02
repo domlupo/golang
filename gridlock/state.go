@@ -339,9 +339,9 @@ func (s *state) moveUnits() {
 			*u)
 
 		switch {
-		case collidesWithUnit && u.player == bluePlayer:
+		case collidesWithUnit && u.player == pBlue:
 			u.AtCollision = true
-		case collidesWithUnit && u.player == redPlayer:
+		case collidesWithUnit && u.player == pRed:
 			u.AtCollision = true
 		}
 
@@ -660,9 +660,9 @@ func (s *state) attackUnits() {
 			s.deleteUnit(u.position)
 			n := s.nodes[u.producedFrom]
 			switch u.player {
-			case bluePlayer:
+			case pBlue:
 				n.blueUnitAliveCount--
-			case redPlayer:
+			case pRed:
 				n.redUnitAliveCount--
 			default:
 				panic(fmt.Sprintf("attackUnits: unknown player %d", u.player))
@@ -876,11 +876,11 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 func (s *state) updateTargets(target position, blueComputerActive bool, redComputerActive bool) {
 	for _, n := range s.nodes {
 		switch {
-		case n.player == neutralPlayer:
+		case n.player == pNeutral:
 			continue
-		case n.player == bluePlayer && blueComputerActive:
+		case n.player == pBlue && blueComputerActive:
 			continue
-		case n.player == redPlayer && redComputerActive:
+		case n.player == pRed && redComputerActive:
 			continue
 		}
 
@@ -943,17 +943,17 @@ func (s *state) updateTargets(target position, blueComputerActive bool, redCompu
 
 func (s *state) produceUnits() {
 	for _, n := range s.nodes {
-		if n.player == neutralPlayer {
+		if n.player == pNeutral {
 			continue
 		}
 
 		var unitAliveCount int
 		var incrementAliveCount func()
 		switch n.player {
-		case bluePlayer:
+		case pBlue:
 			unitAliveCount = n.blueUnitAliveCount
 			incrementAliveCount = func() { n.blueUnitAliveCount++ }
-		case redPlayer:
+		case pRed:
 			unitAliveCount = n.redUnitAliveCount
 			incrementAliveCount = func() { n.redUnitAliveCount++ }
 		default:

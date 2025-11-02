@@ -9,24 +9,23 @@ const minPercent = 0
 
 type player int
 
-// TODO: Update this to be idiomatic (bluePlayer -> pBlue, etc)
 const (
-	noPlayer player = iota
-	bluePlayer
-	redPlayer
-	neutralPlayer
+	pNone player = iota
+	pBlue
+	pRed
+	pNeutral
 )
 
 func (p player) String() string {
 	switch p {
-	case noPlayer:
-		return "noPlayer"
-	case bluePlayer:
-		return "bluePlayer"
-	case redPlayer:
-		return "redPlayer"
-	case neutralPlayer:
-		return "neutralPlayer"
+	case pNone:
+		return "pNone"
+	case pBlue:
+		return "pBlue"
+	case pRed:
+		return "pRed"
+	case pNeutral:
+		return "pNeutral"
 	default:
 		panic(fmt.Sprintf("Cannot convert player to string: %d", p))
 	}

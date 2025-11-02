@@ -49,7 +49,7 @@ func newNode(p player, gridPos GridPosition, initialNodeHealth int, uc unitConfi
 		control:       []*hexagon{},
 		maxHealth:     initialNodeHealth,
 		currentHealth: initialNodeHealth,
-		capturedBy:    noPlayer,
+		capturedBy:    pNone,
 		unitConfig:    uc,
 	}
 	return n
@@ -145,7 +145,7 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 				panic("setupNodeLUT: expected grid position to exist")
 			}
 			n := nodes[gridPos]
-			if n != nil && n.player != noPlayer {
+			if n != nil && n.player != pNone {
 				nodeLUT[p] = nodeInfo{ChebyshevDistance: 0, NearestNodes: []GridPosition{n.gridPos}}
 			} else {
 				nodeLUT[p] = nodeInfo{ChebyshevDistance: distanceLimit}
@@ -238,7 +238,7 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 
 func (n node) isZero() bool {
 	// TODO: fix implementation
-	return n.player == noPlayer && n.gridPos.X == 0 && n.gridPos.Y == 0
+	return n.player == pNone && n.gridPos.X == 0 && n.gridPos.Y == 0
 }
 
 func (n node) selectActive() bool {
@@ -293,12 +293,12 @@ func (nodes nodes) setupControl(g grid, hexagons hexagons, oLUT obstacleLUT) {
 			}
 
 			switch n.player {
-			case redPlayer, bluePlayer, neutralPlayer:
+			case pRed, pBlue, pNeutral:
 				n.control = append(n.control, h)
 				// TODO: Need to determine behavior for same depth conflicts.
 				// Currently, code selects first enountered node which is not correct.
 				q = []GridPosition{}
-			case noPlayer:
+			case pNone:
 				continue
 			default:
 				panic("cannot setup hex control. Unknown player")
@@ -313,17 +313,17 @@ func (n *node) drawNode(dc drawConfig) {
 	var green float32
 	var alpha float32
 	switch n.player {
-	case bluePlayer:
+	case pBlue:
 		red = 0.5
 		blue = 1
 		green = 0.5
 		alpha = 1
-	case redPlayer:
+	case pRed:
 		red = 1
 		blue = 0.5
 		green = 0.5
 		alpha = 1
-	case neutralPlayer:
+	case pNeutral:
 		red = 0.5
 		blue = 0.5
 		green = 0.5
@@ -365,17 +365,17 @@ func (n *node) drawNode(dc drawConfig) {
 func (n *node) drawTargets(dc drawConfig, drawBlueTargets bool, drawRedTargets bool) {
 	var nodeColor color.Color
 	switch n.player {
-	case bluePlayer:
+	case pBlue:
 		nodeColor = dc.bluePlayerNodeColor
-	case redPlayer:
+	case pRed:
 		nodeColor = dc.redPlayerNodeColor
-	case neutralPlayer:
+	case pNeutral:
 		nodeColor = dc.neutralNodeColor
 	default:
 		panic("unknown player for drawTargets")
 	}
 
-	if !n.isZero() && ((n.player == bluePlayer && drawBlueTargets) || (n.player == redPlayer && drawRedTargets)) {
+	if !n.isZero() && ((n.player == pBlue && drawBlueTargets) || (n.player == pRed && drawRedTargets)) {
 		var center, ok = dc.grid.getPixelPos(n.gridPos, hpCenter)
 		if !ok {
 			panic("could not get pixel pos for node draw targets")
