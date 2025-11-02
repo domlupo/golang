@@ -19,6 +19,8 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Refactor pBlue and pRed to pOne and pTwo
+
 - Fix bug where air units target off screen during first spawn
 
 - Fix guided air missile bug
