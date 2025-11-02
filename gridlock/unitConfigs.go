@@ -2,7 +2,10 @@
 
 package main
 
-import "log/slog"
+import (
+	"log/slog"
+	"math"
+)
 
 type name int
 
@@ -29,6 +32,7 @@ type unitConfig struct {
 	attacksPosition      bool
 	explodeAtTerminalPos bool
 	explodeRadius        int
+	maxAlivePerNode      int
 }
 
 // Note: unit radius set to an odd number is better for testing due to division bugs
@@ -47,6 +51,7 @@ var infantryConfig = unitConfig{
 	attacksPosition:      false,
 	explodeAtTerminalPos: false,
 	explodeRadius:        0,
+	maxAlivePerNode:      math.MaxInt,
 }
 
 // TODO: Figure out better naming for various missiles
@@ -66,6 +71,7 @@ var unguidedGroundMissileConfig = unitConfig{
 	attacksPosition:      true,
 	explodeAtTerminalPos: true,
 	explodeRadius:        20,
+	maxAlivePerNode:      math.MaxInt,
 }
 
 var guidedAirMissileConfig = unitConfig{
@@ -83,6 +89,7 @@ var guidedAirMissileConfig = unitConfig{
 	attacksPosition:      false,
 	explodeAtTerminalPos: true,
 	explodeRadius:        100,
+	maxAlivePerNode:      math.MaxInt,
 }
 
 var bomberConfig = unitConfig{
@@ -100,6 +107,7 @@ var bomberConfig = unitConfig{
 	attacksPosition:      false,
 	explodeAtTerminalPos: false,
 	explodeRadius:        100,
+	maxAlivePerNode:      1,
 }
 
 func (uc unitConfig) log() []slog.Attr {

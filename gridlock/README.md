@@ -22,17 +22,12 @@ Is there a mobile equivalent for war/4x games?
 - Fix guided air missile bug 
   - It only retargets to missil when both the final position and other missile are within its range.
 
+- Add node debugging to debugger 
+  - Needed since I can't easily verify unit count syncs
+
  - bomber pathing
     - Determine if I need a new target type (Should this use local targets or new type of queue target)
     - Click on node to confirm path. Also allow click off to confirm path?
-  - bomber movement (global)
-    - Only spawn one bomer at once for now (Eventually will probably need a spawn limit mechanic but can hack for now)
-    - Don't worry about steer yet. Steer is polish.
-  - bomber collision
-    - Can be punted since missiles are in lower layer.
-    - verify other missiles don't hit
-    - Attempt to use existing circle <-> circle.
-      - I want to punt more advanced collision detection till art direction is more known. 
   - bomber attack
     - draw gravity bombs
       - how do I Indicate they are falling easiest?
@@ -45,6 +40,10 @@ Is there a mobile equivalent for war/4x games?
       - easy part is finding hexs to drop bombs
       - hard part is determing path to get there especially out of bounds concerns.
   - Punted
+    - bomber nodes being captured and the bomber is still alive has multiple different options:
+      - bomber flies till it runs out of fuel (can at least soak missiles)
+      - bomber kamikazes itself onto captured airport (might be too wild)
+      - bomber flies off screen (implies there is other wars going on)
     - player experience when spam clicking bomber path targets?
     - bomber crashing
     - bomber flares
@@ -578,6 +577,10 @@ Is there a mobile equivalent for war/4x games?
   - units with the most kills
     - a single bomer had X kills
 - It would be good polish to allow players to config certain aspects e.g. highlight widths
+- Should nodes support multiple bombers? If yes should there also be options
+  - fly in formation and bomb same targets
+  - fly separate but bomb same targets
+  - fly separate and bomb differently (complex due to path finding)
 
 ---
 

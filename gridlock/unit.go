@@ -66,6 +66,7 @@ type unit struct {
 	next                *unit
 	producedAt          int
 	angle               float64
+	producedFrom        GridPosition
 }
 
 type Move struct {
@@ -73,7 +74,7 @@ type Move struct {
 	confirm func()
 }
 
-func newUnit(p player, globalTargets []position, uc unitConfig, pos position, producedOrder int, selected bool) unit {
+func newUnit(p player, globalTargets []position, uc unitConfig, pos position, producedOrder int, selected bool, producedFrom GridPosition) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
 		logger.log(errorLevel, selectedUnit, "newUnit", slog.String("failed to generate UUID", err.Error()))
@@ -91,6 +92,7 @@ func newUnit(p player, globalTargets []position, uc unitConfig, pos position, pr
 		selected:            selected,
 		producedAt:          producedOrder,
 		steerTurnCountLimit: 20,
+		producedFrom:        producedFrom,
 	}
 
 	return u

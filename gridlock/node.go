@@ -27,16 +27,18 @@ type nodeInfo struct {
 
 // Game component which spawns units and is captured by opposing units
 type node struct {
-	player        player
-	gridPos       GridPosition
-	control       []*hexagon
-	singleSelect  bool
-	multiSelect   bool
-	maxHealth     int
-	currentHealth int
-	capturedBy    player
-	targets       []position
-	unitConfig    unitConfig
+	player             player
+	gridPos            GridPosition
+	control            []*hexagon
+	singleSelect       bool
+	multiSelect        bool
+	maxHealth          int
+	currentHealth      int
+	capturedBy         player
+	targets            []position
+	unitConfig         unitConfig
+	blueUnitAliveCount int
+	redUnitAliveCount  int
 }
 
 func newNode(p player, gridPos GridPosition, initialNodeHealth int, uc unitConfig) node {

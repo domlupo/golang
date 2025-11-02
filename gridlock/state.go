@@ -657,6 +657,15 @@ func (s *state) attackUnits() {
 			hex := s.hexagons[gridPos]
 			hex.subtract(*u)
 			s.deleteUnit(u.position)
+			n := s.nodes[u.producedFrom]
+			switch u.player {
+			case bluePlayer:
+				n.blueUnitAliveCount--
+			case redPlayer:
+				n.redUnitAliveCount--
+			default:
+				panic(fmt.Sprintf("attackUnits: unknown player %d", u.player))
+			}
 			s.unitsDeletedTotal++
 			unitsDeletedCount++
 		}
@@ -718,9 +727,11 @@ func (s *state) updateForNodeCapture() bool {
 	for _, n := range s.nodes {
 		if n.currentHealth == 0 {
 			newNode := newNode(n.capturedBy, n.gridPos, n.maxHealth, n.unitConfig)
-			newNode.control = s.nodes[n.gridPos].control
-			newNode.singleSelect = s.nodes[n.gridPos].singleSelect
-			newNode.multiSelect = s.nodes[n.gridPos].multiSelect
+			newNode.control = n.control
+			newNode.singleSelect = n.singleSelect
+			newNode.multiSelect = n.multiSelect
+			newNode.blueUnitAliveCount = n.blueUnitAliveCount
+			newNode.redUnitAliveCount = n.redUnitAliveCount
 			s.nodes[n.gridPos] = &newNode
 			nodeOwnershipChanged = true
 		}
@@ -923,13 +934,30 @@ func (s *state) produceUnits() {
 			continue
 		}
 
+		var unitAliveCount int
+		var incrementAliveCount func()
+		switch n.player {
+		case bluePlayer:
+			unitAliveCount = n.blueUnitAliveCount
+			incrementAliveCount = func() { n.blueUnitAliveCount++ }
+		case redPlayer:
+			unitAliveCount = n.redUnitAliveCount
+			incrementAliveCount = func() { n.redUnitAliveCount++ }
+		default:
+			panic(fmt.Sprintf("produceUnits: unknown player %d", n.player))
+		}
+
+		if unitAliveCount == n.unitConfig.maxAlivePerNode {
+			continue
+		}
+
 		// TODO: determine behavior for producing units during collision
 		pixelPos, ok := s.g.getPixelPos(n.gridPos, hpCenter)
 		if !ok {
 			panic("could not get pixel pos for produce units")
 		}
 		uPos := position{n.unitConfig.produceLayer, pixelPos}
-		newUnit := newUnit(n.player, n.targets, n.unitConfig, uPos, s.unitsProducedTotal, n.selected() && s.developerMode)
+		newUnit := newUnit(n.player, n.targets, n.unitConfig, uPos, s.unitsProducedTotal, n.selected() && s.developerMode, n.gridPos)
 		if _, collides := s.collidesWithUnit(uPos, newUnit); !collides {
 			hex := s.hexagons[n.gridPos]
 			hl := hex.get(newUnit.layer)
@@ -941,6 +969,7 @@ func (s *state) produceUnits() {
 			s.addUnit(&newUnit)
 			hex.add(newUnit)
 			s.unitsProducedTotal++
+			incrementAliveCount()
 		}
 	}
 }
