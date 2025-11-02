@@ -78,8 +78,19 @@ func (c *computer) updateNodeTargets(s state, nodeCapture bool, avgUnitPos Pixel
 		case bomber:
 			if diffs[0].diff > 2 && diffs[1].diff > 2 {
 				selfNode.targets = []position{}
-				selfNode.targets = append(selfNode.targets, position{land, p1})
-				selfNode.targets = append(selfNode.targets, position{land, p2})
+				selfNode.actions = []action{}
+				selfNode.targets = append(selfNode.targets, position{highAir, p1})
+				selfNode.actions = append(selfNode.actions, action{pos: position{highAir, p1}, do: func() {
+					for _, u := range s.highAirUnits {
+						u.selected = true
+					}
+				}})
+				selfNode.targets = append(selfNode.targets, position{highAir, p2})
+				selfNode.actions = append(selfNode.actions, action{pos: position{highAir, p2}, do: func() {
+					for _, u := range s.highAirUnits {
+						u.selected = false
+					}
+				}})
 				selfNode.targets = append(selfNode.targets, position{layer: bomberConfig.produceLayer, PixelPosition: nP})
 			}
 		}
@@ -119,7 +130,7 @@ func (c *computer) updateForNodeCapture(s state) {
 					panic("could not get pixel pos for update computer node targets")
 				}
 
-				selfNode.targets = []position{position{land, targetPixelPos}}
+				selfNode.targets = []position{{land, targetPixelPos}}
 			}
 
 		}

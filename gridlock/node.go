@@ -36,6 +36,7 @@ type node struct {
 	currentHealth      int
 	capturedBy         player
 	targets            []position
+	actions            []action
 	unitConfig         unitConfig
 	pOneUnitAliveCount int
 	pTwoUnitAliveCount int
@@ -81,6 +82,15 @@ func (n node) log() []slog.Attr {
 		a = append(a, slog.String("targets", "none"))
 	} else {
 		a = append(a, nest("targets", targets))
+	}
+	actions := []slog.Attr{}
+	for _, a := range n.actions {
+		actions = append(actions, a.log()...)
+	}
+	if len(targets) == 0 {
+		a = append(a, slog.String("actions", "none"))
+	} else {
+		a = append(a, nest("actions", actions))
 	}
 	a = append(a, slog.String("unitConfig", n.unitConfig.name.String()))
 	a = append(a, slog.Int("blueUnitAliveCount", n.pOneUnitAliveCount))

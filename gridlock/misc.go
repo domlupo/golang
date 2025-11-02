@@ -2,7 +2,10 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"log/slog"
+)
 
 const maxPercent = 100
 const minPercent = 0
@@ -50,4 +53,16 @@ func (wc windowConfig) maxPixels() int {
 
 func (wc windowConfig) inbounds(p PixelPosition) bool {
 	return !(p.X < 0 || p.X > wc.width-1 || p.Y < 0 || p.Y > wc.height-1)
+}
+
+// Stores a callback to invoke when a position is reached.
+type action struct {
+	pos position
+	do  func()
+}
+
+func (action action) log() []slog.Attr {
+	var a = []slog.Attr{}
+	a = append(a, nest("pos", action.pos.log()))
+	return a
 }

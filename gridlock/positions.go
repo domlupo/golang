@@ -133,6 +133,10 @@ func (pixelPos PixelPosition) equals(other PixelPosition) bool {
 	return pixelPos.X == other.X && pixelPos.Y == other.Y
 }
 
+func (pos position) equals(other position) bool {
+	return pos.layer == other.layer && pos.PixelPosition.equals(other.PixelPosition)
+}
+
 func (pos PixelPosition) adjacent(d direction) (PixelPosition, bool) {
 	var x int
 	var y int

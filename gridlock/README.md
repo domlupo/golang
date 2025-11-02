@@ -50,6 +50,8 @@ Is there a mobile equivalent for war/4x games?
     - bomb draws
     - turn radius + paths that arc (not sure if I even want this for player experience)
 
+- Refactor unguided missile to use action struct
+
 - Add better target drawing
   - nodes should show all targets
   - need to differentiate between multi global and multi local targets

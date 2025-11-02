@@ -49,6 +49,7 @@ type unit struct {
 	localTarget         position
 	localTargets        []position
 	globalTargets       []position
+	actions             []action
 	pathGlobalTarget    bool
 	atTerminalPosition  bool
 	bresenhamError      int
@@ -74,7 +75,7 @@ type Move struct {
 	confirm func()
 }
 
-func newUnit(p player, globalTargets []position, uc unitConfig, pos position, producedOrder int, selected bool, producedFrom GridPosition) unit {
+func newUnit(p player, globalTargets []position, actions []action, uc unitConfig, pos position, producedOrder int, selected bool, producedFrom GridPosition) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
 		logger.log(errorLevel, selectedUnit, "newUnit", slog.String("failed to generate UUID", err.Error()))
@@ -87,6 +88,7 @@ func newUnit(p player, globalTargets []position, uc unitConfig, pos position, pr
 		player:              p,
 		globalTargets:       globalTargets,
 		pathGlobalTarget:    true,
+		actions:             actions,
 		unitConfig:          uc,
 		health:              uc.maxHealth,
 		selected:            selected,
@@ -238,7 +240,7 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 	var unitTarget string
 	switch ut {
 	case activeTarget:
-		if !u.activeTarget.equals(target.PixelPosition) {
+		if !u.activeTarget.equals(target) {
 			u.bresenhamError = 0
 		}
 		u.activeTarget = target
@@ -455,6 +457,15 @@ func (u unit) log() []slog.Attr {
 		a = append(a, slog.String("globalTargets", "none"))
 	} else {
 		a = append(a, nest("globalTargets", globalTargets))
+	}
+	actions := []slog.Attr{}
+	for _, a := range u.actions {
+		actions = append(actions, a.log()...)
+	}
+	if len(actions) == 0 {
+		a = append(a, slog.String("actions", "none"))
+	} else {
+		a = append(a, nest("actions", actions))
 	}
 	a = append(a, slog.Bool("atTerminalPosition", u.atTerminalPosition))
 	a = append(a, slog.Int("bresenhamError", u.bresenhamError))

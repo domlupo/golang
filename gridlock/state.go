@@ -143,9 +143,14 @@ func (s *state) analyzeTargets() {
 		if u.unitConfig.name == bomber {
 			u.angle = u.PixelPosition.angle(u.globalTargets[0].PixelPosition)
 			if u.atTerminalPosition && len(u.globalTargets) > 1 {
+				if len(u.actions) > 0 && u.actions[0].pos.equals(u.globalTargets[0]) {
+					u.actions[0].do()
+					u.actions = u.actions[1:]
+				}
 				u.globalTargets = u.globalTargets[1:]
 			} else if u.atTerminalPosition && len(u.globalTargets) == 1 {
 				u.globalTargets = s.nodes[u.producedFrom].targets
+				u.actions = s.nodes[u.producedFrom].actions
 			}
 			u.localTargets = []position{u.globalTargets[0]}
 			u.prioritizeTargets()
@@ -154,7 +159,7 @@ func (s *state) analyzeTargets() {
 		}
 
 		steer := s.steer(u)
-		if !u.position.equals(steer.PixelPosition) {
+		if !u.position.equals(steer) {
 			u.updateTarget(steerTarget, steer)
 		}
 
@@ -967,7 +972,7 @@ func (s *state) produceUnits() {
 			panic("could not get pixel pos for produce units")
 		}
 		uPos := position{n.unitConfig.produceLayer, pixelPos}
-		newUnit := newUnit(n.player, n.targets, n.unitConfig, uPos, s.unitsProducedTotal, n.selectActive() && s.developerMode, n.gridPos)
+		newUnit := newUnit(n.player, n.targets, n.actions, n.unitConfig, uPos, s.unitsProducedTotal, n.selectActive() && s.developerMode, n.gridPos)
 		if _, collides := s.collidesWithUnit(uPos, newUnit); !collides {
 			hex := s.hexagons[n.gridPos]
 			hl := hex.get(newUnit.layer)
