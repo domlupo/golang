@@ -19,12 +19,17 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Fix guided air missile bug 
-  - It only retargets to missil when both the final position and other missile are within its range.
+- Suppress yield lint warning that is distracting
 
 - Add node debugging to debugger 
   - Needed since I can't easily verify unit count syncs
 
+- Fix bug where air units target off screen during first spawn
+
+- Fix guided air missile bug
+  - It only retargets to missile when both the final position and other missile are within its range.
+
+- Add bomber
  - bomber pathing
     - Determine if I need a new target type (Should this use local targets or new type of queue target)
     - Click on node to confirm path. Also allow click off to confirm path?
