@@ -6,6 +6,7 @@ import (
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -22,7 +23,7 @@ type drawConfig struct {
 	grid   grid
 	// windowMultiplier must only be used for drawing images and windows.
 	// Never use for game logic. float32 rather than idiomatic float64
-	// because alot of Ebiten draw APIs use float32
+	// because the Ebiten draw APIs I use are often float32 over float64.
 	windowMultiplier              float32
 	selectectionBoxLineWidth      int
 	missileExplodeRadiusLineWidth int
@@ -44,8 +45,11 @@ type drawConfig struct {
 	pTwoNodeColor                 drawTriangleColor
 	pNeutralNodeColor             drawTriangleColor
 	nodeControlColor              drawTriangleColor
+	pngBomber                     *ebiten.Image
 }
 
+// Invoke only once per game session. NewImage calls are expensive and are not
+// idempotent for specific edge cases. https://github.com/hajimehoshi/ebiten/issues/3335
 func newDrawConfig() *drawConfig {
 	// TODO: check if this should use a subimage if final game uses draw triangle.
 	// Not investigating now since draw triangle may not be used in final game.
@@ -55,6 +59,10 @@ func newDrawConfig() *drawConfig {
 	// For 1280p * 720p resolution, a hexagon height of 40p is ideally 80/sqrt(3) wide.
 	// 80/sqrt(3) is 46.188 which is approximately 46p.
 	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
+	pngBomer, _, err := ebitenutil.NewImageFromFile("assets/bomber.png")
+	if err != nil {
+		panic("newDrawConfig: cannot load bomber png")
+	}
 	dc := drawConfig{
 		screen:                        nil,
 		windowMultiplier:              2.5,
@@ -79,6 +87,7 @@ func newDrawConfig() *drawConfig {
 		pTwoNodeColor:                 drawTriangleColor{red: 1, blue: 0.5, green: 0.5, alpha: 1},
 		pNeutralNodeColor:             drawTriangleColor{red: 0.5, blue: 0.5, green: 0.5, alpha: 1},
 		nodeControlColor:              drawTriangleColor{red: 0.7, blue: 0.7, green: 0.7, alpha: 1},
+		pngBomber:                     pngBomer,
 	}
 	return &dc
 }

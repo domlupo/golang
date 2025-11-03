@@ -4,14 +4,12 @@ package main
 
 import (
 	"image/color"
-	"log"
 	"log/slog"
 	"math"
 	"slices"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -492,19 +490,13 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 	}
 
 	if u.name == bomber {
-		img, _, err := ebitenutil.NewImageFromFile("assets/bomber.png")
-		if err != nil {
-			log.Fatal(err)
-		}
 		op := &ebiten.DrawImageOptions{}
 		xMult := math.Sin(u.angle) - math.Cos(u.angle)
 		yMult := -math.Sqrt2 * math.Sin(u.angle+(math.Pi/4))
 		op.GeoM.Rotate(u.angle)
 		op.GeoM.Translate(float64(u.X)+float64(u.radius)*xMult, float64(u.Y)+float64(u.radius)*yMult)
-		// TOODO: Revisit this issue in the future once fix is more understood
-		// https:github.com/hajimehoshi/ebiten/issues/3335
-		op.GeoM.Scale(float64(dc.windowMultiplier)-0.01, float64(dc.windowMultiplier)-0.01)
-		dc.screen.DrawImage(img, op)
+		op.GeoM.Scale(float64(dc.windowMultiplier), float64(dc.windowMultiplier))
+		dc.screen.DrawImage(dc.pngBomber, op)
 	} else {
 		vector.FillCircle(
 			dc.screen,
