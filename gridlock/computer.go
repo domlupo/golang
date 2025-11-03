@@ -79,17 +79,33 @@ func (c *computer) updateNodeTargets(s state, nodeCapture bool, avgUnitPos Pixel
 			if diffs[0].diff > 2 && diffs[1].diff > 2 {
 				selfNode.targets = []position{}
 				selfNode.actions = []action{}
-				selfNode.targets = append(selfNode.targets, position{highAir, p1})
-				selfNode.actions = append(selfNode.actions, action{pos: position{highAir, p1}, do: func() {
-					for _, u := range s.highAirUnits {
-						u.selected = true
-					}
+				first := position{highAir, p1}
+				selfNode.targets = append(selfNode.targets, first)
+				selfNode.actions = append(selfNode.actions, action{pos: first, do: func() {
+					u := newUnit(
+						bombConfig,
+						position{layer: lowAir, PixelPosition: first.PixelPosition},
+						c.player,
+						[]position{{layer: land, PixelPosition: first.PixelPosition}},
+						[]action{},
+						GridPosition{},
+						s.unitSpawnTotal,
+						false)
+					s.spawn(&u)
 				}})
-				selfNode.targets = append(selfNode.targets, position{highAir, p2})
-				selfNode.actions = append(selfNode.actions, action{pos: position{highAir, p2}, do: func() {
-					for _, u := range s.highAirUnits {
-						u.selected = false
-					}
+				second := position{highAir, p2}
+				selfNode.targets = append(selfNode.targets, second)
+				selfNode.actions = append(selfNode.actions, action{pos: second, do: func() {
+					u := newUnit(
+						bombConfig,
+						position{layer: lowAir, PixelPosition: second.PixelPosition},
+						c.player,
+						[]position{{layer: land, PixelPosition: second.PixelPosition}},
+						[]action{},
+						GridPosition{},
+						s.unitSpawnTotal,
+						false)
+					s.spawn(&u)
 				}})
 				selfNode.targets = append(selfNode.targets, position{layer: bomberConfig.produceLayer, PixelPosition: nP})
 			}

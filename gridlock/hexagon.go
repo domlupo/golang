@@ -108,8 +108,12 @@ func (hs hexagons) maxUnitDifferential(opponent player, l layer) []unitDifferent
 	return diffs
 }
 
-func (h *hexagon) updatePointers(u *unit) {
+// Add the passed unit into the hexagon partition.
+func (h *hexagon) add(u *unit) {
 	hl := h.get(u.layer)
+	if hl.linkedList == nil && hl.unitCount != 0 {
+		panic(fmt.Sprintf("nil linked list unit count should be 0, not %d", hl.unitCount))
+	}
 
 	if hl.linkedList == nil {
 		hl.linkedList = u
@@ -120,10 +124,7 @@ func (h *hexagon) updatePointers(u *unit) {
 	u.prior = hl.linkedList.prior
 	hl.linkedList.prior.next = u
 	hl.linkedList.prior = u
-}
 
-func (h *hexagon) add(u unit) {
-	hl := h.get(u.layer)
 	hl.unitCount++
 	switch u.player {
 	case pOne:
@@ -133,10 +134,22 @@ func (h *hexagon) add(u unit) {
 	default:
 		panic(fmt.Sprintf("cannot add player %d to hexagon", u.player))
 	}
+
 }
 
+// Remove the passed unit from the hexagon partition.
 func (h *hexagon) subtract(u unit) {
 	hl := h.get(u.layer)
+	if u.next.id == u.id && u.prior.id == u.id {
+		hl.linkedList = nil
+	} else if u.next.id == u.id || u.prior.id == u.id {
+		panic("unit is in an invalid state")
+	} else {
+		hl.linkedList = u.next
+	}
+	u.next.prior = u.prior
+	u.prior.next = u.next
+
 	hl.unitCount--
 	switch u.player {
 	case pOne:
@@ -146,15 +159,4 @@ func (h *hexagon) subtract(u unit) {
 	default:
 		panic(fmt.Sprintf("cannot subtract player %d to hexagon", u.player))
 	}
-
-	if u.next.id == u.id && u.prior.id == u.id {
-		hl.linkedList = nil
-	} else if u.next.id == u.id || u.prior.id == u.id {
-		panic("unit is in an invalid state")
-	} else {
-		hl.linkedList = u.next
-	}
-
-	u.next.prior = u.prior
-	u.prior.next = u.next
 }

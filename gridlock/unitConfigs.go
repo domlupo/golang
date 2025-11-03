@@ -16,6 +16,7 @@ const (
 	unguidedGroundMissile
 	guidedAirMissile
 	bomber
+	bomb
 )
 
 func (n name) String() string {
@@ -30,6 +31,8 @@ func (n name) String() string {
 		return "guidedAirMissile"
 	case bomber:
 		return "bomber"
+	case bomb:
+		return "bomb"
 	default:
 		panic(fmt.Sprintf("String name is unknown %d", n))
 	}
@@ -47,8 +50,8 @@ type unitConfig struct {
 	attacksGround        bool
 	attacksLowAltitude   bool
 	attacksHighAltitude  bool
-	attacksPosition      bool
 	explodeAtTerminalPos bool
+	despawnAtTerminalPos bool
 	explodeRadius        int
 	maxAlivePerNode      int
 }
@@ -66,8 +69,8 @@ var infantryConfig = unitConfig{
 	attacksGround:        true,
 	attacksLowAltitude:   false,
 	attacksHighAltitude:  false,
-	attacksPosition:      false,
 	explodeAtTerminalPos: false,
+	despawnAtTerminalPos: false,
 	explodeRadius:        0,
 	maxAlivePerNode:      math.MaxInt,
 }
@@ -86,8 +89,8 @@ var unguidedGroundMissileConfig = unitConfig{
 	attacksGround:        false,
 	attacksLowAltitude:   false,
 	attacksHighAltitude:  false,
-	attacksPosition:      true,
 	explodeAtTerminalPos: true,
+	despawnAtTerminalPos: true,
 	explodeRadius:        20,
 	maxAlivePerNode:      math.MaxInt,
 }
@@ -104,8 +107,8 @@ var guidedAirMissileConfig = unitConfig{
 	attacksGround:        false,
 	attacksLowAltitude:   true,
 	attacksHighAltitude:  true,
-	attacksPosition:      false,
-	explodeAtTerminalPos: true,
+	explodeAtTerminalPos: false,
+	despawnAtTerminalPos: true,
 	explodeRadius:        100,
 	maxAlivePerNode:      math.MaxInt,
 }
@@ -122,10 +125,28 @@ var bomberConfig = unitConfig{
 	attacksGround:        false,
 	attacksLowAltitude:   false,
 	attacksHighAltitude:  false,
-	attacksPosition:      false,
 	explodeAtTerminalPos: false,
+	despawnAtTerminalPos: false,
 	explodeRadius:        100,
 	maxAlivePerNode:      1,
+}
+
+var bombConfig = unitConfig{
+	name:                 bomb,
+	radius:               4,
+	maxHealth:            100,
+	attack:               0,
+	vision:               0,
+	reach:                0,
+	produceLayer:         lowAir,
+	staticTarget:         true,
+	attacksGround:        true,
+	attacksLowAltitude:   false,
+	attacksHighAltitude:  false,
+	explodeAtTerminalPos: true,
+	despawnAtTerminalPos: true,
+	explodeRadius:        20,
+	maxAlivePerNode:      math.MaxInt,
 }
 
 func (uc unitConfig) log() []slog.Attr {
@@ -141,6 +162,7 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.Bool("attacksGround", uc.attacksGround))
 	a = append(a, slog.Bool("attacksLowAltitude", uc.attacksLowAltitude))
 	a = append(a, slog.Bool("attacksHighAltitude", uc.attacksHighAltitude))
-	a = append(a, slog.Bool("attacksPosition", uc.attacksPosition))
+	a = append(a, slog.Bool("explodeAtTerminalPos", uc.explodeAtTerminalPos))
+	a = append(a, slog.Bool("despawnAtTerminalPos", uc.despawnAtTerminalPos))
 	return a
 }

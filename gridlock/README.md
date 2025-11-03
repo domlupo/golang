@@ -31,7 +31,6 @@ Is there a mobile equivalent for war/4x games?
       - how do I Indicate they are falling easiest?
         - circle that shrinks? 
         - circle that fades?
-    - reuse explode code
     - Probably should add new unit time destruction logic  
   - computer AI
     - This is far away so scope this later but it will be hard and require a lot of work.

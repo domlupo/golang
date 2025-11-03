@@ -12,18 +12,18 @@ import (
 
 // not enforced but must be a singleton
 type state struct {
-	g                  grid
-	oLUT               obstacleLUT
-	nLUT               nodeLUT
-	hexagons           hexagons
-	obstacles          obstacles
-	nodes              nodes
-	landUnits          units
-	lowAirUnits        units
-	highAirUnits       units
-	developerMode      bool
-	unitsProducedTotal int
-	unitsDeletedTotal  int
+	g               grid
+	oLUT            obstacleLUT
+	nLUT            nodeLUT
+	hexagons        hexagons
+	obstacles       obstacles
+	nodes           nodes
+	landUnits       units
+	lowAirUnits     units
+	highAirUnits    units
+	developerMode   bool
+	unitSpawnTotal  int
+	unitDeleteTotal int
 }
 
 func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, g grid, developerMode bool) *state {
@@ -64,7 +64,14 @@ func (s state) units() func(yield func(u *unit) bool) {
 	}
 }
 
-func (s *state) addUnit(u *unit) {
+func (s *state) spawn(u *unit) {
+	p, ok := s.g.getGridPos(u.PixelPosition)
+	if !ok {
+		panic(fmt.Sprintf("spawnUnit: cannot get get grid position %s", u.PixelPosition.log()))
+	}
+	hex := s.hexagons[p]
+	hex.add(u)
+
 	switch u.layer {
 	case land:
 		s.landUnits[u.PixelPosition] = u
@@ -73,8 +80,10 @@ func (s *state) addUnit(u *unit) {
 	case highAir:
 		s.highAirUnits[u.PixelPosition] = u
 	default:
-		panic(fmt.Sprintf("addUnit: unknown layer %d", u.layer))
+		panic(fmt.Sprintf("spawnUnit: unknown layer %d", u.layer))
 	}
+
+	s.unitSpawnTotal++
 }
 
 func (s *state) moveUnit(u *unit, p position, confirm func()) {
@@ -84,11 +93,10 @@ func (s *state) moveUnit(u *unit, p position, confirm func()) {
 		panic(fmt.Sprintf("moveUnit: cannot move unit %s %s", u.PixelPosition.log(), p.PixelPosition.log()))
 	}
 	if !old.equals(new) {
-		newHex := s.hexagons[new]
-		newHex.add(*u)
 		oldHex := s.hexagons[old]
 		oldHex.subtract(*u)
-		newHex.updatePointers(u)
+		newHex := s.hexagons[new]
+		newHex.add(u)
 	}
 
 	s.deleteUnit(u.position)
@@ -149,8 +157,8 @@ func (s *state) analyzeTargets() {
 				}
 				u.globalTargets = u.globalTargets[1:]
 			} else if u.atTerminalPosition && len(u.globalTargets) == 1 {
-				u.globalTargets = s.nodes[u.producedFrom].targets
-				u.actions = s.nodes[u.producedFrom].actions
+				u.globalTargets = s.nodes[u.sourceNode].targets
+				u.actions = s.nodes[u.sourceNode].actions
 			}
 			u.localTargets = []position{u.globalTargets[0]}
 			u.prioritizeTargets()
@@ -397,17 +405,17 @@ func (s *state) explode(pos position, blastRadius int) {
 	y1 := pos.Y
 	r1 := blastRadius
 
-	for _, otherUnit := range s.landUnits {
-		x2 := otherUnit.X + otherUnit.radius
-		y2 := otherUnit.Y + otherUnit.radius
-		r2 := otherUnit.radius
+	for _, u := range s.landUnits {
+		x2 := u.X + u.radius
+		y2 := u.Y + u.radius
+		r2 := u.radius
 
 		xDelta := x2 - x1
 		yDelta := y2 - y1
 		rSum := r1 + r2
 		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
-			otherUnit.health = 0
-			s.landUnits[otherUnit.PixelPosition] = otherUnit
+			u.health = 0
+			s.landUnits[u.PixelPosition] = u
 		}
 	}
 }
@@ -594,19 +602,15 @@ func (s *state) collidesWithUnit(newPos position, u unit) (position, bool) {
 
 func (s *state) processTerminalPositions() {
 	for _, u := range s.lowAirUnits {
-		if !u.explodeAtTerminalPos {
+		if !u.atTerminalPosition {
 			continue
 		}
-
-		if u.attacksPosition && u.atTerminalPosition {
-			u.health = 0
-			s.lowAirUnits[u.PixelPosition] = u
+		if u.explodeAtTerminalPos {
 			s.explode(u.position, u.explodeRadius)
-		} else if u.atTerminalPosition {
-			u.health = 0
-			s.lowAirUnits[u.PixelPosition] = u
 		}
-
+		if u.despawnAtTerminalPos {
+			u.health = 0
+		}
 	}
 }
 
@@ -655,22 +659,24 @@ func (s *state) attackUnits() {
 
 	for u := range s.units() {
 		if u.health <= 0 {
-
 			gridPos, _ := s.g.getGridPos(u.PixelPosition)
 			hex := s.hexagons[gridPos]
 			hex.subtract(*u)
 			s.deleteUnit(u.position)
-			n := s.nodes[u.producedFrom]
-			switch u.player {
-			case pOne:
-				n.pOneUnitAliveCount--
-			case pTwo:
-				n.pTwoUnitAliveCount--
-			default:
-				panic(fmt.Sprintf("attackUnits: unknown player %d", u.player))
-			}
-			s.unitsDeletedTotal++
+			s.unitDeleteTotal++
 			unitsDeletedCount++
+
+			if !u.sourceNode.equals(GridPosition{}) {
+				n := s.nodes[u.sourceNode]
+				switch u.player {
+				case pOne:
+					n.pOneUnitAliveCount--
+				case pTwo:
+					n.pTwoUnitAliveCount--
+				default:
+					panic(fmt.Sprintf("attackUnits: unknown player %d", u.player))
+				}
+			}
 		}
 	}
 
@@ -971,19 +977,18 @@ func (s *state) produceUnits() {
 		if !ok {
 			panic("could not get pixel pos for produce units")
 		}
-		uPos := position{n.unitConfig.produceLayer, pixelPos}
-		newUnit := newUnit(n.player, n.targets, n.actions, n.unitConfig, uPos, s.unitsProducedTotal, n.selectActive() && s.developerMode, n.gridPos)
-		if _, collides := s.collidesWithUnit(uPos, newUnit); !collides {
-			hex := s.hexagons[n.gridPos]
-			hl := hex.get(newUnit.layer)
-			if hl.linkedList == nil && hl.unitCount != 0 {
-				panic("if hex linked list is nil, unit count should be 0")
-			}
-
-			hex.updatePointers(&newUnit)
-			s.addUnit(&newUnit)
-			hex.add(newUnit)
-			s.unitsProducedTotal++
+		p := position{n.unitConfig.produceLayer, pixelPos}
+		u := newUnit(
+			n.unitConfig,
+			p,
+			n.player,
+			n.targets,
+			n.actions,
+			n.gridPos,
+			s.unitSpawnTotal,
+			n.selectActive() && s.developerMode)
+		if _, collides := s.collidesWithUnit(p, u); !collides {
+			s.spawn(&u)
 			incrementAliveCount()
 		}
 	}

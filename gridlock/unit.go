@@ -63,9 +63,9 @@ type unit struct {
 	selected            bool
 	prior               *unit
 	next                *unit
-	producedAt          int
+	spawnOrder          int
 	angle               float64
-	producedFrom        GridPosition
+	sourceNode          GridPosition
 }
 
 type Move struct {
@@ -73,7 +73,15 @@ type Move struct {
 	confirm func()
 }
 
-func newUnit(p player, globalTargets []position, actions []action, uc unitConfig, pos position, producedOrder int, selected bool, producedFrom GridPosition) unit {
+func newUnit(
+	uc unitConfig,
+	pos position,
+	p player,
+	globalTargets []position,
+	actions []action,
+	sourceNode GridPosition,
+	spawnOrder int,
+	selected bool) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
 		logger.log(errorLevel, selectedUnit, "newUnit", slog.String("failed to generate UUID", err.Error()))
@@ -90,9 +98,9 @@ func newUnit(p player, globalTargets []position, actions []action, uc unitConfig
 		unitConfig:          uc,
 		health:              uc.maxHealth,
 		selected:            selected,
-		producedAt:          producedOrder,
+		spawnOrder:          spawnOrder,
 		steerTurnCountLimit: 20,
-		producedFrom:        producedFrom,
+		sourceNode:          sourceNode,
 	}
 
 	return u
@@ -417,7 +425,8 @@ func (u unit) log() []slog.Attr {
 	a = append(a, slog.Any("position", position.log(u.position)))
 	a = append(a, slog.Any("next", u.next.id))
 	a = append(a, slog.Any("prior", u.prior.id))
-	a = append(a, slog.Int("producedOrder", u.producedAt))
+	a = append(a, slog.Int("spawnOrder", u.spawnOrder))
+	a = append(a, nest("sourceNode", u.sourceNode.log()))
 	if !u.activeTarget.equals(position{}) {
 		a = append(a, slog.Any("activeTarget", u.activeTarget.log()))
 	} else {
@@ -497,6 +506,22 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 		op.GeoM.Translate(float64(u.X)+float64(u.radius)*xMult, float64(u.Y)+float64(u.radius)*yMult)
 		op.GeoM.Scale(float64(dc.windowMultiplier), float64(dc.windowMultiplier))
 		dc.screen.DrawImage(dc.pngBomber, op)
+
+		for _, a := range u.actions {
+			vector.StrokeCircle(
+				dc.screen,
+				float32(a.pos.X)*dc.windowMultiplier,
+				float32(a.pos.Y)*dc.windowMultiplier,
+				// HACK: hard coded value. Needed because this is the first instance of a unit
+				// drawing another unit config. It is Low priority to fix this. Also this pattern
+				// will occur in the future. Easier to fix once more examples to understand structure.
+				20.0*dc.windowMultiplier,
+				float32(dc.missileExplodeRadiusLineWidth)*dc.windowMultiplier,
+				dc.highlightColor,
+				false,
+			)
+		}
+
 	} else {
 		vector.FillCircle(
 			dc.screen,
