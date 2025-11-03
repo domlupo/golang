@@ -581,6 +581,10 @@ Is there a mobile equivalent for war/4x games?
   - fly in formation and bomb same targets
   - fly separate but bomb same targets
   - fly separate and bomb differently (complex due to path finding)
+- A "heat" seeking mechanic can be added to several different flying units to prioritize targets
+  - counter missile
+  - bomber / fight has tank heat seekking missiles
+  - flares
 
 ---
 
