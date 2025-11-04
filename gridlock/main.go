@@ -167,6 +167,8 @@ func (g *Game) Update() error {
 		logger.log(debugLevel, mainLogic, "start state automated steps")
 		logger.log(debugLevel, mainLogic, "analyzeTargets")
 		g.gameState.analyzeTargets()
+		logger.log(debugLevel, mainLogic, "processEvents")
+		g.gameState.processEvents()
 		logger.log(debugLevel, mainLogic, "processTerminalPositions")
 		g.gameState.processTerminalPositions()
 		logger.log(debugLevel, mainLogic, "refresh")
@@ -300,10 +302,10 @@ func (g *Game) Update() error {
 
 func (g *Game) updateComputerTargetNodes(nodeCaptureOccurred bool, avgUnitPos PixelPosition) {
 	if g.blueComputerActive {
-		g.compOne.updateNodeTargets(*g.gameState, nodeCaptureOccurred, avgUnitPos)
+		g.compOne.updateNodeTargets(g.gameState, nodeCaptureOccurred, avgUnitPos)
 	}
 	if g.redComputerActive {
-		g.compTwo.updateNodeTargets(*g.gameState, nodeCaptureOccurred, avgUnitPos)
+		g.compTwo.updateNodeTargets(g.gameState, nodeCaptureOccurred, avgUnitPos)
 	}
 }
 

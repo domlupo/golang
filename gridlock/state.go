@@ -21,6 +21,8 @@ type state struct {
 	landUnits       units
 	lowAirUnits     units
 	highAirUnits    units
+	events          []event
+	step            uint64
 	developerMode   bool
 	unitSpawnTotal  int
 	unitDeleteTotal int
@@ -130,6 +132,22 @@ func (s *state) refresh() {
 	for u := range s.units() {
 		u.refresh()
 	}
+}
+
+func (s *state) processEvents() {
+	events := []event{}
+	for _, e := range s.events {
+		switch {
+		case e.step < s.step:
+			panic(fmt.Sprintf("cannot process an event with step %d which is less than state step %d", e.step, s.step))
+		case e.step == s.step:
+			e.do()
+		default:
+			events = append(events, e)
+		}
+	}
+	s.events = events
+	s.step++
 }
 
 func (s *state) analyzeTargets() {
@@ -400,10 +418,11 @@ func (s *state) moveUnits() {
 	)
 }
 
-func (s *state) explode(pos position, blastRadius int) {
-	x1 := pos.X
-	y1 := pos.Y
-	r1 := blastRadius
+func (s *state) explode(u *unit) {
+	u.health = 0
+	x1 := u.X
+	y1 := u.Y
+	r1 := u.explodeRadius
 
 	for _, u := range s.landUnits {
 		x2 := u.X + u.radius
@@ -606,7 +625,7 @@ func (s *state) processTerminalPositions() {
 			continue
 		}
 		if u.explodeAtTerminalPos {
-			s.explode(u.position, u.explodeRadius)
+			s.explode(u)
 		}
 		if u.despawnAtTerminalPos {
 			u.health = 0

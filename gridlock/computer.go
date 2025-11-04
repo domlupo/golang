@@ -18,9 +18,9 @@ func newComputer(p player) *computer {
 	return &c
 }
 
-func (c *computer) updateNodeTargets(s state, nodeCapture bool, avgUnitPos PixelPosition) {
+func (c *computer) updateNodeTargets(s *state, nodeCapture bool, avgUnitPos PixelPosition) {
 	if nodeCapture {
-		c.updateForNodeCapture(s)
+		c.updateForNodeCapture(*s)
 	}
 
 	var opponent player
@@ -92,6 +92,12 @@ func (c *computer) updateNodeTargets(s state, nodeCapture bool, avgUnitPos Pixel
 						s.unitSpawnTotal,
 						false)
 					s.spawn(&u)
+					s.events = append(s.events, event{
+						step: s.step + bombConfig.explodeStepDelay,
+						do: func() {
+							s.explode(&u)
+						},
+					})
 				}})
 				second := position{highAir, p2}
 				selfNode.targets = append(selfNode.targets, second)
@@ -106,6 +112,12 @@ func (c *computer) updateNodeTargets(s state, nodeCapture bool, avgUnitPos Pixel
 						s.unitSpawnTotal,
 						false)
 					s.spawn(&u)
+					s.events = append(s.events, event{
+						step: s.step + bombConfig.explodeStepDelay,
+						do: func() {
+							s.explode(&u)
+						},
+					})
 				}})
 				selfNode.targets = append(selfNode.targets, position{layer: bomberConfig.produceLayer, PixelPosition: nP})
 			}

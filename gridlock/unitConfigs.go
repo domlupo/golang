@@ -50,9 +50,10 @@ type unitConfig struct {
 	attacksGround        bool
 	attacksLowAltitude   bool
 	attacksHighAltitude  bool
-	explodeAtTerminalPos bool
 	despawnAtTerminalPos bool
+	explodeAtTerminalPos bool
 	explodeRadius        int
+	explodeStepDelay     uint64
 	maxAlivePerNode      int
 }
 
@@ -143,9 +144,10 @@ var bombConfig = unitConfig{
 	attacksGround:        true,
 	attacksLowAltitude:   false,
 	attacksHighAltitude:  false,
-	explodeAtTerminalPos: true,
-	despawnAtTerminalPos: true,
+	explodeAtTerminalPos: false,
+	despawnAtTerminalPos: false,
 	explodeRadius:        20,
+	explodeStepDelay:     300,
 	maxAlivePerNode:      math.MaxInt,
 }
 

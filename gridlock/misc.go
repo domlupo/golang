@@ -55,6 +55,12 @@ func (wc windowConfig) inbounds(p PixelPosition) bool {
 	return !(p.X < 0 || p.X > wc.width-1 || p.Y < 0 || p.Y > wc.height-1)
 }
 
+// Stores a callback to invoke when a step is reached
+type event struct {
+	step uint64
+	do   func()
+}
+
 // Stores a callback to invoke when a position is reached.
 type action struct {
 	pos position
