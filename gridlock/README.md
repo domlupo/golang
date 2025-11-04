@@ -584,6 +584,13 @@ Is there a mobile equivalent for war/4x games?
   - counter missile
   - bomber / fight has tank heat seekking missiles
   - flares
+- There should probably be some type of comeback mechanic.
+  - As players lose nodes how do you make nodes more valuable?
+    - easier to control fewer nodes
+    - If nodes are upgradeable, most likely better node are in the back. This means it is likely a bomber
+      would have more frequent trips for the losing player than the winning player if the battle field lines
+      are close.
+    - What other combeack mechanics can be added?
 
 ---
 
