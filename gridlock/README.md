@@ -600,6 +600,9 @@ Is there a mobile equivalent for war/4x games?
 - Fog of war? It may be needed or it might be very beneficial while also being simple to implement.
   A compromise could be to keep only certain info hidden then something like uav or satlite can expose
   the info.
+- Tech tree could be a source of randomness. The choices and order can veary per game. Players can have the 
+  same or different pick 1 of three that slowly goes through the tech tree. I like 1 of 3 becaue its like 
+  rock paper scissors.
 
 ---
 
