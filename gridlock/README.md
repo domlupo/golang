@@ -19,43 +19,17 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Add fighter
+  - first brainstorm fighter to scope work
+
 - Fix guided air missile bug
   - It only retargets to missile when both the final position and other missile are within its range.
-
-- Add bomber
- - bomber pathing
-    - Determine if I need a new target type (Should this use local targets or new type of queue target)
-    - Click on node to confirm path. Also allow click off to confirm path?
-  - bomber attack
-    - draw gravity bombs
-      - how do I Indicate they are falling easiest?
-        - circle that shrinks? 
-        - circle that fades?
-  - computer AI
-    - This is far away so scope this later but it will be hard and require a lot of work.
-      - easy part is finding hexs to drop bombs
-      - hard part is determing path to get there especially out of bounds concerns.
-  - Punted
-    - bomber nodes being captured and the bomber is still alive has multiple different options:
-      - bomber flies till it runs out of fuel (can at least soak missiles)
-      - bomber kamikazes itself onto captured airport (might be too wild)
-      - bomber flies off screen (implies there is other wars going on)
-    - player experience when spam clicking bomber path targets?
-    - bomber crashing
-    - bomber flares
-    - bomber stealth
-    - bomber bombs as separate units attached to it
-    - bomb draws
-    - turn radius + paths that arc (not sure if I even want this for player experience)
 
 - Refactor unguided missile to use action struct
 
 - Add better target drawing
   - nodes should show all targets
   - need to differentiate between multi global and multi local targets
-
-- Add fighter
-  - first brainstorm fighter to scope work
 
 - Determine if this is correct player experience
   - high air is transparent
@@ -166,6 +140,31 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Future Checkpoints
+
+- Revisit bomber tasks
+  - Punted
+    - bomber bombs as separate units attached to it that can explode. 
+      - max bombs bomber can hold now depends on it bomber size and bomb size 
+      - order of complexity:
+        - drop bomb out of bomber in unrealistic fashion. bomb bay doesn't match drop location.
+        - drop bombs out of bomber where they exist in bomb bay. Now targetting depends on
+          bomb placement in bomber since it will be offset from center of hex which is ideal target.
+        - update bomber to fly so the next bomb in its hanger pos equals the ideal hex target pos
+          then it gets dropped. This is tricky and now bomber pathing depends on bomb bay.
+      - bombs should be transparent in bomber
+    - player actions
+      - Click on node to confirm path. Also allow click off to confirm path?
+      - player experience when spam clicking bomber path targets?
+    - Determine if I need a new target type (Should this use local targets or new type of queue target)
+    - bomber nodes being captured and the bomber is still alive has multiple different options:
+      - bomber flies till it runs out of fuel (can at least soak missiles)
+      - bomber kamikazes itself onto captured airport (might be too wild)
+      - bomber flies off screen (implies there is other wars going on)
+    - bomb falling animation
+    - bomber crashing
+    - bomber flares
+    - bomber stealth
+    - turn radius + paths that arc (not sure if I even want this for player experience)
 
 - Determine if more than only infantry should exist for ground (tank, SAM, etc) 
   - Focusing efforts elsewhere (air units, tech tree, nodes, art) might be easier and better for player experience.
