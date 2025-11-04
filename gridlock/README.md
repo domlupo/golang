@@ -595,6 +595,8 @@ Is there a mobile equivalent for war/4x games?
       would have more frequent trips for the losing player than the winning player if the battle field lines
       are close.
     - What other combeack mechanics can be added?
+- If I add a unit like paratrooper, Hex control probably needs to remain. I can make hex control be
+  less microable by making a "warzone area" between opposing nodes which are not controllable. 
 
 ---
 
@@ -850,7 +852,7 @@ Have read through several college publications and game ai pro articles not link
 - Questions:
   - Which units will counter other units?
   - Should units have upgrades?
-  - Should certain "civs" have better units?
+  - Should different players have different tech trees? Different unit costs?
   - Should planes need to fly back to airport to refuel?
   - Should planes need to fly back to airport to rearm?
   - Should planes need to fly back to airport to repair?
@@ -870,51 +872,25 @@ Have read through several college publications and game ai pro articles not link
 
 - Units:
   - Land:
-    - Done:
-      - infantry
-    - High Priority:
-      - tank
-      - mobile SAM (shoots missile in low altitude or high altitude)
-    - Low Priority:
-      - mobile artillery / rocket artillery (thought is low priority because SAM pathing more complex. Could be wrong)
-      - troop transport
-      - cargo truck (can transfer production between nodes?)
-      - unit to change targets
-      - a unit which pushes other units out of way (tank?)
-      - train track builder?
-  - Air:
-    - Done:
-      -
-    - High Priority:
-      - bomber
-      - stealth bomber
-      - fighter 
-      - stealth fighter
-    - Low Priority:
-      - helicopter / gun ship
-      - paratrooper
-      - cargo plane (can transfer production between nodes?)
-      - drone
-      - unit to change targets?
-  - City aka Node:
-    - Done
-      - missle (low altitude)
-    - High Priority
-      - guided missle (low altitude)
-      - anti missile system
-      - anti artillery system
-      - anti air gun
-    - Low Priority
-      - nuke
-      - satelite
-      - a unit to change targets
-  - Other
-    - air missile (low altitude, high altitude)
-    - ground missile (low altitude, high altitude)
-    - bomb (low altitude)
-    - artillery shell (low altitude)
-    - chemical gas
-    - jet flare
+    - infantry
+    - tank
+    - mobile sam
+    - mobile artillery
+  - Air
+    - bomber
+    - fighter (tech tree is used for stealth)
+    - paratroopers
+    - ac130 gunship
+    - apache
+    - stealth bomber? (not sure if enough for separate unit)
+    - drone (not sure)
+    - uav (not sure)
+  - Node
+    - missile
+    - counter missile
+  - Other 
+    - nuke
+    - satelite
 
 #### Brainstorm Bomber Unit
 
