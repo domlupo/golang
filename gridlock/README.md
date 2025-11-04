@@ -25,6 +25,12 @@ Is there a mobile equivalent for war/4x games?
 - Fix guided air missile bug
   - It only retargets to missile when both the final position and other missile are within its range.
 
+- Fix bug where bomb explosion still even when it visually disappears from counter missile colliding with it
+  - initial thoughts:
+    - add a condition to event struct?
+    - clear specific unit events when unit dies
+    - add condition on explode that unit must exist?
+
 - Refactor unguided missile to use action struct
 
 - Add better target drawing
