@@ -597,6 +597,9 @@ Is there a mobile equivalent for war/4x games?
     - What other combeack mechanics can be added?
 - If I add a unit like paratrooper, Hex control probably needs to remain. I can make hex control be
   less microable by making a "warzone area" between opposing nodes which are not controllable. 
+- Fog of war? It may be needed or it might be very beneficial while also being simple to implement.
+  A compromise could be to keep only certain info hidden then something like uav or satlite can expose
+  the info.
 
 ---
 
