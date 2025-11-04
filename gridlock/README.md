@@ -954,5 +954,13 @@ Have read through several college publications and game ai pro articles not link
   - faster bomb drop
   - (should bomb accuracy not be exact, but upgradable to be better?)
   - fuel (longer distance). This is hard because targetting UI becomes more complex and can fail.
+- bomb type:
+  - gravity bombs
+  - guided bombs (drop directly over target and steer towards units or something else)
+  - bunker buster (hits node?)
+  - incendiary (fire)
+  - glide bombs (fired from range and fly towards target)
+  - nuclear bomb
+  - HEAT (high-explosive anti-tank) or anti tank
 
 ---
