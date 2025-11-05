@@ -883,17 +883,17 @@ Have read through several college publications and game ai pro articles not link
     - mobile sam
     - mobile artillery
   - Air
-    - bomber
-    - fighter (tech tree is used for stealth)
-    - paratroopers
-    - ac130 gunship
-    - apache
-    - stealth bomber? (not sure if enough for separate unit)
+    - bomber (low air or high air)
+    - fighter (low air or high air, tech tree is used for stealth)
+    - paratroopers (only low air)
+    - ac130 gunship  (only low air)
+    - apache (only low air)
+    - stealth bomber? (low air or high air, not sure if enough for a separate unit)
     - drone (not sure)
     - uav (not sure)
   - Node
-    - missile
-    - counter missile
+    - missile (low air or high air)
+    - counter missile (low air or high air)
   - Other 
     - nuke
     - satelite
