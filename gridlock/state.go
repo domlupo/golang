@@ -166,7 +166,7 @@ func (s *state) analyzeTargets() {
 			continue
 		}
 
-		if u.unitConfig.name == bomber {
+		if u.unitConfig.name == bomber || u.unitConfig.name == fighter {
 			u.angle = u.PixelPosition.angle(u.globalTargets[0].PixelPosition)
 			if u.atTerminalPosition && len(u.globalTargets) > 1 {
 				if len(u.actions) > 0 && u.actions[0].pos.equals(u.globalTargets[0]) {

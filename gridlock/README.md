@@ -603,6 +603,8 @@ Is there a mobile equivalent for war/4x games?
 - Tech tree could be a source of randomness. The choices and order can veary per game. Players can have the 
   same or different pick 1 of three that slowly goes through the tech tree. I like 1 of 3 becaue its like 
   rock paper scissors.
+- fuel mechanic for planes could be risk vs reward for building closer airports but this already exists
+  because planes need to rearm.
 
 ---
 
@@ -905,7 +907,7 @@ Have read through several college publications and game ai pro articles not link
   - relative scale to other art (nodes, infantry, etc)
   - collision shape (I don't think circle will work here long term)
   - turn radius size
-- behavior?
+- behavior
   - is it going to be harder to target corners?
   - is it going to be harder to target edges?
   - When it crashes does it do ground damage? I think it should.
@@ -948,5 +950,22 @@ Have read through several college publications and game ai pro articles not link
   - glide bombs (fired from range and fly towards target)
   - nuclear bomb
   - HEAT (high-explosive anti-tank) or anti tank
+
+#### Brainstorm Fighter Unit
+
+- behavior
+  - should be more manuerverable than bomber
+  - it should be f22 over f35 since no other air to air unit exists yet
+  - adding external payload should make stealth worse
+- control
+  - first implementation is just airport -> p1 -> p2 -> airport
+
+
+#### Pixel Art Notes
+
+b1 lancer is 146' long and 40 pixels -> 3.65
+b1 lancer is 137' wide and 38 pixles -> 3.6
+f22 is 62' long -> 17
+f22 is 44' wide -> 12
 
 ---

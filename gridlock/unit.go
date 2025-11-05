@@ -498,7 +498,16 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 		panic("unit needs a color")
 	}
 
-	if u.name == bomber {
+	switch u.name {
+	case fighter:
+		op := &ebiten.DrawImageOptions{}
+		xMult := math.Sin(u.angle) - math.Cos(u.angle)
+		yMult := -math.Sqrt2 * math.Sin(u.angle+(math.Pi/4))
+		op.GeoM.Rotate(u.angle)
+		op.GeoM.Translate(float64(u.X)+float64(u.radius)*xMult, float64(u.Y)+float64(u.radius)*yMult)
+		op.GeoM.Scale(float64(dc.windowMultiplier), float64(dc.windowMultiplier))
+		dc.screen.DrawImage(dc.pngFighter, op)
+	case bomber:
 		op := &ebiten.DrawImageOptions{}
 		xMult := math.Sin(u.angle) - math.Cos(u.angle)
 		yMult := -math.Sqrt2 * math.Sin(u.angle+(math.Pi/4))
@@ -521,8 +530,7 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 				false,
 			)
 		}
-
-	} else {
+	default:
 		vector.FillCircle(
 			dc.screen,
 			float32(u.X)*dc.windowMultiplier,

@@ -46,6 +46,7 @@ type drawConfig struct {
 	pNeutralNodeColor             drawTriangleColor
 	nodeControlColor              drawTriangleColor
 	pngBomber                     *ebiten.Image
+	pngFighter                    *ebiten.Image
 }
 
 // Invoke only once per game session. NewImage calls are expensive and are not
@@ -59,9 +60,13 @@ func newDrawConfig() *drawConfig {
 	// For 1280p * 720p resolution, a hexagon height of 40p is ideally 80/sqrt(3) wide.
 	// 80/sqrt(3) is 46.188 which is approximately 46p.
 	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
-	pngBomer, _, err := ebitenutil.NewImageFromFile("assets/bomber.png")
-	if err != nil {
+	pngBomer, _, bomberErr := ebitenutil.NewImageFromFile("assets/bomber.png")
+	if bomberErr != nil {
 		panic("newDrawConfig: cannot load bomber png")
+	}
+	pngFighter, _, fighterErr := ebitenutil.NewImageFromFile("assets/fighter.png")
+	if fighterErr != nil {
+		panic("newDrawConfig: cannot load fighter png")
 	}
 	dc := drawConfig{
 		screen:                        nil,
@@ -88,6 +93,7 @@ func newDrawConfig() *drawConfig {
 		pNeutralNodeColor:             drawTriangleColor{red: 0.5, blue: 0.5, green: 0.5, alpha: 1},
 		nodeControlColor:              drawTriangleColor{red: 0.7, blue: 0.7, green: 0.7, alpha: 1},
 		pngBomber:                     pngBomer,
+		pngFighter:                    pngFighter,
 	}
 	return &dc
 }

@@ -75,6 +75,15 @@ func (c *computer) updateNodeTargets(s *state, nodeCapture bool, avgUnitPos Pixe
 			if !avgUnitPos.equals(PixelPosition{}) {
 				selfNode.targets = []position{{land, avgUnitPos}}
 			}
+		case fighter:
+			if diffs[0].diff > 2 && diffs[1].diff > 2 {
+				selfNode.targets = []position{}
+				first := position{highAir, p1}
+				selfNode.targets = append(selfNode.targets, first)
+				second := position{highAir, p2}
+				selfNode.targets = append(selfNode.targets, second)
+				selfNode.targets = append(selfNode.targets, position{layer: bomberConfig.produceLayer, PixelPosition: nP})
+			}
 		case bomber:
 			if diffs[0].diff > 2 && diffs[1].diff > 2 {
 				selfNode.targets = []position{}
@@ -165,7 +174,10 @@ func (c *computer) updateForNodeCapture(s state) {
 	}
 
 	for u := range s.units() {
-		if u.staticTarget || u.unitConfig.name == guidedAirMissile || u.unitConfig.name == bomber {
+		if u.staticTarget ||
+			u.unitConfig.name == guidedAirMissile ||
+			u.unitConfig.name == bomber ||
+			u.unitConfig.name == fighter {
 			continue
 		}
 

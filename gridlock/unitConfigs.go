@@ -15,6 +15,7 @@ const (
 	infantry
 	unguidedGroundMissile
 	guidedAirMissile
+	fighter
 	bomber
 	bomb
 )
@@ -29,6 +30,8 @@ func (n name) String() string {
 		return "unguidedGroundMissile"
 	case guidedAirMissile:
 		return "guidedAirMissile"
+	case fighter:
+		return "fighter"
 	case bomber:
 		return "bomber"
 	case bomb:
@@ -112,6 +115,24 @@ var guidedAirMissileConfig = unitConfig{
 	despawnAtTerminalPos: true,
 	explodeRadius:        100,
 	maxAlivePerNode:      math.MaxInt,
+}
+
+var fighterConfig = unitConfig{
+	name:                 fighter,
+	radius:               8,
+	maxHealth:            100,
+	attack:               0,
+	vision:               40,
+	reach:                0,
+	produceLayer:         highAir,
+	staticTarget:         false,
+	attacksGround:        false,
+	attacksLowAltitude:   false,
+	attacksHighAltitude:  false,
+	explodeAtTerminalPos: false,
+	despawnAtTerminalPos: false,
+	explodeRadius:        100,
+	maxAlivePerNode:      1,
 }
 
 var bomberConfig = unitConfig{
