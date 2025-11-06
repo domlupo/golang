@@ -510,10 +510,18 @@ Is there a mobile equivalent for war/4x games?
   - Go standard library support
   - Go standard library does not support toml or yaml
   - Avoids cross platform issues with sqlite
-15. Use 3 layers (land, lowAir, higAir) instead of only two layers (land, air)
-  - I suspect 3 layers are easier to code and understand, but cannot think it through clearly.
-  - I revisiting htis and there is not a clear answer. Need to move forward.
-  - If I am wrong, probably easier to go 3 -> 2 than 2 -> 3.
+15. Use 3 layers (land, lowAir, highAir) instead of only two layers (land, air)
+  - 3 layers are easier to code and understand
+  - high air is for typical air units (bombers, fighters, etc)
+  - low air is for dropped air units (bombs, paratroopers, etc)
+  - It is not the most realistic but I think it is fine:
+    - brood war only uses a single air layer
+    - Simplifies a lot of design questions 
+      - what units fly in what layer?
+      - Is fighter only unit able to switch layers?
+    - Avoids more implementation work e.g. implement fighter switching layers
+    - Makes art easier to implement so players can see units clearly
+    - Makes layer concept easier for players to understand
 16. No side to side camera movement
   - I still might add camera zoom out (think mini metro or mini motorways) during game start.
   - I don't think this is needed for the game experience I am trying to create.
