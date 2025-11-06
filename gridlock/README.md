@@ -18,9 +18,32 @@ Is there a mobile equivalent for war/4x games?
 ## Checkpoints
 
 ### Next Checkpoints
+  
+- Update nearestUnitWithinVision to be more flexible rather than only 7 hexagons
 
-- Add fighter
-  - first brainstorm fighter to scope work
+- Implement fighter
+  - Add single bomb drop
+    - For game design purposes, I don't think a unit can only be AA, counter missile already does this
+  - Add anti air missiles
+    - can hit bomber
+    - can hit bombs
+
+- Design, scope and implement AC130
+
+- Design, scope and implement paratroopers
+
+- Split guided and unguided missile into low and high air
+  - How can I indicate to player that these are different?
+
+- Attempt to finalize how land, low air and high air layers are drawn
+  - I am worried about how the visuals look
+  - I am worried about how easy is it for players to follow what is going on 
+
+- Attempt to finalize how targetting works across for all type of targets and units
+  - It is fine if it is wrong, but the structure can get closer than what it is. 
+
+- Finalize other major programming structures
+  - hex iteration for all units?
 
 - Fix guided air missile bug
   - It only retargets to missile when both the final position and other missile are within its range.
@@ -885,17 +908,17 @@ Have read through several college publications and game ai pro articles not link
     - mobile sam
     - mobile artillery
   - Air
-    - bomber (only high air)
-    - fighter (low air or high air, tech tree is used for stealth)
-    - paratroopers (only low air)
-    - ac130 gunship  (only low air)
-    - apache (only low air)
-    - stealth bomber? (only high air, not sure if enough for a separate unit)
+    - bomber (plane is high air, bombs are low air)
+    - fighter (high air tech tree is used for stealth)
+    - paratroopers (plane is high air, units are low air)
+    - ac130 gunship  (low air)
+    - apache (low air)
+    - stealth bomber? (low air, not sure if enough for a separate unit)
     - drone (not sure)
     - uav (not sure)
   - Node
-    - missile (low air or high air)
-    - counter missile (low air or high air)
+    - missile (high air)
+    - counter missile (high air)
   - Other 
     - nuke
     - satelite
