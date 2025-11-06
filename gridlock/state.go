@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math"
+	"slices"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -900,14 +901,9 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 
 }
 
-func (s *state) updateTargets(target position, blueComputerActive bool, redComputerActive bool) {
+func (s *state) updateTargets(target position, filter []player) {
 	for _, n := range s.nodes {
-		switch {
-		case n.player == pNeutral:
-			continue
-		case n.player == pOne && blueComputerActive:
-			continue
-		case n.player == pTwo && redComputerActive:
+		if slices.Contains(filter, n.player) {
 			continue
 		}
 

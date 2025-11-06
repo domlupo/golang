@@ -19,10 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Refactor computer layer 
-  - It should interact on state layer (similar to debugger)
-  - It should contain logic for 1 or 2 computers
-
 - Improve multi bomb attack pattern
   - big issue occurs when bombs are greater > 2, smaller issue when == 2
   - > 2 The target pathing should minimize total distance traveled 

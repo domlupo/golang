@@ -25,6 +25,7 @@ type Game struct {
 	*drawConfig
 	nodeSetup                  nodeSetup
 	obstacleSetup              obstacleSetup
+	computers                  computers
 	backgroundColor            color.RGBA
 	produceWait                time.Duration
 	produceInterval            time.Duration
@@ -39,8 +40,6 @@ type Game struct {
 	middleMouseScrollClicked   bool
 	rightMouseClicked          bool
 	paused                     bool
-	blueComputerActive         bool
-	redComputerActive          bool
 	hotRestart                 bool
 	slowTick                   bool
 	cpuProfilerOn              bool
@@ -51,8 +50,6 @@ type Game struct {
 	initialSelectedY           float32
 	currentSelectedX           float32
 	currentSelectedY           float32
-	compOne                    computer
-	compTwo                    computer
 	gameState                  *state
 	debugger                   debugger
 	developerMode              bool
@@ -89,8 +86,6 @@ func newGame() Game {
 		initialSelectedY:        float32(-1.0),
 		currentSelectedX:        float32(-1.0),
 		currentSelectedY:        float32(-1.0),
-		blueComputerActive:      true,
-		redComputerActive:       true,
 		produceUnits:            true,
 		moveUnits:               true,
 		hotRestart:              true,
@@ -108,8 +103,6 @@ func newGame() Game {
 
 func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify bool) {
 	// TODO: Need to restart timers, etc
-	g.compOne = *newComputer(pOne)
-	g.compTwo = *newComputer(pTwo)
 
 	// TODO: Determine if grid being passed here is correct. It might be best to have both lower level grid
 	// for positions and a higher level struct for the grid components
@@ -131,7 +124,7 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 
 	g.gameState = newState(nodes, obstacles, hexagons, oLUT, nLUT, g.drawConfig.grid, g.developerMode)
 	g.debugger = newDebugger(g.gameState, g.developerToggleCooldown)
-	g.updateComputerTargetNodes(true, PixelPosition{})
+	g.computers = newComputers(g.gameState)
 }
 
 func (g *Game) Update() error {
@@ -220,9 +213,9 @@ func (g *Game) Update() error {
 		g.debugger.debug(pixelPos)
 	}
 	if g.rightMouseClicked {
-		// TODO: Determine behavior. Should player choose which layer they target or handle it via game logic?
-		// TODO: It seems a bit hacky that I need to pass computer active here. Determine if this is right behavior.
-		g.gameState.updateTargets(position{land, pixelPos}, g.blueComputerActive, g.redComputerActive)
+		filter := []player{pNeutral}
+		filter = append(filter, g.computers.active()...)
+		g.gameState.updateTargets(position{land, pixelPos}, filter)
 	}
 
 	// update game state after player actions
@@ -271,7 +264,7 @@ func (g *Game) Update() error {
 	// This is a hack, but will probably be fine for awhile.
 	if !g.paused && !(g.slowTick && (g.currentTime.Sub(g.slowTickTime) < g.slowTickInterval)) {
 		nodeCapture := g.gameState.updateForNodeCapture()
-		g.updateComputerTargetNodes(nodeCapture, avgUnitPos)
+		g.computers.updateNodetargets(nodeCapture, avgUnitPos)
 		g.slowTickTime = time.Now()
 	}
 
@@ -298,15 +291,6 @@ func (g *Game) Update() error {
 	}
 
 	return nil
-}
-
-func (g *Game) updateComputerTargetNodes(nodeCaptureOccurred bool, avgUnitPos PixelPosition) {
-	if g.blueComputerActive {
-		g.compOne.updateNodeTargets(g.gameState, nodeCaptureOccurred, avgUnitPos)
-	}
-	if g.redComputerActive {
-		g.compTwo.updateNodeTargets(g.gameState, nodeCaptureOccurred, avgUnitPos)
-	}
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {

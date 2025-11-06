@@ -7,24 +7,75 @@ import (
 	"math"
 )
 
+// Configuration shared by all computers
+type computersConfig struct {
+	count               int
+	minUnitDifferential int
+}
+
+type computers []computer
+
 type computer struct {
-	player                player
-	validUnitDifferential int
+	s      *state
+	player player
+	computersConfig
 }
 
-func newComputer(p player) *computer {
+func newComputersConfig() computersConfig {
+	c := computersConfig{
+		count:               2,
+		minUnitDifferential: 2,
+	}
+	return c
+}
+
+func newComputers(s *state) computers {
+	var computers = make(computers, 0)
+	c := newComputersConfig()
+	for i := range c.count {
+		computers = append(computers, newComputer(s, i))
+	}
+	computers.updateNodetargets(true, PixelPosition{})
+	return computers
+}
+
+func newComputer(s *state, i int) computer {
+	var p player
+	switch i {
+	case 0:
+		p = pOne
+	case 1:
+		p = pTwo
+	default:
+		panic("newComputer: only two computers are supported")
+	}
+
 	c := computer{
-		player:                p,
-		validUnitDifferential: 2,
+		s:               s,
+		player:          p,
+		computersConfig: newComputersConfig(),
 	}
-	return &c
+	return c
 }
 
-func (c *computer) updateNodeTargets(s *state, nodeCapture bool, avgUnitPos PixelPosition) {
-	if nodeCapture {
-		c.updateForNodeCapture(*s)
+func (computers computers) active() []player {
+	a := []player{}
+	for _, c := range computers {
+		a = append(a, c.player)
 	}
+	return a
+}
 
+func (computers *computers) updateNodetargets(nodeCapture bool, avgUnitPos PixelPosition) {
+	for _, c := range *computers {
+		if nodeCapture {
+			c.updateForNodeCapture()
+		}
+		c.updateNodeTargets(avgUnitPos)
+	}
+}
+
+func (c *computer) updateNodeTargets(avgUnitPos PixelPosition) {
 	var opponent player
 	switch c.player {
 	case pOne:
@@ -35,22 +86,22 @@ func (c *computer) updateNodeTargets(s *state, nodeCapture bool, avgUnitPos Pixe
 		panic(fmt.Sprintf("updateNodeTargets: unknown player: %d", c.player))
 	}
 
-	diffs := s.hexagons.maxUnitDifferential(opponent, land)
+	diffs := c.s.hexagons.maxUnitDifferential(opponent, land)
 	validDiffsIndex := -1
 	var positions []PixelPosition
 	for _, d := range diffs {
-		if d.diff > c.validUnitDifferential {
+		if d.diff > c.minUnitDifferential {
 			validDiffsIndex++
 		}
 
-		p, ok := s.g.getCenterWithFallback(d.GridPosition)
+		p, ok := c.s.g.getCenterWithFallback(d.GridPosition)
 		if !ok {
 			panic("updateNodeTargets: cannot get center with fallback")
 		}
 		positions = append(positions, p)
 	}
 
-	for _, n := range s.nodes {
+	for _, n := range c.s.nodes {
 		if n.player != c.player {
 			continue
 		}
@@ -59,7 +110,7 @@ func (c *computer) updateNodeTargets(s *state, nodeCapture bool, avgUnitPos Pixe
 			continue
 		}
 
-		nP, ok := s.g.getCenterWithFallback(n.gridPos)
+		nP, ok := c.s.g.getCenterWithFallback(n.gridPos)
 		if !ok {
 			panic(fmt.Sprintf("updateNodeTargets: cannot get node pixel position %s", nP.log()))
 		}
@@ -76,18 +127,18 @@ func (c *computer) updateNodeTargets(s *state, nodeCapture bool, avgUnitPos Pixe
 			}
 		case fighter:
 			if fighterConfig.bombs <= validDiffsIndex+1 {
-				c.planBombs(s, selfNode, positions[:fighterConfig.bombs])
+				c.planBombs(selfNode, positions[:fighterConfig.bombs])
 			}
 		case bomber:
 			if bomberConfig.bombs <= validDiffsIndex+1 {
-				c.planBombs(s, selfNode, positions[:bomberConfig.bombs])
+				c.planBombs(selfNode, positions[:bomberConfig.bombs])
 			}
 		}
 	}
 }
 
-func (c *computer) updateForNodeCapture(s state) {
-	for _, n := range s.nodes {
+func (c *computer) updateForNodeCapture() {
+	for _, n := range c.s.nodes {
 		if n.player != c.player {
 			continue
 		}
@@ -101,7 +152,7 @@ func (c *computer) updateForNodeCapture(s state) {
 			continue
 		}
 
-		for _, n := range s.nodes {
+		for _, n := range c.s.nodes {
 			if n.player == c.player {
 				continue
 			}
@@ -114,7 +165,7 @@ func (c *computer) updateForNodeCapture(s state) {
 
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
-				var targetPixelPos, ok = s.g.getPixelPos(otherNodePos, hpCenter)
+				var targetPixelPos, ok = c.s.g.getPixelPos(otherNodePos, hpCenter)
 				if !ok {
 					panic("could not get pixel pos for update computer node targets")
 				}
@@ -125,7 +176,7 @@ func (c *computer) updateForNodeCapture(s state) {
 		}
 	}
 
-	for u := range s.units() {
+	for u := range c.s.units() {
 		if u.staticTarget ||
 			u.unitConfig.name == guidedAirMissile ||
 			u.unitConfig.name == bomber ||
@@ -139,12 +190,12 @@ func (c *computer) updateForNodeCapture(s state) {
 
 		nearestTargetDistanceSquared := math.MaxInt
 
-		for _, n := range s.nodes {
+		for _, n := range c.s.nodes {
 			if n.player == c.player {
 				continue
 			}
 
-			nPixelPos, ok := s.g.getPixelPos(n.gridPos, hpCenter)
+			nPixelPos, ok := c.s.g.getPixelPos(n.gridPos, hpCenter)
 			if !ok {
 				panic("could not get pixel pos for update computer unit targets")
 			}
@@ -160,7 +211,7 @@ func (c *computer) updateForNodeCapture(s state) {
 	}
 }
 
-func (c *computer) planBombs(s *state, n *node, targets []PixelPosition) {
+func (c *computer) planBombs(n *node, targets []PixelPosition) {
 	n.targets = []position{}
 	n.actions = []action{}
 
@@ -175,19 +226,19 @@ func (c *computer) planBombs(s *state, n *node, targets []PixelPosition) {
 				[]position{{layer: land, PixelPosition: p.PixelPosition}},
 				[]action{},
 				GridPosition{},
-				s.unitSpawnTotal,
+				c.s.unitSpawnTotal,
 				false)
-			s.spawn(&u)
-			s.events = append(s.events, event{
-				step: s.step + bombConfig.explodeStepDelay,
+			c.s.spawn(&u)
+			c.s.events = append(c.s.events, event{
+				step: c.s.step + bombConfig.explodeStepDelay,
 				do: func() {
-					s.explode(&u)
+					c.s.explode(&u)
 				},
 			})
 		}})
 	}
 
-	nP, ok := s.g.getCenterWithFallback(n.gridPos)
+	nP, ok := c.s.g.getCenterWithFallback(n.gridPos)
 	if !ok {
 		panic(fmt.Sprintf("planBombs: cannot get node pixel position %s", nP.log()))
 	}
