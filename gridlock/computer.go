@@ -8,12 +8,14 @@ import (
 )
 
 type computer struct {
-	player player
+	player                player
+	validUnitDifferential int
 }
 
 func newComputer(p player) *computer {
 	c := computer{
-		player: p,
+		player:                p,
+		validUnitDifferential: 2,
 	}
 	return &c
 }
@@ -34,20 +36,18 @@ func (c *computer) updateNodeTargets(s *state, nodeCapture bool, avgUnitPos Pixe
 	}
 
 	diffs := s.hexagons.maxUnitDifferential(opponent, land)
-	var p1 PixelPosition
-	var p2 PixelPosition
-	for _, diff := range diffs {
-		p, ok := s.g.getCenterWithFallback(diff.GridPosition)
+	validDiffsIndex := -1
+	var positions []PixelPosition
+	for _, d := range diffs {
+		if d.diff > c.validUnitDifferential {
+			validDiffsIndex++
+		}
+
+		p, ok := s.g.getCenterWithFallback(d.GridPosition)
 		if !ok {
-			continue
+			panic("updateNodeTargets: cannot get center with fallback")
 		}
-		if p1.equals(PixelPosition{}) {
-			p1 = p
-		} else if p2.equals(PixelPosition{}) {
-			p2 = p
-		} else {
-			break
-		}
+		positions = append(positions, p)
 	}
 
 	for _, n := range s.nodes {
@@ -63,72 +63,24 @@ func (c *computer) updateNodeTargets(s *state, nodeCapture bool, avgUnitPos Pixe
 		if !ok {
 			panic(fmt.Sprintf("updateNodeTargets: cannot get node pixel position %s", nP.log()))
 		}
-
 		selfNode := n
 		selfNode.targets = []position{{land, nP}}
 		switch n.unitConfig.name {
 		case unguidedGroundMissile:
 			if diffs[0].diff > 1 {
-				selfNode.targets = []position{{land, p1}}
+				selfNode.targets = []position{{land, positions[0]}}
 			}
 		case guidedAirMissile:
 			if !avgUnitPos.equals(PixelPosition{}) {
 				selfNode.targets = []position{{land, avgUnitPos}}
 			}
 		case fighter:
-			if diffs[0].diff > 2 && diffs[1].diff > 2 {
-				selfNode.targets = []position{}
-				first := position{highAir, p1}
-				selfNode.targets = append(selfNode.targets, first)
-				second := position{highAir, p2}
-				selfNode.targets = append(selfNode.targets, second)
-				selfNode.targets = append(selfNode.targets, position{layer: bomberConfig.produceLayer, PixelPosition: nP})
+			if fighterConfig.bombs <= validDiffsIndex+1 {
+				c.planBombs(s, selfNode, positions[:fighterConfig.bombs])
 			}
 		case bomber:
-			if diffs[0].diff > 2 && diffs[1].diff > 2 {
-				selfNode.targets = []position{}
-				selfNode.actions = []action{}
-				first := position{highAir, p1}
-				selfNode.targets = append(selfNode.targets, first)
-				selfNode.actions = append(selfNode.actions, action{pos: first, do: func() {
-					u := newUnit(
-						bombConfig,
-						position{layer: lowAir, PixelPosition: first.PixelPosition},
-						c.player,
-						[]position{{layer: land, PixelPosition: first.PixelPosition}},
-						[]action{},
-						GridPosition{},
-						s.unitSpawnTotal,
-						false)
-					s.spawn(&u)
-					s.events = append(s.events, event{
-						step: s.step + bombConfig.explodeStepDelay,
-						do: func() {
-							s.explode(&u)
-						},
-					})
-				}})
-				second := position{highAir, p2}
-				selfNode.targets = append(selfNode.targets, second)
-				selfNode.actions = append(selfNode.actions, action{pos: second, do: func() {
-					u := newUnit(
-						bombConfig,
-						position{layer: lowAir, PixelPosition: second.PixelPosition},
-						c.player,
-						[]position{{layer: land, PixelPosition: second.PixelPosition}},
-						[]action{},
-						GridPosition{},
-						s.unitSpawnTotal,
-						false)
-					s.spawn(&u)
-					s.events = append(s.events, event{
-						step: s.step + bombConfig.explodeStepDelay,
-						do: func() {
-							s.explode(&u)
-						},
-					})
-				}})
-				selfNode.targets = append(selfNode.targets, position{layer: bomberConfig.produceLayer, PixelPosition: nP})
+			if bomberConfig.bombs <= validDiffsIndex+1 {
+				c.planBombs(s, selfNode, positions[:bomberConfig.bombs])
 			}
 		}
 	}
@@ -206,4 +158,38 @@ func (c *computer) updateForNodeCapture(s state) {
 			}
 		}
 	}
+}
+
+func (c *computer) planBombs(s *state, n *node, targets []PixelPosition) {
+	n.targets = []position{}
+	n.actions = []action{}
+
+	for _, t := range targets {
+		p := position{highAir, t}
+		n.targets = append(n.targets, p)
+		n.actions = append(n.actions, action{pos: p, do: func() {
+			u := newUnit(
+				bombConfig,
+				position{layer: lowAir, PixelPosition: p.PixelPosition},
+				c.player,
+				[]position{{layer: land, PixelPosition: p.PixelPosition}},
+				[]action{},
+				GridPosition{},
+				s.unitSpawnTotal,
+				false)
+			s.spawn(&u)
+			s.events = append(s.events, event{
+				step: s.step + bombConfig.explodeStepDelay,
+				do: func() {
+					s.explode(&u)
+				},
+			})
+		}})
+	}
+
+	nP, ok := s.g.getCenterWithFallback(n.gridPos)
+	if !ok {
+		panic(fmt.Sprintf("planBombs: cannot get node pixel position %s", nP.log()))
+	}
+	n.targets = append(n.targets, position{layer: bomberConfig.produceLayer, PixelPosition: nP})
 }

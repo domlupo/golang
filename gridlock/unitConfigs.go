@@ -58,6 +58,7 @@ type unitConfig struct {
 	explodeRadius        int
 	explodeStepDelay     uint64
 	maxAlivePerNode      int
+	bombs                int
 }
 
 // Note: unit radius set to an odd number is better for testing due to division bugs
@@ -133,6 +134,7 @@ var fighterConfig = unitConfig{
 	despawnAtTerminalPos: false,
 	explodeRadius:        100,
 	maxAlivePerNode:      1,
+	bombs:                1,
 }
 
 var bomberConfig = unitConfig{
@@ -151,6 +153,7 @@ var bomberConfig = unitConfig{
 	despawnAtTerminalPos: false,
 	explodeRadius:        100,
 	maxAlivePerNode:      1,
+	bombs:                4,
 }
 
 var bombConfig = unitConfig{

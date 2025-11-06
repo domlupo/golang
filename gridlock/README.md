@@ -18,12 +18,19 @@ Is there a mobile equivalent for war/4x games?
 ## Checkpoints
 
 ### Next Checkpoints
+
+- Refactor computer layer 
+  - It should interact on state layer (similar to debugger)
+  - It should contain logic for 1 or 2 computers
+
+- Improve multi bomb attack pattern
+  - big issue occurs when bombs are greater > 2, smaller issue when == 2
+  - > 2 The target pathing should minimize total distance traveled 
+  - ==2 The target pathing should prioritize the "safer" target. For now its probably w/e is nearest source node.
   
 - Update nearestUnitWithinVision to be more flexible rather than only 7 hexagons
 
 - Implement fighter
-  - Add single bomb drop
-    - For game design purposes, I don't think a unit can only be AA, counter missile already does this
   - Add anti air missiles
     - can hit bomber
     - can hit bombs
