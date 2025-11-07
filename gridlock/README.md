@@ -19,10 +19,8 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Improve multi bomb attack pattern
-  - big issue occurs when bombs are greater > 2, smaller issue when == 2
-  - > 2 The target pathing should minimize total distance traveled 
-  - ==2 The target pathing should prioritize the "safer" target. For now its probably w/e is nearest source node.
+Replaces sort.Slices with slices.SortFunc
+  - compile time aka generics vs runtime checks aka reflection
   
 - Update nearestUnitWithinVision to be more flexible rather than only 7 hexagons
 
@@ -58,6 +56,12 @@ Is there a mobile equivalent for war/4x games?
     - add condition on explode that unit must exist?
 
 - Refactor unguided missile to use action struct
+
+- Improve multi bomb attack pattern (traveling salesmen)
+  - Implement Held-Karp algorithm 
+  - big issue occurs when bombs are greater > 2, smaller issue when == 2
+  - > 2 The target pathing should minimize total distance traveled 
+  - ==2 The target pathing should prioritize the "safer" target. For now its probably w/e is nearest source node.
 
 - Add better target drawing
   - nodes should show all targets
