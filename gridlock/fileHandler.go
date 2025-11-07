@@ -10,6 +10,7 @@ import (
 	"io"
 	"math"
 	"os"
+	"slices"
 )
 
 type fileHandler struct {
@@ -33,6 +34,22 @@ const (
 	fObstacle
 	fNode
 )
+
+type keys []GridPosition
+
+// Deterministically sort the keys
+func (keys keys) sort() {
+	slices.SortFunc(keys, func(i, j GridPosition) int {
+		switch {
+		case i.X == j.X && i.Y < j.Y:
+			return -1
+		case i.X < j.X:
+			return -1
+		default:
+			return 1
+		}
+	})
+}
 
 // Golang encoding/json does not support direct marshall/unmarshall for custom types
 // Multiple intermediate entry types are defined.

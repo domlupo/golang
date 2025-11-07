@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"math"
 	"slices"
-	"sort"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -90,18 +89,11 @@ func (os obstacles) insert(k GridPosition, v *obstacle) {
 
 // Returns a unique and determinite slice of bytes from the passed obstacles.
 func (os obstacles) key() []byte {
-	var keys []GridPosition
+	var keys keys
 	for k := range os {
 		keys = append(keys, k)
 	}
-
-	sort.Slice(keys, func(i, j int) bool {
-		if keys[i].X == keys[j].X {
-			return keys[i].Y < keys[j].Y
-		}
-		return keys[i].X < keys[j].X
-	})
-
+	keys.sort()
 	var b []byte
 	for i := 0; i < len(keys); i++ {
 		o := os[keys[i]]

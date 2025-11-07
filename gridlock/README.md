@@ -18,9 +18,6 @@ Is there a mobile equivalent for war/4x games?
 ## Checkpoints
 
 ### Next Checkpoints
-
-Replaces sort.Slices with slices.SortFunc
-  - compile time aka generics vs runtime checks aka reflection
   
 - Update nearestUnitWithinVision to be more flexible rather than only 7 hexagons
 

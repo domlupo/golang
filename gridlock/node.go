@@ -7,7 +7,6 @@ import (
 	"image/color"
 	"log/slog"
 	"slices"
-	"sort"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -100,18 +99,11 @@ func (n node) log() []slog.Attr {
 
 // Returns a unique and determinite slice of bytes from the passed nodes.
 func (nodes nodes) key() []byte {
-	var keys []GridPosition
+	var keys keys
 	for k := range nodes {
 		keys = append(keys, k)
 	}
-
-	sort.Slice(keys, func(i, j int) bool {
-		if keys[i].X == keys[j].X {
-			return keys[i].Y < keys[j].Y
-		}
-		return keys[i].X < keys[j].X
-	})
-
+	keys.sort()
 	var b []byte
 	for i := 0; i < len(keys); i++ {
 		n := nodes[keys[i]]
