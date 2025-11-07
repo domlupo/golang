@@ -73,7 +73,7 @@ func newGame() Game {
 	g := Game{
 		developerMode:           true,
 		obstacleSetup:           multiObstacle,
-		nodeSetup:               leftVsRightVerticalOffsetMissile,
+		nodeSetup:               leftVsRightVerticalOffsetPlanes,
 		drawConfig:              drawConfig,
 		backgroundColor:         color.RGBA{200, 200, 200, 255},
 		produceWait:             1_000_000 * time.Second,
@@ -231,6 +231,9 @@ func (g *Game) Update() error {
 	var infantryCount int
 	var unguidedGroundMissileCount int
 	var guidedAirMissileCount int
+	var bombCount int
+	var bomberCount int
+	var fighterCount int
 	var unknownCount int
 	for u := range g.gameState.units() {
 		xSum += u.X
@@ -243,6 +246,12 @@ func (g *Game) Update() error {
 			unguidedGroundMissileCount++
 		case guidedAirMissile:
 			guidedAirMissileCount++
+		case bomb:
+			bombCount++
+		case bomber:
+			bomberCount++
+		case fighter:
+			fighterCount++
 		default:
 			unknownCount++
 		}
@@ -256,6 +265,10 @@ func (g *Game) Update() error {
 		slog.Int("infantryCount", infantryCount),
 		slog.Int("unguidedGroundMissile", unguidedGroundMissileCount),
 		slog.Int("guidedAirMissile", guidedAirMissileCount),
+		slog.Int("guidedAirMissile", guidedAirMissileCount),
+		slog.Int("bomb", bombCount),
+		slog.Int("bomber", bomberCount),
+		slog.Int("fighter", fighterCount),
 		slog.Int("unknownCount", unknownCount),
 	)
 
