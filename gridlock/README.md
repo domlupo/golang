@@ -18,8 +18,6 @@ Is there a mobile equivalent for war/4x games?
 ## Checkpoints
 
 ### Next Checkpoints
-  
-- Update nearestUnitWithinVision to be more flexible rather than only 7 hexagons
 
 - Implement fighter
   - Add anti air missiles
@@ -218,6 +216,15 @@ Is there a mobile equivalent for war/4x games?
       - An easy implementation might be to stay away from infantry
       - Counter missile will either need to travel faster than tracked missile or anticipate movement?
     - Added guided missile variant will probably help but might be low priority?
+
+- Optimize spatial partition for collision and nearestUnitWithinVision checks
+  - Add a hexagon LUT where pixel position returns a sorted slice of relative grid positions.
+    The slice is sorted by chebyshev distance from the pixel pos (prob need a determinate tie break)
+    At runtime, store the largest unit radius in each hex partition layer in hexagon.go
+    At runtime, use the relative grid pos to check if the hex exists and the largest unit radius to
+    check if the units within the hex should be checked. An even further possible optimization that is 
+    probably unneeded would be keeping the unit linked list sorted by unit radius. This could be worse
+    if sorted the linked list takes more CPU than the checking more units. 
 
  - Fix unit selection for single node and multi node. Right now air unit are ignored.
    - Need to add an iter to hexagon which iters through all layers

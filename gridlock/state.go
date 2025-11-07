@@ -444,34 +444,18 @@ func (s *state) nearestUnitWithinVision(u unit) (position, bool) {
 	x1 := u.position.X + u.radius
 	y1 := u.position.Y + u.radius
 
-	gridPos, _ := s.g.getGridPos(u.PixelPosition)
-	hex := s.hexagons[gridPos]
-	var neHex, eHex, seHex, swHex, wHex, nwHex *hexagon
-
-	if pos, ok := s.g.adjacent(gridPos, hsNortheast); ok {
-		neHex = s.hexagons[pos]
+	gridPos, ok := s.g.getGridPos(u.PixelPosition)
+	if !ok {
+		panic(fmt.Sprintf("nearestUnitWithinVision: cannot get grid pos for %s", u.PixelPosition.log()))
 	}
-	if pos, ok := s.g.adjacent(gridPos, hsEast); ok {
-		eHex = s.hexagons[pos]
+	partitions := s.g.partitions(gridPos, u.vision)
+	hexagons := []*hexagon{}
+	for _, p := range partitions {
+		hexagons = append(hexagons, s.hexagons[p])
 	}
-	if pos, ok := s.g.adjacent(gridPos, hsSoutheast); ok {
-		seHex = s.hexagons[pos]
-	}
-	if pos, ok := s.g.adjacent(gridPos, hsSouthwest); ok {
-		swHex = s.hexagons[pos]
-	}
-	if pos, ok := s.g.adjacent(gridPos, hsWest); ok {
-		wHex = s.hexagons[pos]
-	}
-	if pos, ok := s.g.adjacent(gridPos, hsNorthwest); ok {
-		nwHex = s.hexagons[pos]
-	}
-
-	hexagons := [7]*hexagon{hex, neHex, eHex, seHex, swHex, wHex, nwHex}
 
 	shortestDistance := math.MaxInt64
 	var nearestUnitPos position
-
 	for _, hex := range hexagons {
 		if hex == nil {
 			continue
@@ -522,6 +506,10 @@ func (s *state) nearestUnitWithinVision(u unit) (position, bool) {
 			distance := xDelta*xDelta + yDelta*yDelta
 			if distance < shortestDistance && distance <= u.vision*u.vision {
 				if _, los := u.lineOfSight(current.PixelPosition, s.oLUT, u.radius); los {
+					shortestDistance = distance
+					nearestUnitPos = current.position
+				}
+				if u.layer == lowAir || u.layer == highAir {
 					shortestDistance = distance
 					nearestUnitPos = current.position
 				}

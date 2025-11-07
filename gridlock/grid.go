@@ -46,6 +46,10 @@ func hexPoints() []hexPoint {
 	return []hexPoint{hpCenter, hpNorth, hpNortheast, hpSoutheast, hpSouth, hpSouthwest, hpNorthwest}
 }
 
+func hexSides() []hexSide {
+	return []hexSide{hsNortheast, hsEast, hsSoutheast, hsSouthwest, hsWest, hsNorthwest}
+}
+
 func (gridPos GridPosition) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, slog.Int("x", gridPos.X))
@@ -55,6 +59,51 @@ func (gridPos GridPosition) log() []slog.Attr {
 
 func (gridPos GridPosition) equals(other GridPosition) bool {
 	return gridPos.X == other.X && gridPos.Y == other.Y
+}
+
+func (g grid) partitions(pos GridPosition, d int) []GridPosition {
+	layerIndex := 1 + (d / (min(g.hexHeight, g.hexWidth) / 2))
+
+	visited := make(map[GridPosition]struct{})
+	visited[pos] = struct{}{}
+	depth := 0
+	q := []GridPosition{pos}
+	nextQ := []GridPosition{}
+	for depth != layerIndex {
+		current := q[0]
+		q = q[1:]
+
+		for _, a := range g.allAdjacent(current) {
+			if _, ok := visited[a]; !ok {
+				visited[a] = struct{}{}
+				nextQ = append(nextQ, a)
+			}
+		}
+
+		if len(q) == 0 {
+			depth++
+			q = nextQ
+			nextQ = []GridPosition{}
+		}
+	}
+
+	partitions := make([]GridPosition, len(visited))
+	i := 0
+	for p := range visited {
+		partitions[i] = p
+		i++
+	}
+	return partitions
+}
+
+func (g grid) allAdjacent(pos GridPosition) [6]GridPosition {
+	a := [6]GridPosition{}
+	for i, hs := range hexSides() {
+		if p, ok := g.adjacent(pos, hs); ok {
+			a[i] = p
+		}
+	}
+	return a
 }
 
 func (g grid) adjacent(p GridPosition, side hexSide) (GridPosition, bool) {
