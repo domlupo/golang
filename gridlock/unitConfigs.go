@@ -59,6 +59,7 @@ type unitConfig struct {
 	explodeStepDelay     uint64
 	maxAlivePerNode      int
 	bombs                int
+	speedFactor          float64
 }
 
 // Note: unit radius set to an odd number is better for testing due to division bugs
@@ -78,6 +79,7 @@ var infantryConfig = unitConfig{
 	despawnAtTerminalPos: false,
 	explodeRadius:        0,
 	maxAlivePerNode:      math.MaxInt,
+	speedFactor:          2.0,
 }
 
 // TODO: Figure out better naming for various missiles
@@ -98,6 +100,7 @@ var unguidedGroundMissileConfig = unitConfig{
 	despawnAtTerminalPos: true,
 	explodeRadius:        20,
 	maxAlivePerNode:      math.MaxInt,
+	speedFactor:          1.0,
 }
 
 var guidedAirMissileConfig = unitConfig{
@@ -116,6 +119,7 @@ var guidedAirMissileConfig = unitConfig{
 	despawnAtTerminalPos: true,
 	explodeRadius:        100,
 	maxAlivePerNode:      math.MaxInt,
+	speedFactor:          1,
 }
 
 var fighterConfig = unitConfig{
@@ -135,6 +139,7 @@ var fighterConfig = unitConfig{
 	explodeRadius:        100,
 	maxAlivePerNode:      1,
 	bombs:                1,
+	speedFactor:          1.0,
 }
 
 var bomberConfig = unitConfig{
@@ -154,6 +159,7 @@ var bomberConfig = unitConfig{
 	explodeRadius:        100,
 	maxAlivePerNode:      1,
 	bombs:                4,
+	speedFactor:          1.0,
 }
 
 var bombConfig = unitConfig{
@@ -173,6 +179,7 @@ var bombConfig = unitConfig{
 	explodeRadius:        20,
 	explodeStepDelay:     300,
 	maxAlivePerNode:      math.MaxInt,
+	speedFactor:          1.0,
 }
 
 func (uc unitConfig) log() []slog.Attr {

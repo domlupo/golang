@@ -112,7 +112,7 @@ func (hs hexagons) maxUnitDifferential(opponent player, l layer) []unitDifferent
 func (h *hexagon) add(u *unit) {
 	hl := h.get(u.layer)
 	if hl.linkedList == nil && hl.unitCount != 0 {
-		panic(fmt.Sprintf("nil linked list unit count should be 0, not %d", hl.unitCount))
+		panic(fmt.Sprintf("nil linked list unit count should be 0, not %d. \n hexagon: %s \n unit: %s", hl.unitCount, h.log(), u.log()))
 	}
 
 	if hl.linkedList == nil {

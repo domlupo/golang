@@ -19,10 +19,7 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Determine how to structure dynamic velocity
-  - Needed for fighter missiles, flares, etc
-  - Hacks seem to be really buggy
-  - Hacks are showing different velocity changes gameplay alot
+- Update all log methods to handle zero values
 
 - Implement fighter
   - Add anti air missiles

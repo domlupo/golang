@@ -37,8 +37,9 @@ const (
 type units map[PixelPosition]*unit
 
 type unit struct {
-	position
 	unitConfig
+	position
+	subPixelPosition    subPixelPosition
 	id                  uuid.UUID
 	player              player
 	activeTarget        position
@@ -68,9 +69,31 @@ type unit struct {
 	sourceNode          GridPosition
 }
 
-type Move struct {
-	suggest position
-	confirm func()
+// High resolution two dimensional point.
+type subPixelPosition struct {
+	x int
+	y int
+}
+
+func (s subPixelPosition) log() []slog.Attr {
+	a := []slog.Attr{}
+	a = append(a, slog.Int("x", s.x))
+	a = append(a, slog.Int("y", s.y))
+	return a
+}
+
+func (u unit) newSubPixelPosition(p position) subPixelPosition {
+	return subPixelPosition{
+		x: int(math.Round(float64(p.X) * u.speedFactor)),
+		y: int(math.Round(float64(p.Y) * u.speedFactor)),
+	}
+}
+
+func (u unit) downscale(s subPixelPosition) PixelPosition {
+	return PixelPosition{
+		X: int(math.Round(float64(s.x) / float64(u.speedFactor))),
+		Y: int(math.Round(float64(s.y) / float64(u.speedFactor))),
+	}
 }
 
 func newUnit(
@@ -102,6 +125,7 @@ func newUnit(
 		steerTurnCountLimit: 20,
 		sourceNode:          sourceNode,
 	}
+	u.subPixelPosition = u.newSubPixelPosition(u.position)
 
 	return u
 }
@@ -137,7 +161,7 @@ func (u *unit) prioritizeTargets() {
 	}
 }
 
-// Uses Bresenham's line algorithm https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+// Uses Bresenham's line algorithm https://en.wikipedia.org/wiki/Bresenham's_line_algorithm
 // Specifically, the integer incremental error form where error is stored over mulitple moves
 // This algorithm prioritizes straight line movement. It is not guaranteed the final position is reached.
 func (u *unit) getMoves() []Move {
@@ -145,13 +169,14 @@ func (u *unit) getMoves() []Move {
 
 	moves := make([]Move, 0)
 	u.atTerminalPosition = true
-	u.bresenhamErrorDy = 0
 	u.bresenhamErrorDx = 0
+	u.bresenhamErrorDy = 0
 
-	x1 := u.activeTarget.X
-	y1 := u.activeTarget.Y
-	x0 := u.X
-	y0 := u.Y
+	s := u.newSubPixelPosition(u.activeTarget)
+	x1 := s.x
+	y1 := s.y
+	x0 := u.subPixelPosition.x
+	y0 := u.subPixelPosition.y
 
 	var sx int
 	var sy int
@@ -192,34 +217,34 @@ func (u *unit) getMoves() []Move {
 		return moves
 	}
 
-	first := position{u.layer, PixelPosition{x0, y0}}
-	moves = append(moves, Move{suggest: first, confirm: func() { u.confirmMove(first) }})
+	s = subPixelPosition{x0, y0}
+	moves = append(moves, u.newMove(s))
 
 	// TODO: instead of arbitrarily picking second and third option, prioritize to minimize error
-	x0 = u.X
-	y0 = u.Y
+	x0 = u.subPixelPosition.x
+	y0 = u.subPixelPosition.y
 	if u.bresenhamErrorDy != 0 && u.bresenhamErrorDx != 0 {
 		x0 += sx
-		second := position{u.layer, PixelPosition{x0, y0}}
-		moves = append(moves, Move{suggest: second, confirm: func() { u.confirmMove(second) }})
+		s := subPixelPosition{x0, y0}
+		moves = append(moves, u.newMove(s))
 		x0 -= sx
 		y0 += sy
-		third := position{u.layer, PixelPosition{x0, y0}}
-		moves = append(moves, Move{suggest: third, confirm: func() { u.confirmMove(third) }})
+		s = subPixelPosition{x0, y0}
+		moves = append(moves, u.newMove(s))
 	} else if u.bresenhamErrorDy != 0 {
 		y0 += sy
-		second := position{u.layer, PixelPosition{x0, y0}}
-		moves = append(moves, Move{suggest: second, confirm: func() { u.confirmMove(second) }})
+		s := subPixelPosition{x0, y0}
+		moves = append(moves, u.newMove(s))
 		x0 += sx
-		third := position{u.layer, PixelPosition{x0, y0}}
-		moves = append(moves, Move{suggest: third, confirm: func() { u.confirmMove(third) }})
+		s = subPixelPosition{x0, y0}
+		moves = append(moves, u.newMove(s))
 	} else if u.bresenhamErrorDx != 0 {
 		x0 += sx
-		second := position{u.layer, PixelPosition{x0, y0}}
-		moves = append(moves, Move{suggest: second, confirm: func() { u.confirmMove(second) }})
+		s := subPixelPosition{x0, y0}
+		moves = append(moves, u.newMove(s))
 		y0 += sy
-		third := position{u.layer, PixelPosition{x0, y0}}
-		moves = append(moves, Move{suggest: third, confirm: func() { u.confirmMove(third) }})
+		s = subPixelPosition{x0, y0}
+		moves = append(moves, u.newMove(s))
 	}
 
 	u.bresenhamErrorDy = dy
@@ -227,16 +252,22 @@ func (u *unit) getMoves() []Move {
 	return moves
 }
 
-func (u *unit) confirmMove(p position) {
-	if u.position.X != p.X {
+func (u *unit) newMove(s subPixelPosition) Move {
+	return Move{
+		position: position{u.layer, u.downscale(s)},
+		confirm:  func() { u.confirmMove(s) }}
+}
+
+func (u *unit) confirmMove(s subPixelPosition) {
+	u.position = position{u.layer, u.downscale(s)}
+	u.movedThisTurn = true
+	if u.subPixelPosition.x != s.x {
 		u.bresenhamError += u.bresenhamErrorDy
 	}
-	if u.position.Y != p.Y {
-
+	if u.subPixelPosition.y != s.y {
 		u.bresenhamError += u.bresenhamErrorDx
 	}
-	u.position = p
-	u.movedThisTurn = true
+	u.subPixelPosition = s
 }
 
 func (u *unit) updateTarget(ut unitTarget, target position) {
@@ -410,19 +441,9 @@ func (u *unit) getPath(
 func (u unit) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, slog.Any("id", u.id))
-	var player string
-	switch u.player {
-	case pNone:
-		player = "noPlayer"
-	case pOne:
-		player = "bluePlayer"
-	case pTwo:
-		player = "redPlayer"
-	case pNeutral:
-		player = "neutralPlayer"
-	}
-	a = append(a, slog.String("player", player))
-	a = append(a, slog.Any("position", position.log(u.position)))
+	a = append(a, slog.String("player", u.player.String()))
+	a = append(a, nest("position", u.position.log()))
+	a = append(a, nest("subPixelPosition", u.subPixelPosition.log()))
 	a = append(a, slog.Any("next", u.next.id))
 	a = append(a, slog.Any("prior", u.prior.id))
 	a = append(a, slog.Int("spawnOrder", u.spawnOrder))

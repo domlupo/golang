@@ -89,11 +89,11 @@ func (s *state) spawn(u *unit) {
 	s.unitSpawnTotal++
 }
 
-func (s *state) moveUnit(u *unit, p position, confirm func()) {
+func (s *state) moveUnit(u *unit, m Move) {
 	old, oOk := s.g.getGridPos(u.PixelPosition)
-	new, nOk := s.g.getGridPos(p.PixelPosition)
+	new, nOk := s.g.getGridPos(m.PixelPosition)
 	if !oOk || !nOk {
-		panic(fmt.Sprintf("moveUnit: cannot move unit %s %s", u.PixelPosition.log(), p.PixelPosition.log()))
+		panic(fmt.Sprintf("moveUnit: cannot move unit %s %s", u.PixelPosition.log(), m.PixelPosition.log()))
 	}
 	if !old.equals(new) {
 		oldHex := s.hexagons[old]
@@ -101,10 +101,10 @@ func (s *state) moveUnit(u *unit, p position, confirm func()) {
 		newHex := s.hexagons[new]
 		newHex.add(u)
 	}
-
 	s.deleteUnit(u.position)
-	confirm()
-	switch p.layer {
+	m.confirm()
+
+	switch m.layer {
 	case land:
 		s.landUnits[u.PixelPosition] = u
 	case lowAir:
@@ -112,7 +112,7 @@ func (s *state) moveUnit(u *unit, p position, confirm func()) {
 	case highAir:
 		s.highAirUnits[u.PixelPosition] = u
 	default:
-		panic(fmt.Sprintf("moveUnit: unknown layer %d", p.layer))
+		panic(fmt.Sprintf("moveUnit: unknown layer %d", m.layer))
 	}
 }
 
@@ -341,38 +341,29 @@ func (s *state) moveUnits() {
 			unitsWithoutTarget++
 		}
 
-		var newPos position
-		var confirmMove = func() {}
+		var move Move
 		for _, m := range moves {
-			p := m.suggest
-
 			if u.layer != land {
-				newPos = p
-				confirmMove = m.confirm
+				move = m
 				break
 			}
 
-			if s.oLUT[p.PixelPosition].UnwalkableChebyshevDistance > u.radius {
-				newPos = p
-				confirmMove = m.confirm
+			if s.oLUT[m.PixelPosition].UnwalkableChebyshevDistance > u.radius {
+				move = m
 				break
 			}
 		}
 
-		if newPos.equals(position{}) {
+		if move.equals(position{}) {
 			unitsAtUnwalkable++
 			continue
 		}
 
-		collidesWithBorder := collidesWithBorder(newPos, u.radius)
+		collidesWithBorder := collidesWithBorder(move.position, u.radius)
 
 		var collidedUnitPos, collidesWithUnit = s.collidesWithUnit(
-			newPos,
+			move.position,
 			*u)
-
-		if collidesWithUnit {
-			u.AtCollision = true
-		}
 
 		if collidesWithBorder && collidesWithUnit {
 			// TODO: Low priority but eventually need to handle air collision here.
@@ -383,6 +374,7 @@ func (s *state) moveUnits() {
 			unitsBorderCollideCount++
 		} else if collidesWithUnit {
 			unitsCollideCount++
+			u.AtCollision = true
 			var units units
 			switch u.layer {
 			case land:
@@ -401,12 +393,12 @@ func (s *state) moveUnits() {
 			unitsAtNode++
 		} else {
 			unitsMovedCount++
-			s.moveUnit(u, newPos, confirmMove)
+			s.moveUnit(u, move)
 		}
 	}
 
 	logger.log(
-		debugLevel,
+		infoLevel,
 		stateLogic,
 		"moveUnits",
 		slog.Int("units moved", unitsMovedCount),

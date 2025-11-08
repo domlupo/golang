@@ -55,7 +55,7 @@ func (wc windowConfig) inbounds(p PixelPosition) bool {
 	return !(p.X < 0 || p.X > wc.width-1 || p.Y < 0 || p.Y > wc.height-1)
 }
 
-// Stores a callback to invoke when a step is reached
+// Stores a callback to invoke when a step is reached.
 type event struct {
 	step uint64
 	do   func()
@@ -65,6 +65,12 @@ type event struct {
 type action struct {
 	pos position
 	do  func()
+}
+
+// Stores a callback to invoke when a move is confirmed.
+type Move struct {
+	position
+	confirm func()
 }
 
 func (action action) log() []slog.Attr {
