@@ -19,13 +19,23 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Update infantry draw to be less distracting
+
 - Implement fighter
-  - Add anti air missiles
-    - can hit bomber
-    - can hit bombs
-  - Add flares
-  - Long term 
-    - Once steer/boids is understood better, can add avoidance
+  - add directonal high air missle draws
+  - add directional low air missile draws
+  - add ammo concept
+    - missiles
+    - flares
+    - bombs
+  - add fire rate cooldown concept
+    - fighter missiles should have a delay between shots
+  - add logic for anti high air missile
+  - add logic for anti low air missile
+  - add flare draw
+  - add logic for flares to counter missiles
+  - add dynamic flare count
+  - Once steer/boids is understood better, can add avoidance
 
 - Design, scope and implement AC130
 
