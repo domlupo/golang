@@ -552,6 +552,24 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 				false,
 			)
 		}
+	case infantry:
+		var color color.Color
+		switch u.player {
+		case pOne:
+			color = dc.pOneInfantryColor
+		case pTwo:
+			color = dc.pTwoInfantryColor
+		default:
+			panic("infantry needs a color")
+		}
+		vector.FillCircle(
+			dc.screen,
+			float32(u.X)*dc.windowMultiplier,
+			float32(u.Y)*dc.windowMultiplier,
+			float32(u.radius)*dc.windowMultiplier,
+			color,
+			false,
+		)
 	default:
 		vector.FillCircle(
 			dc.screen,

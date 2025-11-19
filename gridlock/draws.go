@@ -37,8 +37,10 @@ type drawConfig struct {
 	nodeHealthColor               color.RGBA
 	pOneNodeTargetColor           color.RGBA
 	pOneUnitColor                 color.RGBA
+	pOneInfantryColor             color.RGBA
 	pTwoNodeTargetColor           color.RGBA
 	pTwoUnitColor                 color.RGBA
+	pTwoInfantryColor             color.RGBA
 	pNeutralNodeTargetColor       color.RGBA
 	drawTriangleDefaultImage      *ebiten.Image
 	pOneNodeColor                 drawTriangleColor
@@ -84,13 +86,15 @@ func newDrawConfig() *drawConfig {
 		nodeHealthColor:               highlightColor,
 		pOneNodeTargetColor:           color.RGBA{0, 0, 255, 100},
 		pOneUnitColor:                 color.RGBA{0, 0, 255, 100},
+		pOneInfantryColor:             color.RGBA{0, 0, 255, 50},
 		pTwoNodeTargetColor:           color.RGBA{255, 0, 0, 100},
 		pTwoUnitColor:                 color.RGBA{255, 0, 0, 100},
+		pTwoInfantryColor:             color.RGBA{255, 0, 0, 50},
 		pNeutralNodeTargetColor:       color.RGBA{100, 60, 100, 200},
 		drawTriangleDefaultImage:      drawTriangleDefaultImage,
-		pOneNodeColor:                 drawTriangleColor{red: 0.5, blue: 1, green: 0.5, alpha: 1},
-		pTwoNodeColor:                 drawTriangleColor{red: 1, blue: 0.5, green: 0.5, alpha: 1},
-		pNeutralNodeColor:             drawTriangleColor{red: 0.5, blue: 0.5, green: 0.5, alpha: 1},
+		pOneNodeColor:                 drawTriangleColor{red: 0.5, blue: 1, green: 0.5, alpha: 0.5},
+		pTwoNodeColor:                 drawTriangleColor{red: 1, blue: 0.5, green: 0.5, alpha: 0.5},
+		pNeutralNodeColor:             drawTriangleColor{red: 0.5, blue: 0.5, green: 0.5, alpha: 0.5},
 		nodeControlColor:              drawTriangleColor{red: 0.7, blue: 0.7, green: 0.7, alpha: 1},
 		pngBomber:                     pngBomer,
 		pngFighter:                    pngFighter,
