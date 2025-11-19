@@ -386,6 +386,7 @@ func (s *state) moveUnits() {
 				units = s.highAirUnits
 			}
 			otherUnit := units[collidedUnitPos.PixelPosition]
+			// TODO: Fix otherUnit can be nil and this panics.
 			otherUnit.health = 0
 			units[collidedUnitPos.PixelPosition] = units[PixelPosition{collidedUnitPos.X, collidedUnitPos.Y}]
 			u.health = 0
