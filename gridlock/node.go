@@ -59,13 +59,13 @@ func (n node) log() []slog.Attr {
 	var a []slog.Attr
 	a = append(a, nest("gridPos", n.gridPos.log()))
 	a = append(a, slog.String("player", n.capturedBy.String()))
-	control := []slog.Attr{}
-	for _, c := range n.control {
-		control = append(control, c.gridPos.log()...)
-	}
-	if len(control) == 0 {
+	if len(n.control) == 0 {
 		a = append(a, slog.String("control", "none"))
 	} else {
+		control := []slog.Attr{}
+		for _, c := range n.control {
+			control = append(control, c.gridPos.log()...)
+		}
 		a = append(a, nest("control", control))
 	}
 	a = append(a, slog.Bool("singleSelect", n.singleSelect))
@@ -73,22 +73,22 @@ func (n node) log() []slog.Attr {
 	a = append(a, slog.Int("maxHealth", n.maxHealth))
 	a = append(a, slog.Int("currentHealth", n.currentHealth))
 	a = append(a, slog.String("capturedBy", n.capturedBy.String()))
-	targets := []slog.Attr{}
-	for _, t := range n.targets {
-		targets = append(targets, t.log()...)
-	}
-	if len(targets) == 0 {
+	if len(n.targets) == 0 {
 		a = append(a, slog.String("targets", "none"))
 	} else {
+		targets := []slog.Attr{}
+		for _, t := range n.targets {
+			targets = append(targets, t.log()...)
+		}
 		a = append(a, nest("targets", targets))
 	}
-	actions := []slog.Attr{}
-	for _, a := range n.actions {
-		actions = append(actions, a.log()...)
-	}
-	if len(targets) == 0 {
+	if len(n.actions) == 0 {
 		a = append(a, slog.String("actions", "none"))
 	} else {
+		actions := []slog.Attr{}
+		for _, a := range n.actions {
+			actions = append(actions, a.log()...)
+		}
 		a = append(a, nest("actions", actions))
 	}
 	a = append(a, slog.String("unitConfig", n.unitConfig.name.String()))
@@ -117,14 +117,14 @@ func (nodes nodes) key() []byte {
 func (info nodeInfo) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, slog.Int("ChebyshevDistance", info.ChebyshevDistance))
-	nearestNodes := []slog.Attr{}
-	for _, p := range info.NearestNodes {
-		nearestNodes = append(nearestNodes, p.log()...)
-	}
-	if len(nearestNodes) == 0 {
+	if len(info.NearestNodes) == 0 {
 		a = append(a, slog.String("NearestNodes", "none"))
 	} else {
-		a = append(a, nest("nearestNodes", nearestNodes))
+		nearestNodes := []slog.Attr{}
+		for _, p := range info.NearestNodes {
+			nearestNodes = append(nearestNodes, p.log()...)
+		}
+		a = append(a, nest("NearestNodes", nearestNodes))
 	}
 	return a
 }

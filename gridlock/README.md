@@ -19,8 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Update all log methods to handle zero values
-
 - Implement fighter
   - Add anti air missiles
     - can hit bomber

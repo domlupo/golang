@@ -468,31 +468,32 @@ func (u unit) log() []slog.Attr {
 	} else {
 		a = append(a, slog.String("localTarget", "nil"))
 	}
-	localtargets := []slog.Attr{}
-	for _, p := range u.localTargets {
-		localtargets = append(localtargets, p.log()...)
-	}
-	if len(localtargets) == 0 {
+	if len(u.localTargets) == 0 {
 		a = append(a, slog.String("localTargets", "none"))
 	} else {
+		localtargets := []slog.Attr{}
+		for _, p := range u.localTargets {
+			localtargets = append(localtargets, p.log()...)
+		}
 		a = append(a, nest("localTargets", localtargets))
 	}
-	globalTargets := []slog.Attr{}
-	for _, p := range u.globalTargets {
-		globalTargets = append(globalTargets, p.log()...)
-	}
-	if len(globalTargets) == 0 {
+	if len(u.globalTargets) == 0 {
 		a = append(a, slog.String("globalTargets", "none"))
 	} else {
+		globalTargets := []slog.Attr{}
+		for _, p := range u.globalTargets {
+			globalTargets = append(globalTargets, p.log()...)
+		}
+
 		a = append(a, nest("globalTargets", globalTargets))
 	}
-	actions := []slog.Attr{}
-	for _, a := range u.actions {
-		actions = append(actions, a.log()...)
-	}
-	if len(actions) == 0 {
+	if len(u.actions) == 0 {
 		a = append(a, slog.String("actions", "none"))
 	} else {
+		actions := []slog.Attr{}
+		for _, a := range u.actions {
+			actions = append(actions, a.log()...)
+		}
 		a = append(a, nest("actions", actions))
 	}
 	a = append(a, slog.Bool("atTerminalPosition", u.atTerminalPosition))
