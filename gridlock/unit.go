@@ -509,7 +509,17 @@ func (u unit) log() []slog.Attr {
 	return a
 }
 
-func (u *unit) draw(dc drawConfig, selected bool) {
+func (u unit) angleDraw(dc drawConfig) *ebiten.DrawImageOptions {
+	op := ebiten.DrawImageOptions{}
+	xMult := math.Sin(u.angle) - math.Cos(u.angle)
+	yMult := -math.Sqrt2 * math.Sin(u.angle+(math.Pi/4))
+	op.GeoM.Rotate(u.angle)
+	op.GeoM.Translate(float64(u.X)+float64(u.radius)*xMult, float64(u.Y)+float64(u.radius)*yMult)
+	op.GeoM.Scale(float64(dc.windowMultiplier), float64(dc.windowMultiplier))
+	return &op
+}
+
+func (u unit) draw(dc drawConfig, selected bool) {
 	var unitColor color.Color
 	switch u.player {
 	case pOne:
@@ -522,21 +532,9 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 
 	switch u.name {
 	case fighter:
-		op := &ebiten.DrawImageOptions{}
-		xMult := math.Sin(u.angle) - math.Cos(u.angle)
-		yMult := -math.Sqrt2 * math.Sin(u.angle+(math.Pi/4))
-		op.GeoM.Rotate(u.angle)
-		op.GeoM.Translate(float64(u.X)+float64(u.radius)*xMult, float64(u.Y)+float64(u.radius)*yMult)
-		op.GeoM.Scale(float64(dc.windowMultiplier), float64(dc.windowMultiplier))
-		dc.screen.DrawImage(dc.pngFighter, op)
+		dc.screen.DrawImage(dc.pngFighter, u.angleDraw(dc))
 	case bomber:
-		op := &ebiten.DrawImageOptions{}
-		xMult := math.Sin(u.angle) - math.Cos(u.angle)
-		yMult := -math.Sqrt2 * math.Sin(u.angle+(math.Pi/4))
-		op.GeoM.Rotate(u.angle)
-		op.GeoM.Translate(float64(u.X)+float64(u.radius)*xMult, float64(u.Y)+float64(u.radius)*yMult)
-		op.GeoM.Scale(float64(dc.windowMultiplier), float64(dc.windowMultiplier))
-		dc.screen.DrawImage(dc.pngBomber, op)
+		dc.screen.DrawImage(dc.pngBomber, u.angleDraw(dc))
 
 		for _, a := range u.actions {
 			vector.StrokeCircle(
@@ -552,6 +550,8 @@ func (u *unit) draw(dc drawConfig, selected bool) {
 				false,
 			)
 		}
+	case missile:
+		dc.screen.DrawImage(dc.pngMissile, u.angleDraw(dc))
 	case infantry:
 		var color color.Color
 		switch u.player {

@@ -755,7 +755,7 @@ func (nodes nodes) setupPositions(s nodeSetup, initialNodeHealth int) {
 			{GridPosition{6, 11}, pOne, unitConfig},
 			{GridPosition{11, 12}, pNeutral, unitConfig},
 			{GridPosition{16, 14}, pNeutral, unitConfig},
-			{GridPosition{21, 13}, pTwo, unitConfig},
+			{GridPosition{21, 13}, pTwo, missileConfig},
 			{GridPosition{26, 13}, pTwo, fighterConfig},
 
 			{GridPosition{1, 16}, pOne, unitConfig},

@@ -18,6 +18,7 @@ const (
 	fighter
 	bomber
 	bomb
+	missile
 )
 
 func (n name) String() string {
@@ -36,6 +37,8 @@ func (n name) String() string {
 		return "bomber"
 	case bomb:
 		return "bomb"
+	case missile:
+		return "missile"
 	default:
 		panic(fmt.Sprintf("String name is unknown %d", n))
 	}
@@ -178,6 +181,26 @@ var bombConfig = unitConfig{
 	despawnAtTerminalPos: false,
 	explodeRadius:        20,
 	explodeStepDelay:     300,
+	maxAlivePerNode:      math.MaxInt,
+	speedFactor:          1.0,
+}
+
+var missileConfig = unitConfig{
+	name:                 missile,
+	radius:               3,
+	maxHealth:            100,
+	attack:               0,
+	vision:               0,
+	reach:                0,
+	produceLayer:         highAir,
+	staticTarget:         false,
+	attacksGround:        false,
+	attacksLowAltitude:   false,
+	attacksHighAltitude:  true,
+	explodeAtTerminalPos: false,
+	despawnAtTerminalPos: false,
+	explodeRadius:        20,
+	explodeStepDelay:     0,
 	maxAlivePerNode:      math.MaxInt,
 	speedFactor:          1.0,
 }

@@ -49,6 +49,7 @@ type drawConfig struct {
 	nodeControlColor              drawTriangleColor
 	pngBomber                     *ebiten.Image
 	pngFighter                    *ebiten.Image
+	pngMissile                    *ebiten.Image
 }
 
 // Invoke only once per game session. NewImage calls are expensive and are not
@@ -69,6 +70,10 @@ func newDrawConfig() *drawConfig {
 	pngFighter, _, fighterErr := ebitenutil.NewImageFromFile("assets/fighter.png")
 	if fighterErr != nil {
 		panic("newDrawConfig: cannot load fighter png")
+	}
+	pngMissile, _, missileErr := ebitenutil.NewImageFromFile("assets/missile.png")
+	if missileErr != nil {
+		panic("newDrawConfig: cannot load missile png")
 	}
 	dc := drawConfig{
 		screen:                        nil,
@@ -98,6 +103,7 @@ func newDrawConfig() *drawConfig {
 		nodeControlColor:              drawTriangleColor{red: 0.7, blue: 0.7, green: 0.7, alpha: 1},
 		pngBomber:                     pngBomer,
 		pngFighter:                    pngFighter,
+		pngMissile:                    pngMissile,
 	}
 	return &dc
 }

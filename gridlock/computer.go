@@ -125,6 +125,10 @@ func (c *computer) updateNodeTargets(avgUnitPos PixelPosition) {
 			if !avgUnitPos.equals(PixelPosition{}) {
 				selfNode.targets = []position{{land, avgUnitPos}}
 			}
+		case missile:
+			if !avgUnitPos.equals(PixelPosition{}) {
+				selfNode.targets = []position{{land, avgUnitPos}}
+			}
 		case fighter:
 			if fighterConfig.bombs <= validDiffsIndex+1 {
 				c.planBombs(selfNode, positions[:fighterConfig.bombs])
