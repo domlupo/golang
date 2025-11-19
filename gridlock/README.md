@@ -23,6 +23,9 @@ Is there a mobile equivalent for war/4x games?
   - Add anti air missiles
     - can hit bomber
     - can hit bombs
+  - Add flares
+  - Long term 
+    - Once steer/boids is understood better, can add avoidance
 
 - Design, scope and implement AC130
 
@@ -158,9 +161,6 @@ Is there a mobile equivalent for war/4x games?
   - learn how to deploy
   - easier to share with friends
   - test web based issues rather than only mac
-
-- local multiplayer:
-  - Initial research shows webRTC is probably better but more complex than websockets
 
 - Improve computer
   - Update computer to be beatable by humans
@@ -337,20 +337,12 @@ Is there a mobile equivalent for war/4x games?
 
 - Update game setups where nodes and obstacles are combined
 
-- Determine if for CPU reasons, I should not mix layers in the same map and always manage them by state.go
-
 - When is the right time to write high level tests?
   - how can i write automated high level tests? basic unit test? simulation? 
 
 - Create more node setup test scenarios
   - Able to easily reproduce and test precise setups for edge case issues
   - Able to randomly generated setups to find hidden edge case issues
-
-- Do I need to think about layers more?
-  - Right now I think this decision can only be known far in the future and it should be 
-    much easier to refactor three layer back to two layer.
-  - two (groun vs air), three (ground, low altitude, high altitude) have major game differences
-  - Should anything be on multiple layers e.g. high altitude mountains technically are on all 3.
 
 - Verify if Bresenham error is handle correctly 
 
@@ -387,11 +379,12 @@ Is there a mobile equivalent for war/4x games?
 
 ### Punted Checkpoints
 
+- local multiplayer:
+  - Initial research shows webRTC is probably better but more complex than websockets
+
 - LUT tables are rather large for end game(100-300MB)
   - I may need to use something smaller for final game (especially if mobile release)
   - Also, players will not want long seed generations
-
-- Determine if splitting hexagon spatial partitions into layers is needed for performance.
 
 - Once game is released, need to either force user cache clears or use directories for cache versioning.
 
@@ -426,9 +419,6 @@ Is there a mobile equivalent for war/4x games?
 - Logging affects game performance. Especially hot loop logs e.g. unit refresh
   - Can I use build tags for a development vs release build?
   - Can I conditionally compile?
-
-- Polish logger
-  - Add runtime dynamic log sampling rates. Is this even possible? Are the benefits worth it?
 
 - Controls interface which work on computer, steam deck, phone, etc: 
   - multiple platform means more sales
