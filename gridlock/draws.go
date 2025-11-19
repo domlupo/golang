@@ -25,6 +25,7 @@ type drawConfig struct {
 	// Never use for game logic. float32 rather than idiomatic float64
 	// because the Ebiten draw APIs I use are often float32 over float64.
 	windowMultiplier              float32
+	defaultLineWidth              int
 	selectectionBoxLineWidth      int
 	missileExplodeRadiusLineWidth int
 	healthLineWidth               int
@@ -79,6 +80,7 @@ func newDrawConfig() *drawConfig {
 		screen:                        nil,
 		windowMultiplier:              2.5,
 		grid:                          grid{&hc},
+		defaultLineWidth:              1,
 		selectectionBoxLineWidth:      1,
 		missileExplodeRadiusLineWidth: 1,
 		healthLineWidth:               2,

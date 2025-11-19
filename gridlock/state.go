@@ -11,36 +11,46 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
+// A request to modify state.
+type request struct {
+	spawn    *unit
+	complete bool
+}
+
 // not enforced but must be a singleton
 type state struct {
-	g               grid
-	oLUT            obstacleLUT
-	nLUT            nodeLUT
-	hexagons        hexagons
-	obstacles       obstacles
-	nodes           nodes
-	landUnits       units
-	lowAirUnits     units
-	highAirUnits    units
-	events          []event
-	step            uint64
-	developerMode   bool
-	unitSpawnTotal  int
-	unitDeleteTotal int
+	g                grid
+	oLUT             obstacleLUT
+	nLUT             nodeLUT
+	hexagons         hexagons
+	obstacles        obstacles
+	nodes            nodes
+	landUnits        units
+	lowAirUnits      units
+	highAirUnits     units
+	reactiveUnits    map[uuid.UUID]*unit
+	requesterUnits   map[uuid.UUID]*unit
+	events           []event
+	step             uint64
+	developerMode    bool
+	unitSpawnTotal   int
+	unitDespawnTotal int
 }
 
 func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, g grid, developerMode bool) *state {
 	s := state{
-		g:             g,
-		obstacles:     o,
-		oLUT:          oLUT,
-		hexagons:      h,
-		nodes:         n,
-		nLUT:          nLUT,
-		landUnits:     make(units),
-		lowAirUnits:   make(units),
-		highAirUnits:  make(units),
-		developerMode: developerMode,
+		g:              g,
+		obstacles:      o,
+		oLUT:           oLUT,
+		hexagons:       h,
+		nodes:          n,
+		nLUT:           nLUT,
+		landUnits:      make(units),
+		lowAirUnits:    make(units),
+		highAirUnits:   make(units),
+		reactiveUnits:  make(map[uuid.UUID]*unit),
+		requesterUnits: make(map[uuid.UUID]*unit),
+		developerMode:  developerMode,
 	}
 
 	return &s
@@ -67,6 +77,21 @@ func (s state) units() func(yield func(u *unit) bool) {
 	}
 }
 
+func (s state) unitsLayer(l layer) *units {
+	var units units
+	switch l {
+	case land:
+		units = s.landUnits
+	case lowAir:
+		units = s.lowAirUnits
+	case highAir:
+		units = s.highAirUnits
+	default:
+		panic(fmt.Sprintf("layerUnits: unknown layer %d", l))
+	}
+	return &units
+}
+
 func (s *state) spawn(u *unit) {
 	p, ok := s.g.getGridPos(u.PixelPosition)
 	if !ok {
@@ -75,18 +100,28 @@ func (s *state) spawn(u *unit) {
 	hex := s.hexagons[p]
 	hex.add(u)
 
-	switch u.layer {
-	case land:
-		s.landUnits[u.PixelPosition] = u
-	case lowAir:
-		s.lowAirUnits[u.PixelPosition] = u
-	case highAir:
-		s.highAirUnits[u.PixelPosition] = u
-	default:
-		panic(fmt.Sprintf("spawnUnit: unknown layer %d", u.layer))
+	if u.reactive {
+		s.reactiveUnits[u.id] = u
 	}
-
+	if u.requester {
+		s.requesterUnits[u.id] = u
+	}
+	units := *s.unitsLayer(u.layer)
+	if _, ok := units[u.PixelPosition]; !ok {
+		units[u.PixelPosition] = u
+	} else {
+		panic(fmt.Sprintf("Cannot spawn unit at %s since it is already occupied.", u.PixelPosition.log()))
+	}
 	s.unitSpawnTotal++
+}
+
+func (s *state) spawnRequest(u *unit) bool {
+	units := *s.unitsLayer(u.layer)
+	if _, ok := units[u.PixelPosition]; ok {
+		return false
+	}
+	s.spawn(u)
+	return true
 }
 
 func (s *state) moveUnit(u *unit, m Move) {
@@ -151,6 +186,45 @@ func (s *state) processEvents() {
 	s.step++
 }
 
+func (s *state) processReactions() {
+	logger.log(infoLevel, stateLogic, "processReactions", slog.Int("reactiveUnitCount", len(s.reactiveUnits)))
+	for _, u := range s.reactiveUnits {
+		for i, r := range u.reactions {
+			if r.next > s.step {
+				continue
+			}
+
+			if r.when(u) {
+				r.do(u)
+				r.next = s.step + r.delay
+				u.reactions[i] = r
+			}
+		}
+	}
+}
+
+func (s *state) processRequests() {
+	logger.log(infoLevel, stateLogic, "processRequests", slog.Int("requesterUnitCounter", len(s.requesterUnits)))
+	for _, u := range s.requesterUnits {
+		for i, r := range u.requests {
+			if s.spawnRequest(r.spawn) {
+				r.complete = true
+				u.requests[i] = r
+			}
+		}
+	}
+
+	for _, u := range s.requesterUnits {
+		incompleteReqs := []request{}
+		for _, r := range u.requests {
+			if !r.complete {
+				incompleteReqs = append(incompleteReqs, r)
+			}
+		}
+		u.requests = incompleteReqs
+	}
+}
+
 func (s *state) analyzeTargets() {
 	for u := range s.units() {
 		if u.staticTarget {
@@ -167,9 +241,25 @@ func (s *state) analyzeTargets() {
 			continue
 		}
 
-		if u.unitConfig.name == bomber || u.unitConfig.name == fighter || u.unitConfig.name == missile {
-			// TODO: don't set angle here it is not right
-			u.angle = u.PixelPosition.angle(u.globalTargets[0].PixelPosition)
+		if u.unitConfig.name == fighter {
+			nearest, _ := s.nearestUnitWithinVision(*u)
+			u.nearest = nearest
+			if u.atTerminalPosition && len(u.globalTargets) > 1 {
+				if len(u.actions) > 0 && u.actions[0].pos.equals(u.globalTargets[0]) {
+					u.actions[0].do()
+					u.actions = u.actions[1:]
+				}
+				u.globalTargets = u.globalTargets[1:]
+			} else if u.atTerminalPosition && len(u.globalTargets) == 1 {
+				u.globalTargets = s.nodes[u.sourceNode].targets
+				u.actions = s.nodes[u.sourceNode].actions
+			}
+			u.localTargets = []position{u.globalTargets[0]}
+			u.prioritizeTargets()
+			continue
+		}
+
+		if u.unitConfig.name == bomber || u.unitConfig.name == missile {
 			if u.atTerminalPosition && len(u.globalTargets) > 1 {
 				if len(u.actions) > 0 && u.actions[0].pos.equals(u.globalTargets[0]) {
 					u.actions[0].do()
@@ -386,7 +476,6 @@ func (s *state) moveUnits() {
 				units = s.highAirUnits
 			}
 			otherUnit := units[collidedUnitPos.PixelPosition]
-			// TODO: Fix otherUnit can be nil and this panics.
 			otherUnit.health = 0
 			units[collidedUnitPos.PixelPosition] = units[PixelPosition{collidedUnitPos.X, collidedUnitPos.Y}]
 			u.health = 0
@@ -434,10 +523,7 @@ func (s *state) explode(u *unit) {
 	}
 }
 
-func (s *state) nearestUnitWithinVision(u unit) (position, bool) {
-	x1 := u.position.X + u.radius
-	y1 := u.position.Y + u.radius
-
+func (s state) nearestUnitWithinVision(u unit) (position, bool) {
 	gridPos, ok := s.g.getGridPos(u.PixelPosition)
 	if !ok {
 		panic(fmt.Sprintf("nearestUnitWithinVision: cannot get grid pos for %s", u.PixelPosition.log()))
@@ -447,6 +533,7 @@ func (s *state) nearestUnitWithinVision(u unit) (position, bool) {
 	for _, p := range partitions {
 		hexagons = append(hexagons, s.hexagons[p])
 	}
+	layers := u.attackLayers()
 
 	shortestDistance := math.MaxInt64
 	var nearestUnitPos position
@@ -454,66 +541,73 @@ func (s *state) nearestUnitWithinVision(u unit) (position, bool) {
 		if hex == nil {
 			continue
 		}
+		for _, l := range layers {
+			linkedList := hex.get(l).linkedList
 
-		linkedList := hex.get(u.layer).linkedList
-
-		if linkedList == nil || (linkedList.id == u.id && linkedList == linkedList.next) {
-			continue
-		}
-
-		end := linkedList
-		current := linkedList
-		// checkOccurred handles the edge case where a hexagon has a single
-		// unit within in. This unit should still be checked since it
-		// is not the unit passed into the function but don't self cycle
-		// since it will never progress to a different current unit.
-		var checkOccurred bool
-		for {
-			if current.id == end.id && checkOccurred {
-				break
+			if p, distance := s.nearestUnitWithinLayer(u, linkedList); distance < shortestDistance {
+				nearestUnitPos = p
+				shortestDistance = distance
 			}
-
-			if current.id == u.id {
-				current = current.next
-				continue
-			}
-
-			checkOccurred = true
-
-			if u.player == current.player {
-				current = current.next
-				continue
-			}
-
-			if !u.attacksGround && current.layer == land ||
-				!u.attacksLowAltitude && current.layer == lowAir ||
-				!u.attacksHighAltitude && current.layer == highAir {
-				current = current.next
-				continue
-			}
-
-			x2 := current.X + current.radius
-			y2 := current.Y + current.radius
-
-			xDelta := x2 - x1
-			yDelta := y2 - y1
-			distance := xDelta*xDelta + yDelta*yDelta
-			if distance < shortestDistance && distance <= u.vision*u.vision {
-				if _, los := u.lineOfSight(current.PixelPosition, s.oLUT, u.radius); los {
-					shortestDistance = distance
-					nearestUnitPos = current.position
-				}
-				if u.layer == lowAir || u.layer == highAir {
-					shortestDistance = distance
-					nearestUnitPos = current.position
-				}
-			}
-
-			current = current.next
 		}
 	}
 
 	return nearestUnitPos, shortestDistance == math.MaxInt64
+}
+
+func (s state) nearestUnitWithinLayer(u unit, linkedList *unit) (position, int) {
+	shortestDistance := math.MaxInt64
+	var nearestUnitPos position
+	if linkedList == nil || (linkedList.id == u.id && linkedList == linkedList.next) {
+		return nearestUnitPos, shortestDistance
+	}
+
+	x1 := u.position.X + u.radius
+	y1 := u.position.Y + u.radius
+	end := linkedList
+	current := linkedList
+	// checkOccurred handles the edge case where a hexagon has a single
+	// unit within in. This unit should still be checked since it
+	// is not the unit passed into the function but don't self cycle
+	// since it will never progress to a different current unit.
+	var checkOccurred bool
+	for {
+		if current.id == end.id && checkOccurred {
+			break
+		}
+
+		if current.id == u.id {
+			current = current.next
+			continue
+		}
+
+		checkOccurred = true
+
+		if u.player == current.player {
+			current = current.next
+			continue
+		}
+
+		x2 := current.X + current.radius
+		y2 := current.Y + current.radius
+
+		xDelta := x2 - x1
+		yDelta := y2 - y1
+		distance := xDelta*xDelta + yDelta*yDelta
+		if distance < shortestDistance && distance <= u.vision*u.vision {
+			if _, los := u.lineOfSight(current.PixelPosition, s.oLUT, u.radius); los {
+				shortestDistance = distance
+				nearestUnitPos = current.position
+			}
+			if current.layer == lowAir || current.layer == highAir {
+				shortestDistance = distance
+				nearestUnitPos = current.position
+			}
+		}
+
+		current = current.next
+	}
+
+	return nearestUnitPos, shortestDistance
 }
 
 // checks the passed newPos hexagon and its adjacent hexagons for collisions between
@@ -579,6 +673,10 @@ func (s *state) collidesWithUnit(newPos position, u unit) (position, bool) {
 
 			checkOccurred = true
 
+			if current.id == u.sourceUnit || current.sourceUnit == u.id {
+				continue
+			}
+
 			if newPos.layer != current.layer {
 				current = current.next
 				continue
@@ -617,7 +715,6 @@ func (s *state) processTerminalPositions() {
 }
 
 func (s *state) attackUnits() {
-	var unitsDeletedCount int
 	var unitAttackedOtherUnitCount int
 
 	for _, u := range s.landUnits {
@@ -659,14 +756,27 @@ func (s *state) attackUnits() {
 		}
 	}
 
+	logger.log(
+		debugLevel,
+		stateLogic,
+		"attackUnits",
+		slog.Int("units attacked", unitAttackedOtherUnitCount),
+	)
+}
+
+func (s *state) despawnUnits() {
+	var despawnUnitTurnCount int
+
 	for u := range s.units() {
 		if u.health <= 0 {
 			gridPos, _ := s.g.getGridPos(u.PixelPosition)
 			hex := s.hexagons[gridPos]
 			hex.subtract(*u)
 			s.deleteUnit(u.position)
-			s.unitDeleteTotal++
-			unitsDeletedCount++
+			delete(s.reactiveUnits, u.id)
+			delete(s.requesterUnits, u.id)
+			s.unitDespawnTotal++
+			despawnUnitTurnCount++
 
 			if !u.sourceNode.equals(GridPosition{}) {
 				n := s.nodes[u.sourceNode]
@@ -685,9 +795,10 @@ func (s *state) attackUnits() {
 	logger.log(
 		debugLevel,
 		stateLogic,
-		"attackUnits",
-		slog.Int("units attacked", unitAttackedOtherUnitCount),
-		slog.Int("units deleted", unitsDeletedCount),
+		"despawnUnits",
+		[]slog.Attr{
+			slog.Int("despawn unit turn count", despawnUnitTurnCount),
+			slog.Int("despawn unit total", s.unitDespawnTotal)}...,
 	)
 }
 
@@ -765,7 +876,7 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 	clickedNode, nodeClicked := s.nodes[clickedGridPos]
 	if nodeClicked && clickPosition.equals(releasePosition) && clickedGridPos.equals(priorSingleSelect) {
 		for _, n := range s.nodes {
-			if n.player == clickedNode.player && n.unitConfig == clickedNode.unitConfig {
+			if n.player == clickedNode.player && n.unitConfig.name == clickedNode.unitConfig.name {
 				n.multiSelect = true
 			}
 		}
@@ -984,6 +1095,9 @@ func (s *state) produceUnits() {
 			n.gridPos,
 			s.unitSpawnTotal,
 			n.selectActive() && s.developerMode)
+		if !ok {
+			panic("Could not get node center")
+		}
 		if _, collides := s.collidesWithUnit(p, u); !collides {
 			s.spawn(&u)
 			incrementAliveCount()

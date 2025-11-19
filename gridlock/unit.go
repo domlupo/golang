@@ -33,6 +33,14 @@ const (
 	globalTarget
 )
 
+// An action which should occur when a condition is met.
+type reaction struct {
+	when  func(*unit) bool
+	do    func(*unit)
+	next  uint64
+	delay uint64
+}
+
 // All units within a 2 dimensioinal layer
 type units map[PixelPosition]*unit
 
@@ -46,6 +54,7 @@ type unit struct {
 	steerTarget         position
 	enemyTarget         position
 	localTarget         position
+	nearest             position
 	localTargets        []position
 	globalTargets       []position
 	actions             []action
@@ -67,6 +76,8 @@ type unit struct {
 	spawnOrder          int
 	angle               float64
 	sourceNode          GridPosition
+	sourcePosition      PixelPosition
+	sourceUnit          uuid.UUID
 }
 
 // High resolution two dimensional point.
@@ -124,10 +135,57 @@ func newUnit(
 		spawnOrder:          spawnOrder,
 		steerTurnCountLimit: 20,
 		sourceNode:          sourceNode,
+		sourcePosition:      pos.PixelPosition,
 	}
 	u.subPixelPosition = u.newSubPixelPosition(u.position)
 
+	if u.name == fighter {
+		u.reactions = []reaction{
+			{
+				when: func(unit *unit) bool {
+					return unit.PixelPosition.equals(unit.sourcePosition) && unit.missileCount != unit.missileCountMax
+				},
+				do: func(unit *unit) {
+					unit.missileCount = unit.missileCountMax
+				},
+				delay: u.missileFireDelay,
+			},
+			{
+				when: func(unit *unit) bool { return !unit.nearest.equals(position{}) && unit.missileCount != 0 },
+				do: func(unit *unit) {
+					// TODO: simplify newUnit, it is complex and usually nneed to set fields afterwards
+					newUnit := newUnit(
+						missileConfig,
+						position{layer: missileConfig.produceLayer, PixelPosition: unit.PixelPosition},
+						unit.player,
+						[]position{unit.nearest},
+						[]action{},
+						GridPosition{},
+						0, // TODO: Fix
+						false)
+					newUnit.sourceUnit = unit.id
+					unit.requests = append(unit.requests, request{&newUnit, false})
+					unit.missileCount--
+				},
+				delay: u.missileFireDelay,
+			}}
+	}
+
 	return u
+}
+
+func (u unit) attackLayers() []layer {
+	var layers []layer
+	if u.attacksLand {
+		layers = append(layers, land)
+	}
+	if u.attacksLowAir {
+		layers = append(layers, lowAir)
+	}
+	if u.attacksHighAir {
+		layers = append(layers, highAir)
+	}
+	return layers
 }
 
 func (u *unit) refresh() {
@@ -135,6 +193,7 @@ func (u *unit) refresh() {
 	u.movedThisTurn = false
 	u.attackedThisTurn = false
 	u.AtCollision = false
+	u.angle = u.PixelPosition.angle(u.globalTargets[0].PixelPosition)
 }
 
 func (u *unit) prioritizeTargets() {
@@ -448,6 +507,8 @@ func (u unit) log() []slog.Attr {
 	a = append(a, slog.Any("prior", u.prior.id))
 	a = append(a, slog.Int("spawnOrder", u.spawnOrder))
 	a = append(a, nest("sourceNode", u.sourceNode.log()))
+	a = append(a, nest("sourcePosition", u.sourcePosition.log()))
+	a = append(a, slog.Int("missileCount", u.missileCount))
 	if !u.activeTarget.equals(position{}) {
 		a = append(a, slog.Any("activeTarget", u.activeTarget.log()))
 	} else {
@@ -533,6 +594,18 @@ func (u unit) draw(dc drawConfig, selected bool) {
 	switch u.name {
 	case fighter:
 		dc.screen.DrawImage(dc.pngFighter, u.angleDraw(dc))
+
+		if u.selected {
+			vector.StrokeCircle(
+				dc.screen,
+				float32(u.X)*dc.windowMultiplier,
+				float32(u.Y)*dc.windowMultiplier,
+				float32(u.vision)*dc.windowMultiplier,
+				float32(dc.defaultLineWidth)*dc.windowMultiplier,
+				dc.highlightColor,
+				false,
+			)
+		}
 	case bomber:
 		dc.screen.DrawImage(dc.pngBomber, u.angleDraw(dc))
 

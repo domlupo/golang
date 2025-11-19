@@ -53,9 +53,9 @@ type unitConfig struct {
 	reach                int
 	produceLayer         layer
 	staticTarget         bool
-	attacksGround        bool
-	attacksLowAltitude   bool
-	attacksHighAltitude  bool
+	attacksLand          bool
+	attacksLowAir        bool
+	attacksHighAir       bool
 	despawnAtTerminalPos bool
 	explodeAtTerminalPos bool
 	explodeRadius        int
@@ -63,6 +63,13 @@ type unitConfig struct {
 	maxAlivePerNode      int
 	bombs                int
 	speedFactor          float64
+	reactions            []reaction
+	reactive             bool
+	requests             []request
+	requester            bool
+	missileCount         int
+	missileCountMax      int
+	missileFireDelay     uint64
 }
 
 // Note: unit radius set to an odd number is better for testing due to division bugs
@@ -75,9 +82,9 @@ var infantryConfig = unitConfig{
 	reach:                5,
 	produceLayer:         land,
 	staticTarget:         false,
-	attacksGround:        true,
-	attacksLowAltitude:   false,
-	attacksHighAltitude:  false,
+	attacksLand:          true,
+	attacksLowAir:        false,
+	attacksHighAir:       false,
 	explodeAtTerminalPos: false,
 	despawnAtTerminalPos: false,
 	explodeRadius:        0,
@@ -96,9 +103,9 @@ var unguidedGroundMissileConfig = unitConfig{
 	reach:                0,
 	produceLayer:         lowAir,
 	staticTarget:         true,
-	attacksGround:        false,
-	attacksLowAltitude:   false,
-	attacksHighAltitude:  false,
+	attacksLand:          false,
+	attacksLowAir:        false,
+	attacksHighAir:       false,
 	explodeAtTerminalPos: true,
 	despawnAtTerminalPos: true,
 	explodeRadius:        20,
@@ -115,9 +122,9 @@ var guidedAirMissileConfig = unitConfig{
 	reach:                0,
 	produceLayer:         lowAir,
 	staticTarget:         false,
-	attacksGround:        false,
-	attacksLowAltitude:   true,
-	attacksHighAltitude:  true,
+	attacksLand:          false,
+	attacksLowAir:        true,
+	attacksHighAir:       true,
 	explodeAtTerminalPos: false,
 	despawnAtTerminalPos: true,
 	explodeRadius:        100,
@@ -130,19 +137,23 @@ var fighterConfig = unitConfig{
 	radius:               8,
 	maxHealth:            100,
 	attack:               0,
-	vision:               40,
+	vision:               400,
 	reach:                0,
 	produceLayer:         highAir,
 	staticTarget:         false,
-	attacksGround:        false,
-	attacksLowAltitude:   false,
-	attacksHighAltitude:  false,
+	attacksLand:          false,
+	attacksLowAir:        true,
+	attacksHighAir:       false,
 	explodeAtTerminalPos: false,
 	despawnAtTerminalPos: false,
 	explodeRadius:        100,
 	maxAlivePerNode:      1,
 	bombs:                1,
 	speedFactor:          1.0,
+	reactive:             true,
+	requester:            true,
+	missileCountMax:      5,
+	missileFireDelay:     20,
 }
 
 var bomberConfig = unitConfig{
@@ -154,9 +165,9 @@ var bomberConfig = unitConfig{
 	reach:                0,
 	produceLayer:         highAir,
 	staticTarget:         false,
-	attacksGround:        false,
-	attacksLowAltitude:   false,
-	attacksHighAltitude:  false,
+	attacksLand:          false,
+	attacksLowAir:        false,
+	attacksHighAir:       false,
 	explodeAtTerminalPos: false,
 	despawnAtTerminalPos: false,
 	explodeRadius:        100,
@@ -174,9 +185,9 @@ var bombConfig = unitConfig{
 	reach:                0,
 	produceLayer:         lowAir,
 	staticTarget:         true,
-	attacksGround:        true,
-	attacksLowAltitude:   false,
-	attacksHighAltitude:  false,
+	attacksLand:          true,
+	attacksLowAir:        false,
+	attacksHighAir:       false,
 	explodeAtTerminalPos: false,
 	despawnAtTerminalPos: false,
 	explodeRadius:        20,
@@ -192,17 +203,17 @@ var missileConfig = unitConfig{
 	attack:               0,
 	vision:               0,
 	reach:                0,
-	produceLayer:         highAir,
-	staticTarget:         false,
-	attacksGround:        false,
-	attacksLowAltitude:   false,
-	attacksHighAltitude:  true,
+	produceLayer:         lowAir,
+	staticTarget:         true,
+	attacksLand:          false,
+	attacksLowAir:        true,
+	attacksHighAir:       false,
 	explodeAtTerminalPos: false,
-	despawnAtTerminalPos: false,
+	despawnAtTerminalPos: true,
 	explodeRadius:        20,
 	explodeStepDelay:     0,
 	maxAlivePerNode:      math.MaxInt,
-	speedFactor:          1.0,
+	speedFactor:          0.5,
 }
 
 func (uc unitConfig) log() []slog.Attr {
@@ -215,9 +226,9 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.Int("reach", uc.reach))
 	a = append(a, uc.produceLayer.log())
 	a = append(a, slog.Bool("staticTarget", uc.staticTarget))
-	a = append(a, slog.Bool("attacksGround", uc.attacksGround))
-	a = append(a, slog.Bool("attacksLowAltitude", uc.attacksLowAltitude))
-	a = append(a, slog.Bool("attacksHighAltitude", uc.attacksHighAltitude))
+	a = append(a, slog.Bool("attacksLand", uc.attacksLand))
+	a = append(a, slog.Bool("attacksLowAir", uc.attacksLowAir))
+	a = append(a, slog.Bool("attacksHighAir", uc.attacksHighAir))
 	a = append(a, slog.Bool("explodeAtTerminalPos", uc.explodeAtTerminalPos))
 	a = append(a, slog.Bool("despawnAtTerminalPos", uc.despawnAtTerminalPos))
 	return a
