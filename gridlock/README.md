@@ -20,7 +20,14 @@ Is there a mobile equivalent for war/4x games?
 ### Next Checkpoints
 
 - Implement fighter
+  - Initially thought low air needed to be more complex to handle multiple bombs in a single spot.
+    - Perhaps bombs should be a targetable unit, but also be able to be queued somehow.
+    - Or a bomb unit can have stacks to it at different intervals. I think this is best. Bombs can merge.
+      would need to allow different players to merge bombs.
+    - An upgrade could be to always target lower level bombs first rather than higher level bombs.
   - add directonal high air missle draws
+    - either need to handle spawning units in same layer or I can avoid this. Probably just want to avoid
+      this ane make missiles always fly in low air but target both low and high air.
   - add ammo concept
     - flares
     - bombs
@@ -37,8 +44,7 @@ Is there a mobile equivalent for war/4x games?
 
 - Design, scope and implement paratroopers
 
-- Split guided and unguided missile into low and high air
-  - How can I indicate to player that these are different?
+- Update guided and unguided missile so they are low air but target low air and high air
 
 - Attempt to finalize how land, low air and high air layers are drawn
   - I am worried about how the visuals look
@@ -203,25 +209,10 @@ Is there a mobile equivalent for war/4x games?
     - bomber stealth
     - turn radius + paths that arc (not sure if I even want this for player experience)
 
-- Determine if more than only infantry should exist for ground (tank, SAM, etc) 
-  - Focusing efforts elsewhere (air units, tech tree, nodes, art) might be easier and better for player experience.
-  - Local path finding is very difficult. Adding more types might make it much more complex.
-  - Determine what units I want to remove. i think most ground units are unneeded.
-  - tank (counters infantry, secondary mode to push unit?)
-  - mobile SAM (counters missiles)
-    - Ground missile exploding in air does no damage?
-    - Should air missile exploding in air do damage?
-    - Should air missile only get one retarget on missle? An upgrade could allow multiple retargets besides the first?
-    - Units may need different pathing algorithm
-      - How to avoid this?
-      - How to simplify this?
-      - How to make this CPU performant?
-    - Targets different layer than it moves
-    - How will AI handle placement? 
-      - An easy implementation might be to be near node.
-      - An easy implementation might be to stay away from infantry
-      - Counter missile will either need to travel faster than tracked missile or anticipate movement?
-    - Added guided missile variant will probably help but might be low priority?
+- Units may need different pathing algorithm
+  - How to avoid this?
+  - How to simplify this?
+  - How to make this CPU performant?
 
 - Optimize spatial partition for collision and nearestUnitWithinVision checks
   - Add a hexagon LUT where pixel position returns a sorted slice of relative grid positions.
@@ -283,7 +274,7 @@ Is there a mobile equivalent for war/4x games?
 
 - Determine if I need to implement separating axis theorem for collision other than (circle <-> circle)
   - static collisions should most likely use a look up table
-  - dynamic collisions may be needed for certain units e.g. tanks
+  - dynamic collisions may be needed for certain units e.g. bombers
 
 - Determine if LOS algorithm should be updated from bresenham to check obstacle line intersects
   - obstacleLUT neareset obstacle check for los probably made this less useful but it still could be useful enough to implement.
@@ -384,9 +375,6 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Punted Checkpoints
-
-- local multiplayer:
-  - Initial research shows webRTC is probably better but more complex than websockets
 
 - LUT tables are rather large for end game(100-300MB)
   - I may need to use something smaller for final game (especially if mobile release)
@@ -510,7 +498,6 @@ Is there a mobile equivalent for war/4x games?
 13. Infantry is only simple ground unit. Less artwork, less animations, less design decisions.
     If needed, infantry can have upgrades which can helps tech tree idea.
   - sniper -> range upgrade
-  - anti tank infantry -> anti tank ammunition
   - marine -> cross shallow water
 14. Use json for files (cache, saves, etc)
   - human readable
@@ -533,6 +520,15 @@ Is there a mobile equivalent for war/4x games?
   - I still might add camera zoom out (think mini metro or mini motorways) during game start.
   - I don't think this is needed for the game experience I am trying to create.
   - Add a lot of complexity (programming, UI, player , etc) with no proveable benefit.
+17. Punt all land units besides infantry for initial release.
+  - There is enough complexity, polish and work for only infantry and air units.
+  - I don't think non infantry land units are required to create desired game loop.
+  - Would increase complexity of infantry behavior alot.
+  - If the game is popular enough, it would be a good theme for an expansion.
+18. Punt multiplayer for initial release
+  - There is enough complexity, polish and work for single player.
+  - Single player games can be very popular and successful. 
+  - If I ever implement, initial research shows webRTC is probably better but more complex than websockets
 
 ---
 
@@ -542,14 +538,11 @@ Is there a mobile equivalent for war/4x games?
   e.g. I invested too much, my enemy lines are breaking apart. Infantry units may need to be ranged in order for
   more units to matter. It might also be nice to allow bimodal behavior. E.g. Charge infantry vs infantry shoots
   from far away. This affects all infantry to keep game controls simple.
-- Having different constraints on layers may help optimize. e.g. ground layer restricts unit movement to 1 pixel
-  but low altitude and high altitude units allow more than 1 pixel movement. Can also sub tick only 1 layer
-  and regular tick the others.
 - It looks visually nice when units in combat vs out of combat have different animations. It also clearly shows
   game state. In final game, perhaps there should be an attack animations for infantry and a non attack animation.
 - Should air units have impassable terrain e.g. high mountain? Will make path finding harder for air units
 - Stopping node unit production in order to advance tech tree, improve node is probably a good form of risk -> reward.
-- Should nodes support unit cycling e.g. produce missile, then produce infantry, then produce tank, etc
+- Should nodes support unit cycling e.g. produce missile, then produce infantry, then missile etc
 - Chemical gas can push enemies back unless they have gas masks
 - Should nodes have a max unit capacity e.g. This node stops producing since 10 units it produced are still alive
 - Should bombs dropped from planes have health and can die?
@@ -557,7 +550,8 @@ Is there a mobile equivalent for war/4x games?
 - Plane collisions would be awesome?
 - air units can produce other units e.g. missiles, paratroops, etc?
 - Should units besides explosives detonate?
-  - e.g. A tank being hit should explode damaging nearby units. Can use unit explode radius variable for this.
+  - e.g. A plane being hit could explode damaging nearby units. Can use unit explode radius variable for this.
+         A plane can fall from sky and cause ground damage from debris.
   - A missile detonating should detonate other missiles in air
   - This could create interesting explosion chains
 - Should there be a zoom out camera:
@@ -584,7 +578,6 @@ Is there a mobile equivalent for war/4x games?
 - Should a node be able to target itself?
 - Cities have different units, different unit ratios, or different counts produced? e.g. Catan
 - Traders or cargo can go to a node which you own to transfer production of city production
-- Ammo limit for units?
 - Nodes with defense system
 - How is node unit production handled?
 - Theme is the gnorp analogue?
@@ -599,9 +592,8 @@ Is there a mobile equivalent for war/4x games?
   - sky claw
   - talon strike
   - hawk point
-  - over watch
 - Replay feature where you can see a battle recap?
-- Should unit behavior be toggable on a global scale? E.g. tanks have fire mode vs push mode
+- Should unit behavior be toggable on a global scale? E.g. bombers have different bomb plan options
 - Should nodes produce multiple units e.g. Nodes always create infatry, then get upgraded over time.
   - Initially, this seems awesome but makes unit production harder
   - Capturing nodes is more swingy? which is good?
@@ -624,7 +616,7 @@ Is there a mobile equivalent for war/4x games?
   - fly separate and bomb differently (complex due to path finding)
 - A "heat" seeking mechanic can be added to several different flying units to prioritize targets
   - counter missile
-  - bomber / fight has tank heat seekking missiles
+  - bomber / fighter has heat seekking missiles
   - flares
 - There should probably be some type of comeback mechanic.
   - As players lose nodes how do you make nodes more valuable?
@@ -879,7 +871,6 @@ CBS in depth notes: https://www.sciencedirect.com/science/article/pii/S000437021
     are withn a hexagon. Object avoidance is different than collision detection.
   - Can use a sphere in front of a units direction to test for object avoidance
   - This includes path following and unaligned collision avoidance which may be needed for airplanes.
-  - Can use steering behaviors to make infantry avoids tanks
   - Can prioritze steering behaviors e.g. do X unless 0. do Y if X is 0 and Y is not 0. Do Z if X and Y are 0.
   - Can merge streering behavior together to get combined direction and velocity.
 - dynamic obstacle avoidance
@@ -908,9 +899,7 @@ Have read through several college publications and game ai pro articles not link
   - Is there a good way to counter artillery?
   - Heat seeking missile (it can be an upgrade but does not have to be)
   - Jet heat flare (it can be an upgrade but does not have to be)
-  - Should ground units like tank, artillery, etc need to refuel and resupply?
   - Missile upgrade makes it smaller?
-  - SAM upgrade or configurable number of rockets sent?
   - Prior to the game and during game allow players to tune unit configs? 
     e.g. 1 SAM in army send 1 rocket, 2 SAM in army send 1 rocket from all in range or 
     send 2 rockets from closest? Army could have seensible defaults but then players
@@ -919,9 +908,6 @@ Have read through several college publications and game ai pro articles not link
 - Units:
   - Land:
     - infantry
-    - tank
-    - mobile sam
-    - mobile artillery
   - Air
     - bomber (plane is high air, bombs are low air)
     - fighter (high air tech tree is used for stealth)
@@ -984,10 +970,10 @@ Have read through several college publications and game ai pro articles not link
   - gravity bombs
   - guided bombs (drop directly over target and steer towards units or something else)
   - bunker buster (hits node?)
+  - chemical
   - incendiary (fire)
   - glide bombs (fired from range and fly towards target)
   - nuclear bomb
-  - HEAT (high-explosive anti-tank) or anti tank
 
 #### Brainstorm Fighter Unit
 
@@ -997,7 +983,6 @@ Have read through several college publications and game ai pro articles not link
   - adding external payload should make stealth worse
 - control
   - first implementation is just airport -> p1 -> p2 -> airport
-
 
 #### Pixel Art Notes
 
