@@ -19,6 +19,8 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Wrap UUID so it is not as exposed
+
 - Implement fighter and bomber
   - bomb improvements
   - - Initially thought low air needed to be more complex to handle multiple bombs in a single spot.
@@ -37,9 +39,6 @@ Is there a mobile equivalent for war/4x games?
   - Add heat seeking missiles
     - Add heat to units
     - Add heat seeking to missiles
-  - Add smart targetting upgrade so bombs don't get overkilled.
-    - how does a unit know it already targetted another unit
-    - Is it correct to add nearest units method which returns an array instead of a single unit?
   - Maybe add a fighter machine gun? Could be an upgrade or missiles could be an update. Or random starting item.
     - Overlap with other units? Helicopter or gunship?
   - bomber should have an upgrade for high g steering away from missiles

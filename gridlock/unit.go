@@ -54,9 +54,10 @@ type unit struct {
 	steerTarget         position
 	enemyTarget         position
 	localTarget         position
-	nearest             position
 	localTargets        []position
 	globalTargets       []position
+	nearest             target
+	skipTargets         []uuid.UUID
 	actions             []action
 	pathGlobalTarget    bool
 	atTerminalPosition  bool
@@ -145,6 +146,7 @@ func newUnit(
 				},
 				do: func(unit *unit) {
 					unit.missileCount = unit.missileCountMax
+					unit.skipTargets = []uuid.UUID{}
 				},
 				delay: u.missileFireDelay,
 			},
@@ -155,11 +157,12 @@ func newUnit(
 						missileConfig,
 						position{layer: missileConfig.produceLayer, PixelPosition: unit.PixelPosition},
 						unit.player,
-						[]position{unit.nearest},
+						[]position{unit.nearest.position},
 						[]action{},
 						GridPosition{},
 						false)
 					newUnit.sourceUnit = unit.id
+					unit.skipTargets = append(unit.skipTargets, unit.nearest.id)
 					unit.requests = append(unit.requests, request{&newUnit, false})
 					unit.missileCount--
 				},

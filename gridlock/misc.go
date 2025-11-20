@@ -5,6 +5,8 @@ package main
 import (
 	"fmt"
 	"log/slog"
+
+	"github.com/gofrs/uuid/v5"
 )
 
 const maxPercent = 100
@@ -71,6 +73,11 @@ type action struct {
 type Move struct {
 	position
 	confirm func()
+}
+
+type target struct {
+	position
+	id uuid.UUID
 }
 
 func (action action) log() []slog.Attr {

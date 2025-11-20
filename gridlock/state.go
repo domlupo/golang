@@ -236,14 +236,14 @@ func (s *state) analyzeTargets() {
 
 		if u.unitConfig.name == guidedAirMissile {
 			u.localTargets = []position{u.globalTargets[0]}
-			nearest, _ := s.nearestUnitWithinVision(*u)
-			u.updateTarget(enemyTarget, nearest)
+			nearest, _ := s.nearestTargetWithinVision(*u)
+			u.updateTarget(enemyTarget, nearest.position)
 			u.prioritizeTargets()
 			continue
 		}
 
 		if u.unitConfig.name == fighter {
-			nearest, _ := s.nearestUnitWithinVision(*u)
+			nearest, _ := s.nearestTargetWithinVisionFiltered(*u, u.skipTargets)
 			u.nearest = nearest
 			if u.atTerminalPosition && len(u.globalTargets) > 1 {
 				if len(u.actions) > 0 && u.actions[0].pos.equals(u.globalTargets[0]) {
@@ -294,8 +294,8 @@ func (s *state) analyzeTargets() {
 			}
 		}
 
-		nearest, _ := s.nearestUnitWithinVision(*u)
-		u.updateTarget(enemyTarget, nearest)
+		nearest, _ := s.nearestTargetWithinVision(*u)
+		u.updateTarget(enemyTarget, nearest.position)
 
 		if len(u.globalTargets) > 0 && u.pathGlobalTarget {
 			u.pathfindGlobalTarget(s.obstacles, s.oLUT, s.g)
@@ -507,11 +507,15 @@ func (s state) partitions(u unit, d int) []*hexagon {
 	return hexs
 }
 
-func (s state) nearestUnitWithinVision(u unit) (position, bool) {
+func (s state) nearestTargetWithinVision(u unit) (target, bool) {
+	return s.nearestTargetWithinVisionFiltered(u, []uuid.UUID{})
+}
+
+func (s state) nearestTargetWithinVisionFiltered(u unit, filter []uuid.UUID) (target, bool) {
 	partitions := s.partitions(u, u.vision)
 	layers := u.attackLayers()
-	shortestDistance := math.MaxInt64
-	var nearestUnitPos position
+	d := math.MaxInt64
+	var t target
 	for _, partition := range partitions {
 		if partition == nil {
 			continue
@@ -519,27 +523,28 @@ func (s state) nearestUnitWithinVision(u unit) (position, bool) {
 
 		for _, l := range layers {
 			linkedList := partition.get(l).linkedList
-			if p, distance := s.nearestUnitWithinLayer(u, linkedList); distance < shortestDistance {
-				nearestUnitPos = p
-				shortestDistance = distance
+			if target, distance := s.nearestTargetWithinLayer(u, linkedList, filter); distance < d {
+				t = target
+				d = distance
 			}
 		}
 	}
 
-	return nearestUnitPos, shortestDistance == math.MaxInt64
+	return t, d == math.MaxInt64
 }
 
-func (s state) nearestUnitWithinLayer(u unit, linkedList *unit) (position, int) {
-	shortestDistance := math.MaxInt64
-	var nearestUnitPos position
+func (s state) nearestTargetWithinLayer(u unit, linkedList *unit, filter []uuid.UUID) (target, int) {
+	d := math.MaxInt64
+	var t target
 	if linkedList == nil || (linkedList.id == u.id && linkedList == linkedList.next) {
-		return nearestUnitPos, shortestDistance
+		return t, d
 	}
 
 	x1 := u.position.X + u.radius
 	y1 := u.position.Y + u.radius
 	end := linkedList
 	current := linkedList
+
 	// checkOccurred handles the edge case where a hexagon has a single
 	// unit within in. This unit should still be checked since it
 	// is not the unit passed into the function but don't self cycle
@@ -557,6 +562,11 @@ func (s state) nearestUnitWithinLayer(u unit, linkedList *unit) (position, int) 
 
 		checkOccurred = true
 
+		if slices.Contains(filter, current.id) {
+			current = current.next
+			continue
+		}
+
 		if u.player == current.player {
 			current = current.next
 			continue
@@ -568,21 +578,21 @@ func (s state) nearestUnitWithinLayer(u unit, linkedList *unit) (position, int) 
 		xDelta := x2 - x1
 		yDelta := y2 - y1
 		distance := xDelta*xDelta + yDelta*yDelta
-		if distance < shortestDistance && distance <= u.vision*u.vision {
+		if distance < d && distance <= u.vision*u.vision {
 			if _, los := u.lineOfSight(current.PixelPosition, s.oLUT, u.radius); los {
-				shortestDistance = distance
-				nearestUnitPos = current.position
+				d = distance
+				t = target{current.position, current.id}
 			}
 			if current.layer == lowAir || current.layer == highAir {
-				shortestDistance = distance
-				nearestUnitPos = current.position
+				d = distance
+				t = target{current.position, current.id}
 			}
 		}
 
 		current = current.next
 	}
 
-	return nearestUnitPos, shortestDistance
+	return t, d
 }
 
 func (s *state) collidesWithUnit(p position, u unit) (position, bool) {
