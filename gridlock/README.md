@@ -19,28 +19,51 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Debug hangs when fighter missile collides with bomber
-
-- Implement fighter
-  - Initially thought low air needed to be more complex to handle multiple bombs in a single spot.
-    - Perhaps bombs should be a targetable unit, but also be able to be queued somehow.
-    - Or a bomb unit can have stacks to it at different intervals. I think this is best. Bombs can merge.
-      would need to allow different players to merge bombs.
+- Implement fighter and bomber
+  - bomb improvements
+  - - Initially thought low air needed to be more complex to handle multiple bombs in a single spot.
+    - Perhaps bombs should be a targetable unit, but also be able to be merged/queued somehow.
+    - Bomb unit can have stacks to it at different intervals. I think this is best. Bombs can merge.
+      Would need to allow different players to merge bombs on same location.
     - An upgrade could be to always target lower level bombs first rather than higher level bombs.
+    - glide bombs would affect this.
   - add ammo concept
     - flares
     - bombs
-  - add flare draw
-  - add logic for flares to counter missiles
-  - add dynamic flare count
-  - add smart targetting so bombs don't get overkilled.
+  - Flares
+   - add flare draw
+   - add logic for flares to counter missiles
+   - add dynamic flare count
+  - Add heat seeking missiles
+    - Add heat to units
+    - Add heat seeking to missiles
+  - Add smart targetting upgrade so bombs don't get overkilled.
+    - how does a unit know it already targetted another unit
+    - Is it correct to add nearest units method which returns an array instead of a single unit?
   - Maybe add a fighter machine gun? Could be an upgrade or missiles could be an update. Or random starting item.
     - Overlap with other units? Helicopter or gunship?
+  - bomber should have an upgrade for high g steering away from missiles
+  - counter measures
+    - chaff
+    - flares
+    - steer
+    - signal jammers (upgrade could increase jam distance?)
+  - missile types
+    - unguided missile (no homing effect)
+    - semi homing missile (aircraft must follow target)
+    - homing missile (fire and forget)
   - Once steer/boids is understood better, can add avoidance
+
+- Debug hangs when fighter missile collides with bomber
+  - is this still occurring?
 
 - Design, scope and implement AC130
 
 - Design, scope and implement paratroopers
+
+- Design, scope and implement apache
+
+- Design, scope and implement stealth bomber
 
 - Update guided and unguided missile so they are low air but target low air and high air
 
@@ -633,6 +656,8 @@ Is there a mobile equivalent for war/4x games?
   rock paper scissors.
 - fuel mechanic for planes could be risk vs reward for building closer airports but this already exists
   because planes need to rearm.
+- Should infantry have upgrades like gas masks, cross shallow water? Cross shallow water is hard since it
+  is dynamic pathing.
 
 ---
 

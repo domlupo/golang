@@ -41,7 +41,7 @@ type reaction struct {
 	delay uint64
 }
 
-// All units within a 2 dimensioinal layer
+// All units within a 2 dimensional layer
 type units map[PixelPosition]*unit
 
 type unit struct {
