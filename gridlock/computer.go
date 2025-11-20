@@ -230,7 +230,6 @@ func (c *computer) planBombs(n *node, targets []PixelPosition) {
 				[]position{{layer: land, PixelPosition: p.PixelPosition}},
 				[]action{},
 				GridPosition{},
-				c.s.unitSpawnTotal,
 				false)
 			c.s.spawn(&u)
 			c.s.events = append(c.s.events, event{

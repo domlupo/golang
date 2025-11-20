@@ -112,15 +112,16 @@ func (s *state) spawn(u *unit) {
 	} else {
 		panic(fmt.Sprintf("Cannot spawn unit at %s since it is already occupied.", u.PixelPosition.log()))
 	}
+	u.spawnOrder = s.unitSpawnTotal
 	s.unitSpawnTotal++
 }
 
-func (s *state) spawnRequest(u *unit) bool {
-	units := *s.unitsLayer(u.layer)
-	if _, ok := units[u.PixelPosition]; ok {
+func (s *state) spawnRequest(r request) bool {
+	units := *s.unitsLayer(r.spawn.layer)
+	if _, ok := units[r.spawn.PixelPosition]; ok {
 		return false
 	}
-	s.spawn(u)
+	s.spawn(r.spawn)
 	return true
 }
 
@@ -207,7 +208,7 @@ func (s *state) processRequests() {
 	logger.log(infoLevel, stateLogic, "processRequests", slog.Int("requesterUnitCounter", len(s.requesterUnits)))
 	for _, u := range s.requesterUnits {
 		for i, r := range u.requests {
-			if s.spawnRequest(r.spawn) {
+			if s.spawnRequest(r) {
 				r.complete = true
 				u.requests[i] = r
 			}
@@ -1052,7 +1053,6 @@ func (s *state) produceUnits() {
 			n.targets,
 			n.actions,
 			n.gridPos,
-			s.unitSpawnTotal,
 			n.selectActive() && s.developerMode)
 		if !ok {
 			panic("Could not get node center")

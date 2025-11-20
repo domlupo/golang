@@ -114,7 +114,6 @@ func newUnit(
 	globalTargets []position,
 	actions []action,
 	sourceNode GridPosition,
-	spawnOrder int,
 	selected bool) unit {
 	id, err := uuid.NewV4()
 	if err != nil {
@@ -132,7 +131,6 @@ func newUnit(
 		unitConfig:          uc,
 		health:              uc.maxHealth,
 		selected:            selected,
-		spawnOrder:          spawnOrder,
 		steerTurnCountLimit: 20,
 		sourceNode:          sourceNode,
 		sourcePosition:      pos.PixelPosition,
@@ -153,7 +151,6 @@ func newUnit(
 			{
 				when: func(unit *unit) bool { return !unit.nearest.equals(position{}) && unit.missileCount != 0 },
 				do: func(unit *unit) {
-					// TODO: simplify newUnit, it is complex and usually nneed to set fields afterwards
 					newUnit := newUnit(
 						missileConfig,
 						position{layer: missileConfig.produceLayer, PixelPosition: unit.PixelPosition},
@@ -161,7 +158,6 @@ func newUnit(
 						[]position{unit.nearest},
 						[]action{},
 						GridPosition{},
-						0, // TODO: Fix
 						false)
 					newUnit.sourceUnit = unit.id
 					unit.requests = append(unit.requests, request{&newUnit, false})
