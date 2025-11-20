@@ -443,21 +443,14 @@ func (s *state) moveUnits() {
 			unitsBorderCollideCount++
 		} else if collidesWithUnit {
 			unitsCollideCount++
-			u.AtCollision = true
-			var units units
-			switch u.layer {
-			case land:
-				continue
-			case lowAir:
-				units = s.lowAirUnits
-			case highAir:
-				units = s.highAirUnits
-			}
-			otherUnit := units[collidedUnitPos.PixelPosition]
+
+			otherUnits := *s.unitsLayer(collidedUnitPos.layer)
+			otherUnit := otherUnits[collidedUnitPos.PixelPosition]
 			otherUnit.health = 0
-			units[collidedUnitPos.PixelPosition] = units[PixelPosition{collidedUnitPos.X, collidedUnitPos.Y}]
+			otherUnit.AtCollision = true
+
 			u.health = 0
-			units[u.position.PixelPosition] = units[PixelPosition{u.X, u.Y}]
+			u.AtCollision = true
 		} else if !u.canReachNode.isZero() {
 			unitsAtNode++
 		} else {
@@ -592,14 +585,8 @@ func (s state) nearestUnitWithinLayer(u unit, linkedList *unit) (position, int) 
 	return nearestUnitPos, shortestDistance
 }
 
-// checks the passed newPos hexagon and its adjacent hexagons for collisions between
-// passed unit and unit midpoints within those hexagons. Returns the position
-// of the unit which collided with the passed unit.
-func (s *state) collidesWithUnit(newPos position, u unit) (position, bool) {
-	x1 := newPos.X + u.radius
-	y1 := newPos.Y + u.radius
-	r1 := u.radius
-
+func (s *state) collidesWithUnit(p position, u unit) (position, bool) {
+	layers := u.collideLayers()
 	partitions := s.partitions(u, 0)
 
 	for _, partition := range partitions {
@@ -607,56 +594,62 @@ func (s *state) collidesWithUnit(newPos position, u unit) (position, bool) {
 			continue
 		}
 
-		// TODO: May want to add collision layer for units that span multiple layers?
-		linkedList := partition.get(u.layer).linkedList
-
-		if linkedList == nil || (linkedList.id == u.id && linkedList == linkedList.next) {
-			continue
-		}
-
-		end := linkedList
-		current := linkedList
-		// checkOccurred handles the edge case where a hexagon has a single
-		// unit within in. This unit should still be checked since it
-		// is not the unit passed into the function but don't self cycle
-		// since it will never progress to a different current unit.
-		var checkOccurred bool
-		for {
-			if current.id == end.id && checkOccurred {
-				break
+		for _, l := range layers {
+			linkedList := partition.get(l).linkedList
+			if p, collides := s.collidesWithUnitLayer(u, p, linkedList); collides {
+				return p, collides
 			}
-
-			if current.id == u.id {
-				current = current.next
-				continue
-			}
-
-			checkOccurred = true
-
-			if current.id == u.sourceUnit || current.sourceUnit == u.id {
-				continue
-			}
-
-			if newPos.layer != current.layer {
-				current = current.next
-				continue
-			}
-
-			x2 := current.X + current.radius
-			y2 := current.Y + current.radius
-			r2 := current.radius
-
-			xDelta := x2 - x1
-			yDelta := y2 - y1
-			rSum := r1 + r2
-			if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
-				return current.position, true
-			}
-
-			current = current.next
 		}
 	}
 
+	return position{}, false
+}
+
+func (s state) collidesWithUnitLayer(u unit, p position, linkedList *unit) (position, bool) {
+	x1 := p.X + u.radius
+	y1 := p.Y + u.radius
+	r1 := u.radius
+
+	if linkedList == nil || (linkedList.id == u.id && linkedList == linkedList.next) {
+		return position{}, false
+	}
+
+	end := linkedList
+	current := linkedList
+	// checkOccurred handles the edge case where a hexagon has a single
+	// unit within in. This unit should still be checked since it
+	// is not the unit passed into the function but don't self cycle
+	// since it will never progress to a different current unit.
+	var checkOccurred bool
+	for {
+		if current.id == end.id && checkOccurred {
+			break
+		}
+
+		if current.id == u.id {
+			current = current.next
+			continue
+		}
+
+		checkOccurred = true
+
+		if current.id == u.sourceUnit || current.sourceUnit == u.id {
+			continue
+		}
+
+		x2 := current.X + current.radius
+		y2 := current.Y + current.radius
+		r2 := current.radius
+
+		xDelta := x2 - x1
+		yDelta := y2 - y1
+		rSum := r1 + r2
+		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
+			return current.position, true
+		}
+
+		current = current.next
+	}
 	return position{}, false
 }
 

@@ -184,6 +184,20 @@ func (u unit) attackLayers() []layer {
 	return layers
 }
 
+func (u unit) collideLayers() []layer {
+	var layers []layer
+	if u.collidesLand {
+		layers = append(layers, land)
+	}
+	if u.collidesLowAir {
+		layers = append(layers, lowAir)
+	}
+	if u.collidesHighAir {
+		layers = append(layers, highAir)
+	}
+	return layers
+}
+
 func (u *unit) refresh() {
 	logger.logSelected(u.selected, infoLevel, selectedUnit, "beforeRefresh", u.log()...)
 	u.movedThisTurn = false

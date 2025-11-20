@@ -19,19 +19,17 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Debug hangs when fighter missile collides with bomber
+
 - Implement fighter
   - Initially thought low air needed to be more complex to handle multiple bombs in a single spot.
     - Perhaps bombs should be a targetable unit, but also be able to be queued somehow.
     - Or a bomb unit can have stacks to it at different intervals. I think this is best. Bombs can merge.
       would need to allow different players to merge bombs.
     - An upgrade could be to always target lower level bombs first rather than higher level bombs.
-  - add directonal high air missle draws
-    - either need to handle spawning units in same layer or I can avoid this. Probably just want to avoid
-      this ane make missiles always fly in low air but target both low and high air.
   - add ammo concept
     - flares
     - bombs
-  - add logic for anti high air missile
   - add flare draw
   - add logic for flares to counter missiles
   - add dynamic flare count
