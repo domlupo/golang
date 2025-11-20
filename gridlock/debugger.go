@@ -11,7 +11,6 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
@@ -197,7 +196,7 @@ func (d *debugger) logPixel(p PixelPosition) {
 
 func (d *debugger) logVisibilityGridObstaclePoints() {
 	if d.debugVisibilityGrids {
-		visited := make(map[uuid.UUID]struct{})
+		visited := make(map[id]struct{})
 		for _, o := range d.obstacles {
 			g := *o.visibilityGrid
 			op := g[0]
@@ -344,7 +343,7 @@ func (d debugger) draw(c drawConfig) {
 	}
 
 	if d.debugVisibilityGrids {
-		visited := make(map[uuid.UUID]struct{})
+		visited := make(map[id]struct{})
 		for _, o := range d.obstacles {
 			g := *o.visibilityGrid
 			op := g[0]

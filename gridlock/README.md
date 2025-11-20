@@ -19,8 +19,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Wrap UUID so it is not as exposed
-
 - Implement fighter and bomber
   - bomb improvements
   - - Initially thought low air needed to be more complex to handle multiple bombs in a single spot.

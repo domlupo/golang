@@ -77,7 +77,22 @@ type Move struct {
 
 type target struct {
 	position
-	id uuid.UUID
+	id id
+}
+
+// Wraps a third party universally unique identifier.
+type id struct {
+	uuid.UUID
+}
+
+// Generate a third party universally unique identifier.
+func generateId() id {
+	uuid, err := uuid.NewV4()
+	if err != nil {
+		logger.log(errorLevel, noLogType, "generateId", slog.String("failed to generate UUID", err.Error()))
+		panic("error when calling generateId. Game logic requires unique Ids")
+	}
+	return id{uuid}
 }
 
 func (action action) log() []slog.Attr {

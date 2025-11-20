@@ -8,8 +8,6 @@ import (
 	"math"
 	"slices"
 	"time"
-
-	"github.com/gofrs/uuid/v5"
 )
 
 // All obstacles on map
@@ -29,7 +27,7 @@ type obstacle struct {
 type obstaclePoint struct {
 	PixelPosition
 	source           GridPosition
-	visibilityGridId uuid.UUID
+	visibilityGridId id
 	cw               *obstaclePoint
 	cwDistance       int
 	ccw              *obstaclePoint
@@ -394,12 +392,7 @@ func (os obstacles) setupVisibilityGrid(oLUT obstacleLUT, g grid) {
 	points.removeDuplicatePoints()
 	points.connectPoints(oLUT, g)
 
-	id, err := uuid.NewV4()
-	if err != nil {
-		logger.log(errorLevel, noLogType, "getGroups", slog.String("failed to generate UUID", err.Error()))
-		panic("cannot getGroups since uuid generation failed")
-	}
-
+	id := generateId()
 	var grid []obstaclePoint
 	for _, op := range points {
 		op.visibilityGridId = id

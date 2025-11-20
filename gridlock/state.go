@@ -7,8 +7,6 @@ import (
 	"log/slog"
 	"math"
 	"slices"
-
-	"github.com/gofrs/uuid/v5"
 )
 
 // A request to modify state.
@@ -28,8 +26,8 @@ type state struct {
 	landUnits        units
 	lowAirUnits      units
 	highAirUnits     units
-	reactiveUnits    map[uuid.UUID]*unit
-	requesterUnits   map[uuid.UUID]*unit
+	reactiveUnits    map[id]*unit
+	requesterUnits   map[id]*unit
 	events           []event
 	step             uint64
 	developerMode    bool
@@ -48,8 +46,8 @@ func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, 
 		landUnits:      make(units),
 		lowAirUnits:    make(units),
 		highAirUnits:   make(units),
-		reactiveUnits:  make(map[uuid.UUID]*unit),
-		requesterUnits: make(map[uuid.UUID]*unit),
+		reactiveUnits:  make(map[id]*unit),
+		requesterUnits: make(map[id]*unit),
 		developerMode:  developerMode,
 	}
 
@@ -508,10 +506,10 @@ func (s state) partitions(u unit, d int) []*hexagon {
 }
 
 func (s state) nearestTargetWithinVision(u unit) (target, bool) {
-	return s.nearestTargetWithinVisionFiltered(u, []uuid.UUID{})
+	return s.nearestTargetWithinVisionFiltered(u, []id{})
 }
 
-func (s state) nearestTargetWithinVisionFiltered(u unit, filter []uuid.UUID) (target, bool) {
+func (s state) nearestTargetWithinVisionFiltered(u unit, filter []id) (target, bool) {
 	partitions := s.partitions(u, u.vision)
 	layers := u.attackLayers()
 	d := math.MaxInt64
@@ -533,7 +531,7 @@ func (s state) nearestTargetWithinVisionFiltered(u unit, filter []uuid.UUID) (ta
 	return t, d == math.MaxInt64
 }
 
-func (s state) nearestTargetWithinLayer(u unit, linkedList *unit, filter []uuid.UUID) (target, int) {
+func (s state) nearestTargetWithinLayer(u unit, linkedList *unit, filter []id) (target, int) {
 	d := math.MaxInt64
 	var t target
 	if linkedList == nil || (linkedList.id == u.id && linkedList == linkedList.next) {
@@ -932,7 +930,7 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 			}
 		}
 
-		visited := make(map[uuid.UUID]struct{})
+		visited := make(map[id]struct{})
 		for _, o := range s.obstacles {
 			g := *o.visibilityGrid
 			obstaclePoint := g[0]

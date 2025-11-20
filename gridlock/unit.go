@@ -8,7 +8,6 @@ import (
 	"math"
 	"slices"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
@@ -48,7 +47,7 @@ type unit struct {
 	unitConfig
 	position
 	subPixelPosition    subPixelPosition
-	id                  uuid.UUID
+	id                  id
 	player              player
 	activeTarget        position
 	steerTarget         position
@@ -57,7 +56,7 @@ type unit struct {
 	localTargets        []position
 	globalTargets       []position
 	nearest             target
-	skipTargets         []uuid.UUID
+	skipTargets         []id
 	actions             []action
 	pathGlobalTarget    bool
 	atTerminalPosition  bool
@@ -78,7 +77,7 @@ type unit struct {
 	angle               float64
 	sourceNode          GridPosition
 	sourcePosition      PixelPosition
-	sourceUnit          uuid.UUID
+	sourceUnit          id
 }
 
 // High resolution two dimensional point.
@@ -116,14 +115,8 @@ func newUnit(
 	actions []action,
 	sourceNode GridPosition,
 	selected bool) unit {
-	id, err := uuid.NewV4()
-	if err != nil {
-		logger.log(errorLevel, selectedUnit, "newUnit", slog.String("failed to generate UUID", err.Error()))
-		panic("cannot newUnit since uuid generation failed")
-	}
-
 	u := unit{
-		id:                  id,
+		id:                  generateId(),
 		position:            pos,
 		player:              p,
 		globalTargets:       globalTargets,
@@ -146,7 +139,7 @@ func newUnit(
 				},
 				do: func(unit *unit) {
 					unit.missileCount = unit.missileCountMax
-					unit.skipTargets = []uuid.UUID{}
+					unit.skipTargets = []id{}
 				},
 				delay: u.missileFireDelay,
 			},
