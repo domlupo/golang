@@ -310,39 +310,16 @@ func (s *state) steer(u *unit) position {
 	x1 := u.position.X + u.radius
 	y1 := u.position.Y + u.radius
 
-	gridPos, _ := s.g.getGridPos(u.PixelPosition)
-	hex := s.hexagons[gridPos]
-	var neHex, eHex, seHex, swHex, wHex, nwHex *hexagon
-
-	if pos, ok := s.g.adjacent(gridPos, hsNortheast); ok {
-		neHex = s.hexagons[pos]
-	}
-	if pos, ok := s.g.adjacent(gridPos, hsEast); ok {
-		eHex = s.hexagons[pos]
-	}
-	if pos, ok := s.g.adjacent(gridPos, hsSoutheast); ok {
-		seHex = s.hexagons[pos]
-	}
-	if pos, ok := s.g.adjacent(gridPos, hsSouthwest); ok {
-		swHex = s.hexagons[pos]
-	}
-	if pos, ok := s.g.adjacent(gridPos, hsWest); ok {
-		wHex = s.hexagons[pos]
-	}
-	if pos, ok := s.g.adjacent(gridPos, hsNorthwest); ok {
-		nwHex = s.hexagons[pos]
-	}
-
-	hexagons := [7]*hexagon{hex, neHex, eHex, seHex, swHex, wHex, nwHex}
+	partitions := s.partitions(*u, 0)
 
 	var xSteer int
 	var ySteer int
-	for _, hex := range hexagons {
-		if hex == nil {
+	for _, partition := range partitions {
+		if partition == nil {
 			continue
 		}
 
-		linkedList := hex.get(u.layer).linkedList
+		linkedList := partition.get(u.layer).linkedList
 
 		if linkedList == nil || (linkedList.id == u.id && linkedList == linkedList.next) {
 			continue
@@ -523,27 +500,31 @@ func (s *state) explode(u *unit) {
 	}
 }
 
-func (s state) nearestUnitWithinVision(u unit) (position, bool) {
+func (s state) partitions(u unit, d int) []*hexagon {
 	gridPos, ok := s.g.getGridPos(u.PixelPosition)
 	if !ok {
 		panic(fmt.Sprintf("nearestUnitWithinVision: cannot get grid pos for %s", u.PixelPosition.log()))
 	}
-	partitions := s.g.partitions(gridPos, u.vision)
-	hexagons := []*hexagon{}
+	partitions := s.g.partitions(gridPos, d)
+	hexs := []*hexagon{}
 	for _, p := range partitions {
-		hexagons = append(hexagons, s.hexagons[p])
+		hexs = append(hexs, s.hexagons[p])
 	}
-	layers := u.attackLayers()
+	return hexs
+}
 
+func (s state) nearestUnitWithinVision(u unit) (position, bool) {
+	partitions := s.partitions(u, u.vision)
+	layers := u.attackLayers()
 	shortestDistance := math.MaxInt64
 	var nearestUnitPos position
-	for _, hex := range hexagons {
-		if hex == nil {
+	for _, partition := range partitions {
+		if partition == nil {
 			continue
 		}
-		for _, l := range layers {
-			linkedList := hex.get(l).linkedList
 
+		for _, l := range layers {
+			linkedList := partition.get(l).linkedList
 			if p, distance := s.nearestUnitWithinLayer(u, linkedList); distance < shortestDistance {
 				nearestUnitPos = p
 				shortestDistance = distance
@@ -618,37 +599,15 @@ func (s *state) collidesWithUnit(newPos position, u unit) (position, bool) {
 	y1 := newPos.Y + u.radius
 	r1 := u.radius
 
-	gridPos, _ := s.g.getGridPos(newPos.PixelPosition)
-	hex := s.hexagons[gridPos]
-	var neHex, eHex, seHex, swHex, wHex, nwHex *hexagon
+	partitions := s.partitions(u, 0)
 
-	if pos, ok := s.g.adjacent(gridPos, hsNortheast); ok {
-		neHex = s.hexagons[pos]
-	}
-	if pos, ok := s.g.adjacent(gridPos, hsEast); ok {
-		eHex = s.hexagons[pos]
-	}
-	if pos, ok := s.g.adjacent(gridPos, hsSoutheast); ok {
-		seHex = s.hexagons[pos]
-	}
-	if pos, ok := s.g.adjacent(gridPos, hsSouthwest); ok {
-		swHex = s.hexagons[pos]
-	}
-	if pos, ok := s.g.adjacent(gridPos, hsWest); ok {
-		wHex = s.hexagons[pos]
-	}
-	if pos, ok := s.g.adjacent(gridPos, hsNorthwest); ok {
-		nwHex = s.hexagons[pos]
-	}
-
-	hexagons := [7]*hexagon{hex, neHex, eHex, seHex, swHex, wHex, nwHex}
-
-	for _, hex := range hexagons {
-		if hex == nil {
+	for _, partition := range partitions {
+		if partition == nil {
 			continue
 		}
 
-		linkedList := hex.get(u.layer).linkedList
+		// TODO: May want to add collision layer for units that span multiple layers?
+		linkedList := partition.get(u.layer).linkedList
 
 		if linkedList == nil || (linkedList.id == u.id && linkedList == linkedList.next) {
 			continue
