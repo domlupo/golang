@@ -21,7 +21,7 @@ const maxPercentage = 100
 const minutesInADay = 1440
 
 type Game struct {
-	windowMultiplier            int
+	windowMultiplier            float32
 	windowWidth                 int
 	windowHeight                int
 	backgroundColor             color.RGBA
@@ -50,7 +50,7 @@ type Game struct {
 
 func newGame() Game {
 	g := Game{
-		windowMultiplier:            2,
+		windowMultiplier:            1.5,
 		windowWidth:                 1280,
 		windowHeight:                720,
 		intDurationStart:            60,
@@ -163,8 +163,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			screen,
 			0,
 			0,
-			float32(float64(g.windowWidth*g.windowMultiplier)*(priorTimerProgress+currentTimerProgess)),
-			float32(g.windowHeight*g.windowMultiplier),
+			float32(g.windowWidth)*g.windowMultiplier*float32(priorTimerProgress+currentTimerProgess),
+			float32(g.windowHeight)*g.windowMultiplier,
 			g.timerColor,
 			false)
 	}
@@ -179,7 +179,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return g.windowWidth * g.windowMultiplier, g.windowHeight * g.windowMultiplier
+	return int(float32(g.windowWidth) * g.windowMultiplier), int(float32(g.windowHeight) * g.windowMultiplier)
 }
 
 func main() {
@@ -196,7 +196,7 @@ func main() {
 		}
 	}
 
-	ebiten.SetWindowSize(g.windowWidth*g.windowMultiplier, g.windowHeight*g.windowMultiplier)
+	ebiten.SetWindowSize(int(float32(g.windowWidth)*g.windowMultiplier), int(float32(g.windowHeight)*g.windowMultiplier))
 
 	file, progressPercentFromLog, intDurationStartFromLog := readProgressFromLog(g.logFileName)
 
