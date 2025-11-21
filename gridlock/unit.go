@@ -509,8 +509,16 @@ func (u unit) log() []slog.Attr {
 	a = append(a, slog.String("player", u.player.String()))
 	a = append(a, nest("position", u.position.log()))
 	a = append(a, nest("subPixelPosition", u.subPixelPosition.log()))
-	a = append(a, slog.Any("next", u.next.id))
-	a = append(a, slog.Any("prior", u.prior.id))
+	if u.next == nil {
+		a = append(a, slog.String("next", "none"))
+	} else {
+		a = append(a, slog.Any("next", u.next.id))
+	}
+	if u.prior == nil {
+		a = append(a, slog.String("prior", "none"))
+	} else {
+		a = append(a, slog.Any("prior", u.prior.id))
+	}
 	a = append(a, slog.Int("spawnOrder", u.spawnOrder))
 	a = append(a, nest("sourceNode", u.sourceNode.log()))
 	a = append(a, nest("sourcePosition", u.sourcePosition.log()))
