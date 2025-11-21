@@ -552,6 +552,9 @@ Is there a mobile equivalent for war/4x games?
 
 ## Game Design Questions
 
+- I like how balatro has a skip mechanic. If i make a tech tree which is randomized, a select 1 of 3 can be used.
+  Then I can allow either cheap skips to progress further or a reroll option. Initial thought is skip would be
+  more interesting than reroll and more skill based.
 - Risk vs reward for how many units to produce and what type vs how production to invest elsewhere could be nice. 
   e.g. I invested too much, my enemy lines are breaking apart. Infantry units may need to be ranged in order for
   more units to matter. It might also be nice to allow bimodal behavior. E.g. Charge infantry vs infantry shoots
