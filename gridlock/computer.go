@@ -182,9 +182,9 @@ func (c *computer) updateForNodeCapture() {
 
 	for u := range c.s.units() {
 		if u.staticTarget ||
-			u.unitConfig.name == guidedAirMissile ||
-			u.unitConfig.name == bomber ||
-			u.unitConfig.name == fighter {
+			u.name == guidedAirMissile ||
+			u.name == bomber ||
+			u.name == fighter {
 			continue
 		}
 

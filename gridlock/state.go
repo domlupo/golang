@@ -232,7 +232,7 @@ func (s *state) analyzeTargets() {
 			continue
 		}
 
-		if u.unitConfig.name == guidedAirMissile {
+		if u.name == guidedAirMissile {
 			u.localTargets = []position{u.globalTargets[0]}
 			nearest, _ := s.nearestTargetWithinVision(*u)
 			u.updateTarget(enemyTarget, nearest.position)
@@ -240,7 +240,7 @@ func (s *state) analyzeTargets() {
 			continue
 		}
 
-		if u.unitConfig.name == fighter {
+		if u.name == fighter {
 			nearest, _ := s.nearestTargetWithinVisionFiltered(*u, u.skipTargets)
 			u.nearest = nearest
 			if u.atTerminalPosition && len(u.globalTargets) > 1 {
@@ -258,7 +258,7 @@ func (s *state) analyzeTargets() {
 			continue
 		}
 
-		if u.unitConfig.name == bomber || u.unitConfig.name == missile {
+		if u.name == bomber || u.name == missile {
 			if u.atTerminalPosition && len(u.globalTargets) > 1 {
 				if len(u.actions) > 0 && u.actions[0].pos.equals(u.globalTargets[0]) {
 					u.actions[0].do()
