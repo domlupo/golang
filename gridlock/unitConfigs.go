@@ -53,9 +53,9 @@ type unitConfig struct {
 	reach                int
 	produceLayer         layer
 	staticTarget         bool
-	attacksLand          bool
-	attacksLowAir        bool
-	attacksHighAir       bool
+	targetsLand          bool
+	targetsLowAir        bool
+	targetsHighAir       bool
 	collidesLand         bool
 	collidesLowAir       bool
 	collidesHighAir      bool
@@ -84,7 +84,7 @@ var infantryConfig = unitConfig{
 	vision:          30,
 	reach:           5,
 	produceLayer:    land,
-	attacksLand:     true,
+	targetsLand:     true,
 	collidesLand:    true,
 	explodeRadius:   0,
 	maxAlivePerNode: math.MaxInt,
@@ -119,8 +119,8 @@ var guidedAirMissileConfig = unitConfig{
 	reach:                0,
 	produceLayer:         lowAir,
 	collidesLowAir:       true,
-	attacksLowAir:        true,
-	attacksHighAir:       true,
+	targetsLowAir:        true,
+	targetsHighAir:       true,
 	despawnAtTerminalPos: true,
 	explodeRadius:        100,
 	maxAlivePerNode:      math.MaxInt,
@@ -135,8 +135,8 @@ var fighterConfig = unitConfig{
 	vision:        400,
 	reach:         0,
 	produceLayer:  highAir,
-	attacksLowAir: true,
-	//attacksHighAir:   true,
+	targetsLowAir: true,
+	//targetsHighAir:   true,
 	collidesHighAir:  true,
 	explodeRadius:    100,
 	maxAlivePerNode:  1,
@@ -173,7 +173,7 @@ var bombConfig = unitConfig{
 	produceLayer:     lowAir,
 	collidesLowAir:   true,
 	staticTarget:     true,
-	attacksLand:      true,
+	targetsLand:      true,
 	explodeRadius:    20,
 	explodeStepDelay: 1000,
 	maxAlivePerNode:  math.MaxInt,
@@ -208,9 +208,9 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.Int("reach", uc.reach))
 	a = append(a, uc.produceLayer.log())
 	a = append(a, slog.Bool("staticTarget", uc.staticTarget))
-	a = append(a, slog.Bool("attacksLand", uc.attacksLand))
-	a = append(a, slog.Bool("attacksLowAir", uc.attacksLowAir))
-	a = append(a, slog.Bool("attacksHighAir", uc.attacksHighAir))
+	a = append(a, slog.Bool("targetsLand", uc.targetsLand))
+	a = append(a, slog.Bool("targetsLowAir", uc.targetsLowAir))
+	a = append(a, slog.Bool("targetsHighAir", uc.targetsHighAir))
 	a = append(a, slog.Bool("explodeAtTerminalPos", uc.explodeAtTerminalPos))
 	a = append(a, slog.Bool("despawnAtTerminalPos", uc.despawnAtTerminalPos))
 	return a

@@ -511,7 +511,7 @@ func (s state) nearestTargetWithinVision(u unit) (target, bool) {
 
 func (s state) nearestTargetWithinVisionFiltered(u unit, filter []id) (target, bool) {
 	partitions := s.partitions(u, u.vision)
-	layers := u.attackLayers()
+	layers := u.targetsLayers()
 	d := math.MaxInt64
 	var t target
 	for _, partition := range partitions {
@@ -594,7 +594,7 @@ func (s state) nearestTargetWithinLayer(u unit, linkedList *unit, filter []id) (
 }
 
 func (s *state) collidesWithUnit(p position, u unit) (position, bool) {
-	layers := u.collideLayers()
+	layers := u.collidesLayers()
 	partitions := s.partitions(u, 0)
 
 	for _, partition := range partitions {

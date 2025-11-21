@@ -166,21 +166,21 @@ func newUnit(
 	return u
 }
 
-func (u unit) attackLayers() []layer {
+func (u unit) targetsLayers() []layer {
 	var layers []layer
-	if u.attacksLand {
+	if u.targetsLand {
 		layers = append(layers, land)
 	}
-	if u.attacksLowAir {
+	if u.targetsLowAir {
 		layers = append(layers, lowAir)
 	}
-	if u.attacksHighAir {
+	if u.targetsHighAir {
 		layers = append(layers, highAir)
 	}
 	return layers
 }
 
-func (u unit) collideLayers() []layer {
+func (u unit) collidesLayers() []layer {
 	var layers []layer
 	if u.collidesLand {
 		layers = append(layers, land)
