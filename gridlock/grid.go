@@ -80,7 +80,9 @@ func (g grid) partitions(pos GridPosition, d int) []GridPosition {
 			}
 		}
 
-		if len(q) == 0 {
+		if len(q) == 0 && len(nextQ) == 0 {
+			break
+		} else if len(q) == 0 {
 			depth++
 			q = nextQ
 			nextQ = []GridPosition{}
