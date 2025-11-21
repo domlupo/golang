@@ -19,6 +19,23 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+- Playtesting MVP
+  - units: 
+    - fighter
+    - bomber
+    - infantry
+    - different node missile types
+  - risk vs reward mechanics
+    - produce infantry or tech
+  - randomized tech tree
+    - select 1 of 3 upgrades
+    - skip mechanic?
+  - randomized map generation
+  - human vs computer
+  - deploy to web
+  - art
+  - no sound
+
 - Implement fighter and bomber
   - Update fighter to store separate counts for heat seeking missiles and gravity bomb counter missiles 
   - Improve heat seeking missile flight path
@@ -63,14 +80,6 @@ Is there a mobile equivalent for war/4x games?
 
 - Debug hangs when fighter missile collides with bomber
   - is this still occurring?
-
-- Design, scope and implement AC130
-
-- Design, scope and implement paratroopers
-
-- Design, scope and implement apache
-
-- Design, scope and implement stealth bomber
 
 - Update guided and unguided missile so they are low air but target low air and high air
 
@@ -211,6 +220,14 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Future Checkpoints
+
+- Design, scope and implement AC130
+
+- Design, scope and implement paratroopers
+
+- Design, scope and implement apache
+
+- Design, scope and implement stealth bomber
 
 - Revisit bomber tasks
   - Punted
