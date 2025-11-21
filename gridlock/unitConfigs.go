@@ -71,7 +71,9 @@ type unitConfig struct {
 	requests             []request
 	requester            bool
 	missileCount         int
+	missileHeatCount     int
 	missileCountMax      int
+	missileHeatCountMax  int
 	missileFireDelay     uint64
 	heated               bool
 	heatSeeking          bool
@@ -130,25 +132,26 @@ var guidedAirMissileConfig = unitConfig{
 }
 
 var fighterConfig = unitConfig{
-	name:             fighter,
-	radius:           8,
-	maxHealth:        100,
-	attack:           0,
-	vision:           800,
-	reach:            0,
-	produceLayer:     highAir,
-	targetsLowAir:    true,
-	targetsHighAir:   true,
-	collidesHighAir:  true,
-	explodeRadius:    100,
-	maxAlivePerNode:  1,
-	bombs:            1,
-	speedFactor:      1.0,
-	reactive:         true,
-	requester:        true,
-	missileCountMax:  100,
-	missileFireDelay: 50,
-	heated:           true,
+	name:                fighter,
+	radius:              8,
+	maxHealth:           100,
+	attack:              0,
+	vision:              800,
+	reach:               0,
+	produceLayer:        highAir,
+	targetsLowAir:       true,
+	targetsHighAir:      true,
+	collidesHighAir:     true,
+	explodeRadius:       100,
+	maxAlivePerNode:     1,
+	bombs:               1,
+	speedFactor:         1.0,
+	reactive:            true,
+	requester:           true,
+	missileCountMax:     3,
+	missileHeatCountMax: 0,
+	missileFireDelay:    50,
+	heated:              true,
 }
 
 var bomberConfig = unitConfig{
@@ -162,7 +165,7 @@ var bomberConfig = unitConfig{
 	collidesHighAir: true,
 	explodeRadius:   100,
 	maxAlivePerNode: 1,
-	bombs:           2,
+	bombs:           4,
 	speedFactor:     1.0,
 	heated:          true,
 }
@@ -218,5 +221,7 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.Bool("targetsHighAir", uc.targetsHighAir))
 	a = append(a, slog.Bool("explodeAtTerminalPos", uc.explodeAtTerminalPos))
 	a = append(a, slog.Bool("despawnAtTerminalPos", uc.despawnAtTerminalPos))
+	a = append(a, slog.Int("missileCount", uc.missileCount))
+	a = append(a, slog.Int("missileHeatCount", uc.missileHeatCount))
 	return a
 }

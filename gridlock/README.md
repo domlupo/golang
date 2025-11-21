@@ -36,17 +36,24 @@ Is there a mobile equivalent for war/4x games?
   - art
   - no sound
 
+- Add upgrade concept
+  - What should be an upgrade ivs what should be configs? Certain things are not always better.
+  - Should all upgrades be toggleable?
+  - Should only a few upgrades be toggleable?
+  - what does the upgrade UI look like.
+
 - Implement fighter and bomber
-  - Update fighter to store separate counts for heat seeking missiles and gravity bomb counter missiles 
   - Improve heat seeking missile flight path
     - At least one aspect is off. I need to investigate if there are multiple issues.
     - It seems like the path isn't direct or as a user would except
-  - Determine if fighter smart target should be improved?
+  - Determine if fighter smart target should kill confirm?
     - This affects game design alot
     - I am not sure from game design perspective if units should be able to confirm kills or 
       confirm what their spawn units do.
     - Current issue is a missile fires at a target. Fighter restocks. The fighter will waste a second
       rocket rather than wait due missile hits is implemented.
+  - Determine if fighter should only fire missiles when it will reach before missile explodes
+    - fighter can determine how far off bombs are from exploding to not waste missiles
   - bomb improvements
   - - Initially thought low air needed to be more complex to handle multiple bombs in a single spot.
     - Perhaps bombs should be a targetable unit, but also be able to be merged/queued somehow.
@@ -61,9 +68,6 @@ Is there a mobile equivalent for war/4x games?
    - add flare draw
    - add logic for flares to counter missiles
    - add dynamic flare count
-  - Add heat seeking missiles
-    - Add heat to units
-    - Add heat seeking to missiles
   - Maybe add a fighter machine gun? Could be an upgrade or missiles could be an update. Or random starting item.
     - Overlap with other units? Helicopter or gunship?
   - bomber should have an upgrade for high g steering away from missiles

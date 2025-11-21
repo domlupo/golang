@@ -158,17 +158,24 @@ func newUnit(
 		u.reactions = []reaction{
 			{
 				when: func(unit *unit) bool {
-					return unit.PixelPosition.equals(unit.sourcePosition) && unit.missileCount != unit.missileCountMax
+					// TODO: bresenham is not guaranteed to get to final position. I have not seen
+					// aircraft not reach their final destination but missiles have. Need to ensure
+					// this is not error prone or make it more conservative.
+					return unit.PixelPosition.equals(unit.sourcePosition) && unit.unfullPayload()
 				},
 				do: func(unit *unit) {
-					unit.missileCount = unit.missileCountMax
+					unit.restockPayload()
+					// TODO: when a missile terminates, it should remove the target from skip targets
+					// rather than do this during restock. This should be an upgrade.
 					unit.skipTargets = []id{}
 				},
 				delay: u.missileFireDelay,
 			},
 			{
-				when: func(unit *unit) bool { return unit.nearest != nil && unit.missileCount != 0 },
+				when: func(unit *unit) bool { return unit.nearest != nil },
 				do: func(unit *unit) {
+					unit.skipTargets = append(unit.skipTargets, unit.nearest.id)
+
 					missile := newUnit(
 						missileConfig,
 						position{layer: missileConfig.produceLayer, PixelPosition: unit.PixelPosition},
@@ -178,25 +185,36 @@ func newUnit(
 						GridPosition{},
 						unit.selected)
 					missile.sourceUnit = unit.id
-					switch unit.nearest.name {
-					case bomb:
-						unit.skipTargets = append(unit.skipTargets, unit.nearest.id)
-					case bomber:
+
+					switch {
+					case unit.nearest.name == bomb && unit.missileCount > 0:
+						unit.missileCount--
+					case unit.nearest.name == bomber && unit.missileHeatCount > 0:
 						missile.heatSeeking = true
 						missile.targetsHighAir = true
 						missile.collidesHighAir = true
 						missile.terminalTarget = unit.nearest
+						unit.missileHeatCount--
 					default:
-						panic(fmt.Sprintf("fighter cannot react to unkown unit: %s", u.name.String()))
+						return
 					}
-					unit.requests = append(unit.requests, request{&missile, false})
-					unit.missileCount--
+
+					unit.requests = append(unit.requests, request{spawn: &missile})
 				},
 				delay: u.missileFireDelay,
 			}}
 	}
 
 	return u
+}
+
+func (u unit) unfullPayload() bool {
+	return u.missileCount != u.missileCountMax || u.missileHeatCount != u.missileHeatCountMax
+}
+
+func (u *unit) restockPayload() {
+	u.missileCount = u.missileCountMax
+	u.missileHeatCount = u.missileHeatCountMax
 }
 
 func (u unit) targetsLayers() []layer {
