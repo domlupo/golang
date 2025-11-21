@@ -75,11 +75,6 @@ type Move struct {
 	confirm func()
 }
 
-type target struct {
-	position
-	id id
-}
-
 // Wraps a third party universally unique identifier.
 type id struct {
 	uuid.UUID

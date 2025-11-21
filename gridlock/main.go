@@ -167,7 +167,7 @@ func (g *Game) Update() error {
 		logger.log(debugLevel, mainLogic, "processRequests")
 		g.gameState.processRequests()
 		logger.log(debugLevel, mainLogic, "processTerminalPositions")
-		g.gameState.processTerminalPositions()
+		g.gameState.processTerminalUnits()
 		logger.log(debugLevel, mainLogic, "refresh")
 		g.gameState.refresh()
 		logger.log(debugLevel, mainLogic, "attackUnits")

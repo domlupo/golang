@@ -61,6 +61,16 @@ func (s state) units() func(yield func(u *unit) bool) {
 				break
 			}
 		}
+		for u := range s.unitsAir() {
+			if !yield(u) {
+				break
+			}
+		}
+	}
+}
+
+func (s state) unitsAir() func(yield func(u *unit) bool) {
+	return func(yield func(u *unit) bool) {
 		for _, u := range s.lowAirUnits {
 			if !yield(u) {
 				break
@@ -71,7 +81,6 @@ func (s state) units() func(yield func(u *unit) bool) {
 				return
 			}
 		}
-
 	}
 }
 
@@ -226,16 +235,15 @@ func (s *state) processRequests() {
 
 func (s *state) analyzeTargets() {
 	for u := range s.units() {
-		if u.staticTarget {
-			u.localTargets = []position{u.globalTargets[0]}
-			u.prioritizeTargets()
-			continue
+		if u.name == unguidedGroundMissile || u.name == guidedAirMissile {
+			panic("units not supported")
 		}
 
-		if u.name == guidedAirMissile {
+		if u.name == missile {
 			u.localTargets = []position{u.globalTargets[0]}
-			nearest, _ := s.nearestTargetWithinVision(*u)
-			u.updateTarget(enemyTarget, nearest.position)
+			if u.heatSeeking && u.terminalTarget != nil && u.terminalTarget.heated {
+				u.updateTargetUnit(enemyTarget, u.terminalTarget)
+			}
 			u.prioritizeTargets()
 			continue
 		}
@@ -243,13 +251,13 @@ func (s *state) analyzeTargets() {
 		if u.name == fighter {
 			nearest, _ := s.nearestTargetWithinVisionFiltered(*u, u.skipTargets)
 			u.nearest = nearest
-			if u.atTerminalPosition && len(u.globalTargets) > 1 {
+			if u.moveDone && len(u.globalTargets) > 1 {
 				if len(u.actions) > 0 && u.actions[0].pos.equals(u.globalTargets[0]) {
 					u.actions[0].do()
 					u.actions = u.actions[1:]
 				}
 				u.globalTargets = u.globalTargets[1:]
-			} else if u.atTerminalPosition && len(u.globalTargets) == 1 {
+			} else if u.moveDone && len(u.globalTargets) == 1 {
 				u.globalTargets = s.nodes[u.sourceNode].targets
 				u.actions = s.nodes[u.sourceNode].actions
 			}
@@ -258,20 +266,19 @@ func (s *state) analyzeTargets() {
 			continue
 		}
 
-		if u.name == bomber || u.name == missile {
-			if u.atTerminalPosition && len(u.globalTargets) > 1 {
+		if u.name == bomber {
+			if u.moveDone && len(u.globalTargets) > 1 {
 				if len(u.actions) > 0 && u.actions[0].pos.equals(u.globalTargets[0]) {
 					u.actions[0].do()
 					u.actions = u.actions[1:]
 				}
 				u.globalTargets = u.globalTargets[1:]
-			} else if u.atTerminalPosition && len(u.globalTargets) == 1 {
+			} else if u.moveDone && len(u.globalTargets) == 1 {
 				u.globalTargets = s.nodes[u.sourceNode].targets
 				u.actions = s.nodes[u.sourceNode].actions
 			}
 			u.localTargets = []position{u.globalTargets[0]}
 			u.prioritizeTargets()
-
 			continue
 		}
 
@@ -293,11 +300,11 @@ func (s *state) analyzeTargets() {
 		}
 
 		nearest, _ := s.nearestTargetWithinVision(*u)
-		u.updateTarget(enemyTarget, nearest.position)
+		u.updateTargetUnit(enemyTarget, nearest)
 
 		if len(u.globalTargets) > 0 && u.pathGlobalTarget {
 			u.pathfindGlobalTarget(s.obstacles, s.oLUT, s.g)
-		} else if len(u.localTargets) > 0 && u.atTerminalPosition {
+		} else if len(u.localTargets) > 0 && u.moveDone {
 			u.localTargets = u.localTargets[:len(u.localTargets)-1]
 		}
 
@@ -495,7 +502,7 @@ func (s *state) explode(u *unit) {
 func (s state) partitions(u unit, d int) []*hexagon {
 	gridPos, ok := s.g.getGridPos(u.PixelPosition)
 	if !ok {
-		panic(fmt.Sprintf("nearestUnitWithinVision: cannot get grid pos for %s", u.PixelPosition.log()))
+		panic(fmt.Sprintf("partitions: cannot get grid pos for %s", u.PixelPosition.log()))
 	}
 	partitions := s.g.partitions(gridPos, d)
 	hexs := []*hexagon{}
@@ -505,15 +512,15 @@ func (s state) partitions(u unit, d int) []*hexagon {
 	return hexs
 }
 
-func (s state) nearestTargetWithinVision(u unit) (target, bool) {
+func (s state) nearestTargetWithinVision(u unit) (*unit, bool) {
 	return s.nearestTargetWithinVisionFiltered(u, []id{})
 }
 
-func (s state) nearestTargetWithinVisionFiltered(u unit, filter []id) (target, bool) {
+func (s state) nearestTargetWithinVisionFiltered(u unit, filter []id) (*unit, bool) {
 	partitions := s.partitions(u, u.vision)
 	layers := u.targetsLayers()
 	d := math.MaxInt64
-	var t target
+	var t *unit
 	for _, partition := range partitions {
 		if partition == nil {
 			continue
@@ -531,9 +538,9 @@ func (s state) nearestTargetWithinVisionFiltered(u unit, filter []id) (target, b
 	return t, d == math.MaxInt64
 }
 
-func (s state) nearestTargetWithinLayer(u unit, linkedList *unit, filter []id) (target, int) {
+func (s state) nearestTargetWithinLayer(u unit, linkedList *unit, filter []id) (*unit, int) {
 	d := math.MaxInt64
-	var t target
+	var t *unit
 	if linkedList == nil || (linkedList.id == u.id && linkedList == linkedList.next) {
 		return t, d
 	}
@@ -579,11 +586,11 @@ func (s state) nearestTargetWithinLayer(u unit, linkedList *unit, filter []id) (
 		if distance < d && distance <= u.vision*u.vision {
 			if _, los := u.lineOfSight(current.PixelPosition, s.oLUT, u.radius); los {
 				d = distance
-				t = target{current.position, current.id}
+				t = current
 			}
 			if current.layer == lowAir || current.layer == highAir {
 				d = distance
-				t = target{current.position, current.id}
+				t = current
 			}
 		}
 
@@ -660,10 +667,9 @@ func (s state) collidesWithUnitLayer(u unit, p position, linkedList *unit) (posi
 	}
 	return position{}, false
 }
-
-func (s *state) processTerminalPositions() {
-	for _, u := range s.lowAirUnits {
-		if !u.atTerminalPosition {
+func (s *state) processTerminalUnits() {
+	for u := range s.unitsAir() {
+		if !u.terminal() {
 			continue
 		}
 		if u.explodeAtTerminalPos {

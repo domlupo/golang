@@ -73,6 +73,8 @@ type unitConfig struct {
 	missileCount         int
 	missileCountMax      int
 	missileFireDelay     uint64
+	heated               bool
+	heatSeeking          bool
 }
 
 // Note: unit radius set to an odd number is better for testing due to division bugs
@@ -128,15 +130,15 @@ var guidedAirMissileConfig = unitConfig{
 }
 
 var fighterConfig = unitConfig{
-	name:          fighter,
-	radius:        8,
-	maxHealth:     100,
-	attack:        0,
-	vision:        400,
-	reach:         0,
-	produceLayer:  highAir,
-	targetsLowAir: true,
-	//targetsHighAir:   true,
+	name:             fighter,
+	radius:           8,
+	maxHealth:        100,
+	attack:           0,
+	vision:           800,
+	reach:            0,
+	produceLayer:     highAir,
+	targetsLowAir:    true,
+	targetsHighAir:   true,
 	collidesHighAir:  true,
 	explodeRadius:    100,
 	maxAlivePerNode:  1,
@@ -145,7 +147,8 @@ var fighterConfig = unitConfig{
 	reactive:         true,
 	requester:        true,
 	missileCountMax:  100,
-	missileFireDelay: 10,
+	missileFireDelay: 50,
+	heated:           true,
 }
 
 var bomberConfig = unitConfig{
@@ -159,8 +162,9 @@ var bomberConfig = unitConfig{
 	collidesHighAir: true,
 	explodeRadius:   100,
 	maxAlivePerNode: 1,
-	bombs:           4,
+	bombs:           2,
 	speedFactor:     1.0,
+	heated:          true,
 }
 
 var bombConfig = unitConfig{
@@ -185,7 +189,7 @@ var missileConfig = unitConfig{
 	radius:               3,
 	maxHealth:            100,
 	attack:               0,
-	vision:               0,
+	vision:               800,
 	reach:                0,
 	produceLayer:         lowAir,
 	collidesLowAir:       true,
@@ -208,6 +212,7 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.Int("reach", uc.reach))
 	a = append(a, uc.produceLayer.log())
 	a = append(a, slog.Bool("staticTarget", uc.staticTarget))
+	a = append(a, slog.Bool("heatSeeking", uc.heatSeeking))
 	a = append(a, slog.Bool("targetsLand", uc.targetsLand))
 	a = append(a, slog.Bool("targetsLowAir", uc.targetsLowAir))
 	a = append(a, slog.Bool("targetsHighAir", uc.targetsHighAir))

@@ -231,6 +231,7 @@ func (c *computer) planBombs(n *node, targets []PixelPosition) {
 				[]action{},
 				GridPosition{},
 				false)
+			// TODO: Update this to a spawn request since it can panic
 			c.s.spawn(&u)
 			c.s.events = append(c.s.events, event{
 				step: c.s.step + bombConfig.explodeStepDelay,

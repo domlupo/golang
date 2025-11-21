@@ -20,6 +20,16 @@ Is there a mobile equivalent for war/4x games?
 ### Next Checkpoints
 
 - Implement fighter and bomber
+  - Update fighter to store separate counts for heat seeking missiles and gravity bomb counter missiles 
+  - Improve heat seeking missile flight path
+    - At least one aspect is off. I need to investigate if there are multiple issues.
+    - It seems like the path isn't direct or as a user would except
+  - Determine if fighter smart target should be improved?
+    - This affects game design alot
+    - I am not sure from game design perspective if units should be able to confirm kills or 
+      confirm what their spawn units do.
+    - Current issue is a missile fires at a target. Fighter restocks. The fighter will waste a second
+      rocket rather than wait due missile hits is implemented.
   - bomb improvements
   - - Initially thought low air needed to be more complex to handle multiple bombs in a single spot.
     - Perhaps bombs should be a targetable unit, but also be able to be merged/queued somehow.

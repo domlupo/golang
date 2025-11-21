@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"log/slog"
 	"math"
@@ -32,6 +33,25 @@ const (
 	globalTarget
 )
 
+func (ut unitTarget) String() string {
+	switch ut {
+	case noTarget:
+		return "noTarget"
+	case activeTarget:
+		return "activeTarget"
+	case steerTarget:
+		return "steerTarget"
+	case enemyTarget:
+		return "enemyTarget"
+	case localTarget:
+		return "localTarget"
+	case globalTarget:
+		return "globalTarget"
+	default:
+		panic(fmt.Sprintf("Cannot convert unit target to string: %d", ut))
+	}
+}
+
 // An action which should occur when a condition is met.
 type reaction struct {
 	when  func(*unit) bool
@@ -50,16 +70,19 @@ type unit struct {
 	id                  id
 	player              player
 	activeTarget        position
+	activeTargetType    unitTarget
 	steerTarget         position
 	enemyTarget         position
 	localTarget         position
 	localTargets        []position
 	globalTargets       []position
-	nearest             target
+	nearest             *unit
 	skipTargets         []id
 	actions             []action
 	pathGlobalTarget    bool
-	atTerminalPosition  bool
+	terminalPosition    position
+	terminalTarget      *unit
+	moveDone            bool
 	bresenhamError      int
 	bresenhamErrorDy    int
 	bresenhamErrorDx    int
@@ -144,19 +167,29 @@ func newUnit(
 				delay: u.missileFireDelay,
 			},
 			{
-				when: func(unit *unit) bool { return !unit.nearest.equals(position{}) && unit.missileCount != 0 },
+				when: func(unit *unit) bool { return unit.nearest != nil && unit.missileCount != 0 },
 				do: func(unit *unit) {
-					newUnit := newUnit(
+					missile := newUnit(
 						missileConfig,
 						position{layer: missileConfig.produceLayer, PixelPosition: unit.PixelPosition},
 						unit.player,
 						[]position{unit.nearest.position},
 						[]action{},
 						GridPosition{},
-						false)
-					newUnit.sourceUnit = unit.id
-					unit.skipTargets = append(unit.skipTargets, unit.nearest.id)
-					unit.requests = append(unit.requests, request{&newUnit, false})
+						unit.selected)
+					missile.sourceUnit = unit.id
+					switch unit.nearest.name {
+					case bomb:
+						unit.skipTargets = append(unit.skipTargets, unit.nearest.id)
+					case bomber:
+						missile.heatSeeking = true
+						missile.targetsHighAir = true
+						missile.collidesHighAir = true
+						missile.terminalTarget = unit.nearest
+					default:
+						panic(fmt.Sprintf("fighter cannot react to unkown unit: %s", u.name.String()))
+					}
+					unit.requests = append(unit.requests, request{&missile, false})
 					unit.missileCount--
 				},
 				delay: u.missileFireDelay,
@@ -194,27 +227,46 @@ func (u unit) collidesLayers() []layer {
 	return layers
 }
 
+func (u unit) terminal() bool {
+	if u.moveDone && (u.despawnAtTerminalPos || u.explodeAtTerminalPos) {
+		return true
+	}
+
+	return false
+}
+
 func (u *unit) refresh() {
 	logger.logSelected(u.selected, infoLevel, selectedUnit, "beforeRefresh", u.log()...)
 	u.movedThisTurn = false
 	u.attackedThisTurn = false
 	u.AtCollision = false
-	u.angle = u.PixelPosition.angle(u.globalTargets[0].PixelPosition)
+
+	// TODO: Fix once target contract / structure is better understood
+	var p PixelPosition
+	if !u.enemyTarget.equals(position{}) {
+		p = u.enemyTarget.PixelPosition
+	} else {
+		p = u.globalTargets[0].PixelPosition
+	}
+	u.angle = u.PixelPosition.angle(p)
 }
 
 func (u *unit) prioritizeTargets() {
 	u.steerTurnCount++
 	if !u.steerTarget.equals(position{}) && u.steerTurnCount < u.steerTurnCountLimit {
 		u.updateTarget(activeTarget, u.steerTarget)
+		u.activeTargetType = steerTarget
 	} else if !u.enemyTarget.equals(position{}) {
 		u.steerTurnCount = 0
 		u.steerTarget = position{}
 		u.localTargets = []position{}
 		u.updateTarget(activeTarget, u.enemyTarget)
+		u.activeTargetType = enemyTarget
 	} else if len(u.localTargets) > 0 {
 		u.steerTurnCount = 0
 		u.steerTarget = position{}
 		u.updateTarget(activeTarget, u.localTargets[len(u.localTargets)-1])
+		u.activeTargetType = localTarget
 	} else {
 		u.steerTurnCount = 0
 		u.steerTarget = position{}
@@ -233,7 +285,7 @@ func (u *unit) getMoves() []Move {
 	logger.logSelected(u.selected, infoLevel, selectedUnit, "getMoves: ", u.position.log()...)
 
 	moves := make([]Move, 0)
-	u.atTerminalPosition = true
+	u.moveDone = true
 	u.bresenhamErrorDx = 0
 	u.bresenhamErrorDy = 0
 
@@ -268,17 +320,17 @@ func (u *unit) getMoves() []Move {
 	}
 	doubleError := u.bresenhamError * 2
 	if doubleError >= dy && x0 != x1 {
-		u.atTerminalPosition = false
+		u.moveDone = false
 		u.bresenhamErrorDy = dy
 		x0 += sx
 	}
 	if doubleError <= dx && y0 != y1 {
-		u.atTerminalPosition = false
+		u.moveDone = false
 		u.bresenhamErrorDx = dx
 		y0 += sy
 	}
 
-	if u.atTerminalPosition {
+	if u.moveDone {
 		return moves
 	}
 
@@ -333,6 +385,14 @@ func (u *unit) confirmMove(s subPixelPosition) {
 		u.bresenhamError += u.bresenhamErrorDx
 	}
 	u.subPixelPosition = s
+}
+
+func (u *unit) updateTargetUnit(ut unitTarget, unit *unit) {
+	if unit == nil {
+		u.updateTarget(ut, position{})
+	} else {
+		u.updateTarget(ut, unit.position)
+	}
 }
 
 func (u *unit) updateTarget(ut unitTarget, target position) {
@@ -504,20 +564,18 @@ func (u *unit) getPath(
 }
 
 func (u unit) log() []slog.Attr {
-	var a = []slog.Attr{}
-	a = append(a, slog.Any("id", u.id))
+	var a = u.logShort()
 	a = append(a, slog.String("player", u.player.String()))
-	a = append(a, nest("position", u.position.log()))
 	a = append(a, nest("subPixelPosition", u.subPixelPosition.log()))
 	if u.next == nil {
 		a = append(a, slog.String("next", "none"))
 	} else {
-		a = append(a, slog.Any("next", u.next.id))
+		a = append(a, slog.Any("next", u.next.logShort()))
 	}
 	if u.prior == nil {
 		a = append(a, slog.String("prior", "none"))
 	} else {
-		a = append(a, slog.Any("prior", u.prior.id))
+		a = append(a, slog.Any("prior", u.prior.logShort()))
 	}
 	a = append(a, slog.Int("spawnOrder", u.spawnOrder))
 	a = append(a, nest("sourceNode", u.sourceNode.log()))
@@ -571,7 +629,8 @@ func (u unit) log() []slog.Attr {
 		}
 		a = append(a, nest("actions", actions))
 	}
-	a = append(a, slog.Bool("atTerminalPosition", u.atTerminalPosition))
+	a = append(a, nest("terminalPosition", u.terminalPosition.log()))
+	a = append(a, slog.Bool("moveDone", u.moveDone))
 	a = append(a, slog.Int("bresenhamError", u.bresenhamError))
 	a = append(a, slog.Int("bresenhamErrorDx", u.bresenhamErrorDx))
 	a = append(a, slog.Int("bresenhamErrorDy", u.bresenhamErrorDy))
@@ -581,6 +640,25 @@ func (u unit) log() []slog.Attr {
 	a = append(a, slog.Bool("attackedThisTurn", u.attackedThisTurn))
 	a = append(a, slog.Any("canReachNode", u.canReachNode))
 	a = append(a, slog.Bool("selected", u.selected))
+	a = append(a, slog.String("activeTargetType", u.activeTargetType.String()))
+	if u.nearest == nil {
+		a = append(a, slog.String("nearest", "none"))
+	} else {
+		a = append(a, slog.Any("nearest", u.nearest.logShort()))
+	}
+	if u.terminalTarget == nil {
+		a = append(a, slog.String("terminalTarget", "none"))
+	} else {
+
+		a = append(a, nest("terminalTarget", u.terminalTarget.logShort()))
+	}
+	return a
+}
+
+func (u unit) logShort() []slog.Attr {
+	a := []slog.Attr{}
+	a = append(a, slog.Any("id", u.id))
+	a = append(a, nest("position", u.position.log()))
 	return a
 }
 
@@ -639,6 +717,18 @@ func (u unit) draw(dc drawConfig, selected bool) {
 		}
 	case missile:
 		dc.screen.DrawImage(dc.pngMissile, u.angleDraw(dc))
+
+		if u.heatSeeking && u.selected {
+			vector.StrokeCircle(
+				dc.screen,
+				float32(u.X)*dc.windowMultiplier,
+				float32(u.Y)*dc.windowMultiplier,
+				float32(u.vision)*dc.windowMultiplier,
+				float32(dc.missileExplodeRadiusLineWidth)*dc.windowMultiplier,
+				dc.highlightColor,
+				false,
+			)
+		}
 	case infantry:
 		var color color.Color
 		switch u.player {
@@ -668,7 +758,7 @@ func (u unit) draw(dc drawConfig, selected bool) {
 		)
 	}
 
-	if selected {
+	if selected && u.name != missile {
 		drawUnfilledBoxInt(
 			dc,
 			dc.highlightColor,
