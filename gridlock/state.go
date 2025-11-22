@@ -250,7 +250,7 @@ func (s *state) analyzeTargets() {
 		}
 
 		if u.name == fighter {
-			s.nearestTargetWithinVisionFiltered(u, u.skipTargets)
+			s.nearestTargetWithinVisionFiltered(u, func(unit *unit) bool { return slices.Contains(u.skipTargets, unit.id) })
 			if u.moveDone && len(u.globalTargets) > 1 {
 				if len(u.actions) > 0 && u.actions[0].pos.equals(u.globalTargets[0]) {
 					u.actions[0].do()
@@ -267,7 +267,7 @@ func (s *state) analyzeTargets() {
 		}
 
 		if u.name == bomber {
-			s.nearestTargetWithinVisionFiltered(u, u.skipTargets)
+			s.nearestTargetWithinVisionFiltered(u, func(unit *unit) bool { return slices.Contains(u.skipTargets, unit.id) })
 			if u.moveDone && len(u.globalTargets) > 1 {
 				if len(u.actions) > 0 && u.actions[0].pos.equals(u.globalTargets[0]) {
 					u.actions[0].do()
@@ -514,10 +514,10 @@ func (s state) partitions(u unit, d int) []*hexagon {
 }
 
 func (s state) nearestTargetWithinVision(u *unit) {
-	s.nearestTargetWithinVisionFiltered(u, []id{})
+	s.nearestTargetWithinVisionFiltered(u, nil)
 }
 
-func (s state) nearestTargetWithinVisionFiltered(u *unit, filter []id) {
+func (s state) nearestTargetWithinVisionFiltered(u *unit, filter func(u *unit) bool) {
 	partitions := s.partitions(*u, u.vision)
 	layers := u.targetsLayers()
 	d := math.MaxInt64
@@ -538,7 +538,7 @@ func (s state) nearestTargetWithinVisionFiltered(u *unit, filter []id) {
 	u.nearest = t
 }
 
-func (s state) nearestTargetWithinLayer(u unit, linkedList *unit, filter []id) (*unit, int) {
+func (s state) nearestTargetWithinLayer(u unit, linkedList *unit, filter func(u *unit) bool) (*unit, int) {
 	d := math.MaxInt64
 	var t *unit
 	if linkedList == nil || (linkedList.id == u.id && linkedList == linkedList.next) {
@@ -567,7 +567,7 @@ func (s state) nearestTargetWithinLayer(u unit, linkedList *unit, filter []id) (
 
 		checkOccurred = true
 
-		if slices.Contains(filter, current.id) {
+		if filter != nil && filter(current) {
 			current = current.next
 			continue
 		}
