@@ -1078,10 +1078,9 @@ Listing out potential upgrades for a single unit might help:
   - rotary cannon? 
 - Research ammo type
   - basic missile
-  - semi active radar missile
-  - active radar missile
-  - semi active heat seeking missile
-  - active heat seeking missile
+  - semi active radar missile (fighter provides radar guidance)
+  - active radar missile (fire and forget)
+  - heat seeking missile (fire and forget)
   - bomb
   - flares
   - chaff
