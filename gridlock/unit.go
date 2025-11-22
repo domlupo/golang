@@ -73,7 +73,6 @@ type unit struct {
 	actions             []action
 	pathGlobalTarget    bool
 	terminalPosition    position
-	terminalTarget      *unit
 	moveDone            bool
 	bresenhamError      int
 	bresenhamErrorDy    int
@@ -595,12 +594,6 @@ func (u unit) log() []slog.Attr {
 		a = append(a, slog.String("nearest", "none"))
 	} else {
 		a = append(a, slog.Any("nearest", u.nearest.logShort()))
-	}
-	if u.terminalTarget == nil {
-		a = append(a, slog.String("terminalTarget", "none"))
-	} else {
-
-		a = append(a, nest("terminalTarget", u.terminalTarget.logShort()))
 	}
 	return a
 }

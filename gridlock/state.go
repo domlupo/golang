@@ -239,8 +239,9 @@ func (s *state) analyzeTargets() {
 			panic("units not supported")
 		}
 
-		if u.name == missileHeatSeeking && u.terminalTarget != nil && u.terminalTarget.heated {
-			u.updateTargetUnit(enemyTarget, u.terminalTarget)
+		if u.name == missileHeatSeeking {
+			s.nearestTargetWithinVisionFiltered(u, func(unit *unit) bool { return !unit.heated })
+			u.updateTargetUnit(enemyTarget, u.nearest)
 		}
 
 		if u.name == missile || u.name == missileHeatSeeking || u.name == flare {

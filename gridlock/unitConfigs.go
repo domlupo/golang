@@ -154,8 +154,8 @@ var fighterConfig = unitConfig{
 	speedFactor:         1.0,
 	reactive:            true,
 	requester:           true,
-	missileCountMax:     3,
-	missileHeatCountMax: 3,
+	missileCountMax:     10,
+	missileHeatCountMax: 1000,
 	fireOrdnanceDelay:   50,
 	heated:              true,
 }
@@ -171,7 +171,7 @@ var bomberConfig = unitConfig{
 	explodeRadius:     100,
 	maxAlivePerNode:   1,
 	bombCountMax:      4,
-	flareCountMax:     30,
+	flareCountMax:     1000,
 	fireOrdnanceDelay: 30,
 	speedFactor:       1.0,
 	heated:            true,
@@ -213,6 +213,7 @@ var missileHeatSeekingConfig = unitConfig{
 	vision:               800,
 	produceLayer:         ordnance,
 	collidesOrdnance:     true,
+	targetsOrdnance:      true,
 	staticTarget:         true,
 	despawnAtTerminalPos: true,
 	heatSeeking:          true,
@@ -231,7 +232,6 @@ var flareConfig = unitConfig{
 	staticTarget:         true,
 	despawnAtTerminalPos: true,
 	speedFactor:          0.5,
-	maxAlivePerNode:      1,
 	heated:               true,
 }
 

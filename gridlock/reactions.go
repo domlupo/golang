@@ -80,7 +80,6 @@ func reactions(n name) []reaction {
 			{
 				when: func(fighter *unit) bool { return fighter.nearest != nil },
 				do: func(fighter *unit) {
-					fighter.skipTargets = append(fighter.skipTargets, fighter.nearest.id)
 					var spawn unit
 					switch {
 					case fighter.nearest.name == bomb && fighter.missileCount > 0:
@@ -103,7 +102,6 @@ func reactions(n name) []reaction {
 							[]action{},
 							GridPosition{},
 							fighter.selected)
-						spawn.terminalTarget = fighter.nearest
 					default:
 						return
 					}
