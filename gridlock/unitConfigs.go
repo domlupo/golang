@@ -20,6 +20,7 @@ const (
 	missileHeatSeeking
 	missileBallistic
 	missileCruise
+	missileAntiBallistic
 	missileAntiAir
 	flare
 )
@@ -44,6 +45,8 @@ func (n name) String() string {
 		return "missileBallistic"
 	case missileCruise:
 		return "missileCruise"
+	case missileAntiBallistic:
+		return "missileAntiBallistic"
 	case missileAntiAir:
 		return "missileAntiAir"
 	case flare:
@@ -195,6 +198,8 @@ var missileHeatSeekingConfig = unitConfig{
 var missileBallisticConfig = unitConfig{}
 
 var missileCruiseConfig = unitConfig{}
+
+var missileAntiBallisticConfig = unitConfig{}
 
 var missileAntiAirConfig = unitConfig{}
 

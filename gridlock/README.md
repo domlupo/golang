@@ -1,6 +1,6 @@
- # Gridlock
+# Gridlock
 
-A prototype for a simple war/4x game. Simple like mini metro or mini motorways. 
+A prototype for a simple war/4x game. Simple like mini metro or mini motorways.
 War game like civ, hearts of iron, 9 kings etc. (also other popular war games on steamdb). 
 Think about how this game relates to civilization revolution, catan, RISK, 
 starcraft desert strike, totally accurate battle simulator, etc.
@@ -24,8 +24,9 @@ Is there a mobile equivalent for war/4x games?
     - fighter
     - bomber
     - infantry
-    - node cruise land missile
-    - node ballistic land missile
+    - node ballistic missile
+    - node cruise missile
+    - node anti ballistic missile
     - node anti air missile
   - risk vs reward mechanics
     - produce infantry
@@ -45,7 +46,6 @@ Is there a mobile equivalent for war/4x games?
 - Implement fighter and bomber
   - Fighter should intercept:
     - cruise misile (maneuverable, aircraft speed)
-    - ballistic missile (high arch, initially slow, but becomes fast, not maneuverable)
     - Maybe glide bombs 
   - Improve heat seeking missile flight path
     - At least one aspect is off. I need to investigate if there are multiple issues.
