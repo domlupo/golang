@@ -89,8 +89,6 @@ Is there a mobile equivalent for war/4x games?
 - Debug hangs when fighter missile collides with bomber
   - is this still occurring?
 
-- Update guided and unguided missile so they are low air but target low air and high air
-
 - Attempt to finalize how land, low air and high air layers are drawn
   - I am worried about how the visuals look
   - I am worried about how easy is it for players to follow what is going on 
@@ -101,16 +99,11 @@ Is there a mobile equivalent for war/4x games?
 - Finalize other major programming structures
   - hex iteration for all units?
 
-- Fix guided air missile bug
-  - It only retargets to missile when both the final position and other missile are within its range.
-
 - Fix bug where bomb explosion still even when it visually disappears from counter missile colliding with it
   - initial thoughts:
     - add a condition to event struct?
     - clear specific unit events when unit dies
     - add condition on explode that unit must exist?
-
-- Refactor unguided missile to use action struct
 
 - Improve multi bomb attack pattern (traveling salesmen)
   - Implement Held-Karp algorithm 
@@ -126,13 +119,6 @@ Is there a mobile equivalent for war/4x games?
   - high air is transparent
   - anything not transparent or infantry is low air
   - infantry is land
-
-- Improve guided air missile
-  - abstract logic for (pos, radius) -> get a list of units to check
-    - This is needed when the radius is larger than hex (counter missile)
-  - Fix bug where ground missile (not air missile) is not moving for computer player
-  - auto despawns for non computer players. This is probably wrong behavior.
-  - Determine target locking behavior for human player and computer player.
 
 - Design and implement global path finding LUT
   - To start probably want to create like existing LUT (useful for debugging issues with pathfinding)
@@ -743,9 +729,9 @@ Careful of current issues:
 
 - Will probably need to support checking a lot of hexagons for certain scenarios:
   - A large explosion will have collision > one hexagon. This is something I am concerned about
-    because this will probablhy be the most performance sensitive computation since players
+    because this will probably be the most performance sensitive computation since players
     will want to most likely target areas with alot of units.
-  - A unit with large vision e.g. guided air missile will probably need to check multiple hexagons.
+  - A unit with large vision e.g. anti air missile will probably need to check multiple hexagons.
   - If I implement in the future units which capture a city atttempt to capture the next closest city
     to themself rather than to the city. It might be more on theme that they all attack the same city
     which is an easier calculation? 

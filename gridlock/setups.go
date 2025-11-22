@@ -404,7 +404,7 @@ const (
 	nodeSurrounded
 	northWest
 	horizontal
-	horizontalMissile
+	horizontalNodeMissile
 	vertical
 	diagonal
 	lowNodeCount
@@ -425,7 +425,7 @@ func nodeSetups() []nodeSetup {
 		nodeSurrounded,
 		northWest,
 		horizontal,
-		horizontalMissile,
+		horizontalNodeMissile,
 		//vertical, TODO debug why this hangs
 		diagonal,
 		lowNodeCount,
@@ -450,8 +450,8 @@ func (ns nodeSetup) String() string {
 		return "northWest"
 	case horizontal:
 		return "horizontal"
-	case horizontalMissile:
-		return "horizontalMissile"
+	case horizontalNodeMissile:
+		return "horizontalNodeMissile"
 	case vertical:
 		return "vertical"
 	case diagonal:
@@ -522,10 +522,10 @@ func (nodes nodes) setupPositions(s nodeSetup, initialNodeHealth int) {
 			{GridPosition{1, 23}, pOne, infantryConfig},
 			{GridPosition{3, 23}, pTwo, infantryConfig},
 		}
-	case horizontalMissile:
+	case horizontalNodeMissile:
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{1, 23}, pOne, unguidedGroundMissileConfig},
-			{GridPosition{3, 23}, pTwo, guidedAirMissileConfig},
+			{GridPosition{1, 23}, pOne, missileBallisticConfig},
+			{GridPosition{3, 23}, pTwo, missileAntiAirConfig},
 		}
 	case vertical:
 		nodeSetupInputs = []nodeSetupInput{
@@ -713,12 +713,12 @@ func (nodes nodes) setupPositions(s nodeSetup, initialNodeHealth int) {
 			{GridPosition{21, 8}, pTwo, unitConfig},
 			{GridPosition{26, 8}, pTwo, unitConfig},
 
-			{GridPosition{1, 11}, pOne, unguidedGroundMissileConfig},
+			{GridPosition{1, 11}, pOne, missileBallisticConfig},
 			{GridPosition{6, 11}, pOne, unitConfig},
 			{GridPosition{11, 12}, pNeutral, unitConfig},
 			{GridPosition{16, 14}, pNeutral, unitConfig},
 			{GridPosition{21, 13}, pTwo, unitConfig},
-			{GridPosition{26, 13}, pTwo, guidedAirMissileConfig},
+			{GridPosition{26, 13}, pTwo, missileAntiAirConfig},
 
 			{GridPosition{1, 16}, pOne, unitConfig},
 			{GridPosition{6, 16}, pOne, unitConfig},

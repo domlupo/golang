@@ -727,7 +727,7 @@ func (u unit) draw(dc drawConfig, selected bool) {
 	}
 
 	if selected && !u.activeTarget.equals(position{}) {
-		if u.name == unguidedGroundMissile {
+		if u.name == missileBallistic {
 			vector.StrokeCircle(
 				dc.screen,
 				float32(u.activeTarget.X)*dc.windowMultiplier,
@@ -739,7 +739,7 @@ func (u unit) draw(dc drawConfig, selected bool) {
 			)
 		}
 
-		if u.name == guidedAirMissile {
+		if u.name == missileAntiAir {
 			vector.StrokeCircle(
 				dc.screen,
 				float32(u.X)*dc.windowMultiplier,

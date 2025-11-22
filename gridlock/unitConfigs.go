@@ -13,13 +13,14 @@ type name int
 const (
 	noName name = iota
 	infantry
-	unguidedGroundMissile
-	guidedAirMissile
 	fighter
 	bomber
 	bomb
 	missile
 	missileHeatSeeking
+	missileBallistic
+	missileCruise
+	missileAntiAir
 	flare
 )
 
@@ -29,10 +30,6 @@ func (n name) String() string {
 		return "noName"
 	case infantry:
 		return "infantry"
-	case unguidedGroundMissile:
-		return "unguidedGroundMissile"
-	case guidedAirMissile:
-		return "guidedAirMissile"
 	case fighter:
 		return "fighter"
 	case bomber:
@@ -43,6 +40,12 @@ func (n name) String() string {
 		return "missile"
 	case missileHeatSeeking:
 		return "missileHeatSeeking"
+	case missileBallistic:
+		return "missileBallistic"
+	case missileCruise:
+		return "missileCruise"
+	case missileAntiAir:
+		return "missileAntiAir"
 	case flare:
 		return "flare"
 	default:
@@ -103,40 +106,6 @@ var infantryConfig = unitConfig{
 	explodeRadius:   0,
 	maxAlivePerNode: math.MaxInt,
 	speedFactor:     2.0,
-}
-
-// TODO: Figure out better naming for various missiles
-// TODO: Figure out better attack conventions e.g. direct, vs explosion, etc
-var unguidedGroundMissileConfig = unitConfig{
-	name:                 unguidedGroundMissile,
-	radius:               5,
-	maxHealth:            1,
-	attack:               1,
-	vision:               100,
-	produceLayer:         ordnance,
-	collidesOrdnance:     true,
-	staticTarget:         true,
-	explodeAtTerminalPos: true,
-	despawnAtTerminalPos: true,
-	explodeRadius:        20,
-	maxAlivePerNode:      math.MaxInt,
-	speedFactor:          1.0,
-}
-
-var guidedAirMissileConfig = unitConfig{
-	name:                 guidedAirMissile,
-	radius:               5,
-	maxHealth:            1,
-	attack:               1000,
-	vision:               300,
-	produceLayer:         ordnance,
-	collidesOrdnance:     true,
-	targetsOrdnance:      true,
-	targetsAircraft:      true,
-	despawnAtTerminalPos: true,
-	explodeRadius:        100,
-	maxAlivePerNode:      math.MaxInt,
-	speedFactor:          1,
 }
 
 var fighterConfig = unitConfig{
@@ -222,6 +191,12 @@ var missileHeatSeekingConfig = unitConfig{
 	explodeRadius:        20,
 	speedFactor:          0.5,
 }
+
+var missileBallisticConfig = unitConfig{}
+
+var missileCruiseConfig = unitConfig{}
+
+var missileAntiAirConfig = unitConfig{}
 
 var flareConfig = unitConfig{
 	name:                 flare,
