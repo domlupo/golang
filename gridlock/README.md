@@ -69,6 +69,8 @@ Is there a mobile equivalent for war/4x games?
      - circle would be easiest?
      - dynamic flare count
      - polish would be to allow multiple patterns or players can create thier own. Not needed.
+     - I kind of like this user config concept. It reminds me of counter strike where you can choose a reticle.
+       The difference is this affects gameplay a lot more but its a single player game so that seems fine.
      - May want to allow players to alter number of flares shot during game play.
   - Maybe add a fighter machine gun? Could be an upgrade or missiles could be an update. Or random starting item.
     - Overlap with other units? Helicopter or gunship?
@@ -228,7 +230,7 @@ Is there a mobile equivalent for war/4x games?
 
 ### Future Checkpoints
 
-- Add more units
+ Add more units
   - Design, scope and implement AC130
   - Design, scope and implement paratroopers
   - Design, scope and implement apache
@@ -400,6 +402,14 @@ Is there a mobile equivalent for war/4x games?
 ---
 
 ### Punted Checkpoints
+
+- Determine if I should add player configurations
+  - player configure flare patterns or setups?
+  - player can configure gameplay visuals:
+    - hex grid outline on or off. 
+    - hex grid colors
+    - color intensities
+    - highlight colors
 
 - LUT tables are rather large for end game(100-300MB)
   - I may need to use something smaller for final game (especially if mobile release)
