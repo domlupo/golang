@@ -40,9 +40,9 @@ Is there a mobile equivalent for war/4x games?
   - art
   - no sound
 
+- Debug hangs. It seems to occur when fighter and bomber collide in air.
+
 - Implement fighter and bomber
-  - Fighter should not intercept:
-    - gravity bombs (fall extremely fast)
   - Fighter should intercept:
     - cruise misile (maneuverable, aircraft speed)
     - ballistic missile (high arch, initially slow, but becomes fast, not maneuverable)
@@ -56,40 +56,34 @@ Is there a mobile equivalent for war/4x games?
       confirm what their spawn units do.
     - Current issue is a missile fires at a target. Fighter restocks. The fighter will waste a second
       rocket rather than wait due missile hits is implemented.
-  - Determine if fighter should only fire missiles when it will reach before missile explodes
+  - Determine if fighter should only intercept missiles when it will reach before missile explodes
     - fighter can determine how far off bombs are from exploding to not waste missiles
   - bomb improvements
-  - - Initially thought low air needed to be more complex to handle multiple bombs in a single spot.
-    - Perhaps bombs should be a targetable unit, but also be able to be merged/queued somehow.
-    - Bomb unit can have stacks to it at different intervals. I think this is best. Bombs can merge.
+  - - Initially thought ordnance layer needed to be more complex to handle multiple bombs in a single spot.
+    - Perhaps bombs should be merged/queued somehow.
+    - Bomb unit can have stacks to it at different intervals. I think this is best.
       Would need to allow different players to merge bombs on same location.
-    - An upgrade could be to always target lower level bombs first rather than higher level bombs.
-    - glide bombs would affect this.
-  - add ammo concept
-    - flares
-    - bombs
-  - Flares
-   - add flare draw
-   - add logic for flares to counter missiles
-   - add dynamic flare count
+    - Glide bombs would affect this.
+  - Improve flares
+   - polish flare pattern
+     - circle would be easiest?
+     - dynamic flare count
+     - polish would be to allow multiple patterns or players can create thier own. Not needed.
+     - May want to allow players to alter number of flares shot during game play.
   - Maybe add a fighter machine gun? Could be an upgrade or missiles could be an update. Or random starting item.
     - Overlap with other units? Helicopter or gunship?
   - bomber should have an upgrade for high g steering away from missiles
   - counter measures
     - chaff
-    - flares
     - steer
     - signal jammers (upgrade could increase jam distance?)
   - missile types
     - unguided missile (no homing effect)
-    - semi homing missile (aircraft must follow target)
-    - homing missile (fire and forget)
+    - semi active missile (aircraft must follow target aka once out of vision don't home to target)
+    - active (fire and forget)
   - Once steer/boids is understood better, can add avoidance
 
-- Debug hangs when fighter missile collides with bomber
-  - is this still occurring?
-
-- Attempt to finalize how land, low air and high air layers are drawn
+- Attempt to finalize how land, ordnance and aircraft layers are drawn
   - I am worried about how the visuals look
   - I am worried about how easy is it for players to follow what is going on 
 
@@ -98,12 +92,6 @@ Is there a mobile equivalent for war/4x games?
 
 - Finalize other major programming structures
   - hex iteration for all units?
-
-- Fix bug where bomb explosion still even when it visually disappears from counter missile colliding with it
-  - initial thoughts:
-    - add a condition to event struct?
-    - clear specific unit events when unit dies
-    - add condition on explode that unit must exist?
 
 - Improve multi bomb attack pattern (traveling salesmen)
   - Implement Held-Karp algorithm 
@@ -116,9 +104,9 @@ Is there a mobile equivalent for war/4x games?
   - need to differentiate between multi global and multi local targets
 
 - Determine if this is correct player experience
-  - high air is transparent
-  - anything not transparent or infantry is low air
-  - infantry is land
+  - aircraft is transparent
+  - ordnance is transparent
+  - infantry is not transparent
 
 - Design and implement global path finding LUT
   - To start probably want to create like existing LUT (useful for debugging issues with pathfinding)
@@ -211,18 +199,6 @@ Is there a mobile equivalent for war/4x games?
   - Investigate, there may be a bug where when a node is captured by a computer player, unit targets incorrectly become node
     when a local target is already acquired.
 
----
-
-### Future Checkpoints
-
-- Design, scope and implement AC130
-
-- Design, scope and implement paratroopers
-
-- Design, scope and implement apache
-
-- Design, scope and implement stealth bomber
-
 - Revisit bomber tasks
   - Punted
     - bomber bombs as separate units attached to it that can explode. 
@@ -248,7 +224,17 @@ Is there a mobile equivalent for war/4x games?
     - bomber stealth
     - turn radius + paths that arc (not sure if I even want this for player experience)
 
-- Units may need different pathing algorithm
+---
+
+### Future Checkpoints
+
+- Add more units
+  - Design, scope and implement AC130
+  - Design, scope and implement paratroopers
+  - Design, scope and implement apache
+  - Design, scope and implement stealth bomber
+
+- Do units need different pathing algorithms or only different steer?
   - How to avoid this?
   - How to simplify this?
   - How to make this CPU performant?
