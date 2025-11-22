@@ -239,11 +239,12 @@ func (s *state) analyzeTargets() {
 			panic("units not supported")
 		}
 
-		if u.name == missile {
+		if u.name == missileHeatSeeking && u.terminalTarget != nil && u.terminalTarget.heated {
+			u.updateTargetUnit(enemyTarget, u.terminalTarget)
+		}
+
+		if u.name == missile || u.name == missileHeatSeeking || u.name == flare {
 			u.localTargets = []position{u.globalTargets[0]}
-			if u.heatSeeking && u.terminalTarget != nil && u.terminalTarget.heated {
-				u.updateTargetUnit(enemyTarget, u.terminalTarget)
-			}
 			u.prioritizeTargets()
 			continue
 		}
@@ -267,6 +268,9 @@ func (s *state) analyzeTargets() {
 		}
 
 		if u.name == bomber {
+			nearest, _ := s.nearestTargetWithinVisionFiltered(*u, u.skipTargets)
+			u.nearest = nearest
+
 			if u.moveDone && len(u.globalTargets) > 1 {
 				if len(u.actions) > 0 && u.actions[0].pos.equals(u.globalTargets[0]) {
 					u.actions[0].do()

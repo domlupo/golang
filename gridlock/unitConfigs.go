@@ -19,6 +19,7 @@ const (
 	bomber
 	bomb
 	missile
+	missileHeatSeeking
 	flare
 )
 
@@ -40,6 +41,8 @@ func (n name) String() string {
 		return "bomb"
 	case missile:
 		return "missile"
+	case missileHeatSeeking:
+		return "missileHeatSeeking"
 	case flare:
 		return "flare"
 	default:
@@ -66,18 +69,22 @@ type unitConfig struct {
 	explodeAtTerminalPos bool
 	explodeRadius        int
 	explodeStepDelay     uint64
+	reloadPayloadDelay   uint64
 	maxAlivePerNode      int
-	bombs                int
 	speedFactor          float64
 	reactions            []reaction
 	reactive             bool
 	requests             []request
 	requester            bool
+	bombCount            int
+	bombCountMax         int
+	flareCount           int
+	flareCountMax        int
 	missileCount         int
 	missileHeatCount     int
 	missileCountMax      int
 	missileHeatCountMax  int
-	missileFireDelay     uint64
+	fireOrdnanceDelay    uint64
 	heated               bool
 	heatSeeking          bool
 }
@@ -143,28 +150,33 @@ var fighterConfig = unitConfig{
 	collidesAircraft:    true,
 	explodeRadius:       100,
 	maxAlivePerNode:     1,
-	bombs:               1,
+	bombCountMax:        1,
 	speedFactor:         1.0,
 	reactive:            true,
 	requester:           true,
 	missileCountMax:     3,
-	missileHeatCountMax: 0,
-	missileFireDelay:    50,
+	missileHeatCountMax: 3,
+	fireOrdnanceDelay:   50,
 	heated:              true,
 }
 
 var bomberConfig = unitConfig{
-	name:             bomber,
-	radius:           20,
-	maxHealth:        1,
-	vision:           40,
-	produceLayer:     aircraft,
-	collidesAircraft: true,
-	explodeRadius:    100,
-	maxAlivePerNode:  1,
-	bombs:            4,
-	speedFactor:      1.0,
-	heated:           true,
+	name:              bomber,
+	radius:            20,
+	maxHealth:         1,
+	vision:            200,
+	produceLayer:      aircraft,
+	targetsOrdnance:   true,
+	collidesAircraft:  true,
+	explodeRadius:     100,
+	maxAlivePerNode:   1,
+	bombCountMax:      4,
+	flareCountMax:     30,
+	fireOrdnanceDelay: 30,
+	speedFactor:       1.0,
+	heated:            true,
+	reactive:          true,
+	requester:         true,
 }
 
 var bombConfig = unitConfig{
@@ -188,23 +200,39 @@ var missileConfig = unitConfig{
 	vision:               800,
 	produceLayer:         ordnance,
 	collidesOrdnance:     true,
-	collidesAircraft:     false,
 	staticTarget:         true,
 	despawnAtTerminalPos: true,
 	explodeRadius:        20,
 	speedFactor:          0.5,
 }
 
+var missileHeatSeekingConfig = unitConfig{
+	name:                 missileHeatSeeking,
+	radius:               3,
+	maxHealth:            1,
+	vision:               800,
+	produceLayer:         ordnance,
+	collidesOrdnance:     true,
+	staticTarget:         true,
+	despawnAtTerminalPos: true,
+	heatSeeking:          true,
+	targetsAircraft:      true,
+	collidesAircraft:     true,
+	explodeRadius:        20,
+	speedFactor:          0.5,
+}
+
 var flareConfig = unitConfig{
-	name:             flare,
-	radius:           3,
-	maxHealth:        1,
-	produceLayer:     ordnance,
-	collidesOrdnance: true,
-	staticTarget:     true,
-	//despawnAtTerminalPos: true,
-	speedFactor:     0.5,
-	maxAlivePerNode: 1,
+	name:                 flare,
+	radius:               3,
+	maxHealth:            1,
+	produceLayer:         ordnance,
+	collidesOrdnance:     true,
+	staticTarget:         true,
+	despawnAtTerminalPos: true,
+	speedFactor:          0.5,
+	maxAlivePerNode:      1,
+	heated:               true,
 }
 
 func (uc unitConfig) log() []slog.Attr {

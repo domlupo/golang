@@ -154,54 +154,93 @@ func newUnit(
 	}
 	u.subPixelPosition = u.newSubPixelPosition(u.position)
 
-	if u.name == fighter {
+	if u.name == bomber {
 		u.reactions = []reaction{
 			{
-				when: func(unit *unit) bool {
+				when: func(bomber *unit) bool {
 					// TODO: bresenham is not guaranteed to get to final position. I have not seen
 					// aircraft not reach their final destination but missiles have. Need to ensure
 					// this is not error prone or make it more conservative.
-					return unit.PixelPosition.equals(unit.sourcePosition) && unit.unfullPayload()
+					return bomber.PixelPosition.equals(bomber.sourcePosition) && bomber.unfullPayload()
 				},
-				do: func(unit *unit) {
-					unit.restockPayload()
-					// TODO: when a missile terminates, it should remove the target from skip targets
-					// rather than do this during restock. This should be an upgrade.
-					unit.skipTargets = []id{}
+				do: func(bomber *unit) {
+					bomber.restockPayload()
 				},
-				delay: u.missileFireDelay,
+				delay: u.reloadPayloadDelay,
 			},
 			{
-				when: func(unit *unit) bool { return unit.nearest != nil },
-				do: func(unit *unit) {
-					unit.skipTargets = append(unit.skipTargets, unit.nearest.id)
+				when: func(bomber *unit) bool { return bomber.nearest != nil },
+				do: func(bomber *unit) {
+					if bomber.nearest.name == missileHeatSeeking {
+						flare := newUnit(
+							flareConfig,
+							position{layer: flareConfig.produceLayer, PixelPosition: bomber.PixelPosition},
+							bomber.player,
+							[]position{bomber.nearest.position},
+							[]action{},
+							GridPosition{},
+							bomber.selected)
+						bomber.requests = append(bomber.requests, request{spawn: &flare})
+						bomber.flareCount--
+					}
 
-					missile := newUnit(
-						missileConfig,
-						position{layer: missileConfig.produceLayer, PixelPosition: unit.PixelPosition},
-						unit.player,
-						[]position{unit.nearest.position},
-						[]action{},
-						GridPosition{},
-						unit.selected)
-					missile.sourceUnit = unit.id
+				},
+				delay: u.fireOrdnanceDelay,
+			}}
 
+	}
+
+	if u.name == fighter {
+		u.reactions = []reaction{
+			{
+				when: func(fighter *unit) bool {
+					// TODO: bresenham is not guaranteed to get to final position. I have not seen
+					// aircraft not reach their final destination but missiles have. Need to ensure
+					// this is not error prone or make it more conservative.
+					return fighter.PixelPosition.equals(fighter.sourcePosition) && fighter.unfullPayload()
+				},
+				do: func(fighter *unit) {
+					fighter.restockPayload()
+					// TODO: when a missile terminates, it should remove the target from skip targets
+					// rather than do this during restock. This should be an upgrade.
+					fighter.skipTargets = []id{}
+				},
+				delay: u.reloadPayloadDelay,
+			},
+			{
+				when: func(fighter *unit) bool { return fighter.nearest != nil },
+				do: func(fighter *unit) {
+					fighter.skipTargets = append(fighter.skipTargets, fighter.nearest.id)
+					var spawn unit
 					switch {
-					case unit.nearest.name == bomb && unit.missileCount > 0:
-						unit.missileCount--
-					case unit.nearest.name == bomber && unit.missileHeatCount > 0:
-						missile.heatSeeking = true
-						missile.targetsAircraft = true
-						missile.collidesAircraft = true
-						missile.terminalTarget = unit.nearest
-						unit.missileHeatCount--
+					case fighter.nearest.name == bomb && fighter.missileCount > 0:
+						fighter.missileCount--
+						spawn = newUnit(
+							missileConfig,
+							position{layer: missileConfig.produceLayer, PixelPosition: fighter.PixelPosition},
+							fighter.player,
+							[]position{fighter.nearest.position},
+							[]action{},
+							GridPosition{},
+							fighter.selected)
+					case fighter.nearest.name == bomber && fighter.missileHeatCount > 0:
+						fighter.missileHeatCount--
+						spawn = newUnit(
+							missileHeatSeekingConfig,
+							position{layer: missileConfig.produceLayer, PixelPosition: fighter.PixelPosition},
+							fighter.player,
+							[]position{fighter.nearest.position},
+							[]action{},
+							GridPosition{},
+							fighter.selected)
+						spawn.terminalTarget = fighter.nearest
 					default:
 						return
 					}
-
-					unit.requests = append(unit.requests, request{spawn: &missile})
+					spawn.sourceUnit = fighter.id
+					fighter.requests = append(fighter.requests, request{spawn: &spawn})
 				},
-				delay: u.missileFireDelay,
+				delay: u.fireOrdnanceDelay,
 			}}
 	}
 
@@ -209,12 +248,17 @@ func newUnit(
 }
 
 func (u unit) unfullPayload() bool {
-	return u.missileCount != u.missileCountMax || u.missileHeatCount != u.missileHeatCountMax
+	return u.missileCount != u.missileCountMax ||
+		u.missileHeatCount != u.missileHeatCountMax ||
+		u.flareCount != u.flareCountMax ||
+		u.bombCount != u.bombCountMax
 }
 
 func (u *unit) restockPayload() {
 	u.missileCount = u.missileCountMax
 	u.missileHeatCount = u.missileHeatCountMax
+	u.flareCount = u.flareCountMax
+	u.bombCount = u.bombCountMax
 }
 
 func (u unit) targetsLayers() []layer {
@@ -719,6 +763,18 @@ func (u unit) draw(dc drawConfig, selected bool) {
 	case bomber:
 		dc.screen.DrawImage(dc.pngBomber, u.angleDraw(dc))
 
+		if u.selected {
+			vector.StrokeCircle(
+				dc.screen,
+				float32(u.X)*dc.windowMultiplier,
+				float32(u.Y)*dc.windowMultiplier,
+				float32(u.vision)*dc.windowMultiplier,
+				float32(dc.defaultLineWidth)*dc.windowMultiplier,
+				dc.highlightColor,
+				false,
+			)
+		}
+
 		for _, a := range u.actions {
 			vector.StrokeCircle(
 				dc.screen,
@@ -733,7 +789,7 @@ func (u unit) draw(dc drawConfig, selected bool) {
 				false,
 			)
 		}
-	case missile:
+	case missile, missileHeatSeeking:
 		dc.screen.DrawImage(dc.pngMissile, u.angleDraw(dc))
 
 		if u.heatSeeking && u.selected {
