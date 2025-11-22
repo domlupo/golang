@@ -19,8 +19,8 @@ type layer int
 const (
 	noLayer layer = iota
 	land
-	lowAir
-	highAir
+	ordnance
+	aircraft
 )
 
 // Three dimensional point.
@@ -100,10 +100,10 @@ func (l layer) log() slog.Attr {
 		layer = "noLayer"
 	case land:
 		layer = "land"
-	case lowAir:
-		layer = "lowAir"
-	case highAir:
-		layer = "HighAir"
+	case ordnance:
+		layer = "ordance"
+	case aircraft:
+		layer = "aircraft"
 	}
 	return slog.String("layer", layer)
 }

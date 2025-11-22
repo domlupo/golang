@@ -24,8 +24,8 @@ type state struct {
 	obstacles        obstacles
 	nodes            nodes
 	landUnits        units
-	lowAirUnits      units
-	highAirUnits     units
+	ordanceUnits     units
+	aircraftUnits    units
 	reactiveUnits    map[id]*unit
 	requesterUnits   map[id]*unit
 	events           []event
@@ -44,8 +44,8 @@ func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, 
 		nodes:          n,
 		nLUT:           nLUT,
 		landUnits:      make(units),
-		lowAirUnits:    make(units),
-		highAirUnits:   make(units),
+		ordanceUnits:   make(units),
+		aircraftUnits:  make(units),
 		reactiveUnits:  make(map[id]*unit),
 		requesterUnits: make(map[id]*unit),
 		developerMode:  developerMode,
@@ -71,12 +71,12 @@ func (s state) units() func(yield func(u *unit) bool) {
 
 func (s state) unitsAir() func(yield func(u *unit) bool) {
 	return func(yield func(u *unit) bool) {
-		for _, u := range s.lowAirUnits {
+		for _, u := range s.ordanceUnits {
 			if !yield(u) {
 				break
 			}
 		}
-		for _, u := range s.highAirUnits {
+		for _, u := range s.aircraftUnits {
 			if !yield(u) {
 				return
 			}
@@ -89,10 +89,10 @@ func (s state) unitsLayer(l layer) *units {
 	switch l {
 	case land:
 		units = s.landUnits
-	case lowAir:
-		units = s.lowAirUnits
-	case highAir:
-		units = s.highAirUnits
+	case ordnance:
+		units = s.ordanceUnits
+	case aircraft:
+		units = s.aircraftUnits
 	default:
 		panic(fmt.Sprintf("layerUnits: unknown layer %d", l))
 	}
@@ -150,10 +150,10 @@ func (s *state) moveUnit(u *unit, m Move) {
 	switch m.layer {
 	case land:
 		s.landUnits[u.PixelPosition] = u
-	case lowAir:
-		s.lowAirUnits[u.PixelPosition] = u
-	case highAir:
-		s.highAirUnits[u.PixelPosition] = u
+	case ordnance:
+		s.ordanceUnits[u.PixelPosition] = u
+	case aircraft:
+		s.aircraftUnits[u.PixelPosition] = u
 	default:
 		panic(fmt.Sprintf("moveUnit: unknown layer %d", m.layer))
 	}
@@ -163,10 +163,10 @@ func (s *state) deleteUnit(p position) {
 	switch p.layer {
 	case land:
 		delete(s.landUnits, p.PixelPosition)
-	case lowAir:
-		delete(s.lowAirUnits, p.PixelPosition)
-	case highAir:
-		delete(s.highAirUnits, p.PixelPosition)
+	case ordnance:
+		delete(s.ordanceUnits, p.PixelPosition)
+	case aircraft:
+		delete(s.aircraftUnits, p.PixelPosition)
 	default:
 		panic(fmt.Sprintf("deleteUnit: unknown layer %d", p.layer))
 	}
@@ -588,7 +588,7 @@ func (s state) nearestTargetWithinLayer(u unit, linkedList *unit, filter []id) (
 				d = distance
 				t = current
 			}
-			if current.layer == lowAir || current.layer == highAir {
+			if current.layer == ordnance || current.layer == aircraft {
 				d = distance
 				t = current
 			}
@@ -1081,10 +1081,10 @@ func (s *state) draw(dc drawConfig) {
 	for _, u := range s.landUnits {
 		u.draw(dc, u.selected)
 	}
-	for _, u := range s.lowAirUnits {
+	for _, u := range s.ordanceUnits {
 		u.draw(dc, u.selected)
 	}
-	for _, u := range s.highAirUnits {
+	for _, u := range s.aircraftUnits {
 		u.draw(dc, u.selected)
 	}
 }

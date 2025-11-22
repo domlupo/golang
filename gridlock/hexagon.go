@@ -15,8 +15,8 @@ type hexagons map[GridPosition]*hexagon
 type hexagon struct {
 	gridPos  GridPosition
 	land     hexLayer
-	lowAir   hexLayer
-	highAir  hexLayer
+	ordnance hexLayer
+	aircraft hexLayer
 	selected bool
 }
 
@@ -32,8 +32,8 @@ func (h hexagon) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, nest("GridPosition", h.gridPos.log()))
 	a = append(a, nest("land", h.land.log()))
-	a = append(a, nest("lowAir", h.lowAir.log()))
-	a = append(a, nest("highAir", h.highAir.log()))
+	a = append(a, nest("ordnance", h.ordnance.log()))
+	a = append(a, nest("aircraft", h.aircraft.log()))
 	return a
 }
 
@@ -54,10 +54,10 @@ func (h *hexagon) get(l layer) *hexLayer {
 	switch l {
 	case land:
 		return &h.land
-	case lowAir:
-		return &h.lowAir
-	case highAir:
-		return &h.highAir
+	case ordnance:
+		return &h.ordnance
+	case aircraft:
+		return &h.aircraft
 	default:
 		panic(fmt.Sprintf("get: unknown layer %d", l))
 	}

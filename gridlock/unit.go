@@ -191,8 +191,8 @@ func newUnit(
 						unit.missileCount--
 					case unit.nearest.name == bomber && unit.missileHeatCount > 0:
 						missile.heatSeeking = true
-						missile.targetsHighAir = true
-						missile.collidesHighAir = true
+						missile.targetsAircraft = true
+						missile.collidesAircraft = true
 						missile.terminalTarget = unit.nearest
 						unit.missileHeatCount--
 					default:
@@ -222,11 +222,11 @@ func (u unit) targetsLayers() []layer {
 	if u.targetsLand {
 		layers = append(layers, land)
 	}
-	if u.targetsLowAir {
-		layers = append(layers, lowAir)
+	if u.targetsOrdnance {
+		layers = append(layers, ordnance)
 	}
-	if u.targetsHighAir {
-		layers = append(layers, highAir)
+	if u.targetsAircraft {
+		layers = append(layers, aircraft)
 	}
 	return layers
 }
@@ -236,11 +236,11 @@ func (u unit) collidesLayers() []layer {
 	if u.collidesLand {
 		layers = append(layers, land)
 	}
-	if u.collidesLowAir {
-		layers = append(layers, lowAir)
+	if u.collidesOrdnance {
+		layers = append(layers, ordnance)
 	}
-	if u.collidesHighAir {
-		layers = append(layers, highAir)
+	if u.collidesAircraft {
+		layers = append(layers, aircraft)
 	}
 	return layers
 }

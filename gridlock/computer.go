@@ -220,12 +220,12 @@ func (c *computer) planBombs(n *node, targets []PixelPosition) {
 	n.actions = []action{}
 
 	for _, t := range targets {
-		p := position{highAir, t}
+		p := position{aircraft, t}
 		n.targets = append(n.targets, p)
 		n.actions = append(n.actions, action{pos: p, do: func() {
 			u := newUnit(
 				bombConfig,
-				position{layer: lowAir, PixelPosition: p.PixelPosition},
+				position{layer: ordnance, PixelPosition: p.PixelPosition},
 				c.player,
 				[]position{{layer: land, PixelPosition: p.PixelPosition}},
 				[]action{},

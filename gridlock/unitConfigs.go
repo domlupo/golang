@@ -54,11 +54,11 @@ type unitConfig struct {
 	produceLayer         layer
 	staticTarget         bool
 	targetsLand          bool
-	targetsLowAir        bool
-	targetsHighAir       bool
+	targetsOrdnance      bool
+	targetsAircraft      bool
 	collidesLand         bool
-	collidesLowAir       bool
-	collidesHighAir      bool
+	collidesOrdnance     bool
+	collidesAircraft     bool
 	despawnAtTerminalPos bool
 	explodeAtTerminalPos bool
 	explodeRadius        int
@@ -104,8 +104,8 @@ var unguidedGroundMissileConfig = unitConfig{
 	attack:               1,
 	vision:               100,
 	reach:                0,
-	produceLayer:         lowAir,
-	collidesLowAir:       true,
+	produceLayer:         ordnance,
+	collidesOrdnance:     true,
 	staticTarget:         true,
 	explodeAtTerminalPos: true,
 	despawnAtTerminalPos: true,
@@ -121,10 +121,10 @@ var guidedAirMissileConfig = unitConfig{
 	attack:               1000,
 	vision:               300,
 	reach:                0,
-	produceLayer:         lowAir,
-	collidesLowAir:       true,
-	targetsLowAir:        true,
-	targetsHighAir:       true,
+	produceLayer:         ordnance,
+	collidesOrdnance:     true,
+	targetsOrdnance:      true,
+	targetsAircraft:      true,
 	despawnAtTerminalPos: true,
 	explodeRadius:        100,
 	maxAlivePerNode:      math.MaxInt,
@@ -138,10 +138,10 @@ var fighterConfig = unitConfig{
 	attack:              0,
 	vision:              800,
 	reach:               0,
-	produceLayer:        highAir,
-	targetsLowAir:       true,
-	targetsHighAir:      true,
-	collidesHighAir:     true,
+	produceLayer:        aircraft,
+	targetsOrdnance:     true,
+	targetsAircraft:     true,
+	collidesAircraft:    true,
 	explodeRadius:       100,
 	maxAlivePerNode:     1,
 	bombs:               1,
@@ -155,19 +155,19 @@ var fighterConfig = unitConfig{
 }
 
 var bomberConfig = unitConfig{
-	name:            bomber,
-	radius:          20,
-	maxHealth:       100,
-	attack:          0,
-	vision:          40,
-	reach:           0,
-	produceLayer:    highAir,
-	collidesHighAir: true,
-	explodeRadius:   100,
-	maxAlivePerNode: 1,
-	bombs:           4,
-	speedFactor:     1.0,
-	heated:          true,
+	name:             bomber,
+	radius:           20,
+	maxHealth:        100,
+	attack:           0,
+	vision:           40,
+	reach:            0,
+	produceLayer:     aircraft,
+	collidesAircraft: true,
+	explodeRadius:    100,
+	maxAlivePerNode:  1,
+	bombs:            4,
+	speedFactor:      1.0,
+	heated:           true,
 }
 
 var bombConfig = unitConfig{
@@ -177,12 +177,12 @@ var bombConfig = unitConfig{
 	attack:           0,
 	vision:           0,
 	reach:            0,
-	produceLayer:     lowAir,
-	collidesLowAir:   true,
+	produceLayer:     ordnance,
+	collidesOrdnance: true,
 	staticTarget:     true,
 	targetsLand:      true,
 	explodeRadius:    20,
-	explodeStepDelay: 1000,
+	explodeStepDelay: 300,
 	maxAlivePerNode:  math.MaxInt,
 	speedFactor:      1.0,
 }
@@ -194,9 +194,9 @@ var missileConfig = unitConfig{
 	attack:               0,
 	vision:               800,
 	reach:                0,
-	produceLayer:         lowAir,
-	collidesLowAir:       true,
-	collidesHighAir:      false,
+	produceLayer:         ordnance,
+	collidesOrdnance:     true,
+	collidesAircraft:     false,
 	staticTarget:         true,
 	despawnAtTerminalPos: true,
 	explodeRadius:        20,
@@ -217,8 +217,8 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.Bool("staticTarget", uc.staticTarget))
 	a = append(a, slog.Bool("heatSeeking", uc.heatSeeking))
 	a = append(a, slog.Bool("targetsLand", uc.targetsLand))
-	a = append(a, slog.Bool("targetsLowAir", uc.targetsLowAir))
-	a = append(a, slog.Bool("targetsHighAir", uc.targetsHighAir))
+	a = append(a, slog.Bool("targetsOrdnance", uc.targetsOrdnance))
+	a = append(a, slog.Bool("targetsAircraft", uc.targetsAircraft))
 	a = append(a, slog.Bool("explodeAtTerminalPos", uc.explodeAtTerminalPos))
 	a = append(a, slog.Bool("despawnAtTerminalPos", uc.despawnAtTerminalPos))
 	a = append(a, slog.Int("missileCount", uc.missileCount))
