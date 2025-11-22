@@ -737,7 +737,7 @@ func (nodes nodes) setupPositions(s nodeSetup, initialNodeHealth int) {
 	case leftVsRightVerticalOffsetPlanes:
 		unitConfig := infantryConfig
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{2, 2}, pOne, unitConfig},
+			{GridPosition{2, 2}, pOne, flareConfig},
 			{GridPosition{6, 1}, pOne, unitConfig},
 			{GridPosition{11, 2}, pNeutral, unitConfig},
 			{GridPosition{16, 4}, pNeutral, unitConfig},

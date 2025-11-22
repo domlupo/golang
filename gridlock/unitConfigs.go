@@ -19,6 +19,7 @@ const (
 	bomber
 	bomb
 	missile
+	flare
 )
 
 func (n name) String() string {
@@ -39,6 +40,8 @@ func (n name) String() string {
 		return "bomb"
 	case missile:
 		return "missile"
+	case flare:
+		return "flare"
 	default:
 		panic(fmt.Sprintf("String name is unknown %d", n))
 	}
@@ -100,10 +103,9 @@ var infantryConfig = unitConfig{
 var unguidedGroundMissileConfig = unitConfig{
 	name:                 unguidedGroundMissile,
 	radius:               5,
-	maxHealth:            100,
+	maxHealth:            1,
 	attack:               1,
 	vision:               100,
-	reach:                0,
 	produceLayer:         ordnance,
 	collidesOrdnance:     true,
 	staticTarget:         true,
@@ -117,10 +119,9 @@ var unguidedGroundMissileConfig = unitConfig{
 var guidedAirMissileConfig = unitConfig{
 	name:                 guidedAirMissile,
 	radius:               5,
-	maxHealth:            100,
+	maxHealth:            1,
 	attack:               1000,
 	vision:               300,
-	reach:                0,
 	produceLayer:         ordnance,
 	collidesOrdnance:     true,
 	targetsOrdnance:      true,
@@ -134,10 +135,8 @@ var guidedAirMissileConfig = unitConfig{
 var fighterConfig = unitConfig{
 	name:                fighter,
 	radius:              8,
-	maxHealth:           100,
-	attack:              0,
+	maxHealth:           1,
 	vision:              800,
-	reach:               0,
 	produceLayer:        aircraft,
 	targetsOrdnance:     true,
 	targetsAircraft:     true,
@@ -157,10 +156,8 @@ var fighterConfig = unitConfig{
 var bomberConfig = unitConfig{
 	name:             bomber,
 	radius:           20,
-	maxHealth:        100,
-	attack:           0,
+	maxHealth:        1,
 	vision:           40,
-	reach:            0,
 	produceLayer:     aircraft,
 	collidesAircraft: true,
 	explodeRadius:    100,
@@ -173,10 +170,7 @@ var bomberConfig = unitConfig{
 var bombConfig = unitConfig{
 	name:             bomb,
 	radius:           4,
-	maxHealth:        100,
-	attack:           0,
-	vision:           0,
-	reach:            0,
+	maxHealth:        1,
 	produceLayer:     ordnance,
 	collidesOrdnance: true,
 	staticTarget:     true,
@@ -190,19 +184,27 @@ var bombConfig = unitConfig{
 var missileConfig = unitConfig{
 	name:                 missile,
 	radius:               3,
-	maxHealth:            100,
-	attack:               0,
+	maxHealth:            1,
 	vision:               800,
-	reach:                0,
 	produceLayer:         ordnance,
 	collidesOrdnance:     true,
 	collidesAircraft:     false,
 	staticTarget:         true,
 	despawnAtTerminalPos: true,
 	explodeRadius:        20,
-	explodeStepDelay:     0,
-	maxAlivePerNode:      math.MaxInt,
 	speedFactor:          0.5,
+}
+
+var flareConfig = unitConfig{
+	name:             flare,
+	radius:           3,
+	maxHealth:        1,
+	produceLayer:     ordnance,
+	collidesOrdnance: true,
+	staticTarget:     true,
+	//despawnAtTerminalPos: true,
+	speedFactor:     0.5,
+	maxAlivePerNode: 1,
 }
 
 func (uc unitConfig) log() []slog.Attr {

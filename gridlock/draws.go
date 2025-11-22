@@ -51,6 +51,7 @@ type drawConfig struct {
 	pngBomber                     *ebiten.Image
 	pngFighter                    *ebiten.Image
 	pngMissile                    *ebiten.Image
+	pngFlare                      *ebiten.Image
 }
 
 // Invoke only once per game session. NewImage calls are expensive and are not
@@ -106,6 +107,8 @@ func newDrawConfig() *drawConfig {
 		pngBomber:                     pngBomer,
 		pngFighter:                    pngFighter,
 		pngMissile:                    pngMissile,
+		// TODO: Add flare png
+		pngFlare: pngMissile,
 	}
 	return &dc
 }

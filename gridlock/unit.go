@@ -747,6 +747,8 @@ func (u unit) draw(dc drawConfig, selected bool) {
 				false,
 			)
 		}
+	case flare:
+		dc.screen.DrawImage(dc.pngFlare, u.angleDraw(dc))
 	case infantry:
 		var color color.Color
 		switch u.player {
