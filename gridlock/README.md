@@ -24,9 +24,13 @@ Is there a mobile equivalent for war/4x games?
     - fighter
     - bomber
     - infantry
-    - different node missile types
+    - node cruise land missile
+    - node ballistic land missile
+    - node anti air missile
   - risk vs reward mechanics
-    - produce infantry or tech
+    - produce infantry
+    - produce advanced unit
+    - research tech/upgrades
   - randomized tech tree
     - select 1 of 3 upgrades
     - skip mechanic?
@@ -36,13 +40,13 @@ Is there a mobile equivalent for war/4x games?
   - art
   - no sound
 
-- Add upgrade concept
-  - What should be an upgrade ivs what should be configs? Certain things are not always better.
-  - Should all upgrades be toggleable?
-  - Should only a few upgrades be toggleable?
-  - what does the upgrade UI look like.
-
 - Implement fighter and bomber
+  - Fighter should not intercept:
+    - gravity bombs (fall extremely fast)
+  - Fighter should intercept:
+    - cruise misile (maneuverable, aircraft speed)
+    - ballistic missile (high arch, initially slow, but becomes fast, not maneuverable)
+    - Maybe glide bombs 
   - Improve heat seeking missile flight path
     - At least one aspect is off. I need to investigate if there are multiple issues.
     - It seems like the path isn't direct or as a user would except
@@ -1037,6 +1041,71 @@ Have read through several college publications and game ai pro articles not link
   - adding external payload should make stealth worse
 - control
   - first implementation is just airport -> p1 -> p2 -> airport
+
+#### Brainstorm upgrades
+
+There are lots of open questions for upgrades:
+  - do upgrades make sense to add to game?
+  - Upgrades would most likely be the randomized tech tree.
+    - each player has the same tree (rock vs paper vs scissors)
+    - More complex than rock vs papyer vs scissors because future tech can be shown?
+    - More complex than rock vs papyer vs scissors because skips?
+    - select 1 of 3
+  - What is an upgrade vs what is a config? Certain things are not always better
+  - Upgrades can make units perform better e.g. more range, more damage
+  - Upgrades can make play easier e.g. manual flares vs auto flares
+  - Should all or only some upgrades be toggleable?
+  - what does the upgrade UI look like.
+  - upgrades will probably need prereq
+    - need to research heat seeking missile before adding count
+    - need to research collision avoidance before fly in formation 
+
+#### Brainstorm upgrades for fighter unit
+
+Listing out potential upgrades for a single unit might help:
+
+- Better vision / radar
+- Faster fighter
+- Faster projectile speed
+  - missiles
+  - rotary cannon? 
+  - bomb step delay
+- Faster fire rate
+  - basic missile
+  - heat seeking missile
+  - all other missile types
+  - rotary cannon? 
+- Research ammo type
+  - basic missile
+  - semi active radar missile
+  - active radar missile
+  - semi active heat seeking missile
+  - active heat seeking missile
+  - bomb
+  - flares
+  - chaff
+  - radar jam
+  - rotary cannon
+- Add ammo
+  - Add missile count
+  - Add heat seeking missile count
+  - Add bomb count
+  - Add flare
+- Add way point
+- Faster maintenance / reloads
+- Faster build time
+- Improve missile accuracy
+- Improve missile damage
+ Smart targetting?
+  - Only attempt to intercept ballistic when it will reach in time
+  - Only attempt to intercept cruise when it will reach in time
+  - etc
+- Steer away from:
+  - colliding with other aircraft
+  - opposing ammo (missiles) 
+- Add fighter count (This should work for any advanced unit combination e.g. fighter + bomber, fighter + ac130)
+  - fly together in formation
+  - fly separately in rotation
 
 #### Pixel Art Notes
 
