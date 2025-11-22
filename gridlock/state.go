@@ -250,8 +250,7 @@ func (s *state) analyzeTargets() {
 		}
 
 		if u.name == fighter {
-			nearest, _ := s.nearestTargetWithinVisionFiltered(*u, u.skipTargets)
-			u.nearest = nearest
+			s.nearestTargetWithinVisionFiltered(u, u.skipTargets)
 			if u.moveDone && len(u.globalTargets) > 1 {
 				if len(u.actions) > 0 && u.actions[0].pos.equals(u.globalTargets[0]) {
 					u.actions[0].do()
@@ -268,9 +267,7 @@ func (s *state) analyzeTargets() {
 		}
 
 		if u.name == bomber {
-			nearest, _ := s.nearestTargetWithinVisionFiltered(*u, u.skipTargets)
-			u.nearest = nearest
-
+			s.nearestTargetWithinVisionFiltered(u, u.skipTargets)
 			if u.moveDone && len(u.globalTargets) > 1 {
 				if len(u.actions) > 0 && u.actions[0].pos.equals(u.globalTargets[0]) {
 					u.actions[0].do()
@@ -303,8 +300,8 @@ func (s *state) analyzeTargets() {
 			}
 		}
 
-		nearest, _ := s.nearestTargetWithinVision(*u)
-		u.updateTargetUnit(enemyTarget, nearest)
+		s.nearestTargetWithinVision(u)
+		u.updateTargetUnit(enemyTarget, u.nearest)
 
 		if len(u.globalTargets) > 0 && u.pathGlobalTarget {
 			u.pathfindGlobalTarget(s.obstacles, s.oLUT, s.g)
@@ -516,12 +513,12 @@ func (s state) partitions(u unit, d int) []*hexagon {
 	return hexs
 }
 
-func (s state) nearestTargetWithinVision(u unit) (*unit, bool) {
-	return s.nearestTargetWithinVisionFiltered(u, []id{})
+func (s state) nearestTargetWithinVision(u *unit) {
+	s.nearestTargetWithinVisionFiltered(u, []id{})
 }
 
-func (s state) nearestTargetWithinVisionFiltered(u unit, filter []id) (*unit, bool) {
-	partitions := s.partitions(u, u.vision)
+func (s state) nearestTargetWithinVisionFiltered(u *unit, filter []id) {
+	partitions := s.partitions(*u, u.vision)
 	layers := u.targetsLayers()
 	d := math.MaxInt64
 	var t *unit
@@ -532,14 +529,13 @@ func (s state) nearestTargetWithinVisionFiltered(u unit, filter []id) (*unit, bo
 
 		for _, l := range layers {
 			linkedList := partition.get(l).linkedList
-			if target, distance := s.nearestTargetWithinLayer(u, linkedList, filter); distance < d {
+			if target, distance := s.nearestTargetWithinLayer(*u, linkedList, filter); distance < d {
 				t = target
 				d = distance
 			}
 		}
 	}
-
-	return t, d == math.MaxInt64
+	u.nearest = t
 }
 
 func (s state) nearestTargetWithinLayer(u unit, linkedList *unit, filter []id) (*unit, int) {
