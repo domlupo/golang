@@ -117,7 +117,7 @@ func (c *computer) updateNodeTargets(avgUnitPos PixelPosition) {
 		selfNode := n
 		selfNode.targets = []position{{land, nP}}
 		switch n.unitConfig.name {
-		case missileCruise:
+		case missileCruise, missileBallistic:
 			if diffs[0].diff > 1 {
 				selfNode.targets = []position{{land, positions[0]}}
 			}

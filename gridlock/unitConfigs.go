@@ -91,7 +91,8 @@ type unitConfig struct {
 	fireOrdnanceDelay    uint64
 	heated               bool
 	heatSeeking          bool
-	ignoreTargets        func(u, t *unit) bool
+	ignoreTarget         func(u, t *unit) bool
+	ignoreCollision      func(u, t *unit) bool
 }
 
 // Note: unit radius set to an odd number is better for testing due to division bugs
@@ -129,7 +130,9 @@ var fighterConfig = unitConfig{
 	missileHeatCountMax: 1000,
 	fireOrdnanceDelay:   50,
 	heated:              true,
-	ignoreTargets:       func(u, t *unit) bool { return t.name == bomb || t.name == flare },
+	ignoreTarget: func(u, t *unit) bool {
+		return t.name == bomb || t.name == flare || t.name == missileBallistic || t.name == missileAntiBallistic
+	},
 }
 
 var bomberConfig = unitConfig{
@@ -149,7 +152,7 @@ var bomberConfig = unitConfig{
 	heated:            true,
 	reactive:          true,
 	requester:         true,
-	ignoreTargets:     func(u, t *unit) bool { return slices.Contains(u.skipTargets, t.id) },
+	ignoreTarget:      func(u, t *unit) bool { return slices.Contains(u.skipTargets, t.id) },
 }
 
 var bombConfig = unitConfig{
@@ -183,7 +186,7 @@ var missileHeatSeekingConfig = unitConfig{
 	speedFactor:          0.5,
 	heated:               true,
 	maxAlivePerNode:      math.MaxInt,
-	ignoreTargets:        func(u, t *unit) bool { return !t.heated },
+	ignoreTarget:         func(u, t *unit) bool { return !t.heated },
 }
 
 var missileCruiseConfig = unitConfig{
@@ -201,7 +204,20 @@ var missileCruiseConfig = unitConfig{
 	heated:               true,
 }
 
-var missileBallisticConfig = unitConfig{}
+var missileBallisticConfig = unitConfig{
+	name:                 missileBallistic,
+	radius:               3,
+	maxHealth:            1,
+	vision:               1,
+	produceLayer:         ordnance,
+	collidesOrdnance:     true,
+	staticTarget:         true,
+	explodeAtTerminalPos: true,
+	explodeRadius:        20,
+	speedFactor:          1,
+	maxAlivePerNode:      math.MaxInt,
+	ignoreCollision:      func(u, o *unit) bool { return o.name != missileAntiBallistic },
+}
 
 var missileAntiBallisticConfig = unitConfig{}
 

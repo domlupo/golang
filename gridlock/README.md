@@ -582,6 +582,10 @@ Is there a mobile equivalent for war/4x games?
   - There is enough complexity, polish and work for single player.
   - Single player games can be very popular and successful. 
   - If I ever implement, initial research shows webRTC is probably better but more complex than websockets
+19. Ballistic missiles only collide with anti ballistic missiles. They do not collide with each other.
+  - They need to different from cruise missiles to justify their game design investment and player use.
+  - They are designed to fly in their own layer and have few counters.
+  - Realistically they will only be countered by anti ballistic missiles.
 
 ---
 

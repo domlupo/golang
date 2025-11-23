@@ -670,7 +670,7 @@ func (u unit) draw(dc drawConfig, selected bool) {
 				false,
 			)
 		}
-	case missile, missileHeatSeeking, missileCruise:
+	case missile, missileHeatSeeking, missileCruise, missileBallistic:
 		dc.screen.DrawImage(dc.pngMissile, u.angleDraw(dc))
 
 		if u.heatSeeking && u.selected {
