@@ -27,7 +27,7 @@ Is there a mobile equivalent for war/4x games?
     - node ballistic missile
     - node cruise missile
     - node anti ballistic missile
-    - node anti air missile
+    - node anti air missile (can reuse other missiles e.g. heat seeking, etc)
   - risk vs reward mechanics
     - produce infantry
     - produce advanced unit
@@ -42,6 +42,8 @@ Is there a mobile equivalent for war/4x games?
   - no sound
 
 - Debug hangs. It seems to occur when fighter and bomber collide in air.
+
+- Verify bombs don't collide with anything. Specifically ordnance layer.
 
 - Implement fighter and bomber
   - Fighter should intercept:

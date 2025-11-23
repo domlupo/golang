@@ -738,18 +738,6 @@ func (u unit) draw(dc drawConfig, selected bool) {
 				false,
 			)
 		}
-
-		if u.name == missileAntiAir {
-			vector.StrokeCircle(
-				dc.screen,
-				float32(u.X)*dc.windowMultiplier,
-				float32(u.Y)*dc.windowMultiplier,
-				float32(u.vision)*dc.windowMultiplier,
-				float32(dc.missileExplodeRadiusLineWidth)*dc.windowMultiplier,
-				dc.highlightColor,
-				false,
-			)
-		}
 	}
 
 	if u.health != u.maxHealth {

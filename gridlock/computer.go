@@ -121,7 +121,7 @@ func (c *computer) updateNodeTargets(avgUnitPos PixelPosition) {
 			if diffs[0].diff > 1 {
 				selfNode.targets = []position{{land, positions[0]}}
 			}
-		case missileAntiAir:
+		case missileHeatSeeking:
 			if !avgUnitPos.equals(PixelPosition{}) {
 				selfNode.targets = []position{{land, avgUnitPos}}
 			}
@@ -152,7 +152,7 @@ func (c *computer) updateForNodeCapture() {
 		selfNode.targets = []position{}
 		nearestTargetDistanceSquared := math.MaxInt
 
-		if n.unitConfig.name == missileCruise || n.unitConfig.name == missileAntiAir {
+		if n.unitConfig.name == missileCruise {
 			continue
 		}
 
@@ -182,7 +182,6 @@ func (c *computer) updateForNodeCapture() {
 
 	for u := range c.s.units() {
 		if u.staticTarget ||
-			u.name == missileAntiAir ||
 			u.name == bomber ||
 			u.name == fighter {
 			continue

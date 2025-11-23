@@ -525,7 +525,7 @@ func (nodes nodes) setupPositions(s nodeSetup, initialNodeHealth int) {
 	case horizontalNodeMissileCruise:
 		nodeSetupInputs = []nodeSetupInput{
 			{GridPosition{1, 23}, pOne, missileCruiseConfig},
-			{GridPosition{3, 23}, pTwo, missileAntiAirConfig},
+			{GridPosition{3, 23}, pTwo, missileHeatSeekingConfig},
 		}
 	case vertical:
 		nodeSetupInputs = []nodeSetupInput{
@@ -718,7 +718,7 @@ func (nodes nodes) setupPositions(s nodeSetup, initialNodeHealth int) {
 			{GridPosition{11, 12}, pNeutral, unitConfig},
 			{GridPosition{16, 14}, pNeutral, unitConfig},
 			{GridPosition{21, 13}, pTwo, unitConfig},
-			{GridPosition{26, 13}, pTwo, missileAntiAirConfig},
+			{GridPosition{26, 13}, pTwo, missileHeatSeekingConfig},
 
 			{GridPosition{1, 16}, pOne, unitConfig},
 			{GridPosition{6, 16}, pOne, unitConfig},
@@ -762,7 +762,7 @@ func (nodes nodes) setupPositions(s nodeSetup, initialNodeHealth int) {
 			{GridPosition{6, 16}, pOne, unitConfig},
 			{GridPosition{11, 17}, pNeutral, unitConfig},
 			{GridPosition{16, 19}, pNeutral, unitConfig},
-			{GridPosition{21, 18}, pTwo, unitConfig},
+			{GridPosition{21, 18}, pTwo, missileHeatSeekingConfig},
 			{GridPosition{26, 18}, pTwo, unitConfig},
 
 			{GridPosition{1, 21}, pOne, unitConfig},

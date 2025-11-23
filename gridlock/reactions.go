@@ -87,7 +87,7 @@ func reactions(n name) []reaction {
 						fighter.missileHeatCount--
 						spawn = newUnit(
 							missileHeatSeekingConfig,
-							position{layer: missileConfig.produceLayer, PixelPosition: fighter.PixelPosition},
+							position{layer: missileHeatSeekingConfig.produceLayer, PixelPosition: fighter.PixelPosition},
 							fighter.player,
 							[]position{fighter.nearest.position},
 							[]action{},

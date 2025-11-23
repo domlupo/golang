@@ -235,7 +235,7 @@ func (s *state) processRequests() {
 
 func (s *state) analyzeTargets() {
 	for u := range s.units() {
-		if u.name == missileBallistic || u.name == missileAntiAir || u.name == missileAntiBallistic {
+		if u.name == missileBallistic || u.name == missileAntiBallistic {
 			panic("units not supported")
 		}
 
