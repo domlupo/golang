@@ -235,11 +235,7 @@ func (s *state) processRequests() {
 
 func (s *state) analyzeTargets() {
 	for u := range s.units() {
-		if u.name == missileAntiBallistic {
-			panic("units not supported")
-		}
-
-		if u.name == missileHeatSeeking {
+		if u.name == missileHeatSeeking || u.name == missileAntiBallistic {
 			s.nearestTargetWithinVision(u)
 			u.updateTargetUnit(enemyTarget, u.nearest)
 		}
@@ -248,7 +244,8 @@ func (s *state) analyzeTargets() {
 			u.name == missileHeatSeeking ||
 			u.name == flare ||
 			u.name == missileCruise ||
-			u.name == missileBallistic {
+			u.name == missileBallistic ||
+			u.name == missileAntiBallistic {
 			u.localTargets = []position{u.globalTargets[0]}
 			u.prioritizeTargets()
 			continue
@@ -649,7 +646,8 @@ func (s state) collidesWithUnitLayer(u unit, p position, linkedList *unit) (posi
 
 		checkOccurred = true
 
-		if u.ignoreCollision != nil && u.ignoreCollision(&u, current) {
+		if u.ignoreCollision != nil && u.ignoreCollision(&u, current) ||
+			current.ignoreCollision != nil && current.ignoreCollision(current, &u) {
 			current = current.next
 			continue
 		}

@@ -413,7 +413,7 @@ const (
 	leftVsRightHorizontalOffset
 	leftVsRightVerticalOffset
 	leftVsRightVerticalOffsetMissileCruise
-	leftVsRightVerticalOffsetPlanes
+	leftVsRightVerticalOffsetAircraftAndOrdnance
 	topVsBottom
 	topVsBottomHorizontalOffset
 	zoomHorizontal
@@ -434,7 +434,7 @@ func nodeSetups() []nodeSetup {
 		leftVsRightHorizontalOffset,
 		leftVsRightVerticalOffset,
 		leftVsRightVerticalOffsetMissileCruise,
-		leftVsRightVerticalOffsetPlanes,
+		leftVsRightVerticalOffsetAircraftAndOrdnance,
 		topVsBottom,
 		topVsBottomHorizontalOffset,
 		zoomHorizontal}
@@ -468,8 +468,8 @@ func (ns nodeSetup) String() string {
 		return "leftVsRightVerticalOffset"
 	case leftVsRightVerticalOffsetMissileCruise:
 		return "leftVsRightVerticalOffsetMissileCruise"
-	case leftVsRightVerticalOffsetPlanes:
-		return "leftVsRightVerticalOffsetPlanes"
+	case leftVsRightVerticalOffsetAircraftAndOrdnance:
+		return "leftVsRightVerticalOffsetAircraftAndOrdnance"
 	case topVsBottom:
 		return "topVsBottom"
 	case topVsBottomHorizontalOffset:
@@ -734,7 +734,7 @@ func (nodes nodes) setupPositions(s nodeSetup, initialNodeHealth int) {
 			{GridPosition{21, 23}, pTwo, unitConfig},
 			{GridPosition{26, 23}, pTwo, unitConfig},
 		}
-	case leftVsRightVerticalOffsetPlanes:
+	case leftVsRightVerticalOffsetAircraftAndOrdnance:
 		unitConfig := infantryConfig
 		nodeSetupInputs = []nodeSetupInput{
 			{GridPosition{2, 2}, pOne, unitConfig},
@@ -770,7 +770,7 @@ func (nodes nodes) setupPositions(s nodeSetup, initialNodeHealth int) {
 			{GridPosition{11, 22}, pNeutral, unitConfig},
 			{GridPosition{16, 22}, pNeutral, unitConfig},
 			{GridPosition{21, 23}, pTwo, unitConfig},
-			{GridPosition{26, 23}, pTwo, unitConfig},
+			{GridPosition{26, 23}, pTwo, missileAntiBallisticConfig},
 		}
 	case topVsBottom:
 		unitConfig := infantryConfig

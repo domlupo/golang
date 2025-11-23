@@ -43,6 +43,8 @@ Is there a mobile equivalent for war/4x games?
 
 - Debug hangs. It seems to occur when fighter and bomber collide in air.
 
+- Debug state.go L547 nil pointer
+
 - Verify bombs don't collide with anything. Specifically ordnance layer.
 
 - Implement fighter and bomber
@@ -95,6 +97,14 @@ Is there a mobile equivalent for war/4x games?
   - For player experience perhaps a single binary yes or no but it depends on a counter that goes
     positive or negative based on upgrades. a heat of 1 or 2 or 3 behave the same. It just a heat
     of 3 would require more upgrades to counter.
+
+- Should heat seeking missiles and anti ballistic only get one target acquisition?
+  - A potential upgrade could be to allow multiple target acquisitions
+  - The issue is multiple target acquisitions seems unrealistic.
+
+- Add dynamaic speed to ballistic missile and anti ballistic missile
+  - Verify collision still works. I am worried 
+  - Should speed be capped or how do I test with max speed?
 
 - Attempt to finalize how land, ordnance and aircraft layers are drawn
   - I am worried about how the visuals look

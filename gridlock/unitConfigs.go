@@ -92,7 +92,7 @@ type unitConfig struct {
 	heated               bool
 	heatSeeking          bool
 	ignoreTarget         func(u, t *unit) bool
-	ignoreCollision      func(u, t *unit) bool
+	ignoreCollision      func(u, o *unit) bool
 }
 
 // Note: unit radius set to an odd number is better for testing due to division bugs
@@ -216,10 +216,25 @@ var missileBallisticConfig = unitConfig{
 	explodeRadius:        20,
 	speedFactor:          1,
 	maxAlivePerNode:      math.MaxInt,
-	ignoreCollision:      func(u, o *unit) bool { return o.name != missileAntiBallistic },
+	ignoreCollision:      func(u, o *unit) bool { return !(o.name == missileAntiBallistic || o.player != u.player) },
 }
 
-var missileAntiBallisticConfig = unitConfig{}
+var missileAntiBallisticConfig = unitConfig{
+	name:                 missileAntiBallistic,
+	radius:               3,
+	maxHealth:            1,
+	vision:               300,
+	produceLayer:         ordnance,
+	collidesOrdnance:     true,
+	staticTarget:         true,
+	targetsOrdnance:      true,
+	despawnAtTerminalPos: true,
+	explodeRadius:        20,
+	speedFactor:          1,
+	maxAlivePerNode:      math.MaxInt,
+	ignoreTarget:         func(u, t *unit) bool { return t.name != missileBallistic },
+	ignoreCollision:      func(u, o *unit) bool { return !(o.name == missileBallistic || o.player != u.player) },
+}
 
 var flareConfig = unitConfig{
 	name:                 flare,

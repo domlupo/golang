@@ -661,7 +661,7 @@ func (u unit) draw(dc drawConfig, selected bool) {
 				dc.screen,
 				float32(a.pos.X)*dc.windowMultiplier,
 				float32(a.pos.Y)*dc.windowMultiplier,
-				// HACK: hard coded value. Needed because this is the first instance of a unit
+				// TODO: hard coded value. Needed because this is the first instance of a unit
 				// drawing another unit config. It is Low priority to fix this. Also this pattern
 				// will occur in the future. Easier to fix once more examples to understand structure.
 				20.0*dc.windowMultiplier,
@@ -670,10 +670,10 @@ func (u unit) draw(dc drawConfig, selected bool) {
 				false,
 			)
 		}
-	case missile, missileHeatSeeking, missileCruise, missileBallistic:
+	case missile, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic:
 		dc.screen.DrawImage(dc.pngMissile, u.angleDraw(dc))
 
-		if u.heatSeeking && u.selected {
+		if u.selected && (u.name == missileHeatSeeking || u.name == missileAntiBallistic) {
 			vector.StrokeCircle(
 				dc.screen,
 				float32(u.X)*dc.windowMultiplier,
