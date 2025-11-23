@@ -21,6 +21,7 @@ const (
 	land
 	ordnance
 	aircraft
+	ballistic
 )
 
 // Three dimensional point.
@@ -104,6 +105,8 @@ func (l layer) log() slog.Attr {
 		layer = "ordance"
 	case aircraft:
 		layer = "aircraft"
+	case ballistic:
+		layer = "ballistic"
 	}
 	return slog.String("layer", layer)
 }

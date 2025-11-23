@@ -13,11 +13,12 @@ type hexagons map[GridPosition]*hexagon
 
 // A hexagon which spatially partitions the map. Stores dynamic data bucketed by layer.
 type hexagon struct {
-	gridPos  GridPosition
-	land     hexLayer
-	ordnance hexLayer
-	aircraft hexLayer
-	selected bool
+	gridPos   GridPosition
+	land      hexLayer
+	ordnance  hexLayer
+	aircraft  hexLayer
+	ballistic hexLayer
+	selected  bool
 }
 
 // A hexagonal spatial partition for a specific layer.
@@ -34,6 +35,7 @@ func (h hexagon) log() []slog.Attr {
 	a = append(a, nest("land", h.land.log()))
 	a = append(a, nest("ordnance", h.ordnance.log()))
 	a = append(a, nest("aircraft", h.aircraft.log()))
+	a = append(a, nest("ballistic", h.ballistic.log()))
 	return a
 }
 
@@ -58,6 +60,8 @@ func (h *hexagon) get(l layer) *hexLayer {
 		return &h.ordnance
 	case aircraft:
 		return &h.aircraft
+	case ballistic:
+		return &h.ballistic
 	default:
 		panic(fmt.Sprintf("get: unknown layer %d", l))
 	}

@@ -43,8 +43,6 @@ Is there a mobile equivalent for war/4x games?
 
 - Debug hangs. It seems to occur when fighter and bomber collide in air.
 
-- Add ballistic layer to prevent invalid s.ordnanceUnits collisions 
-
 - Verify bombs don't collide with anything. Specifically ordnance layer.
 
 - Implement fighter and bomber
@@ -101,6 +99,14 @@ Is there a mobile equivalent for war/4x games?
 - Should heat seeking missiles and anti ballistic only get one target acquisition?
   - A potential upgrade could be to allow multiple target acquisitions
   - The issue is multiple target acquisitions seems unrealistic.
+
+- Should I keep ballistic layer? I think I should.
+  - If yes, should I modify it so that ballistic never collide? I think no. 
+    - This is relatively a lot of work.
+    - Makes code base less cohesive since a layer has different structure and behavior
+    - Collisions between same player ballistic units will probably be rare.
+    - I need to verify, but I think I can add steering to avoid this entire issue?
+    - This seems like a good candidate for not 100% realistic but makes player experience better.
 
 - Add dynamaic speed to ballistic missile and anti ballistic missile
   - Verify collision still works. I am worried 

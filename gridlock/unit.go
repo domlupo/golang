@@ -159,6 +159,9 @@ func (u unit) targetsLayers() []layer {
 	if u.targetsAircraft {
 		layers = append(layers, aircraft)
 	}
+	if u.targetsBallistic {
+		layers = append(layers, ballistic)
+	}
 	return layers
 }
 
@@ -172,6 +175,9 @@ func (u unit) collidesLayers() []layer {
 	}
 	if u.collidesAircraft {
 		layers = append(layers, aircraft)
+	}
+	if u.collidesBallistic {
+		layers = append(layers, ballistic)
 	}
 	return layers
 }

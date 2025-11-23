@@ -62,10 +62,12 @@ type unitConfig struct {
 	staticTarget         bool
 	targetsLand          bool
 	targetsOrdnance      bool
+	targetsBallistic     bool
 	targetsAircraft      bool
 	collidesLand         bool
 	collidesOrdnance     bool
 	collidesAircraft     bool
+	collidesBallistic    bool
 	despawnAtTerminalPos bool
 	explodeAtTerminalPos bool
 	explodeRadius        int
@@ -89,7 +91,6 @@ type unitConfig struct {
 	heated               bool
 	heatSeeking          bool
 	ignoreTarget         func(u, t *unit) bool
-	ignoreCollision      func(u, o *unit) bool
 }
 
 // Note: unit radius set to an odd number is better for testing due to division bugs
@@ -128,7 +129,7 @@ var fighterConfig = unitConfig{
 	fireOrdnanceDelay:   50,
 	heated:              true,
 	ignoreTarget: func(u, t *unit) bool {
-		return t.name == bomb || t.name == flare || t.name == missileBallistic || t.name == missileAntiBallistic
+		return t.name == bomb || t.name == flare
 	},
 }
 
@@ -206,14 +207,13 @@ var missileBallisticConfig = unitConfig{
 	radius:               3,
 	maxHealth:            1,
 	vision:               1,
-	produceLayer:         ordnance,
-	collidesOrdnance:     true,
+	produceLayer:         ballistic,
+	collidesBallistic:    true,
 	staticTarget:         true,
 	explodeAtTerminalPos: true,
 	explodeRadius:        20,
 	speedFactor:          1,
 	maxAlivePerNode:      math.MaxInt,
-	ignoreCollision:      func(u, o *unit) bool { return !(o.name == missileAntiBallistic || o.player != u.player) },
 }
 
 var missileAntiBallisticConfig = unitConfig{
@@ -221,16 +221,14 @@ var missileAntiBallisticConfig = unitConfig{
 	radius:               3,
 	maxHealth:            1,
 	vision:               300,
-	produceLayer:         ordnance,
-	collidesOrdnance:     true,
+	produceLayer:         ballistic,
+	collidesBallistic:    true,
 	staticTarget:         true,
-	targetsOrdnance:      true,
+	targetsBallistic:     true,
 	despawnAtTerminalPos: true,
 	explodeRadius:        20,
 	speedFactor:          1,
 	maxAlivePerNode:      math.MaxInt,
-	ignoreTarget:         func(u, t *unit) bool { return t.name != missileBallistic },
-	ignoreCollision:      func(u, o *unit) bool { return !(o.name == missileBallistic || o.player != u.player) },
 }
 
 var flareConfig = unitConfig{

@@ -26,6 +26,7 @@ type state struct {
 	landUnits        units
 	ordanceUnits     units
 	aircraftUnits    units
+	ballisticUnits   units
 	reactiveUnits    map[id]*unit
 	requesterUnits   map[id]*unit
 	events           []event
@@ -46,6 +47,7 @@ func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, 
 		landUnits:      make(units),
 		ordanceUnits:   make(units),
 		aircraftUnits:  make(units),
+		ballisticUnits: make(units),
 		reactiveUnits:  make(map[id]*unit),
 		requesterUnits: make(map[id]*unit),
 		developerMode:  developerMode,
@@ -81,6 +83,11 @@ func (s state) unitsAir() func(yield func(u *unit) bool) {
 				return
 			}
 		}
+		for _, u := range s.ballisticUnits {
+			if !yield(u) {
+				return
+			}
+		}
 	}
 }
 
@@ -93,6 +100,8 @@ func (s state) unitsLayer(l layer) *units {
 		units = s.ordanceUnits
 	case aircraft:
 		units = s.aircraftUnits
+	case ballistic:
+		units = s.ballisticUnits
 	default:
 		panic(fmt.Sprintf("layerUnits: unknown layer %d", l))
 	}
@@ -154,6 +163,8 @@ func (s *state) moveUnit(u *unit, m Move) {
 		units = s.ordanceUnits
 	case aircraft:
 		units = s.aircraftUnits
+	case ballistic:
+		units = s.ballisticUnits
 	default:
 		panic(fmt.Sprintf("moveUnit: unknown layer %d", m.layer))
 	}
@@ -171,6 +182,8 @@ func (s *state) deleteUnit(p position) {
 		delete(s.ordanceUnits, p.PixelPosition)
 	case aircraft:
 		delete(s.aircraftUnits, p.PixelPosition)
+	case ballistic:
+		delete(s.ballisticUnits, p.PixelPosition)
 	default:
 		panic(fmt.Sprintf("deleteUnit: unknown layer %d", p.layer))
 	}
@@ -649,12 +662,6 @@ func (s state) collidesWithUnitLayer(u unit, p position, linkedList *unit) (posi
 
 		checkOccurred = true
 
-		if u.ignoreCollision != nil && u.ignoreCollision(&u, current) ||
-			current.ignoreCollision != nil && current.ignoreCollision(current, &u) {
-			current = current.next
-			continue
-		}
-
 		if current.id == u.sourceUnit || current.sourceUnit == u.id {
 			continue
 		}
@@ -716,10 +723,6 @@ func (s *state) attackUnits() {
 		}
 
 		var nearestVisibleUnit = s.landUnits[u.enemyTarget.PixelPosition]
-		if nearestVisibleUnit == nil {
-			logger.force("bug", u.log()...)
-			continue
-		}
 		var rSum = u.reach + nearestVisibleUnit.radius
 		if rSum*rSum >= xDelta*xDelta+yDelta*yDelta {
 			nearestVisibleUnit.health = nearestVisibleUnit.health - u.attack
@@ -743,7 +746,10 @@ func (s *state) despawnUnits() {
 
 	for u := range s.units() {
 		if u.health <= 0 {
-			gridPos, _ := s.g.getGridPos(u.PixelPosition)
+			gridPos, ok := s.g.getGridPos(u.PixelPosition)
+			if !ok {
+				panic(fmt.Sprintf("despawnUnits: expected grid pos to exist for %s", u.PixelPosition.log()))
+			}
 			hex := s.hexagons[gridPos]
 			hex.subtract(*u)
 			s.deleteUnit(u.position)
@@ -1092,6 +1098,9 @@ func (s *state) draw(dc drawConfig) {
 		u.draw(dc, u.selected)
 	}
 	for _, u := range s.aircraftUnits {
+		u.draw(dc, u.selected)
+	}
+	for _, u := range s.ballisticUnits {
 		u.draw(dc, u.selected)
 	}
 }
