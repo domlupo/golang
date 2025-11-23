@@ -14,16 +14,6 @@ type PixelPosition struct {
 	Y int `json:"y"`
 }
 
-type layer int
-
-const (
-	noLayer layer = iota
-	land
-	ordnance
-	aircraft
-	ballistic
-)
-
 // Three dimensional point.
 type position struct {
 	layer
@@ -92,23 +82,6 @@ func (p PixelPosition) log() []slog.Attr {
 	a = append(a, slog.Int("x", p.X))
 	a = append(a, slog.Int("y", p.Y))
 	return a
-}
-
-func (l layer) log() slog.Attr {
-	var layer string
-	switch l {
-	case noLayer:
-		layer = "noLayer"
-	case land:
-		layer = "land"
-	case ordnance:
-		layer = "ordance"
-	case aircraft:
-		layer = "aircraft"
-	case ballistic:
-		layer = "ballistic"
-	}
-	return slog.String("layer", layer)
 }
 
 // Returns the angle in radians from p1 -> p2 clockwise from the north axis.

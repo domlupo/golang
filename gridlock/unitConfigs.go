@@ -60,14 +60,8 @@ type unitConfig struct {
 	reach                int
 	produceLayer         layer
 	staticTarget         bool
-	targetsLand          bool
-	targetsOrdnance      bool
-	targetsBallistic     bool
-	targetsAircraft      bool
-	collidesLand         bool
-	collidesOrdnance     bool
-	collidesAircraft     bool
-	collidesBallistic    bool
+	targetLayers         layers
+	collisionLayers      layers
 	despawnAtTerminalPos bool
 	explodeAtTerminalPos bool
 	explodeRadius        int
@@ -102,8 +96,8 @@ var infantryConfig = unitConfig{
 	vision:          30,
 	reach:           5,
 	produceLayer:    land,
-	targetsLand:     true,
-	collidesLand:    true,
+	targetLayers:    []layer{land},
+	collisionLayers: []layer{land},
 	explodeRadius:   0,
 	maxAlivePerNode: math.MaxInt,
 	speedFactor:     2.0,
@@ -115,9 +109,8 @@ var fighterConfig = unitConfig{
 	maxHealth:           1,
 	vision:              800,
 	produceLayer:        aircraft,
-	targetsOrdnance:     true,
-	targetsAircraft:     true,
-	collidesAircraft:    true,
+	targetLayers:        []layer{ordnance, aircraft},
+	collisionLayers:     []layer{aircraft},
 	explodeRadius:       100,
 	maxAlivePerNode:     1,
 	bombCountMax:        1,
@@ -139,8 +132,8 @@ var bomberConfig = unitConfig{
 	maxHealth:         1,
 	vision:            200,
 	produceLayer:      aircraft,
-	targetsOrdnance:   true,
-	collidesAircraft:  true,
+	targetLayers:      []layer{ordnance},
+	collisionLayers:   []layer{aircraft},
 	explodeRadius:     100,
 	maxAlivePerNode:   1,
 	bombCountMax:      4,
@@ -158,9 +151,9 @@ var bombConfig = unitConfig{
 	radius:           4,
 	maxHealth:        1,
 	produceLayer:     ordnance,
-	collidesOrdnance: true,
+	targetLayers:     []layer{land},
+	collisionLayers:  []layer{ordnance},
 	staticTarget:     true,
-	targetsLand:      true,
 	explodeRadius:    20,
 	explodeStepDelay: 300,
 	maxAlivePerNode:  math.MaxInt,
@@ -173,13 +166,11 @@ var missileHeatSeekingConfig = unitConfig{
 	maxHealth:            1,
 	vision:               300,
 	produceLayer:         ordnance,
-	collidesOrdnance:     true,
-	targetsOrdnance:      true,
+	targetLayers:         []layer{ordnance, aircraft},
+	collisionLayers:      []layer{ordnance, aircraft},
 	staticTarget:         true,
 	despawnAtTerminalPos: true,
 	heatSeeking:          true,
-	targetsAircraft:      true,
-	collidesAircraft:     true,
 	explodeRadius:        20,
 	speedFactor:          0.5,
 	heated:               true,
@@ -193,7 +184,7 @@ var missileCruiseConfig = unitConfig{
 	maxHealth:            1,
 	vision:               1,
 	produceLayer:         ordnance,
-	collidesOrdnance:     true,
+	collisionLayers:      []layer{ordnance},
 	staticTarget:         true,
 	explodeAtTerminalPos: true,
 	explodeRadius:        20,
@@ -208,7 +199,7 @@ var missileBallisticConfig = unitConfig{
 	maxHealth:            1,
 	vision:               1,
 	produceLayer:         ballistic,
-	collidesBallistic:    true,
+	collisionLayers:      []layer{ballistic},
 	staticTarget:         true,
 	explodeAtTerminalPos: true,
 	explodeRadius:        20,
@@ -222,9 +213,9 @@ var missileAntiBallisticConfig = unitConfig{
 	maxHealth:            1,
 	vision:               300,
 	produceLayer:         ballistic,
-	collidesBallistic:    true,
+	targetLayers:         []layer{ballistic},
+	collisionLayers:      []layer{ballistic},
 	staticTarget:         true,
-	targetsBallistic:     true,
 	despawnAtTerminalPos: true,
 	explodeRadius:        20,
 	speedFactor:          1,
@@ -236,7 +227,7 @@ var flareConfig = unitConfig{
 	radius:               3,
 	maxHealth:            1,
 	produceLayer:         ordnance,
-	collidesOrdnance:     true,
+	collisionLayers:      []layer{ordnance},
 	staticTarget:         true,
 	despawnAtTerminalPos: true,
 	speedFactor:          0.5,
@@ -254,9 +245,8 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, uc.produceLayer.log())
 	a = append(a, slog.Bool("staticTarget", uc.staticTarget))
 	a = append(a, slog.Bool("heatSeeking", uc.heatSeeking))
-	a = append(a, slog.Bool("targetsLand", uc.targetsLand))
-	a = append(a, slog.Bool("targetsOrdnance", uc.targetsOrdnance))
-	a = append(a, slog.Bool("targetsAircraft", uc.targetsAircraft))
+	a = append(a, slog.String("targetLayers", uc.targetLayers.String()))
+	a = append(a, slog.String("collisionLayers", uc.collisionLayers.String()))
 	a = append(a, slog.Bool("explodeAtTerminalPos", uc.explodeAtTerminalPos))
 	a = append(a, slog.Bool("despawnAtTerminalPos", uc.despawnAtTerminalPos))
 	a = append(a, slog.Int("missileCount", uc.missileCount))

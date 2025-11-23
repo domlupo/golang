@@ -148,40 +148,6 @@ func newUnit(
 	return u
 }
 
-func (u unit) targetsLayers() []layer {
-	var layers []layer
-	if u.targetsLand {
-		layers = append(layers, land)
-	}
-	if u.targetsOrdnance {
-		layers = append(layers, ordnance)
-	}
-	if u.targetsAircraft {
-		layers = append(layers, aircraft)
-	}
-	if u.targetsBallistic {
-		layers = append(layers, ballistic)
-	}
-	return layers
-}
-
-func (u unit) collidesLayers() []layer {
-	var layers []layer
-	if u.collidesLand {
-		layers = append(layers, land)
-	}
-	if u.collidesOrdnance {
-		layers = append(layers, ordnance)
-	}
-	if u.collidesAircraft {
-		layers = append(layers, aircraft)
-	}
-	if u.collidesBallistic {
-		layers = append(layers, ballistic)
-	}
-	return layers
-}
-
 func (u unit) terminal() bool {
 	if u.moveDone && (u.despawnAtTerminalPos || u.explodeAtTerminalPos) {
 		return true

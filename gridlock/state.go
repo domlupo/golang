@@ -533,7 +533,6 @@ func (s state) partitions(u unit, d int) []*hexagon {
 
 func (s state) nearestTargetWithinVision(u *unit) {
 	partitions := s.partitions(*u, u.vision)
-	layers := u.targetsLayers()
 	d := math.MaxInt64
 	var t *unit
 	for _, partition := range partitions {
@@ -541,7 +540,7 @@ func (s state) nearestTargetWithinVision(u *unit) {
 			continue
 		}
 
-		for _, l := range layers {
+		for _, l := range u.targetLayers {
 			linkedList := partition.get(l).linkedList
 			if target, distance := s.nearestTargetWithinLayer(*u, linkedList); distance < d {
 				t = target
@@ -615,15 +614,13 @@ func (s state) nearestTargetWithinLayer(u unit, linkedList *unit) (*unit, int) {
 }
 
 func (s *state) collidesWithUnit(p position, u unit) (position, bool) {
-	layers := u.collidesLayers()
 	partitions := s.partitions(u, 0)
-
 	for _, partition := range partitions {
 		if partition == nil {
 			continue
 		}
 
-		for _, l := range layers {
+		for _, l := range u.collisionLayers {
 			linkedList := partition.get(l).linkedList
 			if p, collides := s.collidesWithUnitLayer(u, p, linkedList); collides {
 				return p, collides
