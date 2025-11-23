@@ -235,7 +235,7 @@ func (s *state) processRequests() {
 
 func (s *state) analyzeTargets() {
 	for u := range s.units() {
-		if u.name == missileBallistic || u.name == missileAntiAir {
+		if u.name == missileBallistic || u.name == missileAntiAir || u.name == missileAntiBallistic {
 			panic("units not supported")
 		}
 
@@ -244,7 +244,7 @@ func (s *state) analyzeTargets() {
 			u.updateTargetUnit(enemyTarget, u.nearest)
 		}
 
-		if u.name == missile || u.name == missileHeatSeeking || u.name == flare {
+		if u.name == missile || u.name == missileHeatSeeking || u.name == flare || u.name == missileCruise {
 			u.localTargets = []position{u.globalTargets[0]}
 			u.prioritizeTargets()
 			continue

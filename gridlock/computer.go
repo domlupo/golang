@@ -117,7 +117,7 @@ func (c *computer) updateNodeTargets(avgUnitPos PixelPosition) {
 		selfNode := n
 		selfNode.targets = []position{{land, nP}}
 		switch n.unitConfig.name {
-		case missileBallistic:
+		case missileCruise:
 			if diffs[0].diff > 1 {
 				selfNode.targets = []position{{land, positions[0]}}
 			}
@@ -152,7 +152,7 @@ func (c *computer) updateForNodeCapture() {
 		selfNode.targets = []position{}
 		nearestTargetDistanceSquared := math.MaxInt
 
-		if n.unitConfig.name == missileBallistic || n.unitConfig.name == missileAntiAir {
+		if n.unitConfig.name == missileCruise || n.unitConfig.name == missileAntiAir {
 			continue
 		}
 

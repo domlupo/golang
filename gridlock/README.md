@@ -85,6 +85,15 @@ Is there a mobile equivalent for war/4x games?
     - active (fire and forget)
   - Once steer/boids is understood better, can add avoidance
 
+- Potential cruise missile upgrade
+  - drop emitted heat by X
+  - fighter can improve heat seeking by X
+  - this would make heat a lot more difficult to understand for players
+  - would require circular collision detection
+  - For player experience perhaps a single binary yes or no but it depends on a counter that goes
+    positive or negative based on upgrades. a heat of 1 or 2 or 3 behave the same. It just a heat
+    of 3 would require more upgrades to counter.
+
 - Attempt to finalize how land, ordnance and aircraft layers are drawn
   - I am worried about how the visuals look
   - I am worried about how easy is it for players to follow what is going on 
@@ -200,6 +209,12 @@ Is there a mobile equivalent for war/4x games?
   - Should computer units prioritize nodes or units?
   - Investigate, there may be a bug where when a node is captured by a computer player, unit targets incorrectly become node
     when a local target is already acquired.
+
+- computer should have option to coordinate attacks
+  - Ballistic missile and bomber should probably not target same hexs
+  - But it does make sense to target same if others have very little units
+  - Also computers AI can have different modes and efficiences
+  - ballistic missile and bomber can have better AI where they retarget if needed.
 
 - Revisit bomber tasks
   - Punted

@@ -195,13 +195,26 @@ var missileHeatSeekingConfig = unitConfig{
 	speedFactor:          0.5,
 }
 
-var missileBallisticConfig = unitConfig{}
-
-var missileCruiseConfig = unitConfig{}
-
-var missileAntiBallisticConfig = unitConfig{}
+var missileCruiseConfig = unitConfig{
+	name:                 missileCruise,
+	radius:               3,
+	maxHealth:            1,
+	vision:               1,
+	produceLayer:         ordnance,
+	collidesOrdnance:     true,
+	staticTarget:         true,
+	explodeAtTerminalPos: true,
+	explodeRadius:        20,
+	speedFactor:          1,
+	maxAlivePerNode:      math.MaxInt,
+	heated:               true,
+}
 
 var missileAntiAirConfig = unitConfig{}
+
+var missileBallisticConfig = unitConfig{}
+
+var missileAntiBallisticConfig = unitConfig{}
 
 var flareConfig = unitConfig{
 	name:                 flare,
