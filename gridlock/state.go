@@ -240,8 +240,7 @@ func (s *state) analyzeTargets() {
 			u.updateTargetUnit(enemyTarget, u.nearest)
 		}
 
-		if u.name == missile ||
-			u.name == missileHeatSeeking ||
+		if u.name == missileHeatSeeking ||
 			u.name == flare ||
 			u.name == missileCruise ||
 			u.name == missileBallistic ||

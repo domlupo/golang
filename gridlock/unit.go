@@ -670,7 +670,7 @@ func (u unit) draw(dc drawConfig, selected bool) {
 				false,
 			)
 		}
-	case missile, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic:
+	case missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic:
 		dc.screen.DrawImage(dc.pngMissile, u.angleDraw(dc))
 
 		if u.selected && (u.name == missileHeatSeeking || u.name == missileAntiBallistic) {
@@ -715,7 +715,7 @@ func (u unit) draw(dc drawConfig, selected bool) {
 		)
 	}
 
-	if selected && u.name != missile {
+	if selected {
 		drawUnfilledBoxInt(
 			dc,
 			dc.highlightColor,

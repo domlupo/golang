@@ -17,7 +17,6 @@ const (
 	fighter
 	bomber
 	bomb
-	missile
 	missileHeatSeeking
 	missileBallistic
 	missileCruise
@@ -37,8 +36,6 @@ func (n name) String() string {
 		return "bomber"
 	case bomb:
 		return "bomb"
-	case missile:
-		return "missile"
 	case missileHeatSeeking:
 		return "missileHeatSeeking"
 	case missileBallistic:
