@@ -43,7 +43,7 @@ Is there a mobile equivalent for war/4x games?
 
 - Debug hangs. It seems to occur when fighter and bomber collide in air.
 
-- Debug state.go L547 nil pointer
+- Add ballistic layer to prevent invalid s.ordnanceUnits collisions 
 
 - Verify bombs don't collide with anything. Specifically ordnance layer.
 

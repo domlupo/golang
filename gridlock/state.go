@@ -146,17 +146,21 @@ func (s *state) moveUnit(u *unit, m Move) {
 	}
 	s.deleteUnit(u.position)
 	m.confirm()
-
+	var units units
 	switch m.layer {
 	case land:
-		s.landUnits[u.PixelPosition] = u
+		units = s.landUnits
 	case ordnance:
-		s.ordanceUnits[u.PixelPosition] = u
+		units = s.ordanceUnits
 	case aircraft:
-		s.aircraftUnits[u.PixelPosition] = u
+		units = s.aircraftUnits
 	default:
 		panic(fmt.Sprintf("moveUnit: unknown layer %d", m.layer))
 	}
+	if o, ok := units[u.PixelPosition]; ok {
+		panic(fmt.Sprintf("moveUnit: position for unit occupied by other unit. unit: %s other: %s", u.log(), o.log()))
+	}
+	units[u.PixelPosition] = u
 }
 
 func (s *state) deleteUnit(p position) {
