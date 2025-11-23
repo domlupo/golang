@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math"
+	"slices"
 )
 
 type name int
@@ -93,6 +94,7 @@ type unitConfig struct {
 	fireOrdnanceDelay    uint64
 	heated               bool
 	heatSeeking          bool
+	ignoreTargets        func(u, t *unit) bool
 }
 
 // Note: unit radius set to an odd number is better for testing due to division bugs
@@ -130,6 +132,7 @@ var fighterConfig = unitConfig{
 	missileHeatCountMax: 1000,
 	fireOrdnanceDelay:   50,
 	heated:              true,
+	ignoreTargets:       func(u, t *unit) bool { return t.name == bomb || t.name == flare },
 }
 
 var bomberConfig = unitConfig{
@@ -149,6 +152,7 @@ var bomberConfig = unitConfig{
 	heated:            true,
 	reactive:          true,
 	requester:         true,
+	ignoreTargets:     func(u, t *unit) bool { return slices.Contains(u.skipTargets, t.id) },
 }
 
 var bombConfig = unitConfig{
@@ -193,7 +197,7 @@ var missileHeatSeekingConfig = unitConfig{
 	collidesAircraft:     true,
 	explodeRadius:        20,
 	speedFactor:          0.5,
-}
+	ignoreTargets:        func(u, t *unit) bool { return !t.heated }}
 
 var missileCruiseConfig = unitConfig{
 	name:                 missileCruise,

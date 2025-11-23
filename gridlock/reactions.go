@@ -82,7 +82,8 @@ func reactions(n name) []reaction {
 				do: func(fighter *unit) {
 					var spawn unit
 					switch {
-					case fighter.nearest.name == bomber && fighter.missileHeatCount > 0:
+					case fighter.missileHeatCount > 0 &&
+						(fighter.nearest.name == bomber || fighter.nearest.name == missileCruise):
 						fighter.missileHeatCount--
 						spawn = newUnit(
 							missileHeatSeekingConfig,
