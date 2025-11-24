@@ -279,23 +279,25 @@ var chaffConfig = unitConfig{
 	despawnWhenTerminal: true,
 }
 
+// This log method is frequently used for debugging. Also it is typically logged at the end of unit.log().
+// Log frequently used info at the end for quicker debugging. Less used info can be parsed via tooling e.g. grep
 func (uc unitConfig) log() []slog.Attr {
 	var a = []slog.Attr{}
-	a = append(a, slog.String("name", uc.name.String()))
 	a = append(a, slog.Int("radius", uc.radius))
 	a = append(a, slog.Int("maxHealth", uc.maxHealth))
 	a = append(a, slog.Int("attack", uc.attack))
 	a = append(a, slog.Int("vision", uc.vision))
 	a = append(a, slog.Int("reach", uc.reach))
-	a = append(a, uc.produceLayer.log())
 	a = append(a, slog.Bool("staticTarget", uc.staticTarget))
 	a = append(a, slog.Bool("heatSeeking", uc.heatSeeking))
-	a = append(a, slog.String("targetLayers", uc.targetLayers.String()))
-	a = append(a, slog.String("collisionLayers", uc.collisionLayers.String()))
+	a = append(a, slog.Int("missileHeatSeekingCount", uc.missileHeatSeekingCount))
 	a = append(a, slog.Bool("explodeWhenTerminal", uc.explodeWhenTerminal))
 	a = append(a, slog.Bool("despawnWhenTerminal", uc.despawnWhenTerminal))
-	a = append(a, slog.Int("missileHeatSeekingCount", uc.missileHeatSeekingCount))
-	a = append(a, slog.Uint64("terminalStep", uc.terminalStep))
 	a = append(a, slog.Uint64("terminalStepDelay", uc.terminalStepDelay))
+	a = append(a, slog.Uint64("terminalStep", uc.terminalStep))
+	a = append(a, slog.String("targetLayers", uc.targetLayers.String()))
+	a = append(a, slog.String("collisionLayers", uc.collisionLayers.String()))
+	a = append(a, uc.produceLayer.log())
+	a = append(a, slog.String("name", uc.name.String()))
 	return a
 }

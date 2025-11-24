@@ -486,6 +486,8 @@ func (u *unit) getPath(
 	return path
 }
 
+// This log method is frequently used for debugging. Log frequently used info at start
+// or end for quicker debugging. Less used info can be parsed via tooling e.g. grep
 func (u unit) log() []slog.Attr {
 	var a = u.logShort()
 	a = append(a, slog.String("player", u.player.String()))
@@ -556,7 +558,6 @@ func (u unit) log() []slog.Attr {
 	a = append(a, slog.Int("bresenhamError", u.bresenhamError))
 	a = append(a, slog.Int("bresenhamErrorDx", u.bresenhamErrorDx))
 	a = append(a, slog.Int("bresenhamErrorDy", u.bresenhamErrorDy))
-	a = append(a, u.unitConfig.log()...)
 	a = append(a, slog.Int("health", u.health))
 	a = append(a, slog.Bool("movedThisTurn", u.movedThisTurn))
 	a = append(a, slog.Bool("attackedThisTurn", u.attackedThisTurn))
@@ -568,6 +569,7 @@ func (u unit) log() []slog.Attr {
 	} else {
 		a = append(a, slog.Any("nearest", u.nearest.logShort()))
 	}
+	a = append(a, u.unitConfig.log()...)
 	return a
 }
 
