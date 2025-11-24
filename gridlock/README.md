@@ -43,10 +43,9 @@ Is there a mobile equivalent for war/4x games?
 
 - Determine if produceUnits should use step count rather than interval. I think yes so game is more cohesive.
   Right now, enabling high CPU debugging by (press w) will cause more units to spawn over a typical tick rate.
+  Another benefit is, produce logic can move from main.go into state.go state.tick method.
 
 - Debug hangs. It seems to occur when fighter and bomber collide in air.
-
-- Verify bombs don't collide with anything. Specifically ordnance layer.
 
 - Research every play testing MVP units in depth. Ensure no unrealistic work planned.
   - relative speed between units 
@@ -61,6 +60,14 @@ Is there a mobile equivalent for war/4x games?
     - active radar homing
 
 - Implement fighter and bomber
+  - scoped out work
+    - Add chaff counters radar missiles
+    - Add fighter chaff
+    - Add fighter flares
+    - Add fighter signal jamming
+    - Add bomber signal jamming
+    - Add semi active radar homing missile
+    - Add fighter rotary cannon (overlap with ac130 and apache?)
   - Fighter should intercept:
     - Maybe glide bombs 
   - Improve heat seeking missile flight path
@@ -92,7 +99,6 @@ Is there a mobile equivalent for war/4x games?
     - Overlap with other units? Helicopter or gunship?
   - bomber should have an upgrade for high g steering away from missiles
   - counter measures
-    - chaff
     - steer
     - signal jammers (upgrade could increase jam distance?)
   - missile types
@@ -100,7 +106,6 @@ Is there a mobile equivalent for war/4x games?
     - semi active missile (aircraft must follow target aka once out of vision don't home to target)
     - active (fire and forget)
   - Once steer/boids is understood better, can add avoidance
-
 
 - Potential cruise missile upgrade
   - drop emitted heat by X
