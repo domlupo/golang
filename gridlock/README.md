@@ -45,9 +45,14 @@ Is there a mobile equivalent for war/4x games?
 
 - Verify bombs don't collide with anything. Specifically ordnance layer.
 
+- Research every play testing MVP units in depth. Ensure no unrealistic work planned.
+  - relative speed between units 
+    - ballistic missiles are faster than cruise missiles
+  - unrealistic unit behaviors
+    - fighters used to shoot down gravity bombs which isn't realistic
+
 - Implement fighter and bomber
   - Fighter should intercept:
-    - cruise misile (maneuverable, aircraft speed)
     - Maybe glide bombs 
   - Improve heat seeking missile flight path
     - At least one aspect is off. I need to investigate if there are multiple issues.
@@ -86,6 +91,7 @@ Is there a mobile equivalent for war/4x games?
     - semi active missile (aircraft must follow target aka once out of vision don't home to target)
     - active (fire and forget)
   - Once steer/boids is understood better, can add avoidance
+
 
 - Potential cruise missile upgrade
   - drop emitted heat by X
