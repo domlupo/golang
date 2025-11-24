@@ -448,6 +448,12 @@ Is there a mobile equivalent for war/4x games?
 
 ### Punted Checkpoints
 
+- I like the solitaire end game screen. Make a cool pre game or end game animation:
+  - pregame menu screen can have animation in background
+  - boids behavior (multiple fighters flying around)
+  - hexagon explosion + collision
+  - hexagon liquify to bottom of screen (if it require shaders that would probably prevent it)
+
 - Determine if I should add player configurations
   - player configure flare patterns or setups?
   - player can configure gameplay visuals:
