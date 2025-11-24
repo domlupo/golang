@@ -126,12 +126,12 @@ func (c *computer) updateNodeTargets(avgUnitPos PixelPosition) {
 				selfNode.targets = []position{{lLand, avgUnitPos}}
 			}
 		case fighter:
-			if fighterConfig.bombCountMax <= validDiffsIndex+1 {
-				c.planBombs(selfNode, positions[:fighterConfig.bombCountMax])
+			if fighterConfig.bombGravityCountMax <= validDiffsIndex+1 {
+				c.planBombs(selfNode, positions[:fighterConfig.bombGravityCountMax])
 			}
 		case bomber:
-			if bomberConfig.bombCountMax <= validDiffsIndex+1 {
-				c.planBombs(selfNode, positions[:bomberConfig.bombCountMax])
+			if bomberConfig.bombGravityCountMax <= validDiffsIndex+1 {
+				c.planBombs(selfNode, positions[:bomberConfig.bombGravityCountMax])
 			}
 		}
 	}
@@ -219,7 +219,7 @@ func (c *computer) planBombs(n *node, targets []PixelPosition) {
 		n.targets = append(n.targets, p)
 		n.actions = append(n.actions, action{pos: p, do: func() {
 			u := newUnit(
-				bombConfig,
+				bombGravityConfig,
 				position{layer: lOrdnance, PixelPosition: p.PixelPosition},
 				c.player,
 				[]position{{layer: lLand, PixelPosition: p.PixelPosition}},
@@ -229,7 +229,7 @@ func (c *computer) planBombs(n *node, targets []PixelPosition) {
 			// TODO: Update this to a spawn request since it can panic
 			c.s.spawn(&u)
 			c.s.events = append(c.s.events, event{
-				step: c.s.step + bombConfig.explodeStepDelay,
+				step: c.s.step + bombGravityConfig.explodeStepDelay,
 				do: func() {
 					c.s.explode(&u)
 				},

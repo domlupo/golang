@@ -13,14 +13,14 @@ type reaction struct {
 func (u unit) isPayloadNotFull() bool {
 	return u.missileHeatSeekingCount != u.missileHeatSeekingCountMax ||
 		u.flareCount != u.flareCountMax ||
-		u.bombCount != u.bombCountMax ||
+		u.bombGravityCount != u.bombGravityCountMax ||
 		u.missileRadarActiveCount != u.missileRadarActiveCountMax
 }
 
 func (u *unit) refillPayload() {
 	u.missileHeatSeekingCount = u.missileHeatSeekingCountMax
 	u.flareCount = u.flareCountMax
-	u.bombCount = u.bombCountMax
+	u.bombGravityCount = u.bombGravityCountMax
 	u.missileRadarActiveCount = u.missileRadarActiveCountMax
 }
 

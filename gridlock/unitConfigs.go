@@ -16,7 +16,7 @@ const (
 	infantry
 	fighter
 	bomber
-	bomb
+	bombGravity
 	missileHeatSeeking
 	missileRadarActive
 	missileBallistic
@@ -35,8 +35,8 @@ func (n name) String() string {
 		return "fighter"
 	case bomber:
 		return "bomber"
-	case bomb:
-		return "bomb"
+	case bombGravity:
+		return "bombGravity"
 	case missileHeatSeeking:
 		return "missileHeatSeeking"
 	case missileRadarActive:
@@ -76,8 +76,8 @@ type unitConfig struct {
 	reactive                   bool
 	requests                   []request
 	requester                  bool
-	bombCount                  int
-	bombCountMax               int
+	bombGravityCount           int
+	bombGravityCountMax        int
 	flareCount                 int
 	flareCountMax              int
 	missileHeatSeekingCount    int
@@ -117,7 +117,7 @@ var fighterConfig = unitConfig{
 	collisionLayers:            []layer{lAircraft},
 	explodeRadius:              100,
 	maxAlivePerNode:            1,
-	bombCountMax:               1,
+	bombGravityCountMax:        1,
 	speedFactor:                1.0,
 	reactive:                   true,
 	requester:                  true,
@@ -126,32 +126,32 @@ var fighterConfig = unitConfig{
 	fireOrdnanceDelay:          50,
 	heated:                     true,
 	ignoreTarget: func(t *unit) bool {
-		return t.name == bomb || t.name == flare
+		return t.name == bombGravity || t.name == flare
 	},
 }
 
 var bomberConfig = unitConfig{
-	name:              bomber,
-	radius:            20,
-	maxHealth:         1,
-	vision:            200,
-	produceLayer:      lAircraft,
-	targetLayers:      []layer{lOrdnance},
-	collisionLayers:   []layer{lAircraft},
-	explodeRadius:     100,
-	maxAlivePerNode:   1,
-	bombCountMax:      4,
-	flareCountMax:     1000,
-	fireOrdnanceDelay: 30,
-	speedFactor:       1.0,
-	heated:            true,
-	reactive:          true,
-	requester:         true,
-	ignore:            func(u, t *unit) bool { return slices.Contains(u.skipTargets, t.id) },
+	name:                bomber,
+	radius:              20,
+	maxHealth:           1,
+	vision:              200,
+	produceLayer:        lAircraft,
+	targetLayers:        []layer{lOrdnance},
+	collisionLayers:     []layer{lAircraft},
+	explodeRadius:       100,
+	maxAlivePerNode:     1,
+	bombGravityCountMax: 4,
+	flareCountMax:       1000,
+	fireOrdnanceDelay:   30,
+	speedFactor:         1.0,
+	heated:              true,
+	reactive:            true,
+	requester:           true,
+	ignore:              func(u, t *unit) bool { return slices.Contains(u.skipTargets, t.id) },
 }
 
-var bombConfig = unitConfig{
-	name:             bomb,
+var bombGravityConfig = unitConfig{
+	name:             bombGravity,
 	radius:           4,
 	maxHealth:        1,
 	produceLayer:     lOrdnance,
@@ -177,7 +177,7 @@ var missileRadarActiveConfig = unitConfig{
 	speedFactor:          0.5,
 	heated:               true,
 	maxAlivePerNode:      math.MaxInt,
-	ignoreTarget:         func(t *unit) bool { return t.name == bomb || t.name == flare },
+	ignoreTarget:         func(t *unit) bool { return t.name == bombGravity || t.name == flare },
 }
 
 var missileHeatSeekingConfig = unitConfig{

@@ -235,7 +235,7 @@ func (g *Game) Update() error {
 	var ySum int
 	var totalCount int
 	var infantryCount int
-	var bombCount int
+	var bombGravityCount int
 	var bomberCount int
 	var fighterCount int
 	var unknownCount int
@@ -246,8 +246,8 @@ func (g *Game) Update() error {
 		switch u.name {
 		case infantry:
 			infantryCount++
-		case bomb:
-			bombCount++
+		case bombGravity:
+			bombGravityCount++
 		case bomber:
 			bomberCount++
 		case fighter:
@@ -263,7 +263,7 @@ func (g *Game) Update() error {
 	logger.log(infoLevel, mainLogic, "unit counts",
 		slog.Int("total_units", totalCount),
 		slog.Int("infantryCount", infantryCount),
-		slog.Int("bomb", bombCount),
+		slog.Int("bombGravity", bombGravityCount),
 		slog.Int("bomber", bomberCount),
 		slog.Int("fighter", fighterCount),
 		slog.Int("unknownCount", unknownCount),
