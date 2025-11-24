@@ -77,7 +77,6 @@ type unitConfig struct {
 	bombCountMax         int
 	flareCount           int
 	flareCountMax        int
-	missileCount         int
 	missileHeatCount     int
 	missileCountMax      int
 	missileHeatCountMax  int
@@ -249,7 +248,6 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.String("collisionLayers", uc.collisionLayers.String()))
 	a = append(a, slog.Bool("explodeAtTerminalPos", uc.explodeAtTerminalPos))
 	a = append(a, slog.Bool("despawnAtTerminalPos", uc.despawnAtTerminalPos))
-	a = append(a, slog.Int("missileCount", uc.missileCount))
 	a = append(a, slog.Int("missileHeatCount", uc.missileHeatCount))
 	return a
 }

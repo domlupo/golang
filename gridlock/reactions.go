@@ -11,14 +11,12 @@ type reaction struct {
 }
 
 func (u unit) isPayloadNotFull() bool {
-	return u.missileCount != u.missileCountMax ||
-		u.missileHeatCount != u.missileHeatCountMax ||
+	return u.missileHeatCount != u.missileHeatCountMax ||
 		u.flareCount != u.flareCountMax ||
 		u.bombCount != u.bombCountMax
 }
 
 func (u *unit) refillPayload() {
-	u.missileCount = u.missileCountMax
 	u.missileHeatCount = u.missileHeatCountMax
 	u.flareCount = u.flareCountMax
 	u.bombCount = u.bombCountMax

@@ -501,7 +501,6 @@ func (u unit) log() []slog.Attr {
 	a = append(a, slog.Int("spawnOrder", u.spawnOrder))
 	a = append(a, nest("sourceNode", u.sourceNode.log()))
 	a = append(a, nest("sourcePosition", u.sourcePosition.log()))
-	a = append(a, slog.Int("missileCount", u.missileCount))
 	if !u.activeTarget.equals(position{}) {
 		a = append(a, slog.Any("activeTarget", u.activeTarget.log()))
 	} else {
