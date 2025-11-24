@@ -641,10 +641,10 @@ func (u unit) draw(dc drawConfig, selected bool) {
 				false,
 			)
 		}
-	case missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic:
+	case missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, missileRadarActive:
 		dc.screen.DrawImage(dc.pngMissile, u.angleDraw(dc))
 
-		if u.selected && (u.name == missileHeatSeeking || u.name == missileAntiBallistic) {
+		if u.selected && (u.name == missileHeatSeeking || u.name == missileAntiBallistic || u.name == missileRadarActive) {
 			vector.StrokeCircle(
 				dc.screen,
 				float32(u.X)*dc.windowMultiplier,

@@ -252,7 +252,7 @@ func (s *state) processRequests() {
 
 func (s *state) analyzeTargets() {
 	for u := range s.units() {
-		if u.name == missileHeatSeeking || u.name == missileAntiBallistic {
+		if u.name == missileHeatSeeking || u.name == missileAntiBallistic || u.name == missileRadarActive {
 			s.nearestTargetWithinVision(u)
 			u.updateTargetUnit(enemyTarget, u.nearest)
 		}
@@ -261,7 +261,8 @@ func (s *state) analyzeTargets() {
 			u.name == flare ||
 			u.name == missileCruise ||
 			u.name == missileBallistic ||
-			u.name == missileAntiBallistic {
+			u.name == missileAntiBallistic ||
+			u.name == missileRadarActive {
 			u.localTargets = []position{u.globalTargets[0]}
 			u.prioritizeTargets()
 			continue

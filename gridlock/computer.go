@@ -121,7 +121,7 @@ func (c *computer) updateNodeTargets(avgUnitPos PixelPosition) {
 			if diffs[0].diff > 1 {
 				selfNode.targets = []position{{land, positions[0]}}
 			}
-		case missileHeatSeeking, missileAntiBallistic:
+		case missileHeatSeeking, missileAntiBallistic, missileRadarActive:
 			if !avgUnitPos.equals(PixelPosition{}) {
 				selfNode.targets = []position{{land, avgUnitPos}}
 			}

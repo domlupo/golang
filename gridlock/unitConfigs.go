@@ -18,6 +18,7 @@ const (
 	bomber
 	bomb
 	missileHeatSeeking
+	missileRadarActive
 	missileBallistic
 	missileCruise
 	missileAntiBallistic
@@ -38,6 +39,8 @@ func (n name) String() string {
 		return "bomb"
 	case missileHeatSeeking:
 		return "missileHeatSeeking"
+	case missileRadarActive:
+		return "missileRadarActive"
 	case missileBallistic:
 		return "missileBallistic"
 	case missileCruise:
@@ -159,6 +162,22 @@ var bombConfig = unitConfig{
 	speedFactor:      1.0,
 }
 
+var missileRadarActiveConfig = unitConfig{
+	name:                 missileRadarActive,
+	radius:               3,
+	maxHealth:            1,
+	vision:               300,
+	produceLayer:         ordnance,
+	targetLayers:         []layer{ordnance, aircraft},
+	collisionLayers:      []layer{ordnance, aircraft},
+	staticTarget:         true,
+	despawnAtTerminalPos: true,
+	speedFactor:          0.5,
+	heated:               true,
+	maxAlivePerNode:      math.MaxInt,
+	ignoreTarget:         func(u, t *unit) bool { return t.name == flare || t.name == bomb },
+}
+
 var missileHeatSeekingConfig = unitConfig{
 	name:                 missileHeatSeeking,
 	radius:               3,
@@ -170,7 +189,6 @@ var missileHeatSeekingConfig = unitConfig{
 	staticTarget:         true,
 	despawnAtTerminalPos: true,
 	heatSeeking:          true,
-	explodeRadius:        20,
 	speedFactor:          0.5,
 	heated:               true,
 	maxAlivePerNode:      math.MaxInt,

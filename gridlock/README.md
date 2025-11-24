@@ -50,6 +50,12 @@ Is there a mobile equivalent for war/4x games?
     - ballistic missiles are faster than cruise missiles
   - unrealistic unit behaviors
     - fighters used to shoot down gravity bombs which isn't realistic
+  - what missiles should nodes fire?
+    - cruise
+    - ballistic
+    - heat seeking
+    - semi active radar homing
+    - active radar homing
 
 - Implement fighter and bomber
   - Fighter should intercept:
