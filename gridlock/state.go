@@ -31,7 +31,6 @@ type state struct {
 	chaffUnits       units
 	reactiveUnits    map[id]*unit
 	requesterUnits   map[id]*unit
-	events           []event
 	step             uint64
 	developerMode    bool
 	unitSpawnTotal   int
@@ -58,6 +57,32 @@ func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, 
 	}
 
 	return &s
+}
+
+// Progress game state by a single step
+func (s *state) tick(moveUnits bool) {
+	logger.log(infoLevel, stateLogic, "tick: start", slog.Uint64("step", s.step))
+	logger.log(infoLevel, stateLogic, "tick: analyzeTargets")
+	s.analyzeTargets()
+	logger.log(infoLevel, stateLogic, "tick: processReactions")
+	s.processReactions()
+	logger.log(infoLevel, stateLogic, "tick: processRequests")
+	s.processRequests()
+	logger.log(infoLevel, stateLogic, "tick: processTerminalPositions")
+	s.processTerminalUnits()
+	logger.log(infoLevel, stateLogic, "tick: refresh")
+	s.refresh()
+	logger.log(infoLevel, stateLogic, "tick: attackUnits")
+	s.attackUnits()
+	logger.log(infoLevel, stateLogic, "tick: despawnUnits")
+	s.despawnUnits()
+	logger.log(infoLevel, stateLogic, "tick: attackNodes")
+	s.attackNodes()
+	logger.log(infoLevel, stateLogic, "tick: moveUnits")
+	if moveUnits {
+		s.moveUnits()
+	}
+	s.step++
 }
 
 func (s state) units() func(yield func(u *unit) bool) {
@@ -140,17 +165,27 @@ func (s *state) spawn(u *unit) {
 	if u.requester {
 		s.requesterUnits[u.id] = u
 	}
+
 	units := *s.unitsLayer(u.layer)
 	if _, ok := units[u.PixelPosition]; !ok {
 		units[u.PixelPosition] = u
 	} else {
 		panic(fmt.Sprintf("Cannot spawn unit at %s since it is already occupied.", u.PixelPosition.log()))
 	}
+
+	if u.terminalStepDelay != 0 {
+		u.terminalStep = s.step + u.terminalStepDelay
+	} else {
+		u.terminalStep = math.MaxUint64
+	}
 	u.spawnOrder = s.unitSpawnTotal
 	s.unitSpawnTotal++
 }
 
 func (s *state) spawnRequest(r request) bool {
+	if r.spawn.terminalStepDelay != 0 {
+		r.spawn.terminalStep = s.step + r.spawn.terminalStepDelay
+	}
 	units := *s.unitsLayer(r.spawn.layer)
 	if _, ok := units[r.spawn.PixelPosition]; ok {
 		return false
@@ -205,22 +240,6 @@ func (s *state) refresh() {
 	for u := range s.units() {
 		u.refresh()
 	}
-}
-
-func (s *state) processEvents() {
-	events := []event{}
-	for _, e := range s.events {
-		switch {
-		case e.step < s.step:
-			panic(fmt.Sprintf("cannot process an event with step %d which is less than state step %d", e.step, s.step))
-		case e.step == s.step:
-			e.do()
-		default:
-			events = append(events, e)
-		}
-	}
-	s.events = events
-	s.step++
 }
 
 func (s *state) processReactions() {
@@ -690,13 +709,13 @@ func (s state) collidesWithUnitLayer(u unit, p position, linkedList *unit) (posi
 }
 func (s *state) processTerminalUnits() {
 	for u := range s.unitsAir() {
-		if !u.terminal() {
+		if !u.terminal(s.step) {
 			continue
 		}
-		if u.explodeAtTerminalPos {
+		if u.explodeWhenTerminal {
 			s.explode(u)
 		}
-		if u.despawnAtTerminalPos {
+		if u.despawnWhenTerminal {
 			u.health = 0
 		}
 	}

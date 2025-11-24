@@ -156,30 +156,8 @@ func (g *Game) Update() error {
 		if g.slowTick {
 			logger.log(infoLevel, devTool, "slowTick")
 		}
-
-		logger.log(debugLevel, mainLogic, "start state automated steps")
-		logger.log(debugLevel, mainLogic, "analyzeTargets")
-		g.gameState.analyzeTargets()
-		logger.log(debugLevel, mainLogic, "processEvents")
-		g.gameState.processEvents()
-		logger.log(debugLevel, mainLogic, "processReactions")
-		g.gameState.processReactions()
-		logger.log(debugLevel, mainLogic, "processRequests")
-		g.gameState.processRequests()
-		logger.log(debugLevel, mainLogic, "processTerminalPositions")
-		g.gameState.processTerminalUnits()
-		logger.log(debugLevel, mainLogic, "refresh")
-		g.gameState.refresh()
-		logger.log(debugLevel, mainLogic, "attackUnits")
-		g.gameState.attackUnits()
-		logger.log(debugLevel, mainLogic, "despawnUnits")
-		g.gameState.despawnUnits()
-		logger.log(debugLevel, mainLogic, "attackNodes")
-		g.gameState.attackNodes()
-		logger.log(debugLevel, mainLogic, "moveUnits")
-		if g.moveUnits {
-			g.gameState.moveUnits()
-		}
+		g.gameState.tick(g.moveUnits)
+		// TODO: move this into g.gameState.tick once produce uses step delay rather than duration delay
 		logger.log(debugLevel, mainLogic, "produceUnits")
 		if g.produceWait < g.produceInterval {
 			g.produceWait = g.produceWait + g.currentTime.Sub(g.priorTime)

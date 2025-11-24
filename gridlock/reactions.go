@@ -14,7 +14,8 @@ func (u unit) isPayloadNotFull() bool {
 	return u.missileHeatSeekingCount != u.missileHeatSeekingCountMax ||
 		u.flareCount != u.flareCountMax ||
 		u.bombGravityCount != u.bombGravityCountMax ||
-		u.missileRadarActiveCount != u.missileRadarActiveCountMax
+		u.missileRadarActiveCount != u.missileRadarActiveCountMax ||
+		u.chaffCount != u.chaffCountMax
 }
 
 func (u *unit) refillPayload() {
@@ -22,6 +23,7 @@ func (u *unit) refillPayload() {
 	u.flareCount = u.flareCountMax
 	u.bombGravityCount = u.bombGravityCountMax
 	u.missileRadarActiveCount = u.missileRadarActiveCountMax
+	u.chaffCount = u.chaffCountMax
 }
 
 // Returns the reactions for the passed unit name.
@@ -42,24 +44,42 @@ func reactions(n name) []reaction {
 				delay: bomberConfig.reloadPayloadDelay,
 			},
 			{
-				when: func(bomber *unit) bool { return bomber.nearest != nil },
+				when: func(bomber *unit) bool {
+					return bomber.nearest != nil && bomber.nearest.name == missileHeatSeeking && bomber.flareCount > 0
+				},
 				do: func(bomber *unit) {
-					if bomber.nearest.name == missileHeatSeeking {
-						flare := newUnit(
-							flareConfig,
-							position{layer: flareConfig.produceLayer, PixelPosition: bomber.PixelPosition},
-							bomber.player,
-							[]position{bomber.nearest.position},
-							[]action{},
-							GridPosition{},
-							bomber.selected)
-						bomber.requests = append(bomber.requests, request{spawn: &flare})
-						bomber.flareCount--
-					}
-
+					flare := newUnit(
+						flareConfig,
+						position{layer: flareConfig.produceLayer, PixelPosition: bomber.PixelPosition},
+						bomber.player,
+						[]position{bomber.nearest.position},
+						[]action{},
+						GridPosition{},
+						bomber.selected)
+					bomber.requests = append(bomber.requests, request{spawn: &flare})
+					bomber.flareCount--
 				},
 				delay: bomberConfig.fireOrdnanceDelay,
-			}}
+			},
+			{
+				when: func(bomber *unit) bool {
+					return bomber.nearest != nil && bomber.nearest.name == missileRadarActive && bomber.chaffCount > 0
+				},
+				do: func(bomber *unit) {
+					chaff := newUnit(
+						chaffConfig,
+						position{layer: chaffConfig.produceLayer, PixelPosition: bomber.PixelPosition},
+						bomber.player,
+						[]position{bomber.position},
+						[]action{},
+						GridPosition{},
+						bomber.selected)
+					bomber.requests = append(bomber.requests, request{spawn: &chaff})
+					bomber.chaffCount--
+				},
+				delay: bomberConfig.fireOrdnanceDelay,
+			},
+		}
 	case fighter:
 		return []reaction{
 			{

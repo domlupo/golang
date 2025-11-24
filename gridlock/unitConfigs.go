@@ -68,10 +68,12 @@ type unitConfig struct {
 	staticTarget               bool
 	targetLayers               layers
 	collisionLayers            layers
-	despawnAtTerminalPos       bool
-	explodeAtTerminalPos       bool
 	explodeRadius              int
-	eventStepDelay             uint64
+	terminalWhenMoveDone       bool
+	terminalStepDelay          uint64
+	terminalStep               uint64
+	explodeWhenTerminal        bool
+	despawnWhenTerminal        bool
 	reloadPayloadDelay         uint64
 	maxAlivePerNode            int
 	speedFactor                float64
@@ -81,6 +83,8 @@ type unitConfig struct {
 	requester                  bool
 	bombGravityCount           int
 	bombGravityCountMax        int
+	chaffCount                 int
+	chaffCountMax              int
 	flareCount                 int
 	flareCountMax              int
 	missileHeatSeekingCount    int
@@ -145,6 +149,7 @@ var bomberConfig = unitConfig{
 	maxAlivePerNode:     1,
 	bombGravityCountMax: 4,
 	flareCountMax:       1000,
+	chaffCountMax:       1000,
 	fireOrdnanceDelay:   30,
 	speedFactor:         1.0,
 	heated:              true,
@@ -154,16 +159,17 @@ var bomberConfig = unitConfig{
 }
 
 var bombGravityConfig = unitConfig{
-	name:            bombGravity,
-	radius:          4,
-	maxHealth:       1,
-	produceLayer:    lBombGravity,
-	targetLayers:    []layer{lLand},
-	collisionLayers: []layer{lBombGravity},
-	staticTarget:    true,
-	explodeRadius:   20,
-	eventStepDelay:  300,
-	maxAlivePerNode: math.MaxInt,
+	name:                bombGravity,
+	radius:              4,
+	maxHealth:           1,
+	produceLayer:        lBombGravity,
+	targetLayers:        []layer{lLand},
+	collisionLayers:     []layer{lBombGravity},
+	staticTarget:        true,
+	explodeRadius:       20,
+	terminalStepDelay:   300,
+	maxAlivePerNode:     math.MaxInt,
+	explodeWhenTerminal: true,
 }
 
 var missileRadarActiveConfig = unitConfig{
@@ -175,11 +181,12 @@ var missileRadarActiveConfig = unitConfig{
 	targetLayers:         []layer{lOrdnance, lAircraft},
 	collisionLayers:      []layer{lOrdnance, lAircraft},
 	staticTarget:         true,
-	despawnAtTerminalPos: true,
+	despawnWhenTerminal:  true,
 	speedFactor:          0.5,
 	heated:               true,
 	maxAlivePerNode:      math.MaxInt,
 	ignoreTarget:         func(t *unit) bool { return t.name == flare },
+	terminalWhenMoveDone: true,
 }
 
 var missileHeatSeekingConfig = unitConfig{
@@ -191,12 +198,13 @@ var missileHeatSeekingConfig = unitConfig{
 	targetLayers:         []layer{lOrdnance, lAircraft},
 	collisionLayers:      []layer{lOrdnance, lAircraft},
 	staticTarget:         true,
-	despawnAtTerminalPos: true,
+	despawnWhenTerminal:  true,
 	heatSeeking:          true,
 	speedFactor:          0.5,
 	heated:               true,
 	maxAlivePerNode:      math.MaxInt,
 	ignoreTarget:         func(t *unit) bool { return !t.heated },
+	terminalWhenMoveDone: true,
 }
 
 var missileCruiseConfig = unitConfig{
@@ -207,11 +215,12 @@ var missileCruiseConfig = unitConfig{
 	produceLayer:         lOrdnance,
 	collisionLayers:      []layer{lOrdnance},
 	staticTarget:         true,
-	explodeAtTerminalPos: true,
+	explodeWhenTerminal:  true,
 	explodeRadius:        20,
 	speedFactor:          1,
 	maxAlivePerNode:      math.MaxInt,
 	heated:               true,
+	terminalWhenMoveDone: true,
 }
 
 var missileBallisticConfig = unitConfig{
@@ -222,10 +231,11 @@ var missileBallisticConfig = unitConfig{
 	produceLayer:         lBallistic,
 	collisionLayers:      []layer{lBallistic},
 	staticTarget:         true,
-	explodeAtTerminalPos: true,
+	explodeWhenTerminal:  true,
 	explodeRadius:        20,
 	speedFactor:          1,
 	maxAlivePerNode:      math.MaxInt,
+	terminalWhenMoveDone: true,
 }
 
 var missileAntiBallisticConfig = unitConfig{
@@ -237,10 +247,11 @@ var missileAntiBallisticConfig = unitConfig{
 	targetLayers:         []layer{lBallistic},
 	collisionLayers:      []layer{lBallistic},
 	staticTarget:         true,
-	despawnAtTerminalPos: true,
+	despawnWhenTerminal:  true,
 	explodeRadius:        20,
 	speedFactor:          1,
 	maxAlivePerNode:      math.MaxInt,
+	terminalWhenMoveDone: true,
 }
 
 var flareConfig = unitConfig{
@@ -250,20 +261,22 @@ var flareConfig = unitConfig{
 	produceLayer:         lOrdnance,
 	collisionLayers:      []layer{lOrdnance},
 	staticTarget:         true,
-	despawnAtTerminalPos: true,
+	despawnWhenTerminal:  true,
 	speedFactor:          0.5,
 	heated:               true,
+	terminalWhenMoveDone: true,
 }
 
 var chaffConfig = unitConfig{
-	name:            chaff,
-	radius:          100,
-	maxHealth:       1,
-	produceLayer:    lChaff,
-	collisionLayers: []layer{lChaff},
-	eventStepDelay:  300,
-	staticTarget:    true,
-	maxAlivePerNode: math.MaxInt,
+	name:                chaff,
+	radius:              40,
+	maxHealth:           1,
+	produceLayer:        lChaff,
+	collisionLayers:     []layer{lChaff},
+	staticTarget:        true,
+	maxAlivePerNode:     math.MaxInt,
+	terminalStepDelay:   300,
+	despawnWhenTerminal: true,
 }
 
 func (uc unitConfig) log() []slog.Attr {
@@ -279,8 +292,10 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.Bool("heatSeeking", uc.heatSeeking))
 	a = append(a, slog.String("targetLayers", uc.targetLayers.String()))
 	a = append(a, slog.String("collisionLayers", uc.collisionLayers.String()))
-	a = append(a, slog.Bool("explodeAtTerminalPos", uc.explodeAtTerminalPos))
-	a = append(a, slog.Bool("despawnAtTerminalPos", uc.despawnAtTerminalPos))
+	a = append(a, slog.Bool("explodeWhenTerminal", uc.explodeWhenTerminal))
+	a = append(a, slog.Bool("despawnWhenTerminal", uc.despawnWhenTerminal))
 	a = append(a, slog.Int("missileHeatSeekingCount", uc.missileHeatSeekingCount))
+	a = append(a, slog.Uint64("terminalStep", uc.terminalStep))
+	a = append(a, slog.Uint64("terminalStepDelay", uc.terminalStepDelay))
 	return a
 }

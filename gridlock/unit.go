@@ -148,11 +148,13 @@ func newUnit(
 	return u
 }
 
-func (u unit) terminal() bool {
-	if u.moveDone && (u.despawnAtTerminalPos || u.explodeAtTerminalPos) {
+func (u unit) terminal(step uint64) bool {
+	if u.moveDone && u.terminalWhenMoveDone {
 		return true
 	}
-
+	if step >= u.terminalStep {
+		return true
+	}
 	return false
 }
 
