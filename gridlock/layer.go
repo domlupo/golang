@@ -18,6 +18,7 @@ const (
 	lAircraft
 	lBallistic
 	lBombGravity
+	lChaff
 )
 
 func (l layer) String() string {
@@ -34,6 +35,8 @@ func (l layer) String() string {
 		return "ballistic"
 	case lBombGravity:
 		return "bombGravity"
+	case lChaff:
+		return "chaff"
 	default:
 		panic(fmt.Sprintf("Cannot String layer: %d", l))
 	}

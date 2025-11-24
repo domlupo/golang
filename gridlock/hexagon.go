@@ -19,6 +19,7 @@ type hexagon struct {
 	aircraft    hexLayer
 	ballistic   hexLayer
 	bombGravity hexLayer
+	chaff       hexLayer
 	selected    bool
 }
 
@@ -38,6 +39,7 @@ func (h hexagon) log() []slog.Attr {
 	a = append(a, nest("aircraft", h.aircraft.log()))
 	a = append(a, nest("ballistic", h.ballistic.log()))
 	a = append(a, nest("bombGravity", h.bombGravity.log()))
+	a = append(a, nest("chaff", h.chaff.log()))
 	return a
 }
 
@@ -66,6 +68,8 @@ func (h *hexagon) get(l layer) *hexLayer {
 		return &h.ballistic
 	case lBombGravity:
 		return &h.bombGravity
+	case lChaff:
+		return &h.chaff
 	default:
 		panic(fmt.Sprintf("get: unknown layer %d", l))
 	}

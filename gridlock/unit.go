@@ -657,6 +657,16 @@ func (u unit) draw(dc drawConfig, selected bool) {
 		}
 	case flare:
 		dc.screen.DrawImage(dc.pngFlare, u.angleDraw(dc))
+	case chaff:
+		vector.StrokeCircle(
+			dc.screen,
+			float32(u.X)*dc.windowMultiplier,
+			float32(u.Y)*dc.windowMultiplier,
+			float32(u.radius)*dc.windowMultiplier,
+			float32(dc.defaultLineWidth)*dc.windowMultiplier,
+			unitColor,
+			false,
+		)
 	case infantry:
 		var color color.Color
 		switch u.player {

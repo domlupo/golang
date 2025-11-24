@@ -23,6 +23,7 @@ const (
 	missileCruise
 	missileAntiBallistic
 	flare
+	chaff
 )
 
 func (n name) String() string {
@@ -49,6 +50,8 @@ func (n name) String() string {
 		return "missileAntiBallistic"
 	case flare:
 		return "flare"
+	case chaff:
+		return "chaff"
 	default:
 		panic(fmt.Sprintf("String name is unknown %d", n))
 	}
@@ -68,7 +71,7 @@ type unitConfig struct {
 	despawnAtTerminalPos       bool
 	explodeAtTerminalPos       bool
 	explodeRadius              int
-	explodeStepDelay           uint64
+	eventStepDelay             uint64
 	reloadPayloadDelay         uint64
 	maxAlivePerNode            int
 	speedFactor                float64
@@ -151,17 +154,16 @@ var bomberConfig = unitConfig{
 }
 
 var bombGravityConfig = unitConfig{
-	name:             bombGravity,
-	radius:           4,
-	maxHealth:        1,
-	produceLayer:     lBombGravity,
-	targetLayers:     []layer{lLand},
-	collisionLayers:  []layer{lBombGravity},
-	staticTarget:     true,
-	explodeRadius:    20,
-	explodeStepDelay: 300,
-	maxAlivePerNode:  math.MaxInt,
-	speedFactor:      1.0,
+	name:            bombGravity,
+	radius:          4,
+	maxHealth:       1,
+	produceLayer:    lBombGravity,
+	targetLayers:    []layer{lLand},
+	collisionLayers: []layer{lBombGravity},
+	staticTarget:    true,
+	explodeRadius:   20,
+	eventStepDelay:  300,
+	maxAlivePerNode: math.MaxInt,
 }
 
 var missileRadarActiveConfig = unitConfig{
@@ -251,6 +253,17 @@ var flareConfig = unitConfig{
 	despawnAtTerminalPos: true,
 	speedFactor:          0.5,
 	heated:               true,
+}
+
+var chaffConfig = unitConfig{
+	name:            chaff,
+	radius:          100,
+	maxHealth:       1,
+	produceLayer:    lChaff,
+	collisionLayers: []layer{lChaff},
+	eventStepDelay:  300,
+	staticTarget:    true,
+	maxAlivePerNode: math.MaxInt,
 }
 
 func (uc unitConfig) log() []slog.Attr {
