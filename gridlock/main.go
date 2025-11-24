@@ -221,7 +221,7 @@ func (g *Game) Update() error {
 	if g.rightMouseClicked {
 		filter := []player{pNeutral}
 		filter = append(filter, g.computers.active()...)
-		g.gameState.updateTargets(position{land, pixelPos}, filter)
+		g.gameState.updateTargets(position{lLand, pixelPos}, filter)
 	}
 
 	// update game state after player actions

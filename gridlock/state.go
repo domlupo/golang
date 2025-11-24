@@ -94,13 +94,13 @@ func (s state) unitsAir() func(yield func(u *unit) bool) {
 func (s state) unitsLayer(l layer) *units {
 	var units units
 	switch l {
-	case land:
+	case lLand:
 		units = s.landUnits
-	case ordnance:
+	case lOrdnance:
 		units = s.ordanceUnits
-	case aircraft:
+	case lAircraft:
 		units = s.aircraftUnits
-	case ballistic:
+	case lBallistic:
 		units = s.ballisticUnits
 	default:
 		panic(fmt.Sprintf("layerUnits: unknown layer %d", l))
@@ -155,19 +155,7 @@ func (s *state) moveUnit(u *unit, m Move) {
 	}
 	s.deleteUnit(u.position)
 	m.confirm()
-	var units units
-	switch m.layer {
-	case land:
-		units = s.landUnits
-	case ordnance:
-		units = s.ordanceUnits
-	case aircraft:
-		units = s.aircraftUnits
-	case ballistic:
-		units = s.ballisticUnits
-	default:
-		panic(fmt.Sprintf("moveUnit: unknown layer %d", m.layer))
-	}
+	units := *s.unitsLayer(m.layer)
 	if o, ok := units[u.PixelPosition]; ok {
 		panic(fmt.Sprintf("moveUnit: position for unit occupied by other unit. unit: %s other: %s", u.log(), o.log()))
 	}
@@ -176,13 +164,13 @@ func (s *state) moveUnit(u *unit, m Move) {
 
 func (s *state) deleteUnit(p position) {
 	switch p.layer {
-	case land:
+	case lLand:
 		delete(s.landUnits, p.PixelPosition)
-	case ordnance:
+	case lOrdnance:
 		delete(s.ordanceUnits, p.PixelPosition)
-	case aircraft:
+	case lAircraft:
 		delete(s.aircraftUnits, p.PixelPosition)
-	case ballistic:
+	case lBallistic:
 		delete(s.ballisticUnits, p.PixelPosition)
 	default:
 		panic(fmt.Sprintf("deleteUnit: unknown layer %d", p.layer))
@@ -437,7 +425,7 @@ func (s *state) moveUnits() {
 
 		var move Move
 		for _, m := range moves {
-			if u.layer != land {
+			if u.layer != lLand {
 				move = m
 				break
 			}
@@ -599,7 +587,7 @@ func (s state) nearestTargetWithinLayer(u unit, linkedList *unit) (*unit, int) {
 				d = distance
 				t = current
 			}
-			if current.layer == ordnance || current.layer == aircraft {
+			if current.layer != lLand {
 				d = distance
 				t = current
 			}
@@ -988,7 +976,7 @@ func (s *state) updateTargets(target position, filter []player) {
 		} else if n.singleSelect {
 			// TODO: Fix this so air units are selected, need a multi layer iter
 			for _, h := range n.control {
-				end := h.get(land).linkedList
+				end := h.get(lLand).linkedList
 				current := end
 				var checkOccurred bool
 				for {
@@ -1008,7 +996,7 @@ func (s *state) updateTargets(target position, filter []player) {
 			}
 		} else if n.multiSelect {
 			// TODO: Fix this so air units are selected, need a multi layer iter
-			end := s.hexagons[n.gridPos].get(land).linkedList
+			end := s.hexagons[n.gridPos].get(lLand).linkedList
 			current := end
 			var checkOccurred bool
 			for {

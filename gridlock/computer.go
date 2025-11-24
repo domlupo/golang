@@ -86,7 +86,7 @@ func (c *computer) updateNodeTargets(avgUnitPos PixelPosition) {
 		panic(fmt.Sprintf("updateNodeTargets: unknown player: %d", c.player))
 	}
 
-	diffs := c.s.hexagons.maxUnitDifferential(opponent, land)
+	diffs := c.s.hexagons.maxUnitDifferential(opponent, lLand)
 	validDiffsIndex := -1
 	var positions []PixelPosition
 	for _, d := range diffs {
@@ -115,15 +115,15 @@ func (c *computer) updateNodeTargets(avgUnitPos PixelPosition) {
 			panic(fmt.Sprintf("updateNodeTargets: cannot get node pixel position %s", nP.log()))
 		}
 		selfNode := n
-		selfNode.targets = []position{{land, nP}}
+		selfNode.targets = []position{{lLand, nP}}
 		switch n.unitConfig.name {
 		case missileCruise, missileBallistic:
 			if diffs[0].diff > 1 {
-				selfNode.targets = []position{{land, positions[0]}}
+				selfNode.targets = []position{{lLand, positions[0]}}
 			}
 		case missileHeatSeeking, missileAntiBallistic, missileRadarActive:
 			if !avgUnitPos.equals(PixelPosition{}) {
-				selfNode.targets = []position{{land, avgUnitPos}}
+				selfNode.targets = []position{{lLand, avgUnitPos}}
 			}
 		case fighter:
 			if fighterConfig.bombCountMax <= validDiffsIndex+1 {
@@ -170,7 +170,7 @@ func (c *computer) updateForNodeCapture() {
 					panic("could not get pixel pos for update computer node targets")
 				}
 
-				selfNode.targets = []position{{land, targetPixelPos}}
+				selfNode.targets = []position{{lLand, targetPixelPos}}
 			}
 
 		}
@@ -204,7 +204,7 @@ func (c *computer) updateForNodeCapture() {
 
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
-				u.updateTarget(globalTarget, position{land, nPixelPos})
+				u.updateTarget(globalTarget, position{lLand, nPixelPos})
 			}
 		}
 	}
@@ -215,14 +215,14 @@ func (c *computer) planBombs(n *node, targets []PixelPosition) {
 	n.actions = []action{}
 
 	for _, t := range targets {
-		p := position{aircraft, t}
+		p := position{lAircraft, t}
 		n.targets = append(n.targets, p)
 		n.actions = append(n.actions, action{pos: p, do: func() {
 			u := newUnit(
 				bombConfig,
-				position{layer: ordnance, PixelPosition: p.PixelPosition},
+				position{layer: lOrdnance, PixelPosition: p.PixelPosition},
 				c.player,
-				[]position{{layer: land, PixelPosition: p.PixelPosition}},
+				[]position{{layer: lLand, PixelPosition: p.PixelPosition}},
 				[]action{},
 				GridPosition{},
 				false)

@@ -54,13 +54,13 @@ func (hl hexLayer) log() []slog.Attr {
 
 func (h *hexagon) get(l layer) *hexLayer {
 	switch l {
-	case land:
+	case lLand:
 		return &h.land
-	case ordnance:
+	case lOrdnance:
 		return &h.ordnance
-	case aircraft:
+	case lAircraft:
 		return &h.aircraft
-	case ballistic:
+	case lBallistic:
 		return &h.ballistic
 	default:
 		panic(fmt.Sprintf("get: unknown layer %d", l))

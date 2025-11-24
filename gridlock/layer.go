@@ -12,24 +12,24 @@ import (
 type layer int
 
 const (
-	noLayer layer = iota
-	land
-	ordnance
-	aircraft
-	ballistic
+	lNone layer = iota
+	lLand
+	lOrdnance
+	lAircraft
+	lBallistic
 )
 
 func (l layer) String() string {
 	switch l {
-	case noLayer:
+	case lNone:
 		return "noLayer"
-	case land:
+	case lLand:
 		return "land"
-	case ordnance:
+	case lOrdnance:
 		return "ordnance"
-	case aircraft:
+	case lAircraft:
 		return "aircraft"
-	case ballistic:
+	case lBallistic:
 		return "ballistic"
 	default:
 		panic(fmt.Sprintf("Cannot String layer: %d", l))
