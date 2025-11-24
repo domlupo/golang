@@ -41,6 +41,9 @@ Is there a mobile equivalent for war/4x games?
   - art
   - no sound
 
+- Determine if produceUnits should use step count rather than interval. I think yes so game is more cohesive.
+  Right now, enabling high CPU debugging by (press w) will cause more units to spawn over a typical tick rate.
+
 - Debug hangs. It seems to occur when fighter and bomber collide in air.
 
 - Verify bombs don't collide with anything. Specifically ordnance layer.
