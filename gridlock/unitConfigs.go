@@ -82,10 +82,13 @@ type unitConfig struct {
 	flareCountMax              int
 	missileHeatSeekingCount    int
 	missileHeatSeekingCountMax int
+	missileRadarActiveCount    int
+	missileRadarActiveCountMax int
 	fireOrdnanceDelay          uint64
 	heated                     bool
 	heatSeeking                bool
-	ignoreTarget               func(u, t *unit) bool
+	ignore                     func(u, t *unit) bool
+	ignoreTarget               func(t *unit) bool
 }
 
 // Note: unit radius set to an odd number is better for testing due to division bugs
@@ -118,10 +121,11 @@ var fighterConfig = unitConfig{
 	speedFactor:                1.0,
 	reactive:                   true,
 	requester:                  true,
-	missileHeatSeekingCountMax: 1000,
+	missileHeatSeekingCountMax: 0,
+	missileRadarActiveCountMax: 1000,
 	fireOrdnanceDelay:          50,
 	heated:                     true,
-	ignoreTarget: func(u, t *unit) bool {
+	ignoreTarget: func(t *unit) bool {
 		return t.name == bomb || t.name == flare
 	},
 }
@@ -143,7 +147,7 @@ var bomberConfig = unitConfig{
 	heated:            true,
 	reactive:          true,
 	requester:         true,
-	ignoreTarget:      func(u, t *unit) bool { return slices.Contains(u.skipTargets, t.id) },
+	ignore:            func(u, t *unit) bool { return slices.Contains(u.skipTargets, t.id) },
 }
 
 var bombConfig = unitConfig{
@@ -173,7 +177,7 @@ var missileRadarActiveConfig = unitConfig{
 	speedFactor:          0.5,
 	heated:               true,
 	maxAlivePerNode:      math.MaxInt,
-	ignoreTarget:         func(u, t *unit) bool { return t.name == flare || t.name == bomb },
+	ignoreTarget:         func(t *unit) bool { return t.name == bomb || t.name == flare },
 }
 
 var missileHeatSeekingConfig = unitConfig{
@@ -190,7 +194,7 @@ var missileHeatSeekingConfig = unitConfig{
 	speedFactor:          0.5,
 	heated:               true,
 	maxAlivePerNode:      math.MaxInt,
-	ignoreTarget:         func(u, t *unit) bool { return !t.heated },
+	ignoreTarget:         func(t *unit) bool { return !t.heated },
 }
 
 var missileCruiseConfig = unitConfig{

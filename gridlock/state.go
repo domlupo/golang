@@ -581,12 +581,9 @@ func (s state) nearestTargetWithinLayer(u unit, linkedList *unit) (*unit, int) {
 
 		checkOccurred = true
 
-		if u.ignoreTarget != nil && u.ignoreTarget(&u, current) {
-			current = current.next
-			continue
-		}
-
-		if u.player == current.player {
+		if u.player == current.player ||
+			u.ignoreTarget != nil && u.ignoreTarget(current) ||
+			u.ignore != nil && u.ignore(&u, current) {
 			current = current.next
 			continue
 		}

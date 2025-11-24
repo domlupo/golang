@@ -13,13 +13,15 @@ type reaction struct {
 func (u unit) isPayloadNotFull() bool {
 	return u.missileHeatSeekingCount != u.missileHeatSeekingCountMax ||
 		u.flareCount != u.flareCountMax ||
-		u.bombCount != u.bombCountMax
+		u.bombCount != u.bombCountMax ||
+		u.missileRadarActiveCount != u.missileRadarActiveCountMax
 }
 
 func (u *unit) refillPayload() {
 	u.missileHeatSeekingCount = u.missileHeatSeekingCountMax
 	u.flareCount = u.flareCountMax
 	u.bombCount = u.bombCountMax
+	u.missileRadarActiveCount = u.missileRadarActiveCountMax
 }
 
 // Returns the reactions for the passed unit name.
@@ -71,6 +73,8 @@ func reactions(n name) []reaction {
 					fighter.refillPayload()
 					// TODO: when a missile terminates, it should remove the target from skip targets
 					// rather than do this during restock. This should be an upgrade.
+					// Also, multiple ordnance might make this complex. Just because a single ordnance skips
+					// a target does not mean others should or can this be avoided?
 					fighter.skipTargets = []id{}
 				},
 				delay: fighterConfig.reloadPayloadDelay,
@@ -78,22 +82,27 @@ func reactions(n name) []reaction {
 			{
 				when: func(fighter *unit) bool { return fighter.nearest != nil },
 				do: func(fighter *unit) {
-					var spawn unit
+					var uc unitConfig
+					// TODO: determine fighter missile preference? Configurable by player?
+					// Arbitrarily set radar to have higher priority than heat seeking.
 					switch {
-					case fighter.missileHeatSeekingCount > 0 &&
-						(fighter.nearest.name == bomber || fighter.nearest.name == missileCruise):
+					case fighter.missileRadarActiveCount > 0 && !missileRadarActiveConfig.ignoreTarget(fighter.nearest):
+						fighter.missileRadarActiveCount--
+						uc = missileRadarActiveConfig
+					case fighter.missileHeatSeekingCount > 0 && !missileHeatSeekingConfig.ignoreTarget(fighter.nearest):
 						fighter.missileHeatSeekingCount--
-						spawn = newUnit(
-							missileHeatSeekingConfig,
-							position{layer: missileHeatSeekingConfig.produceLayer, PixelPosition: fighter.PixelPosition},
-							fighter.player,
-							[]position{fighter.nearest.position},
-							[]action{},
-							GridPosition{},
-							fighter.selected)
+						uc = missileHeatSeekingConfig
 					default:
 						return
 					}
+					spawn := newUnit(
+						uc,
+						position{layer: uc.produceLayer, PixelPosition: fighter.PixelPosition},
+						fighter.player,
+						[]position{fighter.nearest.position},
+						[]action{},
+						GridPosition{},
+						fighter.selected)
 					spawn.sourceUnit = fighter.id
 					fighter.requests = append(fighter.requests, request{spawn: &spawn})
 				},
