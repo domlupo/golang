@@ -11,13 +11,13 @@ type reaction struct {
 }
 
 func (u unit) isPayloadNotFull() bool {
-	return u.missileHeatCount != u.missileHeatCountMax ||
+	return u.missileHeatSeekingCount != u.missileHeatSeekingCountMax ||
 		u.flareCount != u.flareCountMax ||
 		u.bombCount != u.bombCountMax
 }
 
 func (u *unit) refillPayload() {
-	u.missileHeatCount = u.missileHeatCountMax
+	u.missileHeatSeekingCount = u.missileHeatSeekingCountMax
 	u.flareCount = u.flareCountMax
 	u.bombCount = u.bombCountMax
 }
@@ -80,9 +80,9 @@ func reactions(n name) []reaction {
 				do: func(fighter *unit) {
 					var spawn unit
 					switch {
-					case fighter.missileHeatCount > 0 &&
+					case fighter.missileHeatSeekingCount > 0 &&
 						(fighter.nearest.name == bomber || fighter.nearest.name == missileCruise):
-						fighter.missileHeatCount--
+						fighter.missileHeatSeekingCount--
 						spawn = newUnit(
 							missileHeatSeekingConfig,
 							position{layer: missileHeatSeekingConfig.produceLayer, PixelPosition: fighter.PixelPosition},

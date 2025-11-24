@@ -55,38 +55,37 @@ func (n name) String() string {
 }
 
 type unitConfig struct {
-	name                 name
-	radius               int
-	maxHealth            int
-	attack               int
-	vision               int
-	reach                int
-	produceLayer         layer
-	staticTarget         bool
-	targetLayers         layers
-	collisionLayers      layers
-	despawnAtTerminalPos bool
-	explodeAtTerminalPos bool
-	explodeRadius        int
-	explodeStepDelay     uint64
-	reloadPayloadDelay   uint64
-	maxAlivePerNode      int
-	speedFactor          float64
-	reactions            []reaction
-	reactive             bool
-	requests             []request
-	requester            bool
-	bombCount            int
-	bombCountMax         int
-	flareCount           int
-	flareCountMax        int
-	missileHeatCount     int
-	missileCountMax      int
-	missileHeatCountMax  int
-	fireOrdnanceDelay    uint64
-	heated               bool
-	heatSeeking          bool
-	ignoreTarget         func(u, t *unit) bool
+	name                       name
+	radius                     int
+	maxHealth                  int
+	attack                     int
+	vision                     int
+	reach                      int
+	produceLayer               layer
+	staticTarget               bool
+	targetLayers               layers
+	collisionLayers            layers
+	despawnAtTerminalPos       bool
+	explodeAtTerminalPos       bool
+	explodeRadius              int
+	explodeStepDelay           uint64
+	reloadPayloadDelay         uint64
+	maxAlivePerNode            int
+	speedFactor                float64
+	reactions                  []reaction
+	reactive                   bool
+	requests                   []request
+	requester                  bool
+	bombCount                  int
+	bombCountMax               int
+	flareCount                 int
+	flareCountMax              int
+	missileHeatSeekingCount    int
+	missileHeatSeekingCountMax int
+	fireOrdnanceDelay          uint64
+	heated                     bool
+	heatSeeking                bool
+	ignoreTarget               func(u, t *unit) bool
 }
 
 // Note: unit radius set to an odd number is better for testing due to division bugs
@@ -106,23 +105,22 @@ var infantryConfig = unitConfig{
 }
 
 var fighterConfig = unitConfig{
-	name:                fighter,
-	radius:              8,
-	maxHealth:           1,
-	vision:              800,
-	produceLayer:        aircraft,
-	targetLayers:        []layer{ordnance, aircraft},
-	collisionLayers:     []layer{aircraft},
-	explodeRadius:       100,
-	maxAlivePerNode:     1,
-	bombCountMax:        1,
-	speedFactor:         1.0,
-	reactive:            true,
-	requester:           true,
-	missileCountMax:     10,
-	missileHeatCountMax: 1000,
-	fireOrdnanceDelay:   50,
-	heated:              true,
+	name:                       fighter,
+	radius:                     8,
+	maxHealth:                  1,
+	vision:                     800,
+	produceLayer:               aircraft,
+	targetLayers:               []layer{ordnance, aircraft},
+	collisionLayers:            []layer{aircraft},
+	explodeRadius:              100,
+	maxAlivePerNode:            1,
+	bombCountMax:               1,
+	speedFactor:                1.0,
+	reactive:                   true,
+	requester:                  true,
+	missileHeatSeekingCountMax: 1000,
+	fireOrdnanceDelay:          50,
+	heated:                     true,
 	ignoreTarget: func(u, t *unit) bool {
 		return t.name == bomb || t.name == flare
 	},
@@ -266,6 +264,6 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.String("collisionLayers", uc.collisionLayers.String()))
 	a = append(a, slog.Bool("explodeAtTerminalPos", uc.explodeAtTerminalPos))
 	a = append(a, slog.Bool("despawnAtTerminalPos", uc.despawnAtTerminalPos))
-	a = append(a, slog.Int("missileHeatCount", uc.missileHeatCount))
+	a = append(a, slog.Int("missileHeatSeekingCount", uc.missileHeatSeekingCount))
 	return a
 }
