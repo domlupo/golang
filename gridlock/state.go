@@ -27,6 +27,7 @@ type state struct {
 	ordanceUnits     units
 	aircraftUnits    units
 	ballisticUnits   units
+	bombGravityUnits units
 	reactiveUnits    map[id]*unit
 	requesterUnits   map[id]*unit
 	events           []event
@@ -38,19 +39,20 @@ type state struct {
 
 func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, g grid, developerMode bool) *state {
 	s := state{
-		g:              g,
-		obstacles:      o,
-		oLUT:           oLUT,
-		hexagons:       h,
-		nodes:          n,
-		nLUT:           nLUT,
-		landUnits:      make(units),
-		ordanceUnits:   make(units),
-		aircraftUnits:  make(units),
-		ballisticUnits: make(units),
-		reactiveUnits:  make(map[id]*unit),
-		requesterUnits: make(map[id]*unit),
-		developerMode:  developerMode,
+		g:                g,
+		obstacles:        o,
+		oLUT:             oLUT,
+		hexagons:         h,
+		nodes:            n,
+		nLUT:             nLUT,
+		landUnits:        make(units),
+		ordanceUnits:     make(units),
+		aircraftUnits:    make(units),
+		ballisticUnits:   make(units),
+		bombGravityUnits: make(units),
+		reactiveUnits:    make(map[id]*unit),
+		requesterUnits:   make(map[id]*unit),
+		developerMode:    developerMode,
 	}
 
 	return &s
@@ -88,6 +90,11 @@ func (s state) unitsAir() func(yield func(u *unit) bool) {
 				return
 			}
 		}
+		for _, u := range s.bombGravityUnits {
+			if !yield(u) {
+				return
+			}
+		}
 	}
 }
 
@@ -102,6 +109,8 @@ func (s state) unitsLayer(l layer) *units {
 		units = s.aircraftUnits
 	case lBallistic:
 		units = s.ballisticUnits
+	case lBombGravity:
+		units = s.bombGravityUnits
 	default:
 		panic(fmt.Sprintf("layerUnits: unknown layer %d", l))
 	}
@@ -172,6 +181,8 @@ func (s *state) deleteUnit(p position) {
 		delete(s.aircraftUnits, p.PixelPosition)
 	case lBallistic:
 		delete(s.ballisticUnits, p.PixelPosition)
+	case lBombGravity:
+		delete(s.bombGravityUnits, p.PixelPosition)
 	default:
 		panic(fmt.Sprintf("deleteUnit: unknown layer %d", p.layer))
 	}
@@ -1075,6 +1086,9 @@ func (s *state) draw(dc drawConfig) {
 		o.drawObstacle(dc)
 	}
 	for _, u := range s.landUnits {
+		u.draw(dc, u.selected)
+	}
+	for _, u := range s.bombGravityUnits {
 		u.draw(dc, u.selected)
 	}
 	for _, u := range s.ordanceUnits {

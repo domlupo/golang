@@ -126,7 +126,7 @@ var fighterConfig = unitConfig{
 	fireOrdnanceDelay:          50,
 	heated:                     true,
 	ignoreTarget: func(t *unit) bool {
-		return t.name == bombGravity || t.name == flare
+		return t.name == flare
 	},
 }
 
@@ -154,9 +154,9 @@ var bombGravityConfig = unitConfig{
 	name:             bombGravity,
 	radius:           4,
 	maxHealth:        1,
-	produceLayer:     lOrdnance,
+	produceLayer:     lBombGravity,
 	targetLayers:     []layer{lLand},
-	collisionLayers:  []layer{lOrdnance},
+	collisionLayers:  []layer{lBombGravity},
 	staticTarget:     true,
 	explodeRadius:    20,
 	explodeStepDelay: 300,
@@ -177,7 +177,7 @@ var missileRadarActiveConfig = unitConfig{
 	speedFactor:          0.5,
 	heated:               true,
 	maxAlivePerNode:      math.MaxInt,
-	ignoreTarget:         func(t *unit) bool { return t.name == bombGravity || t.name == flare },
+	ignoreTarget:         func(t *unit) bool { return t.name == flare },
 }
 
 var missileHeatSeekingConfig = unitConfig{
