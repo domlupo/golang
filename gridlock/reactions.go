@@ -43,24 +43,7 @@ func reactions(n name) []reaction {
 				},
 				delay: bomberConfig.reloadPayloadDelay,
 			},
-			{
-				when: func(bomber *unit) bool {
-					return bomber.nearest != nil && bomber.nearest.name == missileHeatSeeking && bomber.flareCount > 0
-				},
-				do: func(bomber *unit) {
-					flare := newUnit(
-						flareConfig,
-						position{layer: flareConfig.produceLayer, PixelPosition: bomber.PixelPosition},
-						bomber.player,
-						[]position{bomber.nearest.position},
-						[]action{},
-						GridPosition{},
-						bomber.selected)
-					bomber.requests = append(bomber.requests, request{spawn: &flare})
-					bomber.flareCount--
-				},
-				delay: bomberConfig.fireOrdnanceDelay,
-			},
+			reactFlare(bomberConfig.fireOrdnanceDelay),
 			reactChaff(bomberConfig.fireOrdnanceDelay),
 		}
 	case fighter:
@@ -112,6 +95,7 @@ func reactions(n name) []reaction {
 				delay: fighterConfig.fireOrdnanceDelay,
 			},
 			reactChaff(fighterConfig.fireOrdnanceDelay),
+			reactFlare(fighterConfig.fireOrdnanceDelay),
 		}
 	default:
 		return []reaction{}
@@ -134,6 +118,27 @@ func reactChaff(fireOrdnanceDelay uint64) reaction {
 				u.selected)
 			u.requests = append(u.requests, request{spawn: &chaff})
 			u.chaffCount--
+		},
+		delay: fireOrdnanceDelay,
+	}
+}
+
+func reactFlare(fireOrdnanceDelay uint64) reaction {
+	return reaction{
+		when: func(u *unit) bool {
+			return u.nearest != nil && u.nearest.name == missileHeatSeeking && u.flareCount > 0
+		},
+		do: func(u *unit) {
+			flare := newUnit(
+				flareConfig,
+				position{layer: flareConfig.produceLayer, PixelPosition: u.PixelPosition},
+				u.player,
+				[]position{u.nearest.position},
+				[]action{},
+				GridPosition{},
+				u.selected)
+			u.requests = append(u.requests, request{spawn: &flare})
+			u.flareCount--
 		},
 		delay: fireOrdnanceDelay,
 	}
