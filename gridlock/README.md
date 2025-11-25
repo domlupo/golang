@@ -42,7 +42,6 @@ Is there a mobile equivalent for war/4x games?
   - no sound
 
 - Chaff follow ups
-  - Fix chaff bug where radar missile sometimes enters chaff. It seems to occur sometimes when plane emitting chaff is moving away.
   - Verify chaff counters own radar missiles
   - Document difference between chaff and signal jamming behaviors
     - signal jamming
@@ -68,10 +67,6 @@ Is there a mobile equivalent for war/4x games?
   - So ordnance or aircraft are default layers and then they interact with non default layers.
 
 - Debug hangs. It seems to occur when fighter and bomber collide in air.
-
-- Verify nearestTargetWithinVision is working correctly. Worried since circle collision
-  check was incorrect. Vision is a bit different since its unit vision <-> unit body where
-  as collision is unit body <-> unit body
 
 - Research every play testing MVP units in depth. Ensure no unrealistic work planned.
   - relative speed between units 

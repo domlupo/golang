@@ -385,9 +385,6 @@ func (s *state) analyzeTargets() {
 }
 
 func (s *state) steer(u *unit) position {
-	x1 := u.position.X + u.radius
-	y1 := u.position.Y + u.radius
-
 	partitions := s.partitions(*u, 0)
 
 	var xSteer int
@@ -427,13 +424,12 @@ func (s *state) steer(u *unit) position {
 				continue
 			}
 
-			x2 := current.X + current.radius
-			y2 := current.Y + current.radius
-
-			xDelta := x2 - x1
-			yDelta := y2 - y1
-			rSum := u.radius + current.radius + 1
-			if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
+			// TODO: Improve steering so I don't have to do weird increments here? Or are these
+			// increments fine since units should steer before colliding? I also enabled infantry
+			// to survive collisions which seems correct long term but that may be wrong.
+			// Also, a similar but not equivalent collision check is done during moveUnits. This
+			// logic can maybe be moved there to save CPU.
+			if _, ok := collides(u.PixelPosition, current.PixelPosition, u.radius+1, current.radius+1); ok {
 				magnitude := 1
 
 				switch {
@@ -598,8 +594,6 @@ func (s state) nearestTargetWithinLayer(u unit, linkedList *unit) (*unit, int) {
 		return t, d
 	}
 
-	x1 := u.position.X + u.radius
-	y1 := u.position.Y + u.radius
 	end := linkedList
 	current := linkedList
 
@@ -627,19 +621,14 @@ func (s state) nearestTargetWithinLayer(u unit, linkedList *unit) (*unit, int) {
 			continue
 		}
 
-		x2 := current.X + current.radius
-		y2 := current.Y + current.radius
-
-		xDelta := x2 - x1
-		yDelta := y2 - y1
-		distance := xDelta*xDelta + yDelta*yDelta
-		if distance < d && distance <= u.vision*u.vision {
+		squaredDistance, collides := collides(u.PixelPosition, current.PixelPosition, u.vision, current.radius)
+		if squaredDistance < d && collides {
 			if _, los := u.lineOfSight(current.PixelPosition, s.oLUT, u.radius); los {
-				d = distance
+				d = squaredDistance
 				t = current
 			}
 			if current.layer != lLand {
-				d = distance
+				d = squaredDistance
 				t = current
 			}
 		}
@@ -669,10 +658,6 @@ func (s *state) collidesWithUnit(p position, u unit) (position, bool) {
 }
 
 func (s state) collidesWithUnitLayer(u unit, p position, linkedList *unit) (position, bool) {
-	x1 := p.X
-	y1 := p.Y
-	r1 := u.radius
-
 	if linkedList == nil || (linkedList.id == u.id && linkedList == linkedList.next) {
 		return position{}, false
 	}
@@ -708,17 +693,9 @@ func (s state) collidesWithUnitLayer(u unit, p position, linkedList *unit) (posi
 			continue
 		}
 
-		x2 := current.X
-		y2 := current.Y
-		r2 := current.radius
-
-		xDelta := x2 - x1
-		yDelta := y2 - y1
-		rSum := r1 + r2
-		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
+		if _, ok := collides(p.PixelPosition, current.PixelPosition, u.radius, current.radius); ok {
 			return current.position, true
 		}
-
 		current = current.next
 	}
 	return position{}, false

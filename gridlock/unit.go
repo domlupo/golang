@@ -145,6 +145,10 @@ func newUnit(
 	}
 	u.subPixelPosition = u.newSubPixelPosition(u.position)
 	u.reactions = reactions(u.name)
+
+	if u.vision < u.radius {
+		panic(fmt.Sprintf("newUnit: vision should not be less than radius for %s", uc.name))
+	}
 	return u
 }
 

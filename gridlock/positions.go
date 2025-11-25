@@ -225,3 +225,20 @@ func collidesWithBorder(p position, offset int) bool {
 		return false
 	}
 }
+
+// Returns the squared distance if passed values collide.
+func collides(p1, p2 PixelPosition, r1, r2 int) (int, bool) {
+	x1 := p1.X
+	y1 := p1.Y
+	x2 := p2.X
+	y2 := p2.Y
+	xDelta := x2 - x1
+	yDelta := y2 - y1
+	rSum := r1 + r2
+	squaredDistance := xDelta*xDelta + yDelta*yDelta
+	if squaredDistance <= rSum*rSum {
+		return squaredDistance, true
+	} else {
+		return 0, false
+	}
+}

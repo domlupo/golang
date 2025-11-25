@@ -60,9 +60,9 @@ func (n name) String() string {
 type unitConfig struct {
 	name                       name
 	radius                     int
+	vision                     int
 	maxHealth                  int
 	attack                     int
-	vision                     int
 	reach                      int
 	produceLayer               layer
 	staticTarget               bool
@@ -103,18 +103,19 @@ type unitConfig struct {
 
 // Note: unit radius set to an odd number is better for testing due to division bugs
 var infantryConfig = unitConfig{
-	name:            infantry,
-	radius:          3,
-	maxHealth:       50,
-	attack:          1,
-	vision:          30,
-	reach:           5,
-	produceLayer:    lLand,
-	targetLayers:    []layer{lLand},
-	collisionLayers: []layer{lLand},
-	explodeRadius:   0,
-	maxAlivePerNode: math.MaxInt,
-	speedFactor:     2.0,
+	name:              infantry,
+	radius:            3,
+	maxHealth:         50,
+	attack:            1,
+	vision:            30,
+	reach:             5,
+	produceLayer:      lLand,
+	targetLayers:      []layer{lLand},
+	collisionLayers:   []layer{lLand},
+	explodeRadius:     0,
+	maxAlivePerNode:   math.MaxInt,
+	speedFactor:       2.0,
+	survivesCollision: true,
 }
 
 var fighterConfig = unitConfig{
@@ -164,6 +165,7 @@ var bomberConfig = unitConfig{
 var bombGravityConfig = unitConfig{
 	name:                bombGravity,
 	radius:              4,
+	vision:              4,
 	maxHealth:           1,
 	produceLayer:        lBombGravity,
 	targetLayers:        []layer{lLand},
@@ -214,8 +216,8 @@ var missileHeatSeekingConfig = unitConfig{
 var missileCruiseConfig = unitConfig{
 	name:                 missileCruise,
 	radius:               3,
+	vision:               3,
 	maxHealth:            1,
-	vision:               1,
 	produceLayer:         lOrdnance,
 	collisionLayers:      []layer{lOrdnance},
 	staticTarget:         true,
@@ -230,8 +232,8 @@ var missileCruiseConfig = unitConfig{
 var missileBallisticConfig = unitConfig{
 	name:                 missileBallistic,
 	radius:               3,
+	vision:               3,
 	maxHealth:            1,
-	vision:               1,
 	produceLayer:         lBallistic,
 	collisionLayers:      []layer{lBallistic},
 	staticTarget:         true,
@@ -261,6 +263,7 @@ var missileAntiBallisticConfig = unitConfig{
 var flareConfig = unitConfig{
 	name:                 flare,
 	radius:               3,
+	vision:               3,
 	maxHealth:            1,
 	produceLayer:         lOrdnance,
 	collisionLayers:      []layer{lOrdnance},
@@ -274,6 +277,7 @@ var flareConfig = unitConfig{
 var chaffConfig = unitConfig{
 	name:                chaff,
 	radius:              100,
+	vision:              100,
 	maxHealth:           1,
 	produceLayer:        lChaff,
 	collisionLayers:     []layer{lOrdnance},
