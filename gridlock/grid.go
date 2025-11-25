@@ -98,11 +98,11 @@ func (g grid) partitions(pos GridPosition, d int) []GridPosition {
 	return partitions
 }
 
-func (g grid) allAdjacent(pos GridPosition) [6]GridPosition {
-	a := [6]GridPosition{}
-	for i, hs := range hexSides() {
+func (g grid) allAdjacent(pos GridPosition) []GridPosition {
+	a := []GridPosition{}
+	for _, hs := range hexSides() {
 		if p, ok := g.adjacent(pos, hs); ok {
-			a[i] = p
+			a = append(a, p)
 		}
 	}
 	return a
