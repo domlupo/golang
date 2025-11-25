@@ -61,24 +61,7 @@ func reactions(n name) []reaction {
 				},
 				delay: bomberConfig.fireOrdnanceDelay,
 			},
-			{
-				when: func(bomber *unit) bool {
-					return bomber.nearest != nil && bomber.nearest.name == missileRadarActive && bomber.chaffCount > 0
-				},
-				do: func(bomber *unit) {
-					chaff := newUnit(
-						chaffConfig,
-						position{layer: chaffConfig.produceLayer, PixelPosition: bomber.PixelPosition},
-						bomber.player,
-						[]position{bomber.position},
-						[]action{},
-						GridPosition{},
-						bomber.selected)
-					bomber.requests = append(bomber.requests, request{spawn: &chaff})
-					bomber.chaffCount--
-				},
-				delay: bomberConfig.fireOrdnanceDelay,
-			},
+			reactChaff(bomberConfig.fireOrdnanceDelay),
 		}
 	case fighter:
 		return []reaction{
@@ -127,8 +110,31 @@ func reactions(n name) []reaction {
 					fighter.requests = append(fighter.requests, request{spawn: &spawn})
 				},
 				delay: fighterConfig.fireOrdnanceDelay,
-			}}
+			},
+			reactChaff(fighterConfig.fireOrdnanceDelay),
+		}
 	default:
 		return []reaction{}
+	}
+}
+
+func reactChaff(fireOrdnanceDelay uint64) reaction {
+	return reaction{
+		when: func(u *unit) bool {
+			return u.nearest != nil && u.nearest.name == missileRadarActive && u.chaffCount > 0
+		},
+		do: func(u *unit) {
+			chaff := newUnit(
+				chaffConfig,
+				position{layer: chaffConfig.produceLayer, PixelPosition: u.PixelPosition},
+				u.player,
+				[]position{u.position},
+				[]action{},
+				GridPosition{},
+				u.selected)
+			u.requests = append(u.requests, request{spawn: &chaff})
+			u.chaffCount--
+		},
+		delay: fireOrdnanceDelay,
 	}
 }

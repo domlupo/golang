@@ -139,6 +139,7 @@ var fighterConfig = unitConfig{
 	requester:                  true,
 	missileHeatSeekingCountMax: 0,
 	missileRadarActiveCountMax: 1000,
+	chaffCountMax:              1000,
 	fireOrdnanceDelay:          50,
 	heated:                     true,
 	ignoreTarget: func(t *unit) bool {

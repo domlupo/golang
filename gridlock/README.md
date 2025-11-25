@@ -54,7 +54,10 @@ Is there a mobile equivalent for war/4x games?
     - There are others. Think about it a bit more before implementing.
 
 - Chaff follow ups
-  - Verify chaff counters own radar missiles
+  - Think through chaff behavior more:
+    - Should chaff emitted from a plane counter missiles shot from same plane?
+    - Should chaff counter other planes from same player missles?
+    - Should chaff counter node missiles from same player?
   - Document difference between chaff and signal jamming behaviors
     - signal jamming
       - no ammo
