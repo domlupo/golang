@@ -15,14 +15,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-type debugPartitionsRadius int
-
-const (
-	dprNone debugPartitionsRadius = iota
-	dprUnitRadius
-	dprUnitVision
-)
-
 // Debugger Configurations
 type debuggerConfig struct {
 	debugHexGrid                  bool
@@ -45,7 +37,7 @@ type debuggerConfig struct {
 	heatmapB                      uint8
 	heatmapAlphaMaxLimit          int
 	heatmapPercent                int
-	debugPartitionsRadius         debugPartitionsRadius
+	partitionAnalysis             partitionAnalysis
 	roygbivColors                 []color.RGBA
 }
 
@@ -62,6 +54,7 @@ func newDebuggerConfig() *debuggerConfig {
 		heatmapG:                      0,
 		heatmapB:                      0,
 		heatmapAlphaMaxLimit:          200,
+		partitionAnalysis:             paCollision,
 		heatmapPercent:                maxPercent,
 		roygbivColors: []color.RGBA{
 			{200, 0, 0, 255},
@@ -351,17 +344,8 @@ func (d debugger) draw(c drawConfig) {
 	if d.debugHexagons {
 		u := d.selectedUnit()
 		if u != nil {
-			var radius int
-			switch d.debugPartitionsRadius {
-			case dprNone:
-			case dprUnitRadius:
-				radius = u.radius
-			case dprUnitVision:
-				radius = u.vision
-			default:
-				panic(fmt.Sprintf("cannot draw partitions for unknown debugPartitionsRadius %d", d.debugPartitionsRadius))
-			}
-			partitions := d.partitions(*u, radius)
+			logger.log(infoLevel, devTool, "debugHexagons", d.partitionAnalysis.log())
+			partitions := d.partitions(*u, d.partitionAnalysis)
 			for _, h := range partitions {
 				drawHexHighlight(c, h.gridPos)
 			}

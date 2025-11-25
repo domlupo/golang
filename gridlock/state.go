@@ -32,6 +32,35 @@ type request struct {
 	complete bool
 }
 
+// The type of analysis which will process the partitions.
+type partitionAnalysis int
+
+const (
+	paNone partitionAnalysis = iota
+	paCollision
+	paVision
+	paSteer
+)
+
+func (pa partitionAnalysis) String() string {
+	switch pa {
+	case paNone:
+		return "paNone"
+	case paCollision:
+		return "paCollision"
+	case paVision:
+		return "paVision"
+	case paSteer:
+		return "paSteer"
+	default:
+		panic(fmt.Sprintf("Cannot convert partition analysis to string: %d", pa))
+	}
+}
+
+func (pa partitionAnalysis) log() slog.Attr {
+	return slog.String("partitionAnalysis", pa.String())
+}
+
 // not enforced but must be a singleton
 type state struct {
 	c                stateConfig
@@ -310,6 +339,10 @@ func (s *state) processRequests() {
 
 func (s *state) analyzeTargets() {
 	for u := range s.units() {
+		if u.name == chaff || u.name == bombGravity {
+			continue
+		}
+
 		if u.name == missileHeatSeeking || u.name == missileAntiBallistic || u.name == missileRadarActive {
 			s.nearestTargetWithinVision(u)
 			u.updateTargetUnit(enemyTarget, u.nearest)
@@ -391,7 +424,7 @@ func (s *state) analyzeTargets() {
 }
 
 func (s *state) steer(u *unit) position {
-	partitions := s.partitions(*u, 0)
+	partitions := s.partitions(*u, paSteer)
 
 	var xSteer int
 	var ySteer int
@@ -562,8 +595,22 @@ func (s *state) explode(u *unit) {
 	}
 }
 
-func (s state) partitions(u unit, d int) []*hexagon {
-	partitions := s.g.partitions(u.PixelPosition, d+s.c.spawnUnitRadiusLimit)
+func (s state) partitions(u unit, pa partitionAnalysis) []*hexagon {
+	var partitions []GridPosition
+	switch {
+	case u.name == infantry && pa == paCollision:
+		partitions = s.g.partitions(u.PixelPosition, u.radius+s.c.spawnUnitRadiusLimit)
+	case u.name == infantry && pa == paVision:
+		partitions = s.g.partitions(u.PixelPosition, u.vision+s.c.spawnUnitRadiusLimit)
+	case u.name == infantry && pa == paSteer:
+		partitions = s.g.partitions(u.PixelPosition, s.c.spawnUnitRadiusLimit)
+	case pa == paCollision:
+		partitions = s.g.partitions(u.PixelPosition, u.radius+s.c.spawnUnitRadiusLimit)
+	case pa == paVision:
+		partitions = s.g.partitions(u.PixelPosition, u.vision+s.c.spawnUnitRadiusLimit)
+	default:
+		panic(fmt.Sprintf("partitions: cannot get partitions for unit %s and analysis %s", u.name, pa.String()))
+	}
 	hexs := []*hexagon{}
 	for _, p := range partitions {
 		hexs = append(hexs, s.hexagons[p])
@@ -572,7 +619,7 @@ func (s state) partitions(u unit, d int) []*hexagon {
 }
 
 func (s state) nearestTargetWithinVision(u *unit) {
-	partitions := s.partitions(*u, u.vision)
+	partitions := s.partitions(*u, paVision)
 	d := math.MaxInt64
 	var t *unit
 	for _, partition := range partitions {
@@ -644,7 +691,7 @@ func (s state) nearestTargetWithinLayer(u unit, linkedList *unit) (*unit, int) {
 }
 
 func (s *state) collidesWithUnit(p position, u unit) (position, bool) {
-	partitions := s.partitions(u, u.radius)
+	partitions := s.partitions(u, paCollision)
 	for _, partition := range partitions {
 		if partition == nil {
 			continue
