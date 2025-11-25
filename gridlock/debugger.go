@@ -15,6 +15,14 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+type debugPartitionsRadius int
+
+const (
+	dprNone debugPartitionsRadius = iota
+	dprUnitRadius
+	dprUnitVision
+)
+
 // Debugger Configurations
 type debuggerConfig struct {
 	debugHexGrid                  bool
@@ -37,6 +45,7 @@ type debuggerConfig struct {
 	heatmapB                      uint8
 	heatmapAlphaMaxLimit          int
 	heatmapPercent                int
+	debugPartitionsRadius         debugPartitionsRadius
 	roygbivColors                 []color.RGBA
 }
 
@@ -233,6 +242,24 @@ func (d *debugger) logNodes() {
 	}
 }
 
+func (d *debugger) selectedUnit() *unit {
+	var unit *unit
+	for u := range d.units() {
+		if u.selected && unit != nil {
+			logger.log(debugLevel, devTool, "selectedUnit: cannot select multiple units")
+			return nil
+		} else if u.selected {
+			unit = u
+		}
+	}
+
+	if unit == nil {
+		logger.log(debugLevel, devTool, "selectedUnit: cannot select no units")
+		return nil
+	}
+	return unit
+}
+
 func (d *debugger) createUnitPathfindHeatmap() {
 	logger.onlyEnable(devTool)
 
@@ -241,18 +268,8 @@ func (d *debugger) createUnitPathfindHeatmap() {
 		return
 	}
 
-	var unit *unit
-	for u := range d.units() {
-		if u.selected && unit != nil {
-			logger.log(debugLevel, devTool, "can only select one unit when creating heatmap")
-			return
-		} else if u.selected {
-			unit = u
-		}
-	}
-
+	unit := d.selectedUnit()
 	if unit == nil {
-		logger.log(debugLevel, devTool, "must select one unit when creating heat map")
 		return
 	}
 
@@ -332,12 +349,29 @@ func (d debugger) draw(c drawConfig) {
 	}
 
 	if d.debugHexagons {
-		for _, h := range d.hexagons {
-			center := d.g.getPixelPosOutbounds(h.gridPos, hpCenter)
-			center.draw(c, *d.debuggerConfig, color.White, false)
-
-			if h.selected {
+		u := d.selectedUnit()
+		if u != nil {
+			var radius int
+			switch d.debugPartitionsRadius {
+			case dprNone:
+			case dprUnitRadius:
+				radius = u.radius
+			case dprUnitVision:
+				radius = u.vision
+			default:
+				panic(fmt.Sprintf("cannot draw partitions for unknown debugPartitionsRadius %d", d.debugPartitionsRadius))
+			}
+			partitions := d.partitions(*u, radius)
+			for _, h := range partitions {
 				drawHexHighlight(c, h.gridPos)
+			}
+		} else {
+			for _, h := range d.hexagons {
+				center := d.g.getPixelPosOutbounds(h.gridPos, hpCenter)
+				center.draw(c, *d.debuggerConfig, color.White, false)
+				if h.selected {
+					drawHexHighlight(c, h.gridPos)
+				}
 			}
 		}
 	}

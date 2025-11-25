@@ -112,12 +112,12 @@ func (s state) units() func(yield func(u *unit) bool) {
 	return func(yield func(u *unit) bool) {
 		for _, u := range s.landUnits {
 			if !yield(u) {
-				break
+				return
 			}
 		}
 		for u := range s.unitsAir() {
 			if !yield(u) {
-				break
+				return
 			}
 		}
 	}
@@ -127,7 +127,7 @@ func (s state) unitsAir() func(yield func(u *unit) bool) {
 	return func(yield func(u *unit) bool) {
 		for _, u := range s.ordanceUnits {
 			if !yield(u) {
-				break
+				return
 			}
 		}
 		for _, u := range s.aircraftUnits {
