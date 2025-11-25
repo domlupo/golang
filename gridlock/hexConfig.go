@@ -35,6 +35,16 @@ func newHexConfig(wc windowConfig, hexWidth int, hexHeight int, xOffset int, yOf
 	return hc
 }
 
+func (hc *hexConfig) minimumDistanceBetweenNonAdjacentHexagons() int {
+	return min(hc.hexWidth, hc.hexHeight) / 2
+}
+
+// Returns the radius of a circle which fully surrounds a hexagon. Useful for simple
+// and conservative hexagon collision detection by treating the hexagon as a circle.
+func (hc *hexConfig) conservativeHexRadius() int {
+	return max(hc.hexWidth, hc.hexHeight) / 2
+}
+
 // The hexagon look up table is a hardcoded mapping to aid with converting
 // pixel position to hexagon grid position. It avoids the the need of CPU intensive math.
 // It helps CPU performance by removing the need for floating point or sqrt math logic.

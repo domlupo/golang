@@ -61,29 +61,45 @@ func (gridPos GridPosition) equals(other GridPosition) bool {
 	return gridPos.X == other.X && gridPos.Y == other.Y
 }
 
-func (g grid) partitions(pos GridPosition, d int) []GridPosition {
-	layerIndex := 1 + (d / (min(g.hexHeight, g.hexWidth) / 2))
-
+// Returns conservative partitions which collide with the passed position and distance.
+// The caller is responsible for verifying the analysis performed with the partitions is valid.
+// For example, analyzing partitions for collision detection between two circles would be invalid
+// if the circle with the position and distance not passed has a radius which exceeds the
+// conservative hex radius. Unoptimized because the hexagon collision uses conservative circles.
+func (g grid) partitions(p PixelPosition, d int) []GridPosition {
+	gridPos, ok := g.getGridPos(p)
+	if !ok {
+		panic(fmt.Sprintf("partitions: cannot find grid pos for %s", p.log()))
+	}
 	visited := make(map[GridPosition]struct{})
-	visited[pos] = struct{}{}
-	depth := 0
-	q := []GridPosition{pos}
+	visited[gridPos] = struct{}{}
+	q := []GridPosition{gridPos}
 	nextQ := []GridPosition{}
-	for depth != layerIndex {
+	for len(q) > 0 {
 		current := q[0]
 		q = q[1:]
 
 		for _, a := range g.allAdjacent(current) {
 			if _, ok := visited[a]; !ok {
 				visited[a] = struct{}{}
-				nextQ = append(nextQ, a)
+				// TODO: Fix this. This isn't correct but will probably work fine for awhile.
+				// It doesn't handle border partition collisions 100% correct but this should be rare.
+				// Also, I suspect this partitions method will most likey be refactored before issue
+				// blocks development.
+				pa, okA := g.getCenterWithFallback(a)
+				if !okA {
+					panic(fmt.Sprintf("partitions: cannot find center for pos %s", a.log()))
+				}
+				_, collides := collides(p, pa, d, g.conservativeHexRadius())
+				if collides {
+					nextQ = append(nextQ, a)
+				}
 			}
 		}
 
 		if len(q) == 0 && len(nextQ) == 0 {
 			break
 		} else if len(q) == 0 {
-			depth++
 			q = nextQ
 			nextQ = []GridPosition{}
 		}

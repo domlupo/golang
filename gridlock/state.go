@@ -13,13 +13,15 @@ type stateConfig struct {
 	moveUnits                bool
 	produceUnits             bool
 	produceUnitsStepInterval uint64
+	spawnUnitRadiusLimit     int
 }
 
-func newStateConfig() stateConfig {
+func newStateConfig(g grid) stateConfig {
 	c := stateConfig{
 		moveUnits:                true,
 		produceUnits:             true,
 		produceUnitsStepInterval: 180,
+		spawnUnitRadiusLimit:     g.minimumDistanceBetweenNonAdjacentHexagons(),
 	}
 	return c
 }
@@ -55,7 +57,7 @@ type state struct {
 
 func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, g grid, developerMode bool) *state {
 	s := state{
-		c:                newStateConfig(),
+		c:                newStateConfig(g),
 		g:                g,
 		obstacles:        o,
 		oLUT:             oLUT,
@@ -173,6 +175,10 @@ func (s state) unitsLayer(l layer) *units {
 }
 
 func (s *state) spawn(u *unit) {
+	// TODO: Verify if this should be >= rather than more conservative >
+	if u.radius > s.c.spawnUnitRadiusLimit && !u.skipSpawnRadiusCheck {
+		panic(fmt.Sprintf("spawn: cannot spawn unit radius %d exceeds spawn radius limit %d", u.radius, s.c.spawnUnitRadiusLimit))
+	}
 	p, ok := s.g.getGridPos(u.PixelPosition)
 	if !ok {
 		panic(fmt.Sprintf("spawnUnit: cannot get get grid position %s", u.PixelPosition.log()))
@@ -429,6 +435,8 @@ func (s *state) steer(u *unit) position {
 			// to survive collisions which seems correct long term but that may be wrong.
 			// Also, a similar but not equivalent collision check is done during moveUnits. This
 			// logic can maybe be moved there to save CPU.
+			// TODO: I think technically there should be a check on collides so the second radius
+			// is never greater than state.spawnUnitRadiusLimit. This should be a minor issue until later.
 			if _, ok := collides(u.PixelPosition, current.PixelPosition, u.radius+1, current.radius+1); ok {
 				magnitude := 1
 
@@ -555,11 +563,7 @@ func (s *state) explode(u *unit) {
 }
 
 func (s state) partitions(u unit, d int) []*hexagon {
-	gridPos, ok := s.g.getGridPos(u.PixelPosition)
-	if !ok {
-		panic(fmt.Sprintf("partitions: cannot get grid pos for %s", u.PixelPosition.log()))
-	}
-	partitions := s.g.partitions(gridPos, d)
+	partitions := s.g.partitions(u.PixelPosition, d+s.c.spawnUnitRadiusLimit)
 	hexs := []*hexagon{}
 	for _, p := range partitions {
 		hexs = append(hexs, s.hexagons[p])

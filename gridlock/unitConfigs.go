@@ -99,6 +99,11 @@ type unitConfig struct {
 	ignoreTarget               func(t *unit) bool
 	ignoreCollision            func(other *unit) bool
 	survivesCollision          bool
+	// This flag should rarely be used. If it is used often then write a function to avoid bugs.
+	// This is safe to enable iff the unit only collides with units that have radiuses less
+	// than state.spawnUnitRadiusLimit. For example, chaff only collides with radarGuided units
+	// which are all less than the 20 pixels.
+	skipSpawnRadiusCheck bool
 }
 
 // Note: unit radius set to an odd number is better for testing due to division bugs
@@ -275,18 +280,19 @@ var flareConfig = unitConfig{
 }
 
 var chaffConfig = unitConfig{
-	name:                chaff,
-	radius:              100,
-	vision:              100,
-	maxHealth:           1,
-	produceLayer:        lChaff,
-	collisionLayers:     []layer{lOrdnance},
-	staticTarget:        true,
-	maxAlivePerNode:     math.MaxInt,
-	terminalStepDelay:   300,
-	despawnWhenTerminal: true,
-	ignoreCollision:     func(other *unit) bool { return !other.radarGuided },
-	survivesCollision:   true,
+	name:                 chaff,
+	radius:               100,
+	vision:               100,
+	maxHealth:            1,
+	produceLayer:         lChaff,
+	collisionLayers:      []layer{lOrdnance},
+	staticTarget:         true,
+	maxAlivePerNode:      math.MaxInt,
+	terminalStepDelay:    300,
+	despawnWhenTerminal:  true,
+	ignoreCollision:      func(other *unit) bool { return !other.radarGuided },
+	survivesCollision:    true,
+	skipSpawnRadiusCheck: true,
 }
 
 // This log method is frequently used for debugging. Also it is typically logged at the end of unit.log().
