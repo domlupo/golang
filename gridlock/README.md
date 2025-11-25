@@ -41,6 +41,18 @@ Is there a mobile equivalent for war/4x games?
   - art
   - no sound
 
+- Optimize state.partitions for infantry
+  - There are several ways to optimize this.
+  - There are also several ways to refactor grid.partitions
+    - Might be best to have separate methods for infantry and all other units.
+  - Braindump
+    - Circle detect a hexagon at middle point.
+      - If collides with this circleo only return thi hexagon.
+      - If it is outside this then what? Need to think through more.
+    - Can circle detect infatry radius multiple by 2 then check collisions
+      for circle hexagon?
+    - There are others. Think about it a bit more before implementing.
+
 - Chaff follow ups
   - Verify chaff counters own radar missiles
   - Document difference between chaff and signal jamming behaviors
@@ -57,11 +69,6 @@ Is there a mobile equivalent for war/4x games?
        - wait to spawn till space is free
        - merge on spawn
   
-- Fix grid.partitions method
-  - When written I made it very conservative. It is too conservative. It makes debugging and reasoning hard.
-  - There is a bug. It seems when when a partition is offscreen it defaults to the zero value. Then
-    it keeps building layers from 0,0. This causes a large number of partitions in top left corner.
-
 - Determine how layers and collisions between layers interact. Document as design decision.
   - I think every unit only exists in one layer is needed. So we don't waste CPU.
   - So ordnance or aircraft are default layers and then they interact with non default layers.
@@ -82,7 +89,6 @@ Is there a mobile equivalent for war/4x games?
 
 - Implement fighter and bomber
   - scoped out work
-    - Add chaff counters radar missiles
     - Add fighter chaff
     - Add fighter flares
     - Add fighter signal jamming
