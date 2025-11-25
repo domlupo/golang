@@ -7,13 +7,13 @@ mem:
 cover:
 	go test -v -cover -coverprofile=cover.out; \
         go tool cover -html=cover.out
-c:
+ro:
 	rm -rf output/*
-co:
+roo:
 	rm -rf output/obstacleLUT-*.json
-cn:
+ron:
 	rm -rf output/nodeLUT-*.json
-cl:
+o:
 	find . -maxdepth 2 -name "*.json" -print0 | while IFS= read -r -d $$'\0' file; \
 	do size_bytes=$$(wc -c < "$$file") size_mb=$$(awk "BEGIN {printf \"%.2f\", $$size_bytes / (1024*1024)}"); \
  	echo "$$size_mb MB $$file"; \
