@@ -239,16 +239,11 @@ func (d *debugger) selectedUnit() *unit {
 	var unit *unit
 	for u := range d.units() {
 		if u.selected && unit != nil {
-			logger.log(debugLevel, devTool, "selectedUnit: cannot select multiple units")
+			logger.log(debugLevel, devTool, "selectedUnit: cannot select multiple units to debug")
 			return nil
 		} else if u.selected {
 			unit = u
 		}
-	}
-
-	if unit == nil {
-		logger.log(debugLevel, devTool, "selectedUnit: cannot select no units")
-		return nil
 	}
 	return unit
 }
@@ -257,20 +252,19 @@ func (d *debugger) createUnitPathfindHeatmap() {
 	logger.onlyEnable(devTool)
 
 	if len(d.unitPathfind) != 0 {
-		logger.log(infoLevel, devTool, "cannot create heatmap since it was already attempted")
+		logger.log(infoLevel, devTool, "createUnitPathfindHeatmap: cannot create heatmap since it was already attempted")
 		return
 	}
 
 	unit := d.selectedUnit()
 	if unit == nil {
+		logger.log(debugLevel, devTool, "createUnitPathfindHeatmap: cannot select no units")
 		return
 	}
 
-	logger.log(infoLevel, devTool, "start creating pathfinding heatmap")
-
+	logger.log(infoLevel, devTool, "createUnitPathfindHeatmap: start")
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
-
 	pixelCount := 0
 	wc := newWindowConfig()
 	for pixelPos, info := range d.oLUT {
@@ -281,7 +275,7 @@ func (d *debugger) createUnitPathfindHeatmap() {
 			pixelCount++
 			if pixelCount%(wc.maxPixels()/maxPercent) == 0 {
 				percentProgess := pixelCount / (wc.maxPixels() / maxPercent)
-				logger.log(infoLevel, devTool, "pathfind heatmap", slog.Int("pixel positions percent progress", percentProgess))
+				logger.log(infoLevel, devTool, "createUnitPathfindHeatmap", slog.Int("pixel positions percent progress", percentProgess))
 			}
 
 			if info.Walkable {
@@ -293,7 +287,7 @@ func (d *debugger) createUnitPathfindHeatmap() {
 	}
 
 	d.unitPathfindHeatmapComplete = true
-	logger.log(infoLevel, devTool, "done creating pathfinding heatmap")
+	logger.log(infoLevel, devTool, "createUnitPathfindHeatmap: done")
 }
 
 func (d *debugger) updateHeatmapPercent(delta int) {
