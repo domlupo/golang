@@ -28,7 +28,6 @@ type Game struct {
 	computers                  computers
 	backgroundColor            color.RGBA
 	produceWait                time.Duration
-	produceInterval            time.Duration
 	slowTickInterval           time.Duration
 	slowTickTime               time.Time
 	priorTime                  time.Time
@@ -44,8 +43,6 @@ type Game struct {
 	slowTick                   bool
 	cpuProfilerOn              bool
 	memoryProfilerOn           bool
-	produceUnits               bool
-	moveUnits                  bool
 	initialSelectedX           float32
 	initialSelectedY           float32
 	currentSelectedX           float32
@@ -77,7 +74,6 @@ func newGame() Game {
 		drawConfig:              drawConfig,
 		backgroundColor:         color.RGBA{200, 200, 200, 255},
 		produceWait:             1_000_000 * time.Second,
-		produceInterval:         3 * time.Second,
 		slowTickInterval:        1 * time.Second,
 		slowTickTime:            time.Now(),
 		priorTime:               time.Now(),
@@ -86,8 +82,6 @@ func newGame() Game {
 		initialSelectedY:        float32(-1.0),
 		currentSelectedX:        float32(-1.0),
 		currentSelectedY:        float32(-1.0),
-		produceUnits:            true,
-		moveUnits:               true,
 		hotRestart:              true,
 		cpuProfilerToggleName:   "cpuProfiler",
 		memProfilerToggleName:   "memProfiler",
@@ -156,16 +150,7 @@ func (g *Game) Update() error {
 		if g.slowTick {
 			logger.log(infoLevel, devTool, "slowTick")
 		}
-		g.gameState.tick(g.moveUnits)
-		// TODO: move this into g.gameState.tick once produce uses step delay rather than duration delay
-		logger.log(debugLevel, mainLogic, "produceUnits")
-		if g.produceWait < g.produceInterval {
-			g.produceWait = g.produceWait + g.currentTime.Sub(g.priorTime)
-		} else if g.produceUnits {
-			g.produceWait = 0
-			g.gameState.produceUnits()
-		}
-		logger.log(debugLevel, mainLogic, "done state automated steps")
+		g.gameState.tick()
 	}
 
 	// player actions

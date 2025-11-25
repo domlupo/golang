@@ -9,6 +9,21 @@ import (
 	"slices"
 )
 
+type stateConfig struct {
+	moveUnits                bool
+	produceUnits             bool
+	produceUnitsStepInterval uint64
+}
+
+func newStateConfig() stateConfig {
+	c := stateConfig{
+		moveUnits:                true,
+		produceUnits:             true,
+		produceUnitsStepInterval: 180,
+	}
+	return c
+}
+
 // A request to modify state.
 type request struct {
 	spawn    *unit
@@ -17,6 +32,7 @@ type request struct {
 
 // not enforced but must be a singleton
 type state struct {
+	c                stateConfig
 	g                grid
 	oLUT             obstacleLUT
 	nLUT             nodeLUT
@@ -39,6 +55,7 @@ type state struct {
 
 func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, g grid, developerMode bool) *state {
 	s := state{
+		c:                newStateConfig(),
 		g:                g,
 		obstacles:        o,
 		oLUT:             oLUT,
@@ -60,7 +77,7 @@ func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, 
 }
 
 // Progress game state by a single step
-func (s *state) tick(moveUnits bool) {
+func (s *state) tick() {
 	logger.log(infoLevel, stateLogic, "tick: start", slog.Uint64("step", s.step))
 	logger.log(infoLevel, stateLogic, "tick: refresh")
 	s.refresh()
@@ -77,11 +94,15 @@ func (s *state) tick(moveUnits bool) {
 	logger.log(infoLevel, stateLogic, "tick: attackNodes")
 	s.attackNodes()
 	logger.log(infoLevel, stateLogic, "tick: moveUnits")
-	if moveUnits {
+	if s.c.moveUnits {
 		s.moveUnits()
 	}
 	logger.log(infoLevel, stateLogic, "tick: despawnUnits")
 	s.despawnUnits()
+	logger.log(infoLevel, stateLogic, "tick: produceUnits")
+	if s.c.produceUnits && s.step%s.c.produceUnitsStepInterval == 0 {
+		s.produceUnits()
+	}
 	s.step++
 }
 

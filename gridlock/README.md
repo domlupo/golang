@@ -63,10 +63,6 @@ Is there a mobile equivalent for war/4x games?
   - There is a bug. It seems when when a partition is offscreen it defaults to the zero value. Then
     it keeps building layers from 0,0. This causes a large number of partitions in top left corner.
 
-- Determine if produceUnits should use step count rather than interval. I think yes so game is more cohesive.
-  Right now, enabling high CPU debugging by (press w) will cause more units to spawn over a typical tick rate.
-  Another benefit is, produce logic can move from main.go into state.go state.tick method.
-
 - Determine how layers and collisions between layers interact. Document as design decision.
   - I think every unit only exists in one layer is needed. So we don't waste CPU.
   - So ordnance or aircraft are default layers and then they interact with non default layers.
