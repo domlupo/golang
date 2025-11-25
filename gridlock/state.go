@@ -62,6 +62,8 @@ func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, 
 // Progress game state by a single step
 func (s *state) tick(moveUnits bool) {
 	logger.log(infoLevel, stateLogic, "tick: start", slog.Uint64("step", s.step))
+	logger.log(infoLevel, stateLogic, "tick: refresh")
+	s.refresh()
 	logger.log(infoLevel, stateLogic, "tick: analyzeTargets")
 	s.analyzeTargets()
 	logger.log(infoLevel, stateLogic, "tick: processReactions")
@@ -70,18 +72,16 @@ func (s *state) tick(moveUnits bool) {
 	s.processRequests()
 	logger.log(infoLevel, stateLogic, "tick: processTerminalPositions")
 	s.processTerminalUnits()
-	logger.log(infoLevel, stateLogic, "tick: refresh")
-	s.refresh()
 	logger.log(infoLevel, stateLogic, "tick: attackUnits")
 	s.attackUnits()
-	logger.log(infoLevel, stateLogic, "tick: despawnUnits")
-	s.despawnUnits()
 	logger.log(infoLevel, stateLogic, "tick: attackNodes")
 	s.attackNodes()
 	logger.log(infoLevel, stateLogic, "tick: moveUnits")
 	if moveUnits {
 		s.moveUnits()
 	}
+	logger.log(infoLevel, stateLogic, "tick: despawnUnits")
+	s.despawnUnits()
 	s.step++
 }
 
@@ -439,9 +439,8 @@ func (s *state) steer(u *unit) position {
 
 func (s *state) moveUnits() {
 	var unitsMovedCount int
+	var unitsNotMovedCount int
 	var unitsAlreadyAttacked int
-	var unitsWithoutTarget int
-	var unitsAtUnwalkable int
 	var unitsAtNode int
 	var unitsAtFinalPosition int
 	var unitsCollideCount int
@@ -457,58 +456,47 @@ func (s *state) moveUnits() {
 			continue
 		}
 
-		moves := u.getMoves()
-		if len(moves) == 0 {
-			continue
-		}
-
-		if u.activeTarget.equals(position{}) {
-			unitsWithoutTarget++
-		}
-
 		var move Move
+		moves := u.getMoves()
 		for _, m := range moves {
 			if u.layer != lLand {
 				move = m
 				break
 			}
-
 			if s.oLUT[m.PixelPosition].UnwalkableChebyshevDistance > u.radius {
 				move = m
 				break
 			}
 		}
 
+		var collidedBorder bool
+		var collidedUnitPos position
+		var collidesWithUnit bool
 		if move.equals(position{}) {
-			unitsAtUnwalkable++
-			continue
+			// TODO: Should this be optimized to only perform this check when the unit
+			// does not typically move e.g. chaff
+			collidedBorder = collidesWithBorder(u.position, u.radius)
+			collidedUnitPos, collidesWithUnit = s.collidesWithUnit(u.position, *u)
+		} else {
+			collidedBorder = collidesWithBorder(move.position, u.radius)
+			collidedUnitPos, collidesWithUnit = s.collidesWithUnit(move.position, *u)
 		}
 
-		collidesWithBorder := collidesWithBorder(move.position, u.radius)
-
-		var collidedUnitPos, collidesWithUnit = s.collidesWithUnit(
-			move.position,
-			*u)
-
-		if collidesWithBorder && collidesWithUnit {
-			// TODO: Low priority but eventually need to handle air collision here.
-			// Most likely can refactor to avoid updating this code directly.
+		if collidedBorder && collidesWithUnit {
 			unitsBorderCollideCount++
 			unitsCollideCount++
-		} else if collidesWithBorder {
+		} else if collidedBorder {
 			unitsBorderCollideCount++
 		} else if collidesWithUnit {
 			unitsCollideCount++
-
 			otherUnits := *s.unitsLayer(collidedUnitPos.layer)
 			otherUnit := otherUnits[collidedUnitPos.PixelPosition]
-			otherUnit.health = 0
-			otherUnit.AtCollision = true
-
-			u.health = 0
-			u.AtCollision = true
+			otherUnit.collidedThisturn = true
+			u.collidedThisturn = true
 		} else if !u.canReachNode.isZero() {
 			unitsAtNode++
+		} else if move.equals(position{}) {
+			unitsNotMovedCount++
 		} else {
 			unitsMovedCount++
 			s.moveUnit(u, move)
@@ -520,8 +508,7 @@ func (s *state) moveUnits() {
 		stateLogic,
 		"moveUnits",
 		slog.Int("units moved", unitsMovedCount),
-		slog.Int("units without target", unitsWithoutTarget),
-		slog.Int("units at unwalkable", unitsAtUnwalkable),
+		slog.Int("units not moved", unitsNotMovedCount),
 		slog.Int("units at node", unitsAtNode),
 		slog.Int("units collided", unitsCollideCount),
 		slog.Int("untis already attacked", unitsAlreadyAttacked),
@@ -643,7 +630,7 @@ func (s state) nearestTargetWithinLayer(u unit, linkedList *unit) (*unit, int) {
 }
 
 func (s *state) collidesWithUnit(p position, u unit) (position, bool) {
-	partitions := s.partitions(u, 0)
+	partitions := s.partitions(u, u.radius)
 	for _, partition := range partitions {
 		if partition == nil {
 			continue
@@ -661,8 +648,8 @@ func (s *state) collidesWithUnit(p position, u unit) (position, bool) {
 }
 
 func (s state) collidesWithUnitLayer(u unit, p position, linkedList *unit) (position, bool) {
-	x1 := p.X + u.radius
-	y1 := p.Y + u.radius
+	x1 := p.X
+	y1 := p.Y
 	r1 := u.radius
 
 	if linkedList == nil || (linkedList.id == u.id && linkedList == linkedList.next) {
@@ -688,12 +675,20 @@ func (s state) collidesWithUnitLayer(u unit, p position, linkedList *unit) (posi
 
 		checkOccurred = true
 
-		if current.id == u.sourceUnit || current.sourceUnit == u.id {
+		if u.ignoreCollision != nil && u.ignoreCollision(current) && u.layer == current.layer {
+			panic(fmt.Sprintf("collidesWithUnitLayer: Cannot ignore collisions between units in same layer. unit: %s, current: %s",
+				u.log(), current.log()))
+		}
+
+		if u.ignoreCollision != nil && u.ignoreCollision(current) ||
+			current.id == u.sourceUnit ||
+			current.sourceUnit == u.id {
+			current = current.next
 			continue
 		}
 
-		x2 := current.X + current.radius
-		y2 := current.Y + current.radius
+		x2 := current.X
+		y2 := current.Y
 		r2 := current.radius
 
 		xDelta := x2 - x1
@@ -771,7 +766,7 @@ func (s *state) despawnUnits() {
 	var despawnUnitTurnCount int
 
 	for u := range s.units() {
-		if u.health <= 0 {
+		if u.health <= 0 || (u.collidedThisturn && !u.survivesCollision) {
 			gridPos, ok := s.g.getGridPos(u.PixelPosition)
 			if !ok {
 				panic(fmt.Sprintf("despawnUnits: expected grid pos to exist for %s", u.PixelPosition.log()))

@@ -82,7 +82,7 @@ type unit struct {
 	health              int
 	movedThisTurn       bool
 	attackedThisTurn    bool
-	AtCollision         bool
+	collidedThisturn    bool
 	canReachNode        node
 	selected            bool
 	prior               *unit
@@ -162,7 +162,7 @@ func (u *unit) refresh() {
 	logger.logSelected(u.selected, infoLevel, selectedUnit, "beforeRefresh", u.log()...)
 	u.movedThisTurn = false
 	u.attackedThisTurn = false
-	u.AtCollision = false
+	u.collidedThisturn = false
 
 	// TODO: Fix once target contract / structure is better understood
 	var p PixelPosition
@@ -569,6 +569,7 @@ func (u unit) log() []slog.Attr {
 	} else {
 		a = append(a, slog.Any("nearest", u.nearest.logShort()))
 	}
+	a = append(a, slog.Bool("collidedThisTurn", u.collidedThisturn))
 	a = append(a, u.unitConfig.log()...)
 	return a
 }

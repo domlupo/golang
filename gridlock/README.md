@@ -41,11 +41,41 @@ Is there a mobile equivalent for war/4x games?
   - art
   - no sound
 
+- Chaff follow ups
+  - Fix chaff bug where radar missile sometimes enters chaff. It seems to occur sometimes when plane emitting chaff is moving away.
+  - Verify chaff counters own radar missiles
+  - Document difference between chaff and signal jamming behaviors
+    - signal jamming
+      - no ammo
+      - counters only opposing radar missiles
+      - counters a single missile at a itme
+    - chaff
+      - uses ammo
+      - counters multiple missiles at a time
+      - counters all radar missiles. Even your own.
+  - Determine if Chaff needs to have merge protections similar to bombs. 
+    - I suspect units will either need:
+       - wait to spawn till space is free
+       - merge on spawn
+  
+- Fix grid.partitions method
+  - When written I made it very conservative. It is too conservative. It makes debugging and reasoning hard.
+  - There is a bug. It seems when when a partition is offscreen it defaults to the zero value. Then
+    it keeps building layers from 0,0. This causes a large number of partitions in top left corner.
+
 - Determine if produceUnits should use step count rather than interval. I think yes so game is more cohesive.
   Right now, enabling high CPU debugging by (press w) will cause more units to spawn over a typical tick rate.
   Another benefit is, produce logic can move from main.go into state.go state.tick method.
 
+- Determine how layers and collisions between layers interact. Document as design decision.
+  - I think every unit only exists in one layer is needed. So we don't waste CPU.
+  - So ordnance or aircraft are default layers and then they interact with non default layers.
+
 - Debug hangs. It seems to occur when fighter and bomber collide in air.
+
+- Verify nearestTargetWithinVision is working correctly. Worried since circle collision
+  check was incorrect. Vision is a bit different since its unit vision <-> unit body where
+  as collision is unit body <-> unit body
 
 - Research every play testing MVP units in depth. Ensure no unrealistic work planned.
   - relative speed between units 
@@ -307,8 +337,6 @@ Is there a mobile equivalent for war/4x games?
    - Need to add an iter to hexagon which iters through all layers
 
 - Don't global pathfind unless needed. (CPU usage is high due to this)
-
-- Refactor state.moveUnits (after boids?) since it is a mess
 
 - Debug why certain node setups are hanging
 

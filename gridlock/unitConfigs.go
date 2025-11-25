@@ -94,8 +94,11 @@ type unitConfig struct {
 	fireOrdnanceDelay          uint64
 	heated                     bool
 	heatSeeking                bool
+	radarGuided                bool
 	ignore                     func(u, t *unit) bool
 	ignoreTarget               func(t *unit) bool
+	ignoreCollision            func(other *unit) bool
+	survivesCollision          bool
 }
 
 // Note: unit radius set to an odd number is better for testing due to division bugs
@@ -179,7 +182,7 @@ var missileRadarActiveConfig = unitConfig{
 	vision:               300,
 	produceLayer:         lOrdnance,
 	targetLayers:         []layer{lOrdnance, lAircraft},
-	collisionLayers:      []layer{lOrdnance, lAircraft},
+	collisionLayers:      []layer{lOrdnance, lAircraft, lChaff},
 	staticTarget:         true,
 	despawnWhenTerminal:  true,
 	speedFactor:          0.5,
@@ -187,6 +190,7 @@ var missileRadarActiveConfig = unitConfig{
 	maxAlivePerNode:      math.MaxInt,
 	ignoreTarget:         func(t *unit) bool { return t.name == flare },
 	terminalWhenMoveDone: true,
+	radarGuided:          true,
 }
 
 var missileHeatSeekingConfig = unitConfig{
@@ -269,14 +273,16 @@ var flareConfig = unitConfig{
 
 var chaffConfig = unitConfig{
 	name:                chaff,
-	radius:              40,
+	radius:              100,
 	maxHealth:           1,
 	produceLayer:        lChaff,
-	collisionLayers:     []layer{lChaff},
+	collisionLayers:     []layer{lOrdnance},
 	staticTarget:        true,
 	maxAlivePerNode:     math.MaxInt,
 	terminalStepDelay:   300,
 	despawnWhenTerminal: true,
+	ignoreCollision:     func(other *unit) bool { return !other.radarGuided },
+	survivesCollision:   true,
 }
 
 // This log method is frequently used for debugging. Also it is typically logged at the end of unit.log().
