@@ -657,6 +657,10 @@ Is there a mobile equivalent for war/4x games?
 
 ## Game Design Questions
 
+- I like the look of mosaics and mosaic the word sounds cool. The hexagon grid pattern reminds me
+  of mosaics a lot. Should I incorporate this in this game or a future game? Should I use mosaics to
+  inspire art direction over other games like catan, risk and gnorp analogue? Maybe polish is
+  mosaic filter.
 - I like how balatro has a skip mechanic. If i make a tech tree which is randomized, a select 1 of 3 can be used.
   Then I can allow either cheap skips to progress further or a reroll option. Initial thought is skip would be
   more interesting than reroll and more skill based.
