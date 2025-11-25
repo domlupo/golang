@@ -75,6 +75,13 @@ Is there a mobile equivalent for war/4x games?
 - Determine how layers and collisions between layers interact. Document as design decision.
   - I think every unit only exists in one layer is needed. So we don't waste CPU.
   - So ordnance or aircraft are default layers and then they interact with non default layers.
+  - Should I keep ballistic layer? I think I should.
+    - If yes, should I modify it so that ballistic never collide? I think no. 
+      - This is relatively a lot of work.
+      - Makes code base less cohesive since a layer has different structure and behavior
+      - Collisions between same player ballistic units will probably be rare.
+      - I need to verify, but I think I can add steering to avoid this entire issue?
+      - This seems like a good candidate for not 100% realistic but makes player experience better.
 
 - Debug hangs. It seems to occur when fighter and bomber collide in air.
 
@@ -92,8 +99,6 @@ Is there a mobile equivalent for war/4x games?
 
 - Implement fighter and bomber
   - scoped out work
-    - Add fighter chaff
-    - Add fighter flares
     - Add fighter signal jamming
     - Add bomber signal jamming
     - Add semi active radar homing missile
@@ -150,21 +155,16 @@ Is there a mobile equivalent for war/4x games?
   - A potential upgrade could be to allow multiple target acquisitions
   - The issue is multiple target acquisitions seems unrealistic.
 
-- Should I keep ballistic layer? I think I should.
-  - If yes, should I modify it so that ballistic never collide? I think no. 
-    - This is relatively a lot of work.
-    - Makes code base less cohesive since a layer has different structure and behavior
-    - Collisions between same player ballistic units will probably be rare.
-    - I need to verify, but I think I can add steering to avoid this entire issue?
-    - This seems like a good candidate for not 100% realistic but makes player experience better.
-
 - Add dynamaic speed to ballistic missile and anti ballistic missile
   - Verify collision still works. I am worried 
   - Should speed be capped or how do I test with max speed?
 
-- Attempt to finalize how land, ordnance and aircraft layers are drawn
+- Attempt to finalize how and what order layers are drawn
   - I am worried about how the visuals look
   - I am worried about how easy is it for players to follow what is going on 
+  - what units are transparent. Which are solid?
+  - Can ordnance / ammo be shown on aircraft?
+  - UI (bar on bottom or across entire screen?)
 
 - Attempt to finalize how targetting works across for all type of targets and units
   - It is fine if it is wrong, but the structure can get closer than what it is. 
@@ -181,11 +181,6 @@ Is there a mobile equivalent for war/4x games?
 - Add better target drawing
   - nodes should show all targets
   - need to differentiate between multi global and multi local targets
-
-- Determine if this is correct player experience
-  - aircraft is transparent
-  - ordnance is transparent
-  - infantry is not transparent
 
 - Design and implement global path finding LUT
   - To start probably want to create like existing LUT (useful for debugging issues with pathfinding)
