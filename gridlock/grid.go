@@ -12,7 +12,7 @@ type grid struct {
 	*hexConfig
 }
 
-// Denotes position for multi pixel game components such as nodes, obstacles, hexagons, etc
+// Position for multi pixel game components such as nodes, obstacles, hexagons, etc
 type GridPosition struct {
 	X int `json:"x"`
 	Y int `json:"y"`
@@ -41,6 +41,13 @@ const (
 	hsWest
 	hsNorthwest
 )
+
+// Basic hexagon pixel position shared amongst all hexagons. The left side of
+// the hexagon is aligned with x=0. The top point of the hexagon is aligned with y=0.
+// By motif definition, x must be less than hex width and y must be less than hex height.
+type demotif struct {
+	PixelPosition
+}
 
 func hexPoints() []hexPoint {
 	return []hexPoint{hpCenter, hpNorth, hpNortheast, hpSoutheast, hpSouth, hpSouthwest, hpNorthwest}
@@ -260,4 +267,35 @@ func (g grid) getGridPosOutbounds(p PixelPosition) GridPosition {
 	}
 
 	return GridPosition{xIndex + xIndexOffset, yIndex + yIndexOffset}
+}
+
+// Remove the repeated hexagon grid pattern from the pixel position to find the basic
+// hexagon pixel position shared amongst all hexagons. The left side of the hexagon is
+// aligned with x=0. The top point of the hexagon is aligned with y=0. By motif
+// definition, x must be less than hex width and y must be less than hex height.
+func (g grid) demotif(p PixelPosition) (demotif, bool) {
+	gp, ok := g.getGridPos(p)
+	if !ok {
+		return demotif{}, false
+	}
+	// Offset hexagon to {0, 0}.
+	// The left side of the hexagon is aligned with x=0.
+	// The top point of the hexagon is aligned with y=0.
+	p.X += (g.hexWidth / 2) - g.xOffset
+	p.Y += (g.hexHeight / 2)
+	// Remove the repeated hexagon grid pattern.
+	p.Y -= gp.Y * (g.hexHeight * 3 / 4)
+	switch gp.Y % 2 {
+	case 0:
+		p.X -= gp.X * g.hexWidth
+	case 1:
+		p.X -= gp.X * g.hexWidth
+		p.X += g.hexWidth / 2
+	default:
+		panic("demotif: invalid modulo")
+	}
+	if p.X >= g.hexWidth || p.Y >= g.hexHeight {
+		panic(fmt.Sprintf("demotif: by motif definition, x must be less than hex width and y must be less than hex height %s", p.log()))
+	}
+	return demotif{p}, true
 }

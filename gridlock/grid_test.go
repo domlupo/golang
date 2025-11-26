@@ -189,7 +189,7 @@ func TestGetGridPos(t *testing.T) {
 		{PixelPosition{89, 0}, GridPosition{2, 0}, true},
 		{PixelPosition{89, 1}, GridPosition{2, 0}, true},
 
-		// second top border point hex change around 134,0 pixel position
+		// third top border point hex change around 134,0 pixel position
 		{PixelPosition{133, -1}, GridPosition{0, 0}, false},
 		{PixelPosition{133, 0}, GridPosition{2, 0}, true},
 		{PixelPosition{133, 1}, GridPosition{2, 0}, true},
@@ -1017,4 +1017,265 @@ func TestAdjacent(t *testing.T) {
 		})
 	}
 
+}
+
+func TestDemotif(t *testing.T) {
+	t.Parallel()
+	var tests = []struct {
+		pixelPos      PixelPosition
+		wantedDemotif demotif
+		wantedOk      bool
+	}{
+		// hexagon points near 19, 20 pixel position
+		{PixelPosition{18, 19}, demotif{PixelPosition{22, 39}}, true},
+		{PixelPosition{18, 20}, demotif{PixelPosition{45, 10}}, true},
+		{PixelPosition{18, 21}, demotif{PixelPosition{45, 11}}, true},
+		{PixelPosition{19, 19}, demotif{PixelPosition{23, 39}}, true},
+		{PixelPosition{19, 20}, demotif{PixelPosition{0, 10}}, true},
+		{PixelPosition{19, 21}, demotif{PixelPosition{0, 11}}, true},
+		{PixelPosition{20, 19}, demotif{PixelPosition{1, 9}}, true},
+		{PixelPosition{20, 20}, demotif{PixelPosition{1, 10}}, true},
+		{PixelPosition{20, 21}, demotif{PixelPosition{1, 11}}, true},
+
+		// hexagon points near 19, 40 pixel position
+		{PixelPosition{18, 39}, demotif{PixelPosition{45, 29}}, true},
+		{PixelPosition{18, 40}, demotif{PixelPosition{22, 0}}, true},
+		{PixelPosition{18, 41}, demotif{PixelPosition{22, 1}}, true},
+		{PixelPosition{19, 39}, demotif{PixelPosition{0, 29}}, true},
+		{PixelPosition{19, 40}, demotif{PixelPosition{23, 0}}, true},
+		{PixelPosition{19, 41}, demotif{PixelPosition{23, 1}}, true},
+		{PixelPosition{20, 39}, demotif{PixelPosition{1, 29}}, true},
+		{PixelPosition{20, 40}, demotif{PixelPosition{1, 30}}, true},
+		{PixelPosition{20, 41}, demotif{PixelPosition{24, 1}}, true},
+
+		// hexagon points near 42, 10 pixel position
+		{PixelPosition{41, 9}, demotif{PixelPosition{45, 29}}, true},
+		{PixelPosition{41, 10}, demotif{PixelPosition{22, 0}}, true},
+		{PixelPosition{41, 11}, demotif{PixelPosition{22, 1}}, true},
+		{PixelPosition{42, 9}, demotif{PixelPosition{0, 29}}, true},
+		{PixelPosition{42, 10}, demotif{PixelPosition{23, 0}}, true},
+		{PixelPosition{42, 11}, demotif{PixelPosition{23, 1}}, true},
+		{PixelPosition{43, 9}, demotif{PixelPosition{1, 29}}, true},
+		{PixelPosition{43, 10}, demotif{PixelPosition{1, 30}}, true},
+		{PixelPosition{43, 11}, demotif{PixelPosition{24, 1}}, true},
+
+		// hexagon points near 42, 50 pixel position
+		{PixelPosition{41, 49}, demotif{PixelPosition{22, 39}}, true},
+		{PixelPosition{41, 50}, demotif{PixelPosition{45, 10}}, true},
+		{PixelPosition{41, 51}, demotif{PixelPosition{45, 11}}, true},
+		{PixelPosition{42, 49}, demotif{PixelPosition{23, 39}}, true},
+		{PixelPosition{42, 50}, demotif{PixelPosition{0, 10}}, true},
+		{PixelPosition{42, 51}, demotif{PixelPosition{0, 11}}, true},
+		{PixelPosition{43, 49}, demotif{PixelPosition{1, 9}}, true},
+		{PixelPosition{43, 50}, demotif{PixelPosition{1, 10}}, true},
+		{PixelPosition{43, 51}, demotif{PixelPosition{1, 11}}, true},
+
+		// hexagon points near 65, 20 pixel position
+		{PixelPosition{64, 19}, demotif{PixelPosition{22, 39}}, true},
+		{PixelPosition{64, 20}, demotif{PixelPosition{45, 10}}, true},
+		{PixelPosition{64, 21}, demotif{PixelPosition{45, 11}}, true},
+		{PixelPosition{65, 19}, demotif{PixelPosition{23, 39}}, true},
+		{PixelPosition{65, 20}, demotif{PixelPosition{0, 10}}, true},
+		{PixelPosition{65, 21}, demotif{PixelPosition{0, 11}}, true},
+		{PixelPosition{66, 19}, demotif{PixelPosition{1, 9}}, true},
+		{PixelPosition{66, 20}, demotif{PixelPosition{1, 10}}, true},
+		{PixelPosition{66, 21}, demotif{PixelPosition{1, 11}}, true},
+
+		// hexagon points near 65, 40 pixel position
+		{PixelPosition{64, 39}, demotif{PixelPosition{45, 29}}, true},
+		{PixelPosition{64, 40}, demotif{PixelPosition{22, 0}}, true},
+		{PixelPosition{64, 41}, demotif{PixelPosition{22, 1}}, true},
+		{PixelPosition{65, 39}, demotif{PixelPosition{0, 29}}, true},
+		{PixelPosition{65, 40}, demotif{PixelPosition{23, 0}}, true},
+		{PixelPosition{65, 41}, demotif{PixelPosition{23, 1}}, true},
+		{PixelPosition{66, 39}, demotif{PixelPosition{1, 29}}, true},
+		{PixelPosition{66, 40}, demotif{PixelPosition{1, 30}}, true},
+		{PixelPosition{66, 41}, demotif{PixelPosition{24, 1}}, true},
+
+		// top left of entire hex grid
+		{PixelPosition{0, 0}, demotif{PixelPosition{4, 20}}, true},
+		{PixelPosition{-1, 0}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{0, -1}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{-1, -1}, demotif{PixelPosition{0, 0}}, false},
+
+		// first left border point hex change around 0,12 pixel position
+		{PixelPosition{-1, 11}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{-1, 12}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{-1, 13}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{0, 11}, demotif{PixelPosition{4, 31}}, true},
+		{PixelPosition{0, 12}, demotif{PixelPosition{27, 2}}, true},
+		{PixelPosition{0, 13}, demotif{PixelPosition{27, 3}}, true},
+		{PixelPosition{1, 11}, demotif{PixelPosition{5, 31}}, true},
+		{PixelPosition{1, 12}, demotif{PixelPosition{28, 2}}, true},
+		{PixelPosition{1, 13}, demotif{PixelPosition{28, 3}}, true},
+
+		// second left border point hex change around 0,48 pixel position
+		{PixelPosition{-1, 47}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{-1, 48}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{-1, 49}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{0, 47}, demotif{PixelPosition{27, 37}}, true},
+		{PixelPosition{0, 48}, demotif{PixelPosition{4, 8}}, true},
+		{PixelPosition{0, 49}, demotif{PixelPosition{4, 9}}, true},
+		{PixelPosition{1, 47}, demotif{PixelPosition{28, 37}}, true},
+		{PixelPosition{1, 48}, demotif{PixelPosition{5, 8}}, true},
+		{PixelPosition{1, 49}, demotif{PixelPosition{5, 9}}, true},
+
+		// third left border point hex change around 0,72 pixel position
+		{PixelPosition{-1, 71}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{-1, 72}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{-1, 73}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{0, 71}, demotif{PixelPosition{4, 31}}, true},
+		{PixelPosition{0, 72}, demotif{PixelPosition{27, 2}}, true},
+		{PixelPosition{0, 73}, demotif{PixelPosition{27, 3}}, true},
+		{PixelPosition{1, 71}, demotif{PixelPosition{5, 31}}, true},
+		{PixelPosition{1, 72}, demotif{PixelPosition{28, 2}}, true},
+		{PixelPosition{1, 73}, demotif{PixelPosition{28, 3}}, true},
+
+		// first top border point hex change around 42,0 pixel position
+		{PixelPosition{41, -1}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{41, 0}, demotif{PixelPosition{45, 20}}, true},
+		{PixelPosition{41, 1}, demotif{PixelPosition{45, 21}}, true},
+		{PixelPosition{42, -1}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{42, 0}, demotif{PixelPosition{0, 20}}, true},
+		{PixelPosition{42, 1}, demotif{PixelPosition{0, 21}}, true},
+		{PixelPosition{43, -1}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{43, 0}, demotif{PixelPosition{1, 20}}, true},
+		{PixelPosition{43, 1}, demotif{PixelPosition{1, 21}}, true},
+
+		// second top border point hex change around 88, 0 pixel position
+		{PixelPosition{87, -1}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{87, 0}, demotif{PixelPosition{45, 20}}, true},
+		{PixelPosition{87, 1}, demotif{PixelPosition{45, 21}}, true},
+		{PixelPosition{88, -1}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{88, 0}, demotif{PixelPosition{0, 20}}, true},
+		{PixelPosition{88, 1}, demotif{PixelPosition{0, 21}}, true},
+		{PixelPosition{89, -1}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{89, 0}, demotif{PixelPosition{1, 20}}, true},
+		{PixelPosition{89, 1}, demotif{PixelPosition{1, 21}}, true},
+
+		// third top border point hex change around 134,0 pixel position
+		{PixelPosition{133, -1}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{133, 0}, demotif{PixelPosition{45, 20}}, true},
+		{PixelPosition{133, 1}, demotif{PixelPosition{45, 21}}, true},
+		{PixelPosition{134, -1}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{134, 0}, demotif{PixelPosition{0, 20}}, true},
+		{PixelPosition{134, 1}, demotif{PixelPosition{0, 21}}, true},
+		{PixelPosition{135, -1}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{135, 0}, demotif{PixelPosition{1, 20}}, true},
+		{PixelPosition{135, 1}, demotif{PixelPosition{1, 21}}, true},
+
+		// hexagon points near 19, 80 pixel position
+		{PixelPosition{18, 79}, demotif{PixelPosition{22, 39}}, true},
+		{PixelPosition{18, 80}, demotif{PixelPosition{45, 10}}, true},
+		{PixelPosition{18, 81}, demotif{PixelPosition{45, 11}}, true},
+		{PixelPosition{19, 79}, demotif{PixelPosition{23, 39}}, true},
+		{PixelPosition{19, 80}, demotif{PixelPosition{0, 10}}, true},
+		{PixelPosition{19, 81}, demotif{PixelPosition{0, 11}}, true},
+		{PixelPosition{20, 79}, demotif{PixelPosition{1, 9}}, true},
+		{PixelPosition{20, 80}, demotif{PixelPosition{1, 10}}, true},
+		{PixelPosition{20, 81}, demotif{PixelPosition{1, 11}}, true},
+
+		// hexagon points near 42, 70 pixel position
+		{PixelPosition{41, 69}, demotif{PixelPosition{45, 29}}, true},
+		{PixelPosition{41, 70}, demotif{PixelPosition{22, 0}}, true},
+		{PixelPosition{41, 71}, demotif{PixelPosition{22, 1}}, true},
+		{PixelPosition{42, 69}, demotif{PixelPosition{0, 29}}, true},
+		{PixelPosition{42, 70}, demotif{PixelPosition{23, 0}}, true},
+		{PixelPosition{42, 71}, demotif{PixelPosition{23, 1}}, true},
+		{PixelPosition{43, 69}, demotif{PixelPosition{1, 29}}, true},
+		{PixelPosition{43, 70}, demotif{PixelPosition{1, 30}}, true},
+		{PixelPosition{43, 71}, demotif{PixelPosition{24, 1}}, true},
+
+		// hexagon points near 65, 80 pixel position
+		{PixelPosition{64, 79}, demotif{PixelPosition{22, 39}}, true},
+		{PixelPosition{64, 80}, demotif{PixelPosition{45, 10}}, true},
+		{PixelPosition{64, 81}, demotif{PixelPosition{45, 11}}, true},
+		{PixelPosition{65, 79}, demotif{PixelPosition{23, 39}}, true},
+		{PixelPosition{65, 80}, demotif{PixelPosition{0, 10}}, true},
+		{PixelPosition{65, 81}, demotif{PixelPosition{0, 11}}, true},
+		{PixelPosition{66, 79}, demotif{PixelPosition{1, 9}}, true},
+		{PixelPosition{66, 80}, demotif{PixelPosition{1, 10}}, true},
+		{PixelPosition{66, 81}, demotif{PixelPosition{1, 11}}, true},
+
+		// hexagon points near 88, 10 pixel position
+		{PixelPosition{87, 9}, demotif{PixelPosition{45, 29}}, true},
+		{PixelPosition{87, 10}, demotif{PixelPosition{22, 0}}, true},
+		{PixelPosition{87, 11}, demotif{PixelPosition{22, 1}}, true},
+		{PixelPosition{88, 9}, demotif{PixelPosition{0, 29}}, true},
+		{PixelPosition{88, 10}, demotif{PixelPosition{23, 0}}, true},
+		{PixelPosition{88, 11}, demotif{PixelPosition{23, 1}}, true},
+		{PixelPosition{89, 9}, demotif{PixelPosition{1, 29}}, true},
+		{PixelPosition{89, 10}, demotif{PixelPosition{1, 30}}, true},
+		{PixelPosition{89, 11}, demotif{PixelPosition{24, 1}}, true},
+
+		// hexagon points near 88, 50 pixel position
+		{PixelPosition{87, 49}, demotif{PixelPosition{22, 39}}, true},
+		{PixelPosition{87, 50}, demotif{PixelPosition{45, 10}}, true},
+		{PixelPosition{87, 51}, demotif{PixelPosition{45, 11}}, true},
+		{PixelPosition{88, 49}, demotif{PixelPosition{23, 39}}, true},
+		{PixelPosition{88, 50}, demotif{PixelPosition{0, 10}}, true},
+		{PixelPosition{88, 51}, demotif{PixelPosition{0, 11}}, true},
+		{PixelPosition{89, 49}, demotif{PixelPosition{1, 9}}, true},
+		{PixelPosition{89, 50}, demotif{PixelPosition{1, 10}}, true},
+		{PixelPosition{89, 51}, demotif{PixelPosition{1, 11}}, true},
+
+		// hexagon points near 88, 70 pixel position
+		{PixelPosition{87, 69}, demotif{PixelPosition{45, 29}}, true},
+		{PixelPosition{87, 70}, demotif{PixelPosition{22, 0}}, true},
+		{PixelPosition{87, 71}, demotif{PixelPosition{22, 1}}, true},
+		{PixelPosition{88, 69}, demotif{PixelPosition{0, 29}}, true},
+		{PixelPosition{88, 70}, demotif{PixelPosition{23, 0}}, true},
+		{PixelPosition{88, 71}, demotif{PixelPosition{23, 1}}, true},
+		{PixelPosition{89, 69}, demotif{PixelPosition{1, 29}}, true},
+		{PixelPosition{89, 70}, demotif{PixelPosition{1, 30}}, true},
+		{PixelPosition{89, 71}, demotif{PixelPosition{24, 1}}, true},
+
+		// bottom left of entire hex grid
+		{PixelPosition{-1, 719}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{-1, 720}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{0, 719}, demotif{PixelPosition{4, 19}}, true},
+		{PixelPosition{0, 720}, demotif{PixelPosition{0, 0}}, false},
+
+		// top right of entire hex grid
+		{PixelPosition{1279, -1}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{1280, -1}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{1279, 0}, demotif{PixelPosition{41, 20}}, true},
+		{PixelPosition{1280, 0}, demotif{PixelPosition{0, 0}}, false},
+
+		// bottom right of entire hex grid
+		{PixelPosition{1279, 719}, demotif{PixelPosition{41, 19}}, true},
+		{PixelPosition{1280, 719}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{1279, 720}, demotif{PixelPosition{0, 0}}, false},
+		{PixelPosition{1280, 720}, demotif{PixelPosition{0, 0}}, false},
+	}
+
+	for _, tt := range tests {
+		var sWantedOk string
+		if tt.wantedOk {
+			sWantedOk = "exist"
+		} else {
+			sWantedOk = "not exist"
+		}
+
+		testname := fmt.Sprintf(
+			"PixelPosition %s demotifs to %s and want it to %s",
+			tt.pixelPos.log(),
+			tt.wantedDemotif.log(),
+			sWantedOk)
+
+		hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
+		g := grid{&hc}
+		t.Run(testname, func(t *testing.T) {
+			demotif, ok := g.demotif(tt.pixelPos)
+			if ok != tt.wantedOk {
+				t.Errorf("Wanted pixel position to %s", sWantedOk)
+			}
+			if !demotif.equals(tt.wantedDemotif.PixelPosition) {
+				t.Errorf("For PixelPosition %s wanted demotif %s but it was %s",
+					tt.pixelPos.log(),
+					tt.wantedDemotif.log(),
+					demotif.log())
+			}
+		})
+	}
 }
