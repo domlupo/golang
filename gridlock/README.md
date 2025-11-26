@@ -503,6 +503,15 @@ Determine if I should clarify file names
 
 ### Punted Checkpoints
 
+- Before release determine if any variables should be renamed. Especially foundational structs
+  - PixelPostition
+  - position
+  - etc
+  - I don't want to have to deal with client cache clears due to remaing json fields.
+  - If the code is ever open sourced this is a great way to fix design issue of
+    not knowing end state and have having to make progress anyway with var names
+    that become terrible.
+
 - I like the solitaire end game screen. Make a cool pre game or end game animation:
   - pregame menu screen can have animation in background
   - boids behavior (multiple fighters flying around)
