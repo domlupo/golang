@@ -8,10 +8,10 @@ import (
 func TestGetPixelPos(t *testing.T) {
 	t.Parallel()
 	var tests = []struct {
-		gridPos        GridPosition
-		hexPoint       hexPoint
-		wantedPixelPos PixelPosition
-		wantedOk       bool
+		gridPos      GridPosition
+		hexPoint     hexPoint
+		wantPixelPos PixelPosition
+		wantOk       bool
 	}{
 
 		// check hexagon {1, 1}, {1, 2}, {2,1} to ensure hex points are correct
@@ -84,11 +84,11 @@ func TestGetPixelPos(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		var sWantedOk string
-		if tt.wantedOk {
-			sWantedOk = "exist"
+		var sWantOk string
+		if tt.wantOk {
+			sWantOk = "exist"
 		} else {
-			sWantedOk = "not exist"
+			sWantOk = "not exist"
 		}
 
 		testname := fmt.Sprintf(
@@ -96,24 +96,24 @@ func TestGetPixelPos(t *testing.T) {
 			tt.gridPos.X,
 			tt.gridPos.Y,
 			tt.hexPoint,
-			tt.wantedPixelPos.X,
-			tt.wantedPixelPos.Y,
-			sWantedOk)
+			tt.wantPixelPos.X,
+			tt.wantPixelPos.Y,
+			sWantOk)
 
 		hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
 		g := grid{&hc}
 		t.Run(testname, func(t *testing.T) {
 			pos, ok := g.getPixelPos(tt.gridPos, tt.hexPoint)
-			if ok != tt.wantedOk {
-				t.Errorf("Wanted pixel position to %s", sWantedOk)
+			if ok != tt.wantOk {
+				t.Errorf("Want pixel position to %s", sWantOk)
 			}
-			if !pos.equals(tt.wantedPixelPos) {
-				t.Errorf("For grid pos {%d,%d} and hex point %d  Wanted grid position {%d,%d} but it was {%d,%d}",
+			if !pos.equals(tt.wantPixelPos) {
+				t.Errorf("For grid pos {%d,%d} and hex point %d  Want grid position {%d,%d} but it was {%d,%d}",
 					tt.gridPos.X,
 					tt.gridPos.Y,
 					tt.hexPoint,
-					tt.wantedPixelPos.X,
-					tt.wantedPixelPos.Y,
+					tt.wantPixelPos.X,
+					tt.wantPixelPos.Y,
 					pos.X,
 					pos.Y)
 			}
@@ -124,9 +124,9 @@ func TestGetPixelPos(t *testing.T) {
 func TestGetGridPos(t *testing.T) {
 	t.Parallel()
 	var tests = []struct {
-		pixelPos  PixelPosition
-		wantedPos GridPosition
-		wantedOk  bool
+		pixelPos PixelPosition
+		wantPos  GridPosition
+		wantOk   bool
 	}{
 		// top left of entire hex grid
 		{PixelPosition{0, 0}, GridPosition{0, 0}, true},
@@ -842,32 +842,32 @@ func TestGetGridPos(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		var sWantedOk string
-		if tt.wantedOk {
-			sWantedOk = "exist"
+		var sWantOk string
+		if tt.wantOk {
+			sWantOk = "exist"
 		} else {
-			sWantedOk = "not exist"
+			sWantOk = "not exist"
 		}
 
 		testname := fmt.Sprintf(
 			"PixelPosition:%s converts to hex grid position {%d,%d} and want it to %s",
 			tt.pixelPos.log(),
-			tt.wantedPos.X,
-			tt.wantedPos.Y,
-			sWantedOk)
+			tt.wantPos.X,
+			tt.wantPos.Y,
+			sWantOk)
 
 		hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
 		g := grid{&hc}
 		t.Run(testname, func(t *testing.T) {
 			pos, ok := g.getGridPos(tt.pixelPos)
-			if ok != tt.wantedOk {
-				t.Errorf("Wanted pixel position to %s", sWantedOk)
+			if ok != tt.wantOk {
+				t.Errorf("Want pixel position to %s", sWantOk)
 			}
-			if !pos.equals(tt.wantedPos) {
-				t.Errorf("For pixel position %s, Wanted grid position {%d,%d} but it was {%d,%d}",
+			if !pos.equals(tt.wantPos) {
+				t.Errorf("For pixel position %s, Want grid position {%d,%d} but it was {%d,%d}",
 					tt.pixelPos.log(),
-					tt.wantedPos.X,
-					tt.wantedPos.Y,
+					tt.wantPos.X,
+					tt.wantPos.Y,
 					pos.X,
 					pos.Y)
 			}
@@ -878,10 +878,10 @@ func TestGetGridPos(t *testing.T) {
 func TestAdjacent(t *testing.T) {
 	t.Parallel()
 	var tests = []struct {
-		gridPos       GridPosition
-		hexSide       hexSide
-		wantedGridPos GridPosition
-		wantedOk      bool
+		gridPos     GridPosition
+		hexSide     hexSide
+		wantGridPos GridPosition
+		wantOk      bool
 	}{
 		// check top left hexagon {0,0}
 		{GridPosition{0, 0}, hsNortheast, GridPosition{0, 0}, false},
@@ -981,11 +981,11 @@ func TestAdjacent(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		var sWantedOk string
-		if tt.wantedOk {
-			sWantedOk = "exist"
+		var sWantOk string
+		if tt.wantOk {
+			sWantOk = "exist"
 		} else {
-			sWantedOk = "not exist"
+			sWantOk = "not exist"
 		}
 
 		testname := fmt.Sprintf(
@@ -993,24 +993,24 @@ func TestAdjacent(t *testing.T) {
 			tt.gridPos.X,
 			tt.gridPos.Y,
 			tt.hexSide,
-			tt.wantedGridPos.X,
-			tt.wantedGridPos.Y,
-			sWantedOk)
+			tt.wantGridPos.X,
+			tt.wantGridPos.Y,
+			sWantOk)
 
 		hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
 		g := grid{&hc}
 		t.Run(testname, func(t *testing.T) {
 			pos, ok := g.adjacent(tt.gridPos, tt.hexSide)
-			if ok != tt.wantedOk {
-				t.Errorf("Wanted pixel position to %s", sWantedOk)
+			if ok != tt.wantOk {
+				t.Errorf("Want pixel position to %s", sWantOk)
 			}
-			if !pos.equals(tt.wantedGridPos) {
-				t.Errorf("For grid pos {%d,%d} and hex side %d Wanted grid position {%d,%d} but it was {%d,%d}",
+			if !pos.equals(tt.wantGridPos) {
+				t.Errorf("For grid pos {%d,%d} and hex side %d Want grid position {%d,%d} but it was {%d,%d}",
 					tt.gridPos.X,
 					tt.gridPos.Y,
 					tt.hexSide,
-					tt.wantedGridPos.X,
-					tt.wantedGridPos.Y,
+					tt.wantGridPos.X,
+					tt.wantGridPos.Y,
 					pos.X,
 					pos.Y)
 			}
@@ -1022,9 +1022,9 @@ func TestAdjacent(t *testing.T) {
 func TestDemotif(t *testing.T) {
 	t.Parallel()
 	var tests = []struct {
-		pixelPos      PixelPosition
-		wantedDemotif demotif
-		wantedOk      bool
+		pixelPos    PixelPosition
+		wantDemotif demotif
+		wantOk      bool
 	}{
 		// hexagon points near 19, 20 pixel position
 		{PixelPosition{18, 19}, demotif{PixelPosition{22, 39}}, true},
@@ -1250,30 +1250,30 @@ func TestDemotif(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		var sWantedOk string
-		if tt.wantedOk {
-			sWantedOk = "exist"
+		var sWantOk string
+		if tt.wantOk {
+			sWantOk = "exist"
 		} else {
-			sWantedOk = "not exist"
+			sWantOk = "not exist"
 		}
 
 		testname := fmt.Sprintf(
 			"PixelPosition %s demotifs to %s and want it to %s",
 			tt.pixelPos.log(),
-			tt.wantedDemotif.log(),
-			sWantedOk)
+			tt.wantDemotif.log(),
+			sWantOk)
 
 		hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
 		g := grid{&hc}
 		t.Run(testname, func(t *testing.T) {
 			demotif, ok := g.demotif(tt.pixelPos)
-			if ok != tt.wantedOk {
-				t.Errorf("Wanted pixel position to %s", sWantedOk)
+			if ok != tt.wantOk {
+				t.Errorf("Want pixel position to %s", sWantOk)
 			}
-			if !demotif.equals(tt.wantedDemotif.PixelPosition) {
-				t.Errorf("For PixelPosition %s wanted demotif %s but it was %s",
+			if !demotif.equals(tt.wantDemotif.PixelPosition) {
+				t.Errorf("For PixelPosition %s want demotif %s but it was %s",
 					tt.pixelPos.log(),
-					tt.wantedDemotif.log(),
+					tt.wantDemotif.log(),
 					demotif.log())
 			}
 		})
