@@ -14,32 +14,56 @@ Is there a mobile equivalent for war/4x games?
 1. Design and iterate on Local path finding -> Most unknown but fundamental game engine decision.
 2. Faster iteration from better inspection and debugging tooling. -> Don't waste engineering effort due to poor prioritization.
 3. Playtesting MVP. -> Don't invest major engineering effort into wrong tasks.
+  - Playtesting MVP
+    - units: 
+      - fighter
+      - bomber
+      - infantry
+      - node ballistic missile
+      - node cruise missile
+      - node anti ballistic missile
+      - node anti air missile (can reuse other missiles e.g. heat seeking, etc)
+    - risk vs reward mechanics
+      - produce infantry
+      - produce advanced unit
+      - research tech/upgrades
+    - randomized tech tree
+      - select 1 of 3 upgrades
+      - skip mechanic?
+    - randomized map generation
+    - human vs computer
+    - deploy to web
+    - art
+    - no sound
 
 ## Checkpoints
 
 ### Next Checkpoints
 
-- Playtesting MVP
-  - units: 
-    - fighter
-    - bomber
-    - infantry
-    - node ballistic missile
-    - node cruise missile
-    - node anti ballistic missile
-    - node anti air missile (can reuse other missiles e.g. heat seeking, etc)
-  - risk vs reward mechanics
-    - produce infantry
-    - produce advanced unit
-    - research tech/upgrades
-  - randomized tech tree
-    - select 1 of 3 upgrades
-    - skip mechanic?
-  - randomized map generation
-  - human vs computer
-  - deploy to web
-  - art
-  - no sound
+Determine if I should clarify file names
+  - It is weird that I have some singular and some plural. I think I should make all files singular.
+  - def should be single
+    - debugger
+    - file handler
+    - grid
+    - logger
+    - main
+    - misc
+    - partitioner
+    - state
+  - less sure if singular or plural
+    - computer
+    - draws
+    - hexagon
+    - layer
+    - node
+    - obstacle
+    - positions
+    - reactions
+    - setups
+    - toggle
+    - unit
+    - unitConfigs
 
 - Optimize state.partitions for infantry
   - There are several ways to optimize this.
