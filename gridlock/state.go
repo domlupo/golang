@@ -250,7 +250,7 @@ func (s *state) spawnRequest(r request) bool {
 	return true
 }
 
-func (s *state) moveUnit(u *unit, m Move) {
+func (s *state) moveUnit(u *unit, m move) {
 	old, oOk := s.g.getGridPos(u.PixelPosition)
 	new, nOk := s.g.getGridPos(m.PixelPosition)
 	if !oOk || !nOk {
@@ -514,7 +514,7 @@ func (s *state) moveUnits() {
 			continue
 		}
 
-		var move Move
+		var move move
 		moves := u.getMoves()
 		for _, m := range moves {
 			if u.layer != lLand {

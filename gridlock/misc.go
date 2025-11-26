@@ -64,7 +64,7 @@ type action struct {
 }
 
 // Stores a callback to invoke when a move is confirmed.
-type Move struct {
+type move struct {
 	position
 	confirm func()
 }

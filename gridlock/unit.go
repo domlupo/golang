@@ -208,10 +208,10 @@ func (u *unit) prioritizeTargets() {
 // Uses Bresenham's line algorithm https://en.wikipedia.org/wiki/Bresenham's_line_algorithm
 // Specifically, the integer incremental error form where error is stored over mulitple moves
 // This algorithm prioritizes straight line movement. It is not guaranteed the final position is reached.
-func (u *unit) getMoves() []Move {
+func (u *unit) getMoves() []move {
 	logger.logSelected(u.selected, infoLevel, selectedUnit, "getMoves: ", u.position.log()...)
 
-	moves := make([]Move, 0)
+	moves := make([]move, 0)
 	u.moveDone = true
 	u.bresenhamErrorDx = 0
 	u.bresenhamErrorDy = 0
@@ -296,8 +296,8 @@ func (u *unit) getMoves() []Move {
 	return moves
 }
 
-func (u *unit) newMove(s subPixelPosition) Move {
-	return Move{
+func (u *unit) newMove(s subPixelPosition) move {
+	return move{
 		position: position{u.layer, u.downscale(s)},
 		confirm:  func() { u.confirmMove(s) }}
 }
