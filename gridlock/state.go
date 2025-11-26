@@ -34,8 +34,8 @@ type request struct {
 
 // not enforced but must be a singleton
 type state struct {
-	c                stateConfig
-	g                grid
+	config           stateConfig
+	grid             grid
 	partitioner      partitioner
 	oLUT             obstacleLUT
 	nLUT             nodeLUT
@@ -58,8 +58,8 @@ type state struct {
 
 func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, g grid, developerMode bool) *state {
 	s := state{
-		c:                newStateConfig(g),
-		g:                g,
+		config:           newStateConfig(g),
+		grid:             g,
 		partitioner:      newPartitioner(g, h),
 		obstacles:        o,
 		oLUT:             oLUT,
@@ -98,13 +98,13 @@ func (s *state) tick() {
 	logger.log(infoLevel, stateLogic, "tick: attackNodes")
 	s.attackNodes()
 	logger.log(infoLevel, stateLogic, "tick: moveUnits")
-	if s.c.moveUnits {
+	if s.config.moveUnits {
 		s.moveUnits()
 	}
 	logger.log(infoLevel, stateLogic, "tick: despawnUnits")
 	s.despawnUnits()
 	logger.log(infoLevel, stateLogic, "tick: produceUnits")
-	if s.c.produceUnits && s.step%s.c.produceUnitsStepInterval == 0 {
+	if s.config.produceUnits && s.step%s.config.produceUnitsStepInterval == 0 {
 		s.produceUnits()
 	}
 	s.step++
@@ -178,10 +178,10 @@ func (s state) unitsLayer(l layer) *units {
 
 func (s *state) spawn(u *unit) {
 	// TODO: Verify if this should be >= rather than more conservative >
-	if u.radius > s.c.spawnUnitRadiusLimit && !u.skipSpawnRadiusCheck {
-		panic(fmt.Sprintf("spawn: cannot spawn unit radius %d exceeds spawn radius limit %d", u.radius, s.c.spawnUnitRadiusLimit))
+	if u.radius > s.config.spawnUnitRadiusLimit && !u.skipSpawnRadiusCheck {
+		panic(fmt.Sprintf("spawn: cannot spawn unit radius %d exceeds spawn radius limit %d", u.radius, s.config.spawnUnitRadiusLimit))
 	}
-	p, ok := s.g.getGridPos(u.PixelPosition)
+	p, ok := s.grid.getGridPos(u.PixelPosition)
 	if !ok {
 		panic(fmt.Sprintf("spawnUnit: cannot get get grid position %s", u.PixelPosition.log()))
 	}
@@ -224,8 +224,8 @@ func (s *state) spawnRequest(r request) bool {
 }
 
 func (s *state) moveUnit(u *unit, m move) {
-	old, oOk := s.g.getGridPos(u.PixelPosition)
-	new, nOk := s.g.getGridPos(m.PixelPosition)
+	old, oOk := s.grid.getGridPos(u.PixelPosition)
+	new, nOk := s.grid.getGridPos(m.PixelPosition)
 	if !oOk || !nOk {
 		panic(fmt.Sprintf("moveUnit: cannot move unit %s %s", u.PixelPosition.log(), m.PixelPosition.log()))
 	}
@@ -311,7 +311,7 @@ func (s *state) processRequests() {
 }
 
 func (s *state) partitions(u unit, pa partitionAnalysis) []*hexagon {
-	return s.partitioner.partitions(u, pa, s.c.spawnUnitRadiusLimit)
+	return s.partitioner.partitions(u, pa, s.config.spawnUnitRadiusLimit)
 }
 
 func (s *state) analyzeTargets() {
@@ -391,7 +391,7 @@ func (s *state) analyzeTargets() {
 		u.updateTargetUnit(enemyTarget, u.nearest)
 
 		if len(u.globalTargets) > 0 && u.pathGlobalTarget {
-			u.pathfindGlobalTarget(s.obstacles, s.oLUT, s.g)
+			u.pathfindGlobalTarget(s.obstacles, s.oLUT, s.grid)
 		} else if len(u.localTargets) > 0 && u.moveDone {
 			u.localTargets = u.localTargets[:len(u.localTargets)-1]
 		}
@@ -770,7 +770,7 @@ func (s *state) despawnUnits() {
 
 	for u := range s.units() {
 		if u.health <= 0 || (u.collidedThisturn && !u.survivesCollision) {
-			gridPos, ok := s.g.getGridPos(u.PixelPosition)
+			gridPos, ok := s.grid.getGridPos(u.PixelPosition)
 			if !ok {
 				panic(fmt.Sprintf("despawnUnits: expected grid pos to exist for %s", u.PixelPosition.log()))
 			}
@@ -876,7 +876,7 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 		n.multiSelect = false
 	}
 
-	clickedGridPos, _ := s.g.getGridPos(clickPosition)
+	clickedGridPos, _ := s.grid.getGridPos(clickPosition)
 	clickedNode, nodeClicked := s.nodes[clickedGridPos]
 	if nodeClicked && clickPosition.equals(releasePosition) && clickedGridPos.equals(priorSingleSelect) {
 		for _, n := range s.nodes {
@@ -914,8 +914,8 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 	// usually causes too much selection to occur. The behavior is correct when
 	// the cursor ends right or below window. It is tricky and error prone to fix this
 	// due to hexagon LUT repetition, so I am punting it.
-	topLeftGridPos, _ := s.g.getGridPos(topLeftPixelPos)
-	bottomRightGridPos, _ := s.g.getGridPosOutbounds(bottomRightPixelPos)
+	topLeftGridPos, _ := s.grid.getGridPos(topLeftPixelPos)
+	bottomRightGridPos, _ := s.grid.getGridPosOutbounds(bottomRightPixelPos)
 
 	var firstSelectedNode *node
 	for _, n := range s.nodes {
@@ -950,7 +950,7 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 		}
 
 		for _, h := range s.hexagons {
-			p := s.g.getPixelPosOutbounds(h.gridPos, hpCenter)
+			p := s.grid.getPixelPosOutbounds(h.gridPos, hpCenter)
 			if (topLeftPixelPos.X < p.X) &&
 				(p.X < bottomRightPixelPos.X) &&
 				(topLeftPixelPos.Y < p.Y) &&
@@ -962,7 +962,7 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 		}
 
 		for _, n := range s.nodes {
-			p := s.g.getPixelPosOutbounds(n.gridPos, hpCenter)
+			p := s.grid.getPixelPosOutbounds(n.gridPos, hpCenter)
 			if (topLeftPixelPos.X < p.X) &&
 				(p.X < bottomRightPixelPos.X) &&
 				(topLeftPixelPos.Y < p.Y) &&
@@ -1085,7 +1085,7 @@ func (s *state) produceUnits() {
 		}
 
 		// TODO: determine behavior for producing units during collision
-		pixelPos, ok := s.g.getPixelPos(n.gridPos, hpCenter)
+		pixelPos, ok := s.grid.getPixelPos(n.gridPos, hpCenter)
 		if !ok {
 			panic("could not get pixel pos for produce units")
 		}

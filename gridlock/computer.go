@@ -94,7 +94,7 @@ func (c *computer) updateNodeTargets(avgUnitPos PixelPosition) {
 			validDiffsIndex++
 		}
 
-		p, ok := c.s.g.getCenterWithFallback(d.GridPosition)
+		p, ok := c.s.grid.getCenterWithFallback(d.GridPosition)
 		if !ok {
 			panic("updateNodeTargets: cannot get center with fallback")
 		}
@@ -110,7 +110,7 @@ func (c *computer) updateNodeTargets(avgUnitPos PixelPosition) {
 			continue
 		}
 
-		nP, ok := c.s.g.getCenterWithFallback(n.gridPos)
+		nP, ok := c.s.grid.getCenterWithFallback(n.gridPos)
 		if !ok {
 			panic(fmt.Sprintf("updateNodeTargets: cannot get node pixel position %s", nP.log()))
 		}
@@ -165,7 +165,7 @@ func (c *computer) updateForNodeCapture() {
 
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
-				var targetPixelPos, ok = c.s.g.getPixelPos(otherNodePos, hpCenter)
+				var targetPixelPos, ok = c.s.grid.getPixelPos(otherNodePos, hpCenter)
 				if !ok {
 					panic("could not get pixel pos for update computer node targets")
 				}
@@ -194,7 +194,7 @@ func (c *computer) updateForNodeCapture() {
 				continue
 			}
 
-			nPixelPos, ok := c.s.g.getPixelPos(n.gridPos, hpCenter)
+			nPixelPos, ok := c.s.grid.getPixelPos(n.gridPos, hpCenter)
 			if !ok {
 				panic("could not get pixel pos for update computer unit targets")
 			}
@@ -230,7 +230,7 @@ func (c *computer) planBombs(n *node, targets []PixelPosition) {
 		}})
 	}
 
-	nP, ok := c.s.g.getCenterWithFallback(n.gridPos)
+	nP, ok := c.s.grid.getCenterWithFallback(n.gridPos)
 	if !ok {
 		panic(fmt.Sprintf("planBombs: cannot get node pixel position %s", nP.log()))
 	}

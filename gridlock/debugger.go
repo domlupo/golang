@@ -186,7 +186,7 @@ func (d *debugger) debug(p PixelPosition) {
 
 func (d *debugger) logPixel(p PixelPosition) {
 	attrs := []slog.Attr{nest("PixelPosition", p.log())}
-	if gridPos, ok := d.g.getGridPos(p); ok {
+	if gridPos, ok := d.grid.getGridPos(p); ok {
 		attrs = append(attrs, nest("GridPosition", gridPos.log()))
 	} else {
 		attrs = append(attrs, slog.String("GridPosition", "notFound"))
@@ -280,7 +280,7 @@ func (d *debugger) createUnitPathfindHeatmap() {
 
 			if info.Walkable {
 				unit.updateTarget(globalTarget, position{layer: unit.layer, PixelPosition: pixelPos})
-				distance := unit.pathfindGlobalTarget(d.obstacles, d.oLUT, d.g)
+				distance := unit.pathfindGlobalTarget(d.obstacles, d.oLUT, d.grid)
 				d.unitPathfind[pixelPos] = distance
 			}
 		}
@@ -345,7 +345,7 @@ func (d debugger) draw(c drawConfig) {
 			}
 		} else {
 			for _, h := range d.hexagons {
-				center := d.g.getPixelPosOutbounds(h.gridPos, hpCenter)
+				center := d.grid.getPixelPosOutbounds(h.gridPos, hpCenter)
 				center.draw(c, *d.debuggerConfig, color.White, false)
 				if h.selected {
 					drawHexHighlight(c, h.gridPos)
