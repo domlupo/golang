@@ -52,7 +52,7 @@ func directions() []direction {
 	return []direction{north, northeast, east, southeast, south, southwest, west, northwest}
 }
 
-func (d direction) String() string {
+func (d direction) string() string {
 	switch d {
 	case noDirecton:
 		return "noDirection"
@@ -246,6 +246,78 @@ func (l line) inclusivePoints() []PixelPosition {
 		panic("inclusivePoints: cannot find inclusive points for line that is not either horizontal or vertical")
 	}
 	return inner
+}
+
+// Returns the adjacent points in the passed direction. The function has multiple assumptions.
+// Assumes a square grid with typical compass directions. Assumes a square grid where east is
+// positive x and south is positive y. x is typical and y is opposite of typical for catesian graph.
+// Assumes the line should be drawn in the top left corner of the grid square. Sloped lines
+// determine point direction of split grid squares via which point has more area.
+func (l line) adjacentPoints(d direction) []PixelPosition {
+	switch d {
+	case north, south:
+	default:
+		panic(fmt.Sprintf("adjacentPoints: cannot get points in direction %s since it is unimplemented", d.string()))
+	}
+
+	var southPoints []PixelPosition
+	var left PixelPosition
+	var right PixelPosition
+	switch {
+	case l.start.X < l.end.X:
+		left = l.start
+		right = l.end
+	default:
+		left = l.end
+		right = l.start
+	}
+
+	if left.X == right.X && d == north {
+		southPoints = append(southPoints, PixelPosition{left.X, min(l.start.Y, l.end.Y)})
+	} else if left.X == right.X && d == south {
+		southPoints = append(southPoints, PixelPosition{left.X, max(l.start.Y, l.end.Y) + 1})
+	} else {
+		// Ebitengine y is opposite of typical cartesian grid, slope equation is not typical.
+		// right.Y - left.Y instead of typical left.Y - right.Y
+		slope := float64(right.Y-left.Y) / float64(left.X-right.X)
+		x := float64(left.X) + 0.5
+		for x <= float64(right.X) {
+			yIntercept := float64(left.Y) + (slope * float64(left.X))
+			// Ebitegine y is opposite of typical cartesian grid, y intercept equation is not typical.
+			// y := yIntercept - slope*x instead of y := slope*x + yIntercept.
+			y := yIntercept - slope*x
+			xInteger, _ := math.Modf(x)
+			yInteger, yDecimal := math.Modf(y)
+			xInt := int(xInteger)
+			yInt := int(yInteger)
+			switch {
+			case yDecimal == 0.5:
+				panic("adjacentPoints: undefined behavior when y midpoint occurs")
+			case yDecimal < 0.5:
+				yInt -= 1
+			}
+			southPoints = append(southPoints, PixelPosition{xInt, yInt + 1})
+			x += 1
+		}
+	}
+
+	// A potentially more concise or performant approach would be to shift the start and end point.
+	// Rather than the current approach of finding all south points then offsetting.
+	// I am not 100% sure the other approach is correct for all lines. I also think the offset approach
+	// is typically the first solution people would have so it is probably easier to understand. Finally,
+	// this code is not performance sensitive.
+	var points []PixelPosition
+	var yOffset int
+	if d == north {
+		yOffset = -1
+	}
+	for _, p := range southPoints {
+		points = append(points, PixelPosition{p.X, p.Y + yOffset})
+	}
+
+	// TODO: panic when any point is out of bounds
+
+	return points
 }
 
 func collidesWithBorder(p position, offset int) bool {
