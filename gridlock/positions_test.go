@@ -64,11 +64,19 @@ func TestInclusivePoints(t *testing.T) {
 		wantPoints []PixelPosition
 		wantPanic  bool
 	}{
+		// horizontal lines
+		{line{PixelPosition{0, 0}, PixelPosition{1, 0}}, []PixelPosition{{0, 0}, {1, 0}}, false},
+		{line{PixelPosition{0, 0}, PixelPosition{2, 0}}, []PixelPosition{{0, 0}, {1, 0}, {2, 0}}, false},
+		{line{PixelPosition{1, 0}, PixelPosition{0, 0}}, []PixelPosition{{0, 0}, {1, 0}}, false},
+		{line{PixelPosition{2, 0}, PixelPosition{0, 0}}, []PixelPosition{{0, 0}, {1, 0}, {2, 0}}, false},
+
+		// vertical lines
 		{line{PixelPosition{0, 0}, PixelPosition{0, 1}}, []PixelPosition{{0, 0}, {0, 1}}, false},
 		{line{PixelPosition{0, 0}, PixelPosition{0, 2}}, []PixelPosition{{0, 0}, {0, 1}, {0, 2}}, false},
 		{line{PixelPosition{0, 1}, PixelPosition{0, 0}}, []PixelPosition{{0, 0}, {0, 1}}, false},
 		{line{PixelPosition{0, 2}, PixelPosition{0, 0}}, []PixelPosition{{0, 0}, {0, 1}, {0, 2}}, false},
 
+		// lines not either horizontal or vertical
 		{line{PixelPosition{0, 0}, PixelPosition{0, 0}}, []PixelPosition{}, true},
 		{line{PixelPosition{0, 0}, PixelPosition{1, 1}}, []PixelPosition{}, true},
 		{line{PixelPosition{1, 1}, PixelPosition{1, 1}}, []PixelPosition{}, true},

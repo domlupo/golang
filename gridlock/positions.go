@@ -223,22 +223,20 @@ func (l1 line) intersects(l2 line) bool {
 
 func (l line) inclusivePoints() []PixelPosition {
 	var inner []PixelPosition
-	var start int
-	var end int
 	switch {
 	case l.start.X == l.end.X && l.start.Y == l.end.Y:
 		panic("inclusivePoints: cannot find inclusive points for a point")
 	case l.start.X == l.end.X:
-		start = min(l.start.Y, l.end.Y)
-		end = max(l.start.Y, l.end.Y)
+		start := min(l.start.Y, l.end.Y)
+		end := max(l.start.Y, l.end.Y)
 		y := start
 		for y <= end {
 			inner = append(inner, PixelPosition{l.start.X, y})
 			y += 1
 		}
 	case l.start.Y == l.end.Y:
-		start = min(l.start.Y, l.end.Y)
-		end = max(l.start.Y, l.end.Y)
+		start := min(l.start.X, l.end.X)
+		end := max(l.start.X, l.end.X)
 		x := start
 		for x <= end {
 			inner = append(inner, PixelPosition{x, l.start.Y})
