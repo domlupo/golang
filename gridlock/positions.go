@@ -84,6 +84,13 @@ func (p PixelPosition) log() []slog.Attr {
 	return a
 }
 
+func (l line) log() []slog.Attr {
+	var a = []slog.Attr{}
+	a = append(a, nest("start", l.start.log()))
+	a = append(a, nest("end", l.end.log()))
+	return a
+}
+
 // Returns the angle in radians from p1 -> p2 clockwise from the north axis.
 func (p1 PixelPosition) angle(p2 PixelPosition) float64 {
 	return math.Atan2(float64(p2.Y-p1.Y), float64(p2.X-p1.X)) + math.Pi/2
