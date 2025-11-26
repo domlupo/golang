@@ -53,20 +53,23 @@ func newPartitioner(g grid, h hexagons) partitioner {
 
 func (part partitioner) partitions(u unit, pa partitionAnalysis, buffer int) partitions {
 	var positions []GridPosition
-	switch {
-	case u.name == infantry && pa == paCollision:
-		positions = part.defaultPartitions(u.PixelPosition, u.radius+buffer)
-	case u.name == infantry && pa == paVision:
-		positions = part.defaultPartitions(u.PixelPosition, u.vision+buffer)
-	case u.name == infantry && pa == paSteer:
-		positions = part.defaultPartitions(u.PixelPosition, buffer)
-	case pa == paCollision:
-		positions = part.defaultPartitions(u.PixelPosition, u.radius+buffer)
-	case pa == paVision:
-		positions = part.defaultPartitions(u.PixelPosition, u.vision+buffer)
+	radius := buffer
+	switch pa {
+	case paCollision:
+		radius += u.radius
+	case paVision:
+		radius += u.vision
+	case paSteer:
+		radius += 0
 	default:
+		panic(fmt.Sprintf("partitions: unknown partitions analysis %s", pa.String()))
+	}
+
+	if pa == paSteer && u.name != infantry {
 		panic(fmt.Sprintf("partitions: cannot get partitions for unit %s, analysis %s and buffer %d", u.name, pa.String(), buffer))
 	}
+
+	positions = part.defaultPartitions(u.PixelPosition, radius)
 	var ps partitions
 	for _, p := range positions {
 		ps = append(ps, part.hexagons[p])
