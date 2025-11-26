@@ -92,12 +92,10 @@ func TestGetPixelPos(t *testing.T) {
 		}
 
 		testname := fmt.Sprintf(
-			"gridPos:{%d,%d} and hex point %d converts to hex grid position {%d,%d} and want it to %s",
-			tt.gridPos.X,
-			tt.gridPos.Y,
-			tt.hexPoint,
-			tt.wantPixelPos.X,
-			tt.wantPixelPos.Y,
+			"gridPos: %s and hex point %s converts to hex grid position %s and want it to %s",
+			tt.gridPos.log(),
+			tt.hexPoint.string(),
+			tt.wantPixelPos.log(),
 			sWantOk)
 
 		hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
@@ -108,14 +106,11 @@ func TestGetPixelPos(t *testing.T) {
 				t.Errorf("Want pixel position to %s", sWantOk)
 			}
 			if !pos.equals(tt.wantPixelPos) {
-				t.Errorf("For grid pos {%d,%d} and hex point %d  Want grid position {%d,%d} but it was {%d,%d}",
-					tt.gridPos.X,
-					tt.gridPos.Y,
-					tt.hexPoint,
-					tt.wantPixelPos.X,
-					tt.wantPixelPos.Y,
-					pos.X,
-					pos.Y)
+				t.Errorf("For grid pos %s and hex point %s  Want grid position %s but it was %s",
+					tt.gridPos.log(),
+					tt.hexPoint.string(),
+					tt.wantPixelPos.log(),
+					pos.log())
 			}
 		})
 	}
@@ -850,10 +845,9 @@ func TestGetGridPos(t *testing.T) {
 		}
 
 		testname := fmt.Sprintf(
-			"PixelPosition:%s converts to hex grid position {%d,%d} and want it to %s",
+			"PixelPosition: %s converts to hex grid position %s and want it to %s",
 			tt.pixelPos.log(),
-			tt.wantPos.X,
-			tt.wantPos.Y,
+			tt.wantPos.log(),
 			sWantOk)
 
 		hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
@@ -864,12 +858,10 @@ func TestGetGridPos(t *testing.T) {
 				t.Errorf("Want pixel position to %s", sWantOk)
 			}
 			if !pos.equals(tt.wantPos) {
-				t.Errorf("For pixel position %s, Want grid position {%d,%d} but it was {%d,%d}",
+				t.Errorf("For pixel position %s, Want grid position %s but it was %s",
 					tt.pixelPos.log(),
-					tt.wantPos.X,
-					tt.wantPos.Y,
-					pos.X,
-					pos.Y)
+					tt.wantPos.log(),
+					pos.log())
 			}
 		})
 	}
@@ -989,12 +981,10 @@ func TestAdjacent(t *testing.T) {
 		}
 
 		testname := fmt.Sprintf(
-			"gridPos:{%d,%d} and hex side %d has adjacent position {%d,%d} and want it to %s",
-			tt.gridPos.X,
-			tt.gridPos.Y,
-			tt.hexSide,
-			tt.wantGridPos.X,
-			tt.wantGridPos.Y,
+			"gridPos: %s and hex side %s has adjacent position %s and want it to %s",
+			tt.gridPos.log(),
+			tt.hexSide.string(),
+			tt.wantGridPos.log(),
 			sWantOk)
 
 		hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
@@ -1005,14 +995,11 @@ func TestAdjacent(t *testing.T) {
 				t.Errorf("Want pixel position to %s", sWantOk)
 			}
 			if !pos.equals(tt.wantGridPos) {
-				t.Errorf("For grid pos {%d,%d} and hex side %d Want grid position {%d,%d} but it was {%d,%d}",
-					tt.gridPos.X,
-					tt.gridPos.Y,
-					tt.hexSide,
-					tt.wantGridPos.X,
-					tt.wantGridPos.Y,
-					pos.X,
-					pos.Y)
+				t.Errorf("For grid pos %s and hex side %s Want grid position %s but it was %s",
+					tt.gridPos.log(),
+					tt.hexSide.string(),
+					tt.wantGridPos.log(),
+					pos.log())
 			}
 		})
 	}

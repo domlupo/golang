@@ -30,6 +30,27 @@ const (
 	hpNorthwest
 )
 
+func (hp hexPoint) string() string {
+	switch hp {
+	case hpCenter:
+		return "hpCenter"
+	case hpNorth:
+		return "hpNorth"
+	case hpNortheast:
+		return "hpNortheast"
+	case hpSoutheast:
+		return "hpSoutheast"
+	case hpSouth:
+		return "hpSouth"
+	case hpSouthwest:
+		return "hpSouthwest"
+	case hpNorthwest:
+		return "hpNorthwest"
+	default:
+		panic(fmt.Sprintf("Cannot convert hexPoint to string: %d", hp))
+	}
+}
+
 type hexSide int
 
 const (
@@ -41,6 +62,27 @@ const (
 	hsWest
 	hsNorthwest
 )
+
+func (hs hexSide) string() string {
+	switch hs {
+	case hsNone:
+		return "hsNone"
+	case hsNortheast:
+		return "hsNortheast"
+	case hsEast:
+		return "hsEast"
+	case hsSoutheast:
+		return "hsSoutheast"
+	case hsSouthwest:
+		return "hsSouthwest"
+	case hsWest:
+		return "hsWest"
+	case hsNorthwest:
+		return "hsNorthwest"
+	default:
+		panic(fmt.Sprintf("Cannot convert hexSide to string: %d", hs))
+	}
+}
 
 // Basic hexagon pixel position shared amongst all hexagons. The left side of
 // the hexagon is aligned with x=0. The top point of the hexagon is aligned with y=0.
