@@ -105,12 +105,35 @@ func TestInclusivePoints(t *testing.T) {
 
 func TestAdjacentPoints(t *testing.T) {
 	t.Parallel()
+	wc := newWindowConfig()
 	var tests = []struct {
 		l          line
 		d          direction
 		wantPoints []PixelPosition
 		wantPanic  bool
 	}{
+		// panics when any point out of bounds 1
+		{line{PixelPosition{0, 0}, PixelPosition{0, 0}}, north, []PixelPosition{}, true},
+		{line{PixelPosition{0, 0}, PixelPosition{0, 0}}, south, []PixelPosition{{0, 1}}, false},
+		{line{PixelPosition{0, -1}, PixelPosition{0, -1}}, north, []PixelPosition{}, true},
+		{line{PixelPosition{0, -1}, PixelPosition{0, -1}}, south, []PixelPosition{{0, 0}}, false},
+		// panics when any point out of bounds 2
+		{line{PixelPosition{-1, 1}, PixelPosition{-1, 1}}, north, []PixelPosition{}, true},
+		{line{PixelPosition{-1, 1}, PixelPosition{-1, 1}}, south, []PixelPosition{}, true},
+		// panics when any point out of bounds 3
+		{line{PixelPosition{wc.width, 1}, PixelPosition{wc.width, 1}}, north, []PixelPosition{}, true},
+		{line{PixelPosition{wc.width, 1}, PixelPosition{wc.width, 1}}, south, []PixelPosition{}, true},
+		// panics when any point out of bounds 4
+		{line{PixelPosition{1, wc.height}, PixelPosition{1, wc.height}}, north, []PixelPosition{{1, wc.height - 1}}, false},
+		{line{PixelPosition{1, wc.height}, PixelPosition{1, wc.height}}, south, []PixelPosition{}, true},
+		{line{PixelPosition{1, wc.height - 1}, PixelPosition{1, wc.height - 1}}, north, []PixelPosition{{1, wc.height - 2}}, false},
+		{line{PixelPosition{1, wc.height - 2}, PixelPosition{1, wc.height - 2}}, south, []PixelPosition{{1, wc.height - 1}}, false},
+		// panics when any point out of bounds 5
+		{line{PixelPosition{0, -3}, PixelPosition{0, 0}}, north, []PixelPosition{}, true},
+		{line{PixelPosition{0, -3}, PixelPosition{0, 0}}, south, []PixelPosition{{0, 1}}, false},
+		{line{PixelPosition{0, -3}, PixelPosition{0, -1}}, north, []PixelPosition{}, true},
+		{line{PixelPosition{0, -3}, PixelPosition{0, -1}}, south, []PixelPosition{{0, 0}}, false},
+
 		// point 1
 		{line{PixelPosition{1, 1}, PixelPosition{1, 1}}, north, []PixelPosition{{1, 0}}, false},
 		{line{PixelPosition{1, 1}, PixelPosition{1, 1}}, south, []PixelPosition{{1, 2}}, false},

@@ -253,6 +253,7 @@ func (l line) inclusivePoints() []PixelPosition {
 // positive x and south is positive y. x is typical and y is opposite of typical for catesian graph.
 // Assumes the line should be drawn in the top left corner of the grid square. Sloped lines
 // determine point direction of split grid squares via which point has more area.
+// Guarantees panic when any returned point is out of bounds. Accepts passed lines out of bounds.
 func (l line) adjacentPoints(d direction) []PixelPosition {
 	switch d {
 	case north, south:
@@ -306,16 +307,19 @@ func (l line) adjacentPoints(d direction) []PixelPosition {
 	// I am not 100% sure the other approach is correct for all lines. I also think the offset approach
 	// is typically the first solution people would have so it is probably easier to understand. Finally,
 	// this code is not performance sensitive.
-	var points []PixelPosition
 	var yOffset int
 	if d == north {
 		yOffset = -1
 	}
-	for _, p := range southPoints {
-		points = append(points, PixelPosition{p.X, p.Y + yOffset})
+	var points []PixelPosition
+	wc := newWindowConfig()
+	for _, sp := range southPoints {
+		p := PixelPosition{sp.X, sp.Y + yOffset}
+		if !wc.inbounds(p) {
+			panic("adjacentPoints: undefined behavior when a point is out of bounds")
+		}
+		points = append(points, p)
 	}
-
-	// TODO: panic when any point is out of bounds
 
 	return points
 }
