@@ -915,7 +915,7 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 	// the cursor ends right or below window. It is tricky and error prone to fix this
 	// due to hexagon LUT repetition, so I am punting it.
 	topLeftGridPos, _ := s.grid.getGridPos(topLeftPixelPos)
-	bottomRightGridPos, _ := s.grid.getGridPosOutbounds(bottomRightPixelPos)
+	bottomRightGridPos := s.grid.getGridPosOutbounds(bottomRightPixelPos)
 
 	var firstSelectedNode *node
 	for _, n := range s.nodes {

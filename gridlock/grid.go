@@ -190,10 +190,10 @@ func (g grid) getGridPos(p PixelPosition) (GridPosition, bool) {
 	if !wc.inbounds(p) {
 		return GridPosition{}, false
 	}
-	return g.getGridPosOutbounds(p)
+	return g.getGridPosOutbounds(p), true
 }
 
-func (g grid) getGridPosOutbounds(p PixelPosition) (GridPosition, bool) {
+func (g grid) getGridPosOutbounds(p PixelPosition) GridPosition {
 	xIndex := (p.X+g.hexWidth-g.xOffset)/g.hexWidth - 1
 	yIndex := (p.Y+(g.hexHeight/4*3)-g.yOffset)/(g.hexHeight/4*3) - 2
 	innerX := (p.X + g.hexWidth - g.xOffset) % g.hexWidth
@@ -259,5 +259,5 @@ func (g grid) getGridPosOutbounds(p PixelPosition) (GridPosition, bool) {
 		panic(fmt.Sprintf("getHexGridPostion could not find a y section for the inner y: %d for pixel position %s", innerY, p.log()))
 	}
 
-	return GridPosition{xIndex + xIndexOffset, yIndex + yIndexOffset}, true
+	return GridPosition{xIndex + xIndexOffset, yIndex + yIndexOffset}
 }
