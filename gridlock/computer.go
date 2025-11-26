@@ -16,9 +16,9 @@ type computersConfig struct {
 type computers []computer
 
 type computer struct {
-	s      *state
-	player player
+	*state
 	computersConfig
+	player player
 }
 
 func newComputersConfig() computersConfig {
@@ -51,7 +51,7 @@ func newComputer(s *state, i int) computer {
 	}
 
 	c := computer{
-		s:               s,
+		state:           s,
 		player:          p,
 		computersConfig: newComputersConfig(),
 	}
@@ -86,7 +86,7 @@ func (c *computer) updateNodeTargets(avgUnitPos PixelPosition) {
 		panic(fmt.Sprintf("updateNodeTargets: unknown player: %d", c.player))
 	}
 
-	diffs := c.s.hexagons.maxUnitDifferential(opponent, lLand)
+	diffs := c.state.hexagons.maxUnitDifferential(opponent, lLand)
 	validDiffsIndex := -1
 	var positions []PixelPosition
 	for _, d := range diffs {
@@ -94,14 +94,14 @@ func (c *computer) updateNodeTargets(avgUnitPos PixelPosition) {
 			validDiffsIndex++
 		}
 
-		p, ok := c.s.grid.getCenterWithFallback(d.GridPosition)
+		p, ok := c.state.grid.getCenterWithFallback(d.GridPosition)
 		if !ok {
 			panic("updateNodeTargets: cannot get center with fallback")
 		}
 		positions = append(positions, p)
 	}
 
-	for _, n := range c.s.nodes {
+	for _, n := range c.state.nodes {
 		if n.player != c.player {
 			continue
 		}
@@ -110,7 +110,7 @@ func (c *computer) updateNodeTargets(avgUnitPos PixelPosition) {
 			continue
 		}
 
-		nP, ok := c.s.grid.getCenterWithFallback(n.gridPos)
+		nP, ok := c.grid.getCenterWithFallback(n.gridPos)
 		if !ok {
 			panic(fmt.Sprintf("updateNodeTargets: cannot get node pixel position %s", nP.log()))
 		}
@@ -138,7 +138,7 @@ func (c *computer) updateNodeTargets(avgUnitPos PixelPosition) {
 }
 
 func (c *computer) updateForNodeCapture() {
-	for _, n := range c.s.nodes {
+	for _, n := range c.nodes {
 		if n.player != c.player {
 			continue
 		}
@@ -152,7 +152,7 @@ func (c *computer) updateForNodeCapture() {
 			continue
 		}
 
-		for _, n := range c.s.nodes {
+		for _, n := range c.nodes {
 			if n.player == c.player {
 				continue
 			}
@@ -165,7 +165,7 @@ func (c *computer) updateForNodeCapture() {
 
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
-				var targetPixelPos, ok = c.s.grid.getPixelPos(otherNodePos, hpCenter)
+				var targetPixelPos, ok = c.grid.getPixelPos(otherNodePos, hpCenter)
 				if !ok {
 					panic("could not get pixel pos for update computer node targets")
 				}
@@ -176,7 +176,7 @@ func (c *computer) updateForNodeCapture() {
 		}
 	}
 
-	for u := range c.s.units() {
+	for u := range c.units() {
 		if u.staticTarget ||
 			u.name == bomber ||
 			u.name == fighter {
@@ -189,12 +189,12 @@ func (c *computer) updateForNodeCapture() {
 
 		nearestTargetDistanceSquared := math.MaxInt
 
-		for _, n := range c.s.nodes {
+		for _, n := range c.nodes {
 			if n.player == c.player {
 				continue
 			}
 
-			nPixelPos, ok := c.s.grid.getPixelPos(n.gridPos, hpCenter)
+			nPixelPos, ok := c.grid.getPixelPos(n.gridPos, hpCenter)
 			if !ok {
 				panic("could not get pixel pos for update computer unit targets")
 			}
@@ -226,11 +226,11 @@ func (c *computer) planBombs(n *node, targets []PixelPosition) {
 				[]action{},
 				GridPosition{},
 				false)
-			c.s.spawnRequest(request{spawn: &u})
+			c.spawnRequest(request{spawn: &u})
 		}})
 	}
 
-	nP, ok := c.s.grid.getCenterWithFallback(n.gridPos)
+	nP, ok := c.grid.getCenterWithFallback(n.gridPos)
 	if !ok {
 		panic(fmt.Sprintf("planBombs: cannot get node pixel position %s", nP.log()))
 	}
