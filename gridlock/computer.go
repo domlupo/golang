@@ -217,7 +217,7 @@ func (c *computer) planBombs(n *node, targets []PixelPosition) {
 	for _, t := range targets {
 		p := position{lAircraft, t}
 		n.targets = append(n.targets, p)
-		n.actions = append(n.actions, action{pos: p, do: func() {
+		n.actions = append(n.actions, action{position: p, do: func() {
 			u := newUnit(
 				bombGravityConfig,
 				position{layer: bombGravityConfig.produceLayer, PixelPosition: p.PixelPosition},

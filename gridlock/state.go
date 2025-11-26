@@ -362,7 +362,7 @@ func (s *state) analyzeTargets() {
 		if u.name == fighter {
 			s.nearestTargetWithinVision(u)
 			if u.moveDone && len(u.globalTargets) > 1 {
-				if len(u.actions) > 0 && u.actions[0].pos.equals(u.globalTargets[0]) {
+				if len(u.actions) > 0 && u.actions[0].equals(u.globalTargets[0]) {
 					u.actions[0].do()
 					u.actions = u.actions[1:]
 				}
@@ -379,7 +379,7 @@ func (s *state) analyzeTargets() {
 		if u.name == bomber {
 			s.nearestTargetWithinVision(u)
 			if u.moveDone && len(u.globalTargets) > 1 {
-				if len(u.actions) > 0 && u.actions[0].pos.equals(u.globalTargets[0]) {
+				if len(u.actions) > 0 && u.actions[0].equals(u.globalTargets[0]) {
 					u.actions[0].do()
 					u.actions = u.actions[1:]
 				}

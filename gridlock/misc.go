@@ -59,8 +59,8 @@ func (wc windowConfig) inbounds(p PixelPosition) bool {
 
 // Stores a callback to invoke when a position is reached.
 type action struct {
-	pos position
-	do  func()
+	position
+	do func()
 }
 
 // Stores a callback to invoke when a move is confirmed.
@@ -86,6 +86,6 @@ func generateId() id {
 
 func (action action) log() []slog.Attr {
 	var a = []slog.Attr{}
-	a = append(a, nest("pos", action.pos.log()))
+	a = append(a, nest("pos", action.position.log()))
 	return a
 }

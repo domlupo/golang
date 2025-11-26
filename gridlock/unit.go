@@ -639,8 +639,8 @@ func (u unit) draw(dc drawConfig, selected bool) {
 		for _, a := range u.actions {
 			vector.StrokeCircle(
 				dc.screen,
-				float32(a.pos.X)*dc.windowMultiplier,
-				float32(a.pos.Y)*dc.windowMultiplier,
+				float32(a.X)*dc.windowMultiplier,
+				float32(a.Y)*dc.windowMultiplier,
 				// TODO: hard coded value. Needed because this is the first instance of a unit
 				// drawing another unit config. It is Low priority to fix this. Also this pattern
 				// will occur in the future. Easier to fix once more examples to understand structure.
