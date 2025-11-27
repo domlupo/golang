@@ -65,6 +65,10 @@ Determine if I should clarify file names
     - unit
     - unitConfigs
 
+- Determine if ordance on air units should be used to indicate ready to fire. e.g. a unit in process of reloading would have one missing? 
+  - This might look bad with several units
+  - It might be confusing because it seems like units are generating ordnance rather than picking it up from a node.
+
 - Optimize state.partitions for infantry
   - There are several ways to optimize this.
   - There are also several ways to refactor grid.partitions
