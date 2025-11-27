@@ -341,7 +341,7 @@ func TestAdjacentPoints(t *testing.T) {
 				}
 			}()
 			wc := newWindowConfig()
-			points := tt.l.adjacentPoints(tt.d, wc)
+			points := tt.l.adjacentPoints(tt.d, wc.bounds)
 			if !slices.Equal(points, tt.wantPoints) {
 				t.Errorf("points %s %#v\n not equal to wanted points %#v", tt.d.string(), points, tt.wantPoints)
 			}

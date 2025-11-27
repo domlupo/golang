@@ -40,9 +40,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-Determine if I should rename windowConfig to better represent it is a bound? Or struct embed?
-  - refactor relevant line.adjacentPoints code.
-
 Determine if I should clarify file names
   - It is weird that I have some singular and some plural. I think I should make all files singular.
   - def should be single

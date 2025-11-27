@@ -131,17 +131,17 @@ func (g grid) setupHexTriangleLUT() []hexagonTriangle {
 	yMax := max(left.start.Y, left.end.Y, right.start.Y, right.end.Y)
 
 	switchTriangle := make(map[PixelPosition]hexagonTriangle)
-	wc := windowConfig{xMax - xMin, yMax - yMin}
-	for _, p := range left.adjacentPoints(north, wc) {
+	bounds := bounds{xMax - xMin, yMax - yMin}
+	for _, p := range left.adjacentPoints(north, bounds) {
 		switchTriangle[p] = leftHexTriangle
 	}
-	for _, p := range left.adjacentPoints(south, wc) {
+	for _, p := range left.adjacentPoints(south, bounds) {
 		switchTriangle[p] = middleHexTriangle
 	}
-	for _, p := range right.adjacentPoints(north, wc) {
+	for _, p := range right.adjacentPoints(north, bounds) {
 		switchTriangle[p] = rightHexTriangle
 	}
-	for _, p := range right.adjacentPoints(south, wc) {
+	for _, p := range right.adjacentPoints(south, bounds) {
 		switchTriangle[p] = middleHexTriangle
 	}
 
@@ -336,7 +336,7 @@ func (g grid) isAdjacent(gp1 GridPosition, gp2 GridPosition) bool {
 
 func (g grid) getPixelPos(gp GridPosition, hexPoint hexPoint) (PixelPosition, bool) {
 	p := g.getPixelPosOutbounds(gp, hexPoint)
-	if !newWindowConfig().inbounds(p) {
+	if !newWindowConfig().contains(p) {
 		return PixelPosition{}, false
 	} else {
 		return p, true
@@ -393,7 +393,7 @@ func (g grid) getPixelPosOutbounds(gp GridPosition, hexPoint hexPoint) PixelPosi
 
 func (g grid) getGridPos(p PixelPosition) (GridPosition, bool) {
 	wc := newWindowConfig()
-	if !wc.inbounds(p) {
+	if !wc.contains(p) {
 		return GridPosition{}, false
 	}
 	return g.getGridPosOutbounds(p), true

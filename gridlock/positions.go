@@ -147,7 +147,7 @@ func (p PixelPosition) adjacent(d direction) (PixelPosition, bool) {
 	}
 
 	a := PixelPosition{X: p.X + x, Y: p.Y + y}
-	if !newWindowConfig().inbounds(a) {
+	if !newWindowConfig().contains(a) {
 		return PixelPosition{}, false
 	}
 	return a, true
@@ -172,7 +172,7 @@ func (p position) log() []slog.Attr {
 
 func (p1 PixelPosition) add(p2 PixelPosition) (PixelPosition, bool) {
 	p := PixelPosition{X: p1.X + p2.X, Y: p1.Y + p2.Y}
-	if !newWindowConfig().inbounds(p) {
+	if !newWindowConfig().contains(p) {
 		return PixelPosition{}, false
 	} else {
 		return p, true
@@ -253,8 +253,8 @@ func (l line) inclusivePoints() []PixelPosition {
 // positive x and south is positive y. x is typical and y is opposite of typical for catesian graph.
 // Assumes the line should be drawn in the top left corner of the grid square. Sloped lines
 // determine point direction of split grid squares via which point has more area.
-// Trims any outside the passed windowConfig. Accepts passed lines out of bounds.
-func (l line) adjacentPoints(d direction, wc windowConfig) []PixelPosition {
+// Trims any points outside the passed bounds. Accepts passed lines outside the passed bounds.
+func (l line) adjacentPoints(d direction, bounds bounds) []PixelPosition {
 	switch d {
 	case north, south:
 	default:
@@ -314,7 +314,7 @@ func (l line) adjacentPoints(d direction, wc windowConfig) []PixelPosition {
 	var points []PixelPosition
 	for _, sp := range southPoints {
 		p := PixelPosition{sp.X, sp.Y + yOffset}
-		if wc.inbounds(p) {
+		if bounds.contains(p) {
 			points = append(points, p)
 		}
 	}

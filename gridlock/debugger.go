@@ -309,7 +309,7 @@ func (d debugger) draw(c drawConfig) {
 		d.obstacleLUTUnwalkable.draw(c, *d.debuggerConfig, d.heatmapPercent)
 		d.obstacleLUTDistance.draw(c, *d.debuggerConfig, d.heatmapPercent)
 
-		if newWindowConfig().inbounds(d.pixel) {
+		if newWindowConfig().contains(d.pixel) {
 			p := d.oLUT[d.pixel].NearestUnwalkablesAvg
 			p.draw(c, *d.debuggerConfig, c.highlightColor, true)
 		}
