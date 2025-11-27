@@ -7,7 +7,9 @@ import (
 	"log/slog"
 )
 
-// The hexagon look up table is a hardcoded mapping to aid with converting
+// The grid struct has a field called hexTriangleLUT which is a look up table (LUT)
+//
+// The hexagon triangle LUT is a hardcoded mapping to aid with converting
 // pixel position to hexagon grid position. It avoids the the need of CPU intensive math.
 // It helps CPU performance by removing the need for floating point or sqrt math logic.
 //
@@ -84,50 +86,63 @@ import (
 // As shown above, the prior section's middle triangle is now converted into
 // this section's left and right triangle.
 
-type hexagonTriangle int
-
-const (
-	unknownHexTriangle hexagonTriangle = iota
-	leftHexTriangle
-	middleHexTriangle
-	rightHexTriangle
-)
-
 // A hexagonal grid.
 type grid struct {
 	hexConfig
 	hexTriangleLUT []hexagonTriangle
 }
 
+// Position for multi pixel game components such as nodes, obstacles, hexagons, etc
+type GridPosition struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+}
+
+// A value stored in a lookup table to help determine grid position.
+type hexagonTriangle int
+
+// A commmon interior or exterior point of a hexagon.
+type hexPoint int
+
+// One of the six sides of a hexagon.
+type hexSide int
+
+// Basic hexagon pixel position shared amongst all hexagons. The left side of
+// the hexagon is aligned with x=0. The top point of the hexagon is aligned with y=0.
+// By motif definition, x must be less than hex width and y must be less than hex height.
+type demotif struct {
+	PixelPosition
+}
+
 func newGrid(hc hexConfig) grid {
-	g := grid{
-		hexConfig: hc,
-		hexTriangleLUT: setupHexTriangleLUT(
-			line{PixelPosition{0, hc.hexHeight / 4}, PixelPosition{hc.hexWidth / 2, 0}},
-			line{PixelPosition{hc.hexWidth / 2, 0}, PixelPosition{hc.hexWidth, hc.hexHeight / 4}}),
-	}
+	g := grid{hexConfig: hc}
+	g.hexTriangleLUT = g.setupHexTriangleLUT()
 	return g
 }
 
-func setupHexTriangleLUT(left, right line) []hexagonTriangle {
+// Setup a look up table to help determine grid position
+func (g grid) setupHexTriangleLUT() []hexagonTriangle {
+	left := line{PixelPosition{0, g.hexHeight / 4}, PixelPosition{g.hexWidth / 2, 0}}
+	right := line{PixelPosition{g.hexWidth / 2, 0}, PixelPosition{g.hexWidth, g.hexHeight / 4}}
+
 	xMin := left.start.X
 	xMax := right.end.X
 	yMin := min(left.start.Y, left.end.Y, right.start.Y, right.end.Y)
 	yMax := max(left.start.Y, left.end.Y, right.start.Y, right.end.Y)
 
-	triangleSwitchLUT := make(map[PixelPosition]hexagonTriangle)
+	switchTriangle := make(map[PixelPosition]hexagonTriangle)
 	wc := windowConfig{xMax - xMin, yMax - yMin}
 	for _, p := range left.adjacentPoints(north, wc) {
-		triangleSwitchLUT[p] = leftHexTriangle
+		switchTriangle[p] = leftHexTriangle
 	}
 	for _, p := range left.adjacentPoints(south, wc) {
-		triangleSwitchLUT[p] = middleHexTriangle
+		switchTriangle[p] = middleHexTriangle
 	}
 	for _, p := range right.adjacentPoints(north, wc) {
-		triangleSwitchLUT[p] = rightHexTriangle
+		switchTriangle[p] = rightHexTriangle
 	}
 	for _, p := range right.adjacentPoints(south, wc) {
-		triangleSwitchLUT[p] = middleHexTriangle
+		switchTriangle[p] = middleHexTriangle
 	}
 
 	var lut []hexagonTriangle
@@ -135,7 +150,7 @@ func setupHexTriangleLUT(left, right line) []hexagonTriangle {
 		triangle := leftHexTriangle
 		for x := xMin; x < xMax; x++ {
 			p := PixelPosition{x, y}
-			if t, ok := triangleSwitchLUT[p]; ok {
+			if t, ok := switchTriangle[p]; ok {
 				triangle = t
 			}
 			lut = append(lut, triangle)
@@ -164,13 +179,12 @@ func setupHexTriangleLUT(left, right line) []hexagonTriangle {
 	return lut
 }
 
-// Position for multi pixel game components such as nodes, obstacles, hexagons, etc
-type GridPosition struct {
-	X int `json:"x"`
-	Y int `json:"y"`
-}
-
-type hexPoint int
+const (
+	unknownHexTriangle hexagonTriangle = iota
+	leftHexTriangle
+	middleHexTriangle
+	rightHexTriangle
+)
 
 const (
 	hpCenter hexPoint = iota
@@ -180,6 +194,16 @@ const (
 	hpSouth
 	hpSouthwest
 	hpNorthwest
+)
+
+const (
+	hsNone hexSide = iota
+	hsNortheast
+	hsEast
+	hsSoutheast
+	hsSouthwest
+	hsWest
+	hsNorthwest
 )
 
 func (hp hexPoint) string() string {
@@ -203,18 +227,6 @@ func (hp hexPoint) string() string {
 	}
 }
 
-type hexSide int
-
-const (
-	hsNone hexSide = iota
-	hsNortheast
-	hsEast
-	hsSoutheast
-	hsSouthwest
-	hsWest
-	hsNorthwest
-)
-
 func (hs hexSide) string() string {
 	switch hs {
 	case hsNone:
@@ -236,13 +248,6 @@ func (hs hexSide) string() string {
 	}
 }
 
-// Basic hexagon pixel position shared amongst all hexagons. The left side of
-// the hexagon is aligned with x=0. The top point of the hexagon is aligned with y=0.
-// By motif definition, x must be less than hex width and y must be less than hex height.
-type demotif struct {
-	PixelPosition
-}
-
 func hexPoints() []hexPoint {
 	return []hexPoint{hpCenter, hpNorth, hpNortheast, hpSoutheast, hpSouth, hpSouthwest, hpNorthwest}
 }
@@ -251,21 +256,21 @@ func hexSides() []hexSide {
 	return []hexSide{hsNortheast, hsEast, hsSoutheast, hsSouthwest, hsWest, hsNorthwest}
 }
 
-func (gridPos GridPosition) log() []slog.Attr {
+func (gp GridPosition) log() []slog.Attr {
 	var a = []slog.Attr{}
-	a = append(a, slog.Int("x", gridPos.X))
-	a = append(a, slog.Int("y", gridPos.Y))
+	a = append(a, slog.Int("x", gp.X))
+	a = append(a, slog.Int("y", gp.Y))
 	return a
 }
 
-func (gridPos GridPosition) equals(other GridPosition) bool {
-	return gridPos.X == other.X && gridPos.Y == other.Y
+func (gp GridPosition) equals(other GridPosition) bool {
+	return gp.X == other.X && gp.Y == other.Y
 }
 
-func (g grid) allAdjacent(pos GridPosition) []GridPosition {
+func (g grid) allAdjacent(gp GridPosition) []GridPosition {
 	a := []GridPosition{}
 	for _, hs := range hexSides() {
-		if p, ok := g.adjacent(pos, hs); ok {
+		if p, ok := g.adjacent(gp, hs); ok {
 			a = append(a, p)
 		}
 	}
@@ -313,24 +318,24 @@ func (g grid) adjacent(p GridPosition, side hexSide) (GridPosition, bool) {
 	}
 }
 
-func (g grid) isAdjacent(p1 GridPosition, p2 GridPosition) bool {
-	ne, neOk := g.adjacent(p1, hsNortheast)
-	e, eOk := g.adjacent(p1, hsEast)
-	se, seOk := g.adjacent(p1, hsSoutheast)
-	sw, swOk := g.adjacent(p1, hsSouthwest)
-	w, wOk := g.adjacent(p1, hsWest)
-	nw, nwOk := g.adjacent(p1, hsNorthwest)
+func (g grid) isAdjacent(gp1 GridPosition, gp2 GridPosition) bool {
+	ne, neOk := g.adjacent(gp1, hsNortheast)
+	e, eOk := g.adjacent(gp1, hsEast)
+	se, seOk := g.adjacent(gp1, hsSoutheast)
+	sw, swOk := g.adjacent(gp1, hsSouthwest)
+	w, wOk := g.adjacent(gp1, hsWest)
+	nw, nwOk := g.adjacent(gp1, hsNorthwest)
 
-	return (neOk && ne.equals(p2)) ||
-		(eOk && e.equals(p2)) ||
-		(seOk && se.equals(p2)) ||
-		(swOk && sw.equals(p2)) ||
-		(wOk && w.equals(p2)) ||
-		(nwOk && nw.equals(p2))
+	return (neOk && ne.equals(gp2)) ||
+		(eOk && e.equals(gp2)) ||
+		(seOk && se.equals(gp2)) ||
+		(swOk && sw.equals(gp2)) ||
+		(wOk && w.equals(gp2)) ||
+		(nwOk && nw.equals(gp2))
 }
 
-func (g grid) getPixelPos(pos GridPosition, hexPoint hexPoint) (PixelPosition, bool) {
-	p := g.getPixelPosOutbounds(pos, hexPoint)
+func (g grid) getPixelPos(gp GridPosition, hexPoint hexPoint) (PixelPosition, bool) {
+	p := g.getPixelPosOutbounds(gp, hexPoint)
 	if !newWindowConfig().inbounds(p) {
 		return PixelPosition{}, false
 	} else {
@@ -338,23 +343,23 @@ func (g grid) getPixelPos(pos GridPosition, hexPoint hexPoint) (PixelPosition, b
 	}
 }
 
-func (g grid) getCenterWithFallback(pos GridPosition) (PixelPosition, bool) {
-	if p, ok := g.getPixelPos(pos, hpCenter); ok {
+func (g grid) getCenterWithFallback(gp GridPosition) (PixelPosition, bool) {
+	if p, ok := g.getPixelPos(gp, hpCenter); ok {
 		return p, true
 	}
 
 	for _, hp := range hexPoints() {
-		if p, ok := g.getPixelPos(pos, hp); ok {
+		if p, ok := g.getPixelPos(gp, hp); ok {
 			return p, true
 		}
 	}
 	return PixelPosition{}, false
 }
 
-func (g grid) getPixelPosOutbounds(p GridPosition, hexPoint hexPoint) PixelPosition {
-	x := p.X * g.hexWidth
-	y := p.Y * (g.hexHeight / 4 * 3)
-	if p.Y%2 == 1 {
+func (g grid) getPixelPosOutbounds(gp GridPosition, hexPoint hexPoint) PixelPosition {
+	x := gp.X * g.hexWidth
+	y := gp.Y * (g.hexHeight / 4 * 3)
+	if gp.Y%2 == 1 {
 		x -= (g.hexWidth) / 2
 	}
 
