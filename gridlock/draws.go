@@ -80,7 +80,7 @@ func newDrawConfig() *drawConfig {
 	dc := drawConfig{
 		screen:                        nil,
 		windowMultiplier:              2.5,
-		grid:                          grid{&hc},
+		grid:                          newGrid(hc),
 		defaultLineWidth:              1,
 		selectectionBoxLineWidth:      1,
 		missileExplodeRadiusLineWidth: 1,

@@ -99,7 +99,7 @@ func TestGetPixelPos(t *testing.T) {
 			sWantOk)
 
 		hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
-		g := grid{&hc}
+		g := newGrid(hc)
 		t.Run(testname, func(t *testing.T) {
 			pos, ok := g.getPixelPos(tt.gridPos, tt.hexPoint)
 			if ok != tt.wantOk {
@@ -851,7 +851,7 @@ func TestGetGridPos(t *testing.T) {
 			sWantOk)
 
 		hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
-		g := grid{&hc}
+		g := newGrid(hc)
 		t.Run(testname, func(t *testing.T) {
 			pos, ok := g.getGridPos(tt.pixelPos)
 			if ok != tt.wantOk {
@@ -988,7 +988,7 @@ func TestAdjacent(t *testing.T) {
 			sWantOk)
 
 		hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
-		g := grid{&hc}
+		g := newGrid(hc)
 		t.Run(testname, func(t *testing.T) {
 			pos, ok := g.adjacent(tt.gridPos, tt.hexSide)
 			if ok != tt.wantOk {
@@ -1236,6 +1236,8 @@ func TestDemotif(t *testing.T) {
 		{PixelPosition{1280, 720}, demotif{PixelPosition{0, 0}}, false},
 	}
 
+	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
+	g := newGrid(hc)
 	for _, tt := range tests {
 		var sWantOk string
 		if tt.wantOk {
@@ -1250,8 +1252,6 @@ func TestDemotif(t *testing.T) {
 			tt.wantDemotif.log(),
 			sWantOk)
 
-		hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
-		g := grid{&hc}
 		t.Run(testname, func(t *testing.T) {
 			demotif, ok := g.demotif(tt.pixelPos)
 			if ok != tt.wantOk {

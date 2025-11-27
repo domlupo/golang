@@ -217,6 +217,9 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 			fmt.Sprintf("setupNodeLUT: %.1f%% total pixels calculated. %d pixels of distance %d", percent, count-priorCount, distance))
 
 		distance++
+		if distance > max(wc.height, wc.width) {
+			panic("setupNodeLUT: invalid setup because distance is greater than max distance allowed by window.")
+		}
 	}
 
 	percent := float64(count) / float64(wc.maxPixels()) * maxPercent

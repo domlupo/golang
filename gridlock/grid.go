@@ -7,9 +7,161 @@ import (
 	"log/slog"
 )
 
+// The hexagon look up table is a hardcoded mapping to aid with converting
+// pixel position to hexagon grid position. It avoids the the need of CPU intensive math.
+// It helps CPU performance by removing the need for floating point or sqrt math logic.
+//
+// Specific CPU profiling did not prove this optimizaton was needed but prior CPU profiling
+// for this game showed that integer math is much more efficient. Other pixel position to
+// hexagon algorithms appeared as complex or even more complex than this method so this
+// more optimized solution was implemented first.
+//
+// It is small portion of the hexagonal grid that is repeated multiple times.
+// It covers 460 (46 cols, 10 rows) of pixels. The top left point in the most
+// top left pattern is located at {xOffset, yOffset}.
+//
+// It has a:
+//   - right triangle on the left side.
+//   - non right triangle in the middle.
+//   - right triangle on the right side.
+//
+// right triangle on left side
+//
+// ***/ \
+// **/   \
+// */     \
+//
+// non right triangle in middle
+//
+//    /*\
+//   /***\
+//  /*****\
+//
+// right triangle on right side
+//
+//    / \***
+//   /   \**
+//  /     \*
+//
+// The hexagon look up table is also used for another section of the hexagonal grid
+// that is repeated multiple times. It is usally referenced as "inverted"
+//
+//  \     /
+//   \   /
+//    \ /
+//
+// This is possible because this section becomes the prior section by following these steps:
+//   - horizontally flip the entire section.
+//   - split entire section vertically in half.
+//   - swap the two vertical halfs.
+//
+// An example highlighting the middle section is shown below:
+//
+// non right triangle in middle
+//
+//    /*\
+//   /***\
+//  /*****\
+//
+// horizontally flip the entire section.
+//
+//  \*****/
+//   \***/
+//    \*/
+//
+// split the entir section vertically in half
+//
+//  \** **/
+//   \* */
+//    \ /
+//
+// swap the two vertical halfs.
+//
+//  **/ \**
+//  */   \*
+//  /     \
+//
+// As shown above, the prior section's middle triangle is now converted into
+// this section's left and right triangle.
+
+type hexagonTriangle int
+
+const (
+	unknownHexTriangle hexagonTriangle = iota
+	leftHexTriangle
+	middleHexTriangle
+	rightHexTriangle
+)
+
 // A hexagonal grid.
 type grid struct {
-	*hexConfig
+	hexConfig
+	hexTriangleLUT []hexagonTriangle
+}
+
+func newGrid(hc hexConfig) grid {
+	g := grid{
+		hexConfig: hc,
+		hexTriangleLUT: setupHexTriangleLUT(
+			line{PixelPosition{0, hc.hexHeight / 4}, PixelPosition{hc.hexWidth / 2, 0}},
+			line{PixelPosition{hc.hexWidth / 2, 0}, PixelPosition{hc.hexWidth, hc.hexHeight / 4}}),
+	}
+	return g
+}
+
+func setupHexTriangleLUT(left, right line) []hexagonTriangle {
+	xMin := left.start.X
+	xMax := right.end.X
+	yMin := min(left.start.Y, left.end.Y, right.start.Y, right.end.Y)
+	yMax := max(left.start.Y, left.end.Y, right.start.Y, right.end.Y)
+
+	triangleSwitchLUT := make(map[PixelPosition]hexagonTriangle)
+	wc := windowConfig{xMax - xMin, yMax - yMin}
+	for _, p := range left.adjacentPoints(north, wc) {
+		triangleSwitchLUT[p] = leftHexTriangle
+	}
+	for _, p := range left.adjacentPoints(south, wc) {
+		triangleSwitchLUT[p] = middleHexTriangle
+	}
+	for _, p := range right.adjacentPoints(north, wc) {
+		triangleSwitchLUT[p] = rightHexTriangle
+	}
+	for _, p := range right.adjacentPoints(south, wc) {
+		triangleSwitchLUT[p] = middleHexTriangle
+	}
+
+	var lut []hexagonTriangle
+	for y := yMin; y < yMax; y++ {
+		triangle := leftHexTriangle
+		for x := xMin; x < xMax; x++ {
+			p := PixelPosition{x, y}
+			if t, ok := triangleSwitchLUT[p]; ok {
+				triangle = t
+			}
+			lut = append(lut, triangle)
+		}
+	}
+
+	leftTriangleCount := 0
+	middleTriangleCount := 0
+	rightTriangleCount := 0
+	for _, t := range lut {
+		switch t {
+		case unknownHexTriangle:
+			panic("setupHexTriangleLUT: The look up table should not have any unknown hex triangles")
+		case leftHexTriangle:
+			leftTriangleCount++
+		case middleHexTriangle:
+			middleTriangleCount++
+		case rightHexTriangle:
+			rightTriangleCount++
+		}
+	}
+	if leftTriangleCount+rightTriangleCount != middleTriangleCount {
+		panic("stupHexTriangleLUT: This may be fine but I added this conservative protection " +
+			"since it may help debug future issues. Verify this isn't a bug.")
+	}
+	return lut
 }
 
 // Position for multi pixel game components such as nodes, obstacles, hexagons, etc
@@ -257,7 +409,7 @@ func (g grid) getGridPosOutbounds(p PixelPosition) GridPosition {
 	var yIndexOffset int
 	switch {
 	case innerY >= firstYSectionStart && innerY < secondYSectionStart:
-		triangle := g.lut[innerX+innerY*g.hexWidth]
+		triangle := g.hexTriangleLUT[innerX+innerY*g.hexWidth]
 		switch triangle {
 		case leftHexTriangle:
 			xIndexOffset = 0
@@ -281,7 +433,7 @@ func (g grid) getGridPosOutbounds(p PixelPosition) GridPosition {
 			hexLookUpXOffset = -(g.hexWidth / 2)
 		}
 
-		triangle := g.lut[innerX+(innerY*g.hexWidth)+hexLookUpXOffset-hexLookUpYOffset]
+		triangle := g.hexTriangleLUT[innerX+(innerY*g.hexWidth)+hexLookUpXOffset-hexLookUpYOffset]
 		switch {
 		case triangle == leftHexTriangle:
 			xIndexOffset = 1

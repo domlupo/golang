@@ -112,26 +112,26 @@ func TestAdjacentPoints(t *testing.T) {
 		wantPoints []PixelPosition
 		wantPanic  bool
 	}{
-		// panics when any point out of bounds 1
-		{line{PixelPosition{0, 0}, PixelPosition{0, 0}}, north, []PixelPosition{}, true},
+		// trims points out of bounds 1
+		{line{PixelPosition{0, 0}, PixelPosition{0, 0}}, north, []PixelPosition{}, false},
 		{line{PixelPosition{0, 0}, PixelPosition{0, 0}}, south, []PixelPosition{{0, 1}}, false},
-		{line{PixelPosition{0, -1}, PixelPosition{0, -1}}, north, []PixelPosition{}, true},
+		{line{PixelPosition{0, -1}, PixelPosition{0, -1}}, north, []PixelPosition{}, false},
 		{line{PixelPosition{0, -1}, PixelPosition{0, -1}}, south, []PixelPosition{{0, 0}}, false},
-		// panics when any point out of bounds 2
-		{line{PixelPosition{-1, 1}, PixelPosition{-1, 1}}, north, []PixelPosition{}, true},
-		{line{PixelPosition{-1, 1}, PixelPosition{-1, 1}}, south, []PixelPosition{}, true},
-		// panics when any point out of bounds 3
-		{line{PixelPosition{wc.width, 1}, PixelPosition{wc.width, 1}}, north, []PixelPosition{}, true},
-		{line{PixelPosition{wc.width, 1}, PixelPosition{wc.width, 1}}, south, []PixelPosition{}, true},
-		// panics when any point out of bounds 4
+		// trims points out of bounds 2
+		{line{PixelPosition{-1, 1}, PixelPosition{-1, 1}}, north, []PixelPosition{}, false},
+		{line{PixelPosition{-1, 1}, PixelPosition{-1, 1}}, south, []PixelPosition{}, false},
+		// trims point out of bounds 3
+		{line{PixelPosition{wc.width, 1}, PixelPosition{wc.width, 1}}, north, []PixelPosition{}, false},
+		{line{PixelPosition{wc.width, 1}, PixelPosition{wc.width, 1}}, south, []PixelPosition{}, false},
+		// trims points out of bounds 4
 		{line{PixelPosition{1, wc.height}, PixelPosition{1, wc.height}}, north, []PixelPosition{{1, wc.height - 1}}, false},
-		{line{PixelPosition{1, wc.height}, PixelPosition{1, wc.height}}, south, []PixelPosition{}, true},
+		{line{PixelPosition{1, wc.height}, PixelPosition{1, wc.height}}, south, []PixelPosition{}, false},
 		{line{PixelPosition{1, wc.height - 1}, PixelPosition{1, wc.height - 1}}, north, []PixelPosition{{1, wc.height - 2}}, false},
 		{line{PixelPosition{1, wc.height - 2}, PixelPosition{1, wc.height - 2}}, south, []PixelPosition{{1, wc.height - 1}}, false},
-		// panics when any point out of bounds 5
-		{line{PixelPosition{0, -3}, PixelPosition{0, 0}}, north, []PixelPosition{}, true},
+		// trims points out of bounds 5
+		{line{PixelPosition{0, -3}, PixelPosition{0, 0}}, north, []PixelPosition{}, false},
 		{line{PixelPosition{0, -3}, PixelPosition{0, 0}}, south, []PixelPosition{{0, 1}}, false},
-		{line{PixelPosition{0, -3}, PixelPosition{0, -1}}, north, []PixelPosition{}, true},
+		{line{PixelPosition{0, -3}, PixelPosition{0, -1}}, north, []PixelPosition{}, false},
 		{line{PixelPosition{0, -3}, PixelPosition{0, -1}}, south, []PixelPosition{{0, 0}}, false},
 
 		// point 1
@@ -340,8 +340,8 @@ func TestAdjacentPoints(t *testing.T) {
 					t.Errorf("do not want panic but did panic")
 				}
 			}()
-
-			points := tt.l.adjacentPoints(tt.d)
+			wc := newWindowConfig()
+			points := tt.l.adjacentPoints(tt.d, wc)
 			if !slices.Equal(points, tt.wantPoints) {
 				t.Errorf("points %s %#v\n not equal to wanted points %#v", tt.d.string(), points, tt.wantPoints)
 			}
