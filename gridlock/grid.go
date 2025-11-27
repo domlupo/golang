@@ -125,10 +125,10 @@ func (g grid) setupHexTriangleLUT() []hexagonTriangle {
 	left := line{PixelPosition{0, g.hexHeight / 4}, PixelPosition{g.hexWidth / 2, 0}}
 	right := line{PixelPosition{g.hexWidth / 2, 0}, PixelPosition{g.hexWidth, g.hexHeight / 4}}
 
-	xMin := left.start.X
-	xMax := right.end.X
-	yMin := min(left.start.Y, left.end.Y, right.start.Y, right.end.Y)
-	yMax := max(left.start.Y, left.end.Y, right.start.Y, right.end.Y)
+	xMin := min(left.p1.X, left.p2.X)
+	xMax := max(right.p1.X, right.p2.X)
+	yMin := min(left.p1.Y, left.p2.Y, right.p1.Y, right.p2.Y)
+	yMax := max(left.p1.Y, left.p2.Y, right.p1.Y, right.p2.Y)
 
 	switchTriangle := make(map[PixelPosition]hexagonTriangle)
 	bounds := bounds{xMax - xMin, yMax - yMin}

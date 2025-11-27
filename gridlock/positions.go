@@ -35,8 +35,8 @@ const (
 )
 
 type line struct {
-	start PixelPosition
-	end   PixelPosition
+	p1 PixelPosition
+	p2 PixelPosition
 }
 
 type pointOrientation int
@@ -86,8 +86,8 @@ func (p PixelPosition) log() []slog.Attr {
 
 func (l line) log() []slog.Attr {
 	var a = []slog.Attr{}
-	a = append(a, nest("start", l.start.log()))
-	a = append(a, nest("end", l.end.log()))
+	a = append(a, nest("p1", l.p1.log()))
+	a = append(a, nest("p2", l.p1.log()))
 	return a
 }
 
@@ -200,21 +200,21 @@ func onSegment(p1 PixelPosition, p2 PixelPosition, p3 PixelPosition) bool {
 }
 
 func (l1 line) intersects(l2 line) bool {
-	o1 := orientation(l1.start, l1.end, l2.start)
-	o2 := orientation(l1.start, l1.end, l2.end)
-	o3 := orientation(l2.start, l2.end, l1.start)
-	o4 := orientation(l2.start, l2.end, l1.end)
+	o1 := orientation(l1.p1, l1.p2, l2.p1)
+	o2 := orientation(l1.p1, l1.p2, l2.p2)
+	o3 := orientation(l2.p1, l2.p2, l1.p1)
+	o4 := orientation(l2.p1, l2.p2, l1.p2)
 
 	switch {
 	case o1 != o2 && o3 != o4:
 		return true
-	case o1 == collinear && onSegment(l1.start, l2.start, l1.end):
+	case o1 == collinear && onSegment(l1.p1, l2.p1, l1.p2):
 		return true
-	case o2 == collinear && onSegment(l1.start, l2.end, l1.end):
+	case o2 == collinear && onSegment(l1.p1, l2.p2, l1.p2):
 		return true
-	case o3 == collinear && onSegment(l2.start, l1.start, l2.end):
+	case o3 == collinear && onSegment(l2.p1, l1.p1, l2.p2):
 		return true
-	case o4 == collinear && onSegment(l2.start, l1.end, l2.end):
+	case o4 == collinear && onSegment(l2.p1, l1.p2, l2.p2):
 		return true
 	default:
 		return false
@@ -224,22 +224,22 @@ func (l1 line) intersects(l2 line) bool {
 func (l line) inclusivePoints() []PixelPosition {
 	var inner []PixelPosition
 	switch {
-	case l.start.X == l.end.X && l.start.Y == l.end.Y:
+	case l.p1.X == l.p2.X && l.p1.Y == l.p2.Y:
 		panic("inclusivePoints: cannot find inclusive points for a point")
-	case l.start.X == l.end.X:
-		start := min(l.start.Y, l.end.Y)
-		end := max(l.start.Y, l.end.Y)
+	case l.p1.X == l.p2.X:
+		start := min(l.p1.Y, l.p2.Y)
+		end := max(l.p1.Y, l.p2.Y)
 		y := start
 		for y <= end {
-			inner = append(inner, PixelPosition{l.start.X, y})
+			inner = append(inner, PixelPosition{l.p1.X, y})
 			y += 1
 		}
-	case l.start.Y == l.end.Y:
-		start := min(l.start.X, l.end.X)
-		end := max(l.start.X, l.end.X)
+	case l.p1.Y == l.p2.Y:
+		start := min(l.p1.X, l.p2.X)
+		end := max(l.p1.X, l.p2.X)
 		x := start
 		for x <= end {
-			inner = append(inner, PixelPosition{x, l.start.Y})
+			inner = append(inner, PixelPosition{x, l.p1.Y})
 			x += 1
 		}
 	default:
@@ -265,18 +265,18 @@ func (l line) adjacentPoints(d direction, bounds bounds) []PixelPosition {
 	var left PixelPosition
 	var right PixelPosition
 	switch {
-	case l.start.X < l.end.X:
-		left = l.start
-		right = l.end
+	case l.p1.X < l.p2.X:
+		left = l.p1
+		right = l.p2
 	default:
-		left = l.end
-		right = l.start
+		left = l.p2
+		right = l.p1
 	}
 
 	if left.X == right.X && d == north {
-		southPoints = append(southPoints, PixelPosition{left.X, min(l.start.Y, l.end.Y)})
+		southPoints = append(southPoints, PixelPosition{left.X, min(l.p1.Y, l.p2.Y)})
 	} else if left.X == right.X && d == south {
-		southPoints = append(southPoints, PixelPosition{left.X, max(l.start.Y, l.end.Y) + 1})
+		southPoints = append(southPoints, PixelPosition{left.X, max(l.p1.Y, l.p2.Y) + 1})
 	} else {
 		// Ebitengine y is opposite of typical cartesian grid, slope equation is not typical.
 		// right.Y - left.Y instead of typical left.Y - right.Y
@@ -302,7 +302,7 @@ func (l line) adjacentPoints(d direction, bounds bounds) []PixelPosition {
 		}
 	}
 
-	// A potentially more concise or performant approach would be to shift the start and end point.
+	// A potentially more concise or performant approach would be to shift the stating line.
 	// Rather than the current approach of finding all south points then offsetting.
 	// I am not 100% sure the other approach is correct for all lines. I also think the offset approach
 	// is typically the first solution people would have so it is probably easier to understand. Finally,
