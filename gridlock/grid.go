@@ -107,7 +107,7 @@ type hexPoint int
 // One of the six sides of a hexagon.
 type hexSide int
 
-// Basic hexagon pixel position shared amongst all hexagons. The left side of
+// Represents a hexagon pixel position shared amongst all hexagons. The left side of
 // the hexagon is aligned with x=0. The top point of the hexagon is aligned with y=0.
 // By motif definition, x must be less than hex width and y must be less than hex height.
 type demotif struct {
@@ -122,26 +122,26 @@ func newGrid(hc hexConfig) grid {
 
 // Setup a look up table to help determine grid position
 func (g grid) setupHexTriangleLUT() []hexagonTriangle {
-	left := line{PixelPosition{0, g.hexHeight / 4}, PixelPosition{g.hexWidth / 2, 0}}
-	right := line{PixelPosition{g.hexWidth / 2, 0}, PixelPosition{g.hexWidth, g.hexHeight / 4}}
+	nw := g.demotifHexLine(hsNorthwest)
+	ne := g.demotifHexLine(hsNortheast)
 
-	xMin := min(left.p1.X, left.p2.X)
-	xMax := max(right.p1.X, right.p2.X)
-	yMin := min(left.p1.Y, left.p2.Y, right.p1.Y, right.p2.Y)
-	yMax := max(left.p1.Y, left.p2.Y, right.p1.Y, right.p2.Y)
+	xMin := min(nw.p1.X, nw.p2.X)
+	xMax := max(ne.p1.X, ne.p2.X)
+	yMin := min(nw.p1.Y, nw.p2.Y, ne.p1.Y, ne.p2.Y)
+	yMax := max(nw.p1.Y, nw.p2.Y, ne.p1.Y, ne.p2.Y)
 
 	switchTriangle := make(map[PixelPosition]hexagonTriangle)
 	bounds := bounds{xMax - xMin, yMax - yMin}
-	for _, p := range left.adjacentPoints(north, bounds) {
+	for _, p := range nw.adjacentPoints(north, bounds) {
 		switchTriangle[p] = leftHexTriangle
 	}
-	for _, p := range left.adjacentPoints(south, bounds) {
+	for _, p := range nw.adjacentPoints(south, bounds) {
 		switchTriangle[p] = middleHexTriangle
 	}
-	for _, p := range right.adjacentPoints(north, bounds) {
+	for _, p := range ne.adjacentPoints(north, bounds) {
 		switchTriangle[p] = rightHexTriangle
 	}
-	for _, p := range right.adjacentPoints(south, bounds) {
+	for _, p := range ne.adjacentPoints(south, bounds) {
 		switchTriangle[p] = middleHexTriangle
 	}
 
@@ -468,8 +468,8 @@ func (g grid) getGridPosOutbounds(p PixelPosition) GridPosition {
 	return GridPosition{xIndex + xIndexOffset, yIndex + yIndexOffset}
 }
 
-// Remove the repeated hexagon grid pattern from the pixel position to find the basic
-// hexagon pixel position shared amongst all hexagons. The left side of the hexagon is
+// Remove the repeated hexagon grid pattern from the pixel position to find the base
+// hexagon structure shared amongst all hexagons. The left side of the hexagon is
 // aligned with x=0. The top point of the hexagon is aligned with y=0. By motif
 // definition, x must be less than hex width and y must be less than hex height.
 func (g grid) demotif(p PixelPosition) (demotif, bool) {
