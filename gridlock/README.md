@@ -503,6 +503,10 @@ Determine if I should clarify file names
 
 ### Punted Checkpoints
 
+- I am using multiple grids instead of a single in grid in application memory. This is a potential optimization
+  in the future. Right now it is too low hanging fruit and but should be revisited. Right now I prefer the
+  more idiomatic code with better readability.
+
 - Before release determine if any variables should be renamed. Especially foundational structs
   - PixelPostition
   - position
