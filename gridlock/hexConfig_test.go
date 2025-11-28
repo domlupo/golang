@@ -53,5 +53,12 @@ func TestDemotifHexLine(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestDemotifPixels(t *testing.T) {
+	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
+	demotifPixels := hc.demotifHexPixels()
+	if len(demotifPixels) != 1380 {
+		t.Error("demotifPixels sanity check failed")
+	}
 }

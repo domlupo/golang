@@ -68,3 +68,34 @@ func (hc hexConfig) demotifHexLine(hs hexSide) line {
 		panic(fmt.Sprintf("demotifHexLine: unknown hex side %s", hs.string()))
 	}
 }
+
+// Returns all pixels within the demotif hexagon.
+func (hc hexConfig) demotifHexPixels() []PixelPosition {
+	demotifPixels := []PixelPosition{}
+
+	leftBounds := &bounds{
+		xMin: 0,
+		xMax: hc.hexWidth / 2,
+		yMin: 0,
+		yMax: hc.hexHeight,
+	}
+	rightBounds := &bounds{
+		xMin: hc.hexWidth / 2,
+		xMax: hc.hexWidth,
+		yMin: 0,
+		yMax: hc.hexHeight,
+	}
+	nwPixels := hc.demotifHexLine(hsNorthwest).adjacentPoints(south, leftBounds)
+	nePixles := hc.demotifHexLine(hsNortheast).adjacentPoints(south, rightBounds)
+	swPixels := hc.demotifHexLine(hsSouthwest).adjacentPoints(north, leftBounds)
+	sePixels := hc.demotifHexLine(hsSoutheast).adjacentPoints(north, rightBounds)
+
+	northPixels := append(nwPixels, nePixles...)
+	southPixels := append(swPixels, sePixels...)
+	for i, np := range northPixels {
+		sp := southPixels[i]
+		l := line{np, sp}
+		demotifPixels = append(demotifPixels, l.adjacentPoints(east, nil)...)
+	}
+	return demotifPixels
+}
