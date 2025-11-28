@@ -87,7 +87,7 @@ func (p PixelPosition) log() []slog.Attr {
 func (l line) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, nest("p1", l.p1.log()))
-	a = append(a, nest("p2", l.p1.log()))
+	a = append(a, nest("p2", l.p2.log()))
 	return a
 }
 
@@ -256,34 +256,52 @@ func (l line) inclusivePoints() []PixelPosition {
 // Trims any points outside the passed bounds. Accepts passed lines outside the passed bounds.
 func (l line) adjacentPoints(d direction, bounds bounds) []PixelPosition {
 	switch d {
-	case north, south:
+	case north, south, west, east:
 	default:
 		panic(fmt.Sprintf("adjacentPoints: cannot get points in direction %s since it is unimplemented", d.string()))
 	}
 
-	var southPoints []PixelPosition
-	var left PixelPosition
-	var right PixelPosition
+	var w PixelPosition
+	var e PixelPosition
 	switch {
 	case l.p1.X < l.p2.X:
-		left = l.p1
-		right = l.p2
+		w = l.p1
+		e = l.p2
 	default:
-		left = l.p2
-		right = l.p1
+		w = l.p2
+		e = l.p1
 	}
+	nY := max(l.p1.Y, l.p2.Y)
+	sY := min(l.p1.Y, l.p2.Y)
 
-	if left.X == right.X && d == north {
-		southPoints = append(southPoints, PixelPosition{left.X, min(l.p1.Y, l.p2.Y)})
-	} else if left.X == right.X && d == south {
-		southPoints = append(southPoints, PixelPosition{left.X, max(l.p1.Y, l.p2.Y) + 1})
-	} else {
+	lineIsVertical := w.X == e.X
+	var points []PixelPosition
+	switch {
+	case lineIsVertical && d == west:
+		y := sY
+		for y <= nY {
+			points = append(points, PixelPosition{w.X - 1, y})
+			y += 1
+		}
+	case lineIsVertical && d == east:
+		y := sY
+		for y <= nY {
+			points = append(points, PixelPosition{w.X, y})
+			y += 1
+		}
+	case !lineIsVertical && d == west, !lineIsVertical && d == east:
+		panic(fmt.Sprintf("adjacentPoints: cannot get points in direction %s for non vertical lines since it is unimplemented", d.string()))
+	case lineIsVertical && d == north:
+		points = append(points, PixelPosition{w.X, sY - 1})
+	case lineIsVertical && d == south:
+		points = append(points, PixelPosition{w.X, nY})
+	default:
 		// Ebitengine y is opposite of typical cartesian grid, slope equation is not typical.
-		// right.Y - left.Y instead of typical left.Y - right.Y
-		slope := float64(right.Y-left.Y) / float64(left.X-right.X)
-		x := float64(left.X) + 0.5
-		for x <= float64(right.X) {
-			yIntercept := float64(left.Y) + (slope * float64(left.X))
+		// e.Y - w.Y instead of typical w.Y - e.Y
+		slope := float64(e.Y-w.Y) / float64(w.X-e.X)
+		x := float64(w.X) + 0.5
+		for x <= float64(e.X+1) {
+			yIntercept := float64(w.Y) + (slope * float64(w.X))
 			// Ebitegine y is opposite of typical cartesian grid, y intercept equation is not typical.
 			// y := yIntercept - slope*x instead of y := slope*x + yIntercept.
 			y := yIntercept - slope*x
@@ -297,29 +315,22 @@ func (l line) adjacentPoints(d direction, bounds bounds) []PixelPosition {
 			case yDecimal < 0.5:
 				yInt -= 1
 			}
-			southPoints = append(southPoints, PixelPosition{xInt, yInt + 1})
+			var yOffset int
+			if d == south {
+				yOffset++
+			}
+			points = append(points, PixelPosition{xInt, yInt + yOffset})
 			x += 1
 		}
 	}
 
-	// A potentially more concise or performant approach would be to shift the stating line.
-	// Rather than the current approach of finding all south points then offsetting.
-	// I am not 100% sure the other approach is correct for all lines. I also think the offset approach
-	// is typically the first solution people would have so it is probably easier to understand. Finally,
-	// this code is not performance sensitive.
-	var yOffset int
-	if d == north {
-		yOffset = -1
-	}
-	var points []PixelPosition
-	for _, sp := range southPoints {
-		p := PixelPosition{sp.X, sp.Y + yOffset}
+	var trimmedPoints []PixelPosition
+	for _, p := range points {
 		if bounds.contains(p) {
-			points = append(points, p)
+			trimmedPoints = append(trimmedPoints, p)
 		}
 	}
-
-	return points
+	return trimmedPoints
 }
 
 func collidesWithBorder(p position, offset int) bool {
