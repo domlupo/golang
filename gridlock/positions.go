@@ -253,8 +253,8 @@ func (l line) inclusivePoints() []PixelPosition {
 // positive x and south is positive y. x is typical and y is opposite of typical for catesian graph.
 // Assumes the line should be drawn in the top left corner of the grid square. Sloped lines
 // determine point direction of split grid squares via which point has more area.
-// Trims any points outside the passed bounds. Accepts passed lines outside the passed bounds.
-func (l line) adjacentPoints(d direction, bounds bounds) []PixelPosition {
+// Trims any points outside the passed optional bounds. Accepts passed lines outside the passed bounds.
+func (l line) adjacentPoints(d direction, bounds *bounds) []PixelPosition {
 	switch d {
 	case north, south, west, east:
 	default:
@@ -326,7 +326,7 @@ func (l line) adjacentPoints(d direction, bounds bounds) []PixelPosition {
 
 	var trimmedPoints []PixelPosition
 	for _, p := range points {
-		if bounds.contains(p) {
+		if bounds == nil || (bounds != nil && bounds.contains(p)) {
 			trimmedPoints = append(trimmedPoints, p)
 		}
 	}

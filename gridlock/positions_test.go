@@ -103,6 +103,14 @@ func TestInclusivePoints(t *testing.T) {
 	}
 }
 
+func TestAdjacentPointsNoBounds(t *testing.T) {
+	l := line{PixelPosition{-1, -1}, PixelPosition{-1, -1}}
+	point := l.adjacentPoints(south, nil)[0]
+	if !point.equals(PixelPosition{-1, -1}) {
+		t.Error("A point should be returned when bounds is nil")
+	}
+}
+
 func TestAdjacentPoints(t *testing.T) {
 	t.Parallel()
 	wc := newWindowConfig()
@@ -112,7 +120,6 @@ func TestAdjacentPoints(t *testing.T) {
 		wantPoints []PixelPosition
 		wantPanic  bool
 	}{
-
 		// trims points out of bounds 1
 		{line{PixelPosition{0, 0}, PixelPosition{0, 0}}, north, []PixelPosition{}, false},
 		{line{PixelPosition{0, 0}, PixelPosition{0, 0}}, south, []PixelPosition{{0, 0}}, false},
@@ -387,7 +394,7 @@ func TestAdjacentPoints(t *testing.T) {
 				}
 			}()
 			wc := newWindowConfig()
-			points := tt.l.adjacentPoints(tt.d, wc.bounds)
+			points := tt.l.adjacentPoints(tt.d, &wc.bounds)
 			if !slices.Equal(points, tt.wantPoints) {
 				t.Errorf("points %s of line %s returned %#v. not equal to wanted points\n %#v", tt.d.string(), tt.l.log(), points, tt.wantPoints)
 			}
