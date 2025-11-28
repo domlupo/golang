@@ -43,6 +43,7 @@ type debuggerConfig struct {
 
 func newDebuggerConfig() *debuggerConfig {
 	dc := debuggerConfig{
+		debugHexGrid:                  true,
 		hexGridLineWidth:              1,
 		hexGridIndexCount:             32,
 		hexGridColor:                  color.White,

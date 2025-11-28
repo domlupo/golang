@@ -273,8 +273,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	screen.Fill(g.drawConfig.backgroundColor)
-	g.gameState.draw(*g.drawConfig)
+
 	g.debugger.draw(*g.drawConfig)
+	g.gameState.draw(*g.drawConfig)
 
 	if g.leftMouseHeld {
 		drawUnfilledBoxFloat32(
