@@ -1,4 +1,4 @@
-// A position represents a two dimensional point (PixelPosition) or a three dimension point (position).
+// A position represents a two dimensional (pixel) or a three dimension point (position).
 
 package main
 
@@ -9,7 +9,7 @@ import (
 )
 
 // Two dimensional point.
-type PixelPosition struct {
+type Pixel struct {
 	X int `json:"x"`
 	Y int `json:"y"`
 }
@@ -17,7 +17,7 @@ type PixelPosition struct {
 // Three dimensional point.
 type position struct {
 	layer
-	PixelPosition
+	Pixel
 }
 
 type direction int
@@ -72,7 +72,7 @@ func (d direction) string() string {
 	}
 }
 
-func (p PixelPosition) log() []slog.Attr {
+func (p Pixel) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, slog.Int("x", p.X))
 	a = append(a, slog.Int("y", p.Y))
@@ -80,11 +80,11 @@ func (p PixelPosition) log() []slog.Attr {
 }
 
 // Returns the angle in radians from p1 -> p2 clockwise from the north axis.
-func (p1 PixelPosition) angle(p2 PixelPosition) float64 {
+func (p1 Pixel) angle(p2 Pixel) float64 {
 	return math.Atan2(float64(p2.Y-p1.Y), float64(p2.X-p1.X)) + math.Pi/2
 }
 
-func (p PixelPosition) chebyshevDistance(other PixelPosition) int {
+func (p Pixel) chebyshevDistance(other Pixel) int {
 	xDelta := p.X - other.X
 	if xDelta < 0 {
 		xDelta *= -1
@@ -96,15 +96,15 @@ func (p PixelPosition) chebyshevDistance(other PixelPosition) int {
 	return max(xDelta, yDelta)
 }
 
-func (p PixelPosition) equals(other PixelPosition) bool {
+func (p Pixel) equals(other Pixel) bool {
 	return p.X == other.X && p.Y == other.Y
 }
 
 func (p position) equals(other position) bool {
-	return p.layer == other.layer && p.PixelPosition.equals(other.PixelPosition)
+	return p.layer == other.layer && p.Pixel.equals(other.Pixel)
 }
 
-func (p PixelPosition) adjacent(d direction) (PixelPosition, bool) {
+func (p Pixel) adjacent(d direction) (Pixel, bool) {
 	var x int
 	var y int
 
@@ -134,15 +134,15 @@ func (p PixelPosition) adjacent(d direction) (PixelPosition, bool) {
 		panic(fmt.Sprintf("cannot get adjacent pixel position for %s unknown direction: %d", p.log(), d))
 	}
 
-	a := PixelPosition{X: p.X + x, Y: p.Y + y}
+	a := Pixel{X: p.X + x, Y: p.Y + y}
 	if !newWindowConfig().contains(a) {
-		return PixelPosition{}, false
+		return Pixel{}, false
 	}
 	return a, true
 }
 
-func (p PixelPosition) allAdjacent() []PixelPosition {
-	a := []PixelPosition{}
+func (p Pixel) allAdjacent() []Pixel {
+	a := []Pixel{}
 	for _, d := range directions() {
 		if pos, ok := p.adjacent(d); ok {
 			a = append(a, pos)
@@ -154,21 +154,21 @@ func (p PixelPosition) allAdjacent() []PixelPosition {
 func (p position) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, p.layer.log())
-	a = append(a, p.PixelPosition.log()...)
+	a = append(a, p.Pixel.log()...)
 	return a
 }
 
-func (p1 PixelPosition) add(p2 PixelPosition) (PixelPosition, bool) {
-	p := PixelPosition{X: p1.X + p2.X, Y: p1.Y + p2.Y}
+func (p1 Pixel) add(p2 Pixel) (Pixel, bool) {
+	p := Pixel{X: p1.X + p2.X, Y: p1.Y + p2.Y}
 	if !newWindowConfig().contains(p) {
-		return PixelPosition{}, false
+		return Pixel{}, false
 	} else {
 		return p, true
 	}
 }
 
 // The point directions are p -> q -> r.
-func orientation(p1 PixelPosition, p2 PixelPosition, p3 PixelPosition) pointOrientation {
+func orientation(p1 Pixel, p2 Pixel, p3 Pixel) pointOrientation {
 	o := (p2.Y-p1.Y)*(p3.X-p2.X) - (p2.X-p1.X)*(p3.Y-p2.Y)
 	switch {
 	case o == 0:
@@ -196,7 +196,7 @@ func collidesWithBorder(p position, offset int) bool {
 }
 
 // Returns the squared distance if passed values collide.
-func collides(p1, p2 PixelPosition, r1, r2 int) (int, bool) {
+func collides(p1, p2 Pixel, r1, r2 int) (int, bool) {
 	x1 := p1.X
 	y1 := p1.Y
 	x2 := p2.X

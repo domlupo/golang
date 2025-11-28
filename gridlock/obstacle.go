@@ -14,7 +14,7 @@ import (
 type obstacles map[GridPosition]*obstacle
 
 // All points on map from every obstacle visibility grid
-type obstaclePoints map[PixelPosition]*obstaclePoint
+type obstaclePoints map[Pixel]*obstaclePoint
 
 // A grid level component which blocks unit movement
 type obstacle struct {
@@ -25,7 +25,7 @@ type obstacle struct {
 
 // A point on an obstacle visibility grid
 type obstaclePoint struct {
-	PixelPosition
+	Pixel
 	source           GridPosition
 	visibilityGridId id
 	cw               *obstaclePoint
@@ -36,13 +36,13 @@ type obstaclePoint struct {
 }
 
 // Lookup table for processed obstacle information.
-type obstacleLUT map[PixelPosition]obstacleInfo
+type obstacleLUT map[Pixel]obstacleInfo
 
 // Processed obstacle information.
 type obstacleInfo struct {
-	Walkable                    bool          `json:"walkable"`
-	NearestUnwalkablesAvg       PixelPosition `json:"nearestUnwalkablesAvg"`
-	UnwalkableChebyshevDistance int           `json:"unwalkableChebyshevDistance"`
+	Walkable                    bool  `json:"walkable"`
+	NearestUnwalkablesAvg       Pixel `json:"nearestUnwalkablesAvg"`
+	UnwalkableChebyshevDistance int   `json:"unwalkableChebyshevDistance"`
 }
 
 type obstacleKind int
@@ -55,12 +55,12 @@ const (
 
 func (op obstaclePoint) log() []slog.Attr {
 	var a = []slog.Attr{}
-	a = append(a, nest("PixelPosition", op.PixelPosition.log()))
+	a = append(a, nest("Pixel", op.Pixel.log()))
 	a = append(a, nest("source", op.source.log()))
 	a = append(a, slog.String("visibilityGridId", op.visibilityGridId.String()))
-	a = append(a, nest("cw", op.cw.PixelPosition.log()))
+	a = append(a, nest("cw", op.cw.Pixel.log()))
 	a = append(a, slog.Int("cwDistance", op.cwDistance))
-	a = append(a, nest("ccw", op.ccw.PixelPosition.log()))
+	a = append(a, nest("ccw", op.ccw.Pixel.log()))
 	a = append(a, slog.Int("ccwDistance", op.ccwDistance))
 	return a
 }
@@ -74,7 +74,7 @@ func (info obstacleInfo) log() []slog.Attr {
 }
 
 func (op obstaclePoint) isZero() bool {
-	return op.PixelPosition.equals(PixelPosition{0, 0})
+	return op.Pixel.equals(Pixel{0, 0})
 }
 
 func (os obstacles) insert(k GridPosition, v *obstacle) {
@@ -126,12 +126,12 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 	start := time.Now()
 	wc := newWindowConfig()
 	distanceLimit := max(wc.width(), wc.height())
-	nearestUnwalkables := make(map[PixelPosition][]PixelPosition)
-	oLUT := make(map[PixelPosition]obstacleInfo, wc.width()*wc.height())
+	nearestUnwalkables := make(map[Pixel][]Pixel)
+	oLUT := make(map[Pixel]obstacleInfo, wc.width()*wc.height())
 
 	for x := range wc.width() {
 		for y := range wc.height() {
-			p := PixelPosition{X: x, Y: y}
+			p := Pixel{X: x, Y: y}
 			gridPos, ok := g.getGridPos(p)
 			if !ok {
 				panic("setupObstacleLUT: Could not setup obstacle lookup table")
@@ -139,7 +139,7 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 			o := os[gridPos]
 			if o != nil && (o.kind == lowMountain || o.kind == highMountain) {
 				oLUT[p] = obstacleInfo{Walkable: false}
-				nearestUnwalkables[p] = []PixelPosition{p}
+				nearestUnwalkables[p] = []Pixel{p}
 			} else {
 				oLUT[p] = obstacleInfo{Walkable: true}
 			}
@@ -148,7 +148,7 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 
 	for x := range wc.width() {
 		for y := range wc.height() {
-			p := PixelPosition{X: x, Y: y}
+			p := Pixel{X: x, Y: y}
 			info := oLUT[p]
 			if !info.Walkable {
 				info.UnwalkableChebyshevDistance = 0
@@ -170,7 +170,7 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 
 		for x := range wc.width() {
 			for y := range wc.height() {
-				p := PixelPosition{X: x, Y: y}
+				p := Pixel{X: x, Y: y}
 				info := oLUT[p]
 
 				if !info.Walkable || (info.Walkable && info.UnwalkableChebyshevDistance != distanceLimit) {
@@ -219,7 +219,7 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 		// Optimizing may be needed in the future to speed up setup, but LUT caching is sufficient for now.
 		for x := range wc.width() {
 			for y := range wc.height() {
-				p := PixelPosition{X: x, Y: y}
+				p := Pixel{X: x, Y: y}
 				n := nearestUnwalkables[p]
 
 				xSum := 0
@@ -232,7 +232,7 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 				yAvg := int(math.Round(float64(ySum) / float64(len(n))))
 
 				info := oLUT[p]
-				info.NearestUnwalkablesAvg = PixelPosition{X: xAvg, Y: yAvg}
+				info.NearestUnwalkablesAvg = Pixel{X: xAvg, Y: yAvg}
 				oLUT[p] = info
 			}
 		}
@@ -310,7 +310,7 @@ func (os obstacles) getGroups(g grid) []obstacles {
 }
 
 // Returns true if a point to point line of sight exists using Bresenham's algorithm
-func (pos PixelPosition) lineOfSight(otherPos PixelPosition, oLUT obstacleLUT, radius int) (PixelPosition, bool) {
+func (pos Pixel) lineOfSight(otherPos Pixel, oLUT obstacleLUT, radius int) (Pixel, bool) {
 	x0 := pos.X
 	y0 := pos.Y
 	x1 := otherPos.X
@@ -339,7 +339,7 @@ func (pos PixelPosition) lineOfSight(otherPos PixelPosition, oLUT obstacleLUT, r
 	bresenhamError := dx + dy
 
 	for x0 != x1 || y0 != y1 {
-		p := PixelPosition{X: x0, Y: y0}
+		p := Pixel{X: x0, Y: y0}
 		if !oLUT[p].Walkable || oLUT[p].UnwalkableChebyshevDistance < radius-1 {
 			return p, false
 		}
@@ -356,11 +356,11 @@ func (pos PixelPosition) lineOfSight(otherPos PixelPosition, oLUT obstacleLUT, r
 
 	}
 
-	return PixelPosition{}, true
+	return Pixel{}, true
 }
 
 // returns the obstacle point nearest to the line of sight block from start to end
-func (start PixelPosition) obstaclePoint(end PixelPosition, oLUT obstacleLUT, obstacles obstacles, g grid) (obstaclePoint, bool) {
+func (start Pixel) obstaclePoint(end Pixel, oLUT obstacleLUT, obstacles obstacles, g grid) (obstaclePoint, bool) {
 	obstaclePixelPos, los := start.lineOfSight(end, oLUT, 0)
 
 	if los {
@@ -376,7 +376,7 @@ func (start PixelPosition) obstaclePoint(end PixelPosition, oLUT obstacleLUT, ob
 	}
 	visibilityGrid := *obstacles[gridPos].visibilityGrid
 	for index, op := range visibilityGrid {
-		distance := obstaclePixelPos.chebyshevDistance(op.PixelPosition)
+		distance := obstaclePixelPos.chebyshevDistance(op.Pixel)
 		if distance < nearest {
 			nearest = distance
 			nearestIndex = index
@@ -405,12 +405,12 @@ func (os obstacles) setupVisibilityGrid(oLUT obstacleLUT, g grid) {
 
 func (points obstaclePoints) createAllPoints(os obstacles, g grid) {
 	// TODO: don't hardcode offset values for infantry unit with radius of 3
-	nOffset := PixelPosition{0, -4}
-	neOffset := PixelPosition{4, -2}
-	seOffset := PixelPosition{4, 2}
-	sOffset := PixelPosition{0, 4}
-	swOffset := PixelPosition{-4, 2}
-	nwOffset := PixelPosition{-4, -2}
+	nOffset := Pixel{0, -4}
+	neOffset := Pixel{4, -2}
+	seOffset := Pixel{4, 2}
+	sOffset := Pixel{0, 4}
+	swOffset := Pixel{-4, 2}
+	nwOffset := Pixel{-4, -2}
 
 	for _, o := range os {
 		nObstaclePoint := &obstaclePoint{source: o.gridPos}
@@ -420,45 +420,45 @@ func (points obstaclePoints) createAllPoints(os obstacles, g grid) {
 		swObstaclePoint := &obstaclePoint{source: o.gridPos}
 		nwObstaclePoint := &obstaclePoint{source: o.gridPos}
 
-		n := g.getPixelPosOutbounds(o.gridPos, hpNorth)
-		ne := g.getPixelPosOutbounds(o.gridPos, hpNortheast)
-		se := g.getPixelPosOutbounds(o.gridPos, hpSoutheast)
-		s := g.getPixelPosOutbounds(o.gridPos, hpSouth)
-		sw := g.getPixelPosOutbounds(o.gridPos, hpSouthwest)
-		nw := g.getPixelPosOutbounds(o.gridPos, hpNorthwest)
+		n := g.getPixelOutbounds(o.gridPos, hpNorth)
+		ne := g.getPixelOutbounds(o.gridPos, hpNortheast)
+		se := g.getPixelOutbounds(o.gridPos, hpSoutheast)
+		s := g.getPixelOutbounds(o.gridPos, hpSouth)
+		sw := g.getPixelOutbounds(o.gridPos, hpSouthwest)
+		nw := g.getPixelOutbounds(o.gridPos, hpNorthwest)
 
 		if nPoint, ok := n.add(nOffset); ok {
-			nObstaclePoint.PixelPosition = nPoint
+			nObstaclePoint.Pixel = nPoint
 			points[nPoint] = nObstaclePoint
 		}
 		if neTarget, ok := ne.add(neOffset); ok {
-			neObstaclePoint.PixelPosition = neTarget
+			neObstaclePoint.Pixel = neTarget
 			points[neTarget] = neObstaclePoint
 		}
 		if seTarget, ok := se.add(seOffset); ok {
-			seObstaclePoint.PixelPosition = seTarget
+			seObstaclePoint.Pixel = seTarget
 			points[seTarget] = seObstaclePoint
 		}
 		if sTarget, ok := s.add(sOffset); ok {
-			sObstaclePoint.PixelPosition = sTarget
+			sObstaclePoint.Pixel = sTarget
 			points[sTarget] = sObstaclePoint
 		}
 		if swTarget, ok := sw.add(swOffset); ok {
-			swObstaclePoint.PixelPosition = swTarget
+			swObstaclePoint.Pixel = swTarget
 			points[swTarget] = swObstaclePoint
 		}
 		if nwTarget, ok := nw.add(nwOffset); ok {
-			nwObstaclePoint.PixelPosition = nwTarget
+			nwObstaclePoint.Pixel = nwTarget
 			points[nwTarget] = nwObstaclePoint
 		}
 	}
 }
 
 func (points obstaclePoints) removeDuplicatePoints() {
-	duplicate := make(map[PixelPosition]struct{})
+	duplicate := make(map[Pixel]struct{})
 	for _, op := range points {
 		for _, otherOp := range points {
-			if op.equals(otherOp.PixelPosition) {
+			if op.equals(otherOp.Pixel) {
 				continue
 			}
 
@@ -469,8 +469,8 @@ func (points obstaclePoints) removeDuplicatePoints() {
 			yDelta := op.Y - otherOp.Y
 			rSum := 5 + 5
 			if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
-				duplicate[PixelPosition{X: op.X, Y: op.Y}] = struct{}{}
-				duplicate[PixelPosition{X: otherOp.X, Y: otherOp.Y}] = struct{}{}
+				duplicate[Pixel{X: op.X, Y: op.Y}] = struct{}{}
+				duplicate[Pixel{X: otherOp.X, Y: otherOp.Y}] = struct{}{}
 			}
 		}
 	}
@@ -495,7 +495,7 @@ func (points obstaclePoints) connectPoints(oLUT obstacleLUT, g grid) {
 		var cwConnection *obstaclePoint
 
 		for _, op := range notConnected {
-			if current.PixelPosition.equals(op.PixelPosition) {
+			if current.Pixel.equals(op.Pixel) {
 				continue
 			}
 
@@ -503,13 +503,13 @@ func (points obstaclePoints) connectPoints(oLUT obstacleLUT, g grid) {
 				continue
 			}
 
-			if _, lineOfSight := current.lineOfSight(op.PixelPosition, oLUT, 0); !lineOfSight {
+			if _, lineOfSight := current.lineOfSight(op.Pixel, oLUT, 0); !lineOfSight {
 				continue
 			}
 
 			if !foundFirstCwConnection &&
 				current.source.equals(op.source) &&
-				orientation(current.PixelPosition, g.getPixelPosOutbounds(current.source, hpCenter), op.PixelPosition) == clockwise {
+				orientation(current.Pixel, g.getPixelOutbounds(current.source, hpCenter), op.Pixel) == clockwise {
 				foundFirstCwConnection = true
 			}
 
@@ -518,7 +518,7 @@ func (points obstaclePoints) connectPoints(oLUT obstacleLUT, g grid) {
 			}
 
 			isAdjacent := g.isAdjacent(current.source, op.source)
-			distance := current.chebyshevDistance(op.PixelPosition)
+			distance := current.chebyshevDistance(op.Pixel)
 			switch {
 			case isAdjacent:
 				cwConnection = op
@@ -527,7 +527,7 @@ func (points obstaclePoints) connectPoints(oLUT obstacleLUT, g grid) {
 				cwConnection = op
 				shortestDistance = distance
 			case distance == shortestDistance &&
-				orientation(current.PixelPosition, op.PixelPosition, cwConnection.PixelPosition) == clockwise:
+				orientation(current.Pixel, op.Pixel, cwConnection.Pixel) == clockwise:
 				cwConnection = op
 			}
 		}
@@ -548,7 +548,7 @@ func (points obstaclePoints) connectPoints(oLUT obstacleLUT, g grid) {
 }
 
 func (op *obstaclePoint) connectCwTo(other *obstaclePoint) {
-	distance := op.chebyshevDistance(other.PixelPosition)
+	distance := op.chebyshevDistance(other.Pixel)
 	op.cw = other
 	other.ccw = op
 	op.cwDistance = distance

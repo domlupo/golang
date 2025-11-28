@@ -171,13 +171,13 @@ func drawUnfilledBoxInt(dc drawConfig, color color.Color, initialX int, initialY
 }
 
 func drawHex(dc drawConfig, p GridPosition, color drawTriangleColor, selected bool) {
-	center := dc.grid.getPixelPosOutbounds(p, hpCenter)
-	north := dc.grid.getPixelPosOutbounds(p, hpNorth)
-	northeast := dc.grid.getPixelPosOutbounds(p, hpNortheast)
-	southeast := dc.grid.getPixelPosOutbounds(p, hpSoutheast)
-	southwest := dc.grid.getPixelPosOutbounds(p, hpSouthwest)
-	south := dc.grid.getPixelPosOutbounds(p, hpSouth)
-	northwest := dc.grid.getPixelPosOutbounds(p, hpNorthwest)
+	center := dc.grid.getPixelOutbounds(p, hpCenter)
+	north := dc.grid.getPixelOutbounds(p, hpNorth)
+	northeast := dc.grid.getPixelOutbounds(p, hpNortheast)
+	southeast := dc.grid.getPixelOutbounds(p, hpSoutheast)
+	southwest := dc.grid.getPixelOutbounds(p, hpSouthwest)
+	south := dc.grid.getPixelOutbounds(p, hpSouth)
+	northwest := dc.grid.getPixelOutbounds(p, hpNorthwest)
 
 	// The one pixel offsets for inclusive or exclusive hex points are handled at the game logic layer.
 	// The window multiplier offsets are handled here since window multiplier is a draw concept.
@@ -210,27 +210,27 @@ func drawHex(dc drawConfig, p GridPosition, color drawTriangleColor, selected bo
 func drawHexHighlight(dc drawConfig, p GridPosition) {
 	lineWidth := float32(dc.hexLineWidth) * dc.windowMultiplier
 
-	north := dc.grid.getPixelPosOutbounds(p, hpNorth)
+	north := dc.grid.getPixelOutbounds(p, hpNorth)
 	nX := float32(north.X) * dc.windowMultiplier
 	nY := float32(north.Y) * dc.windowMultiplier
 
-	nw := dc.grid.getPixelPosOutbounds(p, hpNorthwest)
+	nw := dc.grid.getPixelOutbounds(p, hpNorthwest)
 	nwX := float32(nw.X) * dc.windowMultiplier
 	nwY := float32(nw.Y) * dc.windowMultiplier
 
-	ne := dc.grid.getPixelPosOutbounds(p, hpNortheast)
+	ne := dc.grid.getPixelOutbounds(p, hpNortheast)
 	neX := float32(ne.X+1) * dc.windowMultiplier
 	neY := float32(ne.Y) * dc.windowMultiplier
 
-	sw := dc.grid.getPixelPosOutbounds(p, hpSouthwest)
+	sw := dc.grid.getPixelOutbounds(p, hpSouthwest)
 	swX := float32(sw.X) * dc.windowMultiplier
 	swY := float32(sw.Y+1) * dc.windowMultiplier
 
-	se := dc.grid.getPixelPosOutbounds(p, hpSoutheast)
+	se := dc.grid.getPixelOutbounds(p, hpSoutheast)
 	seX := float32(se.X+1) * dc.windowMultiplier
 	seY := float32(se.Y+1) * dc.windowMultiplier
 
-	s := dc.grid.getPixelPosOutbounds(p, hpSouth)
+	s := dc.grid.getPixelOutbounds(p, hpSouth)
 	sX := float32(s.X) * dc.windowMultiplier
 	sY := float32(s.Y+1) * dc.windowMultiplier
 

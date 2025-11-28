@@ -53,12 +53,12 @@ func (ut unitTarget) String() string {
 }
 
 // All units within a 2 dimensional layer
-type units map[PixelPosition]*unit
+type units map[Pixel]*unit
 
 type unit struct {
 	unitConfig
 	position
-	subPixelPosition    subPixelPosition
+	subPixel            subPixel
 	id                  id
 	player              player
 	activeTarget        position
@@ -90,32 +90,32 @@ type unit struct {
 	spawnOrder          int
 	angle               float64
 	sourceNode          GridPosition
-	sourcePosition      PixelPosition
+	sourcePosition      Pixel
 	sourceUnit          id
 }
 
 // High resolution two dimensional point.
-type subPixelPosition struct {
+type subPixel struct {
 	x int
 	y int
 }
 
-func (s subPixelPosition) log() []slog.Attr {
+func (s subPixel) log() []slog.Attr {
 	a := []slog.Attr{}
 	a = append(a, slog.Int("x", s.x))
 	a = append(a, slog.Int("y", s.y))
 	return a
 }
 
-func (u unit) newSubPixelPosition(p position) subPixelPosition {
-	return subPixelPosition{
+func (u unit) newSubPixel(p position) subPixel {
+	return subPixel{
 		x: int(math.Round(float64(p.X) * u.speedFactor)),
 		y: int(math.Round(float64(p.Y) * u.speedFactor)),
 	}
 }
 
-func (u unit) downscale(s subPixelPosition) PixelPosition {
-	return PixelPosition{
+func (u unit) downscale(s subPixel) Pixel {
+	return Pixel{
 		X: int(math.Round(float64(s.x) / float64(u.speedFactor))),
 		Y: int(math.Round(float64(s.y) / float64(u.speedFactor))),
 	}
@@ -141,9 +141,9 @@ func newUnit(
 		selected:            selected,
 		steerTurnCountLimit: 20,
 		sourceNode:          sourceNode,
-		sourcePosition:      pos.PixelPosition,
+		sourcePosition:      pos.Pixel,
 	}
-	u.subPixelPosition = u.newSubPixelPosition(u.position)
+	u.subPixel = u.newSubPixel(u.position)
 	u.reactions = reactions(u.name)
 
 	if u.vision < u.radius {
@@ -169,13 +169,13 @@ func (u *unit) refresh() {
 	u.collidedThisturn = false
 
 	// TODO: Fix once target contract / structure is better understood
-	var p PixelPosition
+	var p Pixel
 	if !u.enemyTarget.equals(position{}) {
-		p = u.enemyTarget.PixelPosition
+		p = u.enemyTarget.Pixel
 	} else {
-		p = u.globalTargets[0].PixelPosition
+		p = u.globalTargets[0].Pixel
 	}
-	u.angle = u.PixelPosition.angle(p)
+	u.angle = u.Pixel.angle(p)
 }
 
 func (u *unit) prioritizeTargets() {
@@ -216,11 +216,11 @@ func (u *unit) getMoves() []move {
 	u.bresenhamErrorDx = 0
 	u.bresenhamErrorDy = 0
 
-	s := u.newSubPixelPosition(u.activeTarget)
+	s := u.newSubPixel(u.activeTarget)
 	x1 := s.x
 	y1 := s.y
-	x0 := u.subPixelPosition.x
-	y0 := u.subPixelPosition.y
+	x0 := u.subPixel.x
+	y0 := u.subPixel.y
 
 	var sx int
 	var sy int
@@ -261,33 +261,33 @@ func (u *unit) getMoves() []move {
 		return moves
 	}
 
-	s = subPixelPosition{x0, y0}
+	s = subPixel{x0, y0}
 	moves = append(moves, u.newMove(s))
 
 	// TODO: instead of arbitrarily picking second and third option, prioritize to minimize error
-	x0 = u.subPixelPosition.x
-	y0 = u.subPixelPosition.y
+	x0 = u.subPixel.x
+	y0 = u.subPixel.y
 	if u.bresenhamErrorDy != 0 && u.bresenhamErrorDx != 0 {
 		x0 += sx
-		s := subPixelPosition{x0, y0}
+		s := subPixel{x0, y0}
 		moves = append(moves, u.newMove(s))
 		x0 -= sx
 		y0 += sy
-		s = subPixelPosition{x0, y0}
+		s = subPixel{x0, y0}
 		moves = append(moves, u.newMove(s))
 	} else if u.bresenhamErrorDy != 0 {
 		y0 += sy
-		s := subPixelPosition{x0, y0}
+		s := subPixel{x0, y0}
 		moves = append(moves, u.newMove(s))
 		x0 += sx
-		s = subPixelPosition{x0, y0}
+		s = subPixel{x0, y0}
 		moves = append(moves, u.newMove(s))
 	} else if u.bresenhamErrorDx != 0 {
 		x0 += sx
-		s := subPixelPosition{x0, y0}
+		s := subPixel{x0, y0}
 		moves = append(moves, u.newMove(s))
 		y0 += sy
-		s = subPixelPosition{x0, y0}
+		s = subPixel{x0, y0}
 		moves = append(moves, u.newMove(s))
 	}
 
@@ -296,22 +296,22 @@ func (u *unit) getMoves() []move {
 	return moves
 }
 
-func (u *unit) newMove(s subPixelPosition) move {
+func (u *unit) newMove(s subPixel) move {
 	return move{
 		position: position{u.layer, u.downscale(s)},
 		confirm:  func() { u.confirmMove(s) }}
 }
 
-func (u *unit) confirmMove(s subPixelPosition) {
+func (u *unit) confirmMove(s subPixel) {
 	u.position = position{u.layer, u.downscale(s)}
 	u.movedThisTurn = true
-	if u.subPixelPosition.x != s.x {
+	if u.subPixel.x != s.x {
 		u.bresenhamError += u.bresenhamErrorDy
 	}
-	if u.subPixelPosition.y != s.y {
+	if u.subPixel.y != s.y {
 		u.bresenhamError += u.bresenhamErrorDx
 	}
-	u.subPixelPosition = s
+	u.subPixel = s
 }
 
 func (u *unit) updateTargetUnit(ut unitTarget, unit *unit) {
@@ -378,7 +378,7 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, oLUT obstacleLUT, g gri
 	for !foundPath {
 		for _, path := range tries {
 			start := path[len(path)-1]
-			obstaclePoint, los := start.obstaclePoint(u.PixelPosition, oLUT, obstacles, g)
+			obstaclePoint, los := start.obstaclePoint(u.Pixel, oLUT, obstacles, g)
 
 			if los {
 				foundPath = true
@@ -404,7 +404,7 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, oLUT obstacleLUT, g gri
 	paths := [][]position{}
 	for _, try := range tries {
 		end := try[len(try)-1]
-		if _, los := u.lineOfSight(end.PixelPosition, oLUT, u.radius); los {
+		if _, los := u.lineOfSight(end.Pixel, oLUT, u.radius); los {
 			paths = append(paths, try)
 		}
 	}
@@ -415,7 +415,7 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, oLUT obstacleLUT, g gri
 			pos := path[j]
 			for k := len(path) - 1; k > j; k-- {
 				otherPos := path[k]
-				if _, los := pos.lineOfSight(otherPos.PixelPosition, oLUT, u.radius); los {
+				if _, los := pos.lineOfSight(otherPos.Pixel, oLUT, u.radius); los {
 					j = k
 					trimPath = append(trimPath, path[k])
 					j--
@@ -429,9 +429,9 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, oLUT obstacleLUT, g gri
 	shortestDistance := math.MaxInt64
 	shortestPath := 0
 	for i, path := range paths {
-		distance := u.chebyshevDistance(path[len(path)-1].PixelPosition)
+		distance := u.chebyshevDistance(path[len(path)-1].Pixel)
 		for i := 0; i < len(path)-1; i++ {
-			distance += path[i].chebyshevDistance(path[i+1].PixelPosition)
+			distance += path[i].chebyshevDistance(path[i+1].Pixel)
 		}
 		if distance < shortestDistance {
 			shortestDistance = distance
@@ -470,8 +470,8 @@ func (u *unit) getPath(
 	}
 
 	for current != end {
-		path = append(path, position{layer: u.layer, PixelPosition: current.PixelPosition})
-		obstaclePoint, los := current.obstaclePoint(u.PixelPosition, oLUT, obstacles, g)
+		path = append(path, position{layer: u.layer, Pixel: current.Pixel})
+		obstaclePoint, los := current.obstaclePoint(u.Pixel, oLUT, obstacles, g)
 
 		if los || current.visibilityGridId != obstaclePoint.visibilityGridId {
 			break
@@ -495,7 +495,7 @@ func (u *unit) getPath(
 func (u unit) log() []slog.Attr {
 	var a = u.logShort()
 	a = append(a, slog.String("player", u.player.String()))
-	a = append(a, nest("subPixelPosition", u.subPixelPosition.log()))
+	a = append(a, nest("subPixel", u.subPixel.log()))
 	if u.next == nil {
 		a = append(a, slog.String("next", "none"))
 	} else {

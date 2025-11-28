@@ -41,13 +41,13 @@ func (hc hexConfig) conservativeHexRadius() int {
 // Base hexagon structure shared amongst all hexagons. The left side of
 // the hexagon is aligned with x=0. The top point of the hexagon is aligned with y=0.
 func (hc hexConfig) demotifHexLine(hs hexSide) line {
-	nw := PixelPosition{0, hc.hexHeight / 4}
-	n := PixelPosition{hc.hexWidth / 2, 0}
-	ne := PixelPosition{hc.hexWidth, hc.hexHeight / 4}
+	nw := Pixel{0, hc.hexHeight / 4}
+	n := Pixel{hc.hexWidth / 2, 0}
+	ne := Pixel{hc.hexWidth, hc.hexHeight / 4}
 
-	sw := PixelPosition{0, (hc.hexHeight * 3) / 4}
-	s := PixelPosition{hc.hexWidth / 2, hc.hexHeight}
-	se := PixelPosition{hc.hexWidth, (hc.hexHeight * 3) / 4}
+	sw := Pixel{0, (hc.hexHeight * 3) / 4}
+	s := Pixel{hc.hexWidth / 2, hc.hexHeight}
+	se := Pixel{hc.hexWidth, (hc.hexHeight * 3) / 4}
 
 	switch hs {
 	case hsNone:
@@ -70,8 +70,8 @@ func (hc hexConfig) demotifHexLine(hs hexSide) line {
 }
 
 // Returns all pixels within the demotif hexagon.
-func (hc hexConfig) demotifHexPixels() []PixelPosition {
-	demotifPixels := []PixelPosition{}
+func (hc hexConfig) demotifHexPixels() []Pixel {
+	demotifPixels := []Pixel{}
 
 	leftBounds := &bounds{
 		xMin: 0,

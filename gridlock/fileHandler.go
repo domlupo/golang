@@ -54,12 +54,12 @@ func (keys keys) sort() {
 // Golang encoding/json does not support direct marshall/unmarshall for custom types
 // Multiple intermediate entry types are defined.
 type obstacleLUTEntry struct {
-	Key   PixelPosition `json:"key"`
-	Value obstacleInfo  `json:"value"`
+	Key   Pixel        `json:"key"`
+	Value obstacleInfo `json:"value"`
 }
 type nodeLUTEntry struct {
-	Key   PixelPosition `json:"key"`
-	Value nodeInfo      `json:"value"`
+	Key   Pixel    `json:"key"`
+	Value nodeInfo `json:"value"`
 }
 
 func (f fileHandler) readObstacleLUT(obstacles obstacles, g grid) obstacleLUT {

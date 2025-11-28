@@ -16,7 +16,7 @@ import (
 type nodes map[GridPosition]*node
 
 // Lookup table for processed node information.
-type nodeLUT map[PixelPosition]nodeInfo
+type nodeLUT map[Pixel]nodeInfo
 
 // Processed node information.
 type nodeInfo struct {
@@ -137,11 +137,11 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 	start := time.Now()
 	wc := newWindowConfig()
 	distanceLimit := max(wc.width(), wc.height())
-	nodeLUT := make(map[PixelPosition]nodeInfo, wc.maxPixels())
+	nodeLUT := make(map[Pixel]nodeInfo, wc.maxPixels())
 
 	for x := range wc.width() {
 		for y := range wc.height() {
-			p := PixelPosition{X: x, Y: y}
+			p := Pixel{X: x, Y: y}
 			gridPos, ok := g.getGridPos(p)
 			if !ok {
 				panic("setupNodeLUT: expected grid position to exist")
@@ -166,7 +166,7 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 
 		for x := range wc.width() {
 			for y := range wc.height() {
-				p := PixelPosition{X: x, Y: y}
+				p := Pixel{X: x, Y: y}
 				oInfo := oLUT[p]
 				nInfo := nodeLUT[p]
 
@@ -227,7 +227,7 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 
 	for x := range wc.width() {
 		for y := range wc.height() {
-			p := PixelPosition{X: x, Y: y}
+			p := Pixel{X: x, Y: y}
 			oInfo := oLUT[p]
 			if !oInfo.Walkable {
 				info := nodeLUT[p]
@@ -327,9 +327,9 @@ func (n *node) drawNode(dc drawConfig) {
 	drawHex(dc, n.gridPos, drawTriangleColor, n.multiSelect)
 
 	if n.currentHealth != n.maxHealth {
-		c := dc.grid.getPixelPosOutbounds(n.gridPos, hpCenter)
-		ne := dc.grid.getPixelPosOutbounds(n.gridPos, hpNortheast)
-		nw := dc.grid.getPixelPosOutbounds(n.gridPos, hpNorthwest)
+		c := dc.grid.getPixelOutbounds(n.gridPos, hpCenter)
+		ne := dc.grid.getPixelOutbounds(n.gridPos, hpNortheast)
+		nw := dc.grid.getPixelOutbounds(n.gridPos, hpNorthwest)
 		width := ne.X - nw.X
 		healthLineLength := (float32(n.currentHealth) / float32(n.maxHealth)) * float32(width)
 
@@ -368,7 +368,7 @@ func (n *node) drawTargets(dc drawConfig, drawPOneTargets bool, drawPTwoTargets 
 	}
 
 	if !n.isZero() && ((n.player == pOne && drawPOneTargets) || (n.player == pTwo && drawPTwoTargets)) {
-		var center, ok = dc.grid.getPixelPos(n.gridPos, hpCenter)
+		var center, ok = dc.grid.getPixel(n.gridPos, hpCenter)
 		if !ok {
 			panic("could not get pixel pos for node draw targets")
 		}

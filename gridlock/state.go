@@ -181,9 +181,9 @@ func (s *state) spawn(u *unit) {
 	if u.radius > s.config.spawnUnitRadiusLimit && !u.skipSpawnRadiusCheck {
 		panic(fmt.Sprintf("spawn: cannot spawn unit radius %d exceeds spawn radius limit %d", u.radius, s.config.spawnUnitRadiusLimit))
 	}
-	p, ok := s.grid.getGridPos(u.PixelPosition)
+	p, ok := s.grid.getGridPos(u.Pixel)
 	if !ok {
-		panic(fmt.Sprintf("spawnUnit: cannot get get grid position %s", u.PixelPosition.log()))
+		panic(fmt.Sprintf("spawnUnit: cannot get get grid position %s", u.Pixel.log()))
 	}
 	hex := s.hexagons[p]
 	hex.add(u)
@@ -196,10 +196,10 @@ func (s *state) spawn(u *unit) {
 	}
 
 	units := *s.unitsLayer(u.layer)
-	if _, ok := units[u.PixelPosition]; !ok {
-		units[u.PixelPosition] = u
+	if _, ok := units[u.Pixel]; !ok {
+		units[u.Pixel] = u
 	} else {
-		panic(fmt.Sprintf("Cannot spawn unit at %s since it is already occupied.", u.PixelPosition.log()))
+		panic(fmt.Sprintf("Cannot spawn unit at %s since it is already occupied.", u.Pixel.log()))
 	}
 
 	if u.terminalStepDelay != 0 {
@@ -216,7 +216,7 @@ func (s *state) spawnRequest(r request) bool {
 		r.spawn.terminalStep = s.step + r.spawn.terminalStepDelay
 	}
 	units := *s.unitsLayer(r.spawn.layer)
-	if _, ok := units[r.spawn.PixelPosition]; ok {
+	if _, ok := units[r.spawn.Pixel]; ok {
 		return false
 	}
 	s.spawn(r.spawn)
@@ -224,10 +224,10 @@ func (s *state) spawnRequest(r request) bool {
 }
 
 func (s *state) moveUnit(u *unit, m move) {
-	old, oOk := s.grid.getGridPos(u.PixelPosition)
-	new, nOk := s.grid.getGridPos(m.PixelPosition)
+	old, oOk := s.grid.getGridPos(u.Pixel)
+	new, nOk := s.grid.getGridPos(m.Pixel)
 	if !oOk || !nOk {
-		panic(fmt.Sprintf("moveUnit: cannot move unit %s %s", u.PixelPosition.log(), m.PixelPosition.log()))
+		panic(fmt.Sprintf("moveUnit: cannot move unit %s %s", u.Pixel.log(), m.Pixel.log()))
 	}
 	if !old.equals(new) {
 		oldHex := s.hexagons[old]
@@ -238,10 +238,10 @@ func (s *state) moveUnit(u *unit, m move) {
 	s.deleteUnit(u.position)
 	m.confirm()
 	units := *s.unitsLayer(m.layer)
-	if o, ok := units[u.PixelPosition]; ok {
+	if o, ok := units[u.Pixel]; ok {
 		panic(fmt.Sprintf("moveUnit: position for unit occupied by other unit. unit: %s other: %s", u.log(), o.log()))
 	}
-	units[u.PixelPosition] = u
+	units[u.Pixel] = u
 }
 
 func (s *state) deleteUnit(p position) {
@@ -262,7 +262,7 @@ func (s *state) deleteUnit(p position) {
 	default:
 		panic(fmt.Sprintf("deleteUnit: unknown layer %d", p.layer))
 	}
-	delete(units, p.PixelPosition)
+	delete(units, p.Pixel)
 }
 
 func (s *state) refresh() {
@@ -376,11 +376,11 @@ func (s *state) analyzeTargets() {
 		}
 
 		u.canReachNode = node{}
-		if s.nLUT[u.PixelPosition].ChebyshevDistance < u.reach {
-			if len(s.nLUT[u.PixelPosition].NearestNodes) > 1 {
+		if s.nLUT[u.Pixel].ChebyshevDistance < u.reach {
+			if len(s.nLUT[u.Pixel].NearestNodes) > 1 {
 				logger.log(errorLevel, undecidedBehavior, "Undecided behavior. Unit can reach multiple nodes. Arbitrarily picking one")
 			}
-			p := s.nLUT[u.PixelPosition].NearestNodes[0]
+			p := s.nLUT[u.Pixel].NearestNodes[0]
 			n := s.nodes[p]
 			if u.player != n.player {
 				u.canReachNode = *n
@@ -447,7 +447,7 @@ func (s *state) steer(u *unit) position {
 			// logic can maybe be moved there to save CPU.
 			// TODO: I think technically there should be a check on collides so the second radius
 			// is never greater than state.spawnUnitRadiusLimit. This should be a minor issue until later.
-			if _, ok := collides(u.PixelPosition, current.PixelPosition, u.radius+1, current.radius+1); ok {
+			if _, ok := collides(u.Pixel, current.Pixel, u.radius+1, current.radius+1); ok {
 				magnitude := 1
 
 				switch {
@@ -469,7 +469,7 @@ func (s *state) steer(u *unit) position {
 		}
 	}
 
-	return position{layer: u.layer, PixelPosition: PixelPosition{X: u.X + xSteer, Y: u.Y + ySteer}}
+	return position{layer: u.layer, Pixel: Pixel{X: u.X + xSteer, Y: u.Y + ySteer}}
 }
 
 func (s *state) moveUnits() {
@@ -498,7 +498,7 @@ func (s *state) moveUnits() {
 				move = m
 				break
 			}
-			if s.oLUT[m.PixelPosition].UnwalkableChebyshevDistance > u.radius {
+			if s.oLUT[m.Pixel].UnwalkableChebyshevDistance > u.radius {
 				move = m
 				break
 			}
@@ -525,7 +525,7 @@ func (s *state) moveUnits() {
 		} else if collidesWithUnit {
 			unitsCollideCount++
 			otherUnits := *s.unitsLayer(collidedUnitPos.layer)
-			otherUnit := otherUnits[collidedUnitPos.PixelPosition]
+			otherUnit := otherUnits[collidedUnitPos.Pixel]
 			otherUnit.collidedThisturn = true
 			u.collidedThisturn = true
 		} else if !u.canReachNode.isZero() {
@@ -567,7 +567,7 @@ func (s *state) explode(u *unit) {
 		rSum := r1 + r2
 		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
 			u.health = 0
-			s.landUnits[u.PixelPosition] = u
+			s.landUnits[u.Pixel] = u
 		}
 	}
 }
@@ -626,9 +626,9 @@ func (s state) nearestTargetWithinLayer(u unit, linkedList *unit) (*unit, int) {
 			continue
 		}
 
-		squaredDistance, collides := collides(u.PixelPosition, current.PixelPosition, u.vision, current.radius)
+		squaredDistance, collides := collides(u.Pixel, current.Pixel, u.vision, current.radius)
 		if squaredDistance < d && collides {
-			if _, los := u.lineOfSight(current.PixelPosition, s.oLUT, u.radius); los {
+			if _, los := u.lineOfSight(current.Pixel, s.oLUT, u.radius); los {
 				d = squaredDistance
 				t = current
 			}
@@ -698,7 +698,7 @@ func (s state) collidesWithUnitLayer(u unit, p position, linkedList *unit) (posi
 			continue
 		}
 
-		if _, ok := collides(p.PixelPosition, current.PixelPosition, u.radius, current.radius); ok {
+		if _, ok := collides(p.Pixel, current.Pixel, u.radius, current.radius); ok {
 			return current.position, true
 		}
 		current = current.next
@@ -730,30 +730,30 @@ func (s *state) attackUnits() {
 			continue
 		}
 
-		xTargetPixelPos := u.enemyTarget.X
-		yTargetPixelPos := u.enemyTarget.Y
+		xTargetPixel := u.enemyTarget.X
+		yTargetPixel := u.enemyTarget.Y
 
 		var xDelta int
 		var yDelta int
-		if u.X < (xTargetPixelPos) {
-			xDelta = xTargetPixelPos - u.X
-		} else if u.X > (xTargetPixelPos) {
-			xDelta = u.X - xTargetPixelPos
+		if u.X < (xTargetPixel) {
+			xDelta = xTargetPixel - u.X
+		} else if u.X > (xTargetPixel) {
+			xDelta = u.X - xTargetPixel
 		}
-		if u.Y < (yTargetPixelPos) {
-			yDelta = yTargetPixelPos - u.Y
-		} else if u.Y > (yTargetPixelPos) {
-			yDelta = u.Y - yTargetPixelPos
+		if u.Y < (yTargetPixel) {
+			yDelta = yTargetPixel - u.Y
+		} else if u.Y > (yTargetPixel) {
+			yDelta = u.Y - yTargetPixel
 		}
 
-		var nearestVisibleUnit = s.landUnits[u.enemyTarget.PixelPosition]
+		var nearestVisibleUnit = s.landUnits[u.enemyTarget.Pixel]
 		var rSum = u.reach + nearestVisibleUnit.radius
 		if rSum*rSum >= xDelta*xDelta+yDelta*yDelta {
 			nearestVisibleUnit.health = nearestVisibleUnit.health - u.attack
 			u.attackedThisTurn = true
 			unitAttackedOtherUnitCount++
-			s.landUnits[u.enemyTarget.PixelPosition] = nearestVisibleUnit
-			s.landUnits[u.position.PixelPosition] = u
+			s.landUnits[u.enemyTarget.Pixel] = nearestVisibleUnit
+			s.landUnits[u.position.Pixel] = u
 		}
 	}
 
@@ -770,9 +770,9 @@ func (s *state) despawnUnits() {
 
 	for u := range s.units() {
 		if u.health <= 0 || (u.collidedThisturn && !u.survivesCollision) {
-			gridPos, ok := s.grid.getGridPos(u.PixelPosition)
+			gridPos, ok := s.grid.getGridPos(u.Pixel)
 			if !ok {
-				panic(fmt.Sprintf("despawnUnits: expected grid pos to exist for %s", u.PixelPosition.log()))
+				panic(fmt.Sprintf("despawnUnits: expected grid pos to exist for %s", u.Pixel.log()))
 			}
 			hex := s.hexagons[gridPos]
 			hex.subtract(*u)
@@ -866,7 +866,7 @@ func (s *state) updateForNodeCapture() bool {
 	return nodeOwnershipChanged
 }
 
-func (s *state) updateSelected(clickPosition PixelPosition, releasePosition PixelPosition) {
+func (s *state) updateSelected(clickPosition Pixel, releasePosition Pixel) {
 	var priorSingleSelect GridPosition
 	for _, n := range s.nodes {
 		if n.singleSelect {
@@ -890,22 +890,22 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 		return
 	}
 
-	var topLeftPixelPos PixelPosition
-	var bottomRightPixelPos PixelPosition
+	var topLeftPixel Pixel
+	var bottomRightPixel Pixel
 
 	switch {
 	case clickPosition.X < releasePosition.X && clickPosition.Y < releasePosition.Y:
-		topLeftPixelPos = clickPosition
-		bottomRightPixelPos = releasePosition
+		topLeftPixel = clickPosition
+		bottomRightPixel = releasePosition
 	case clickPosition.X > releasePosition.X && clickPosition.Y > releasePosition.Y:
-		topLeftPixelPos = releasePosition
-		bottomRightPixelPos = clickPosition
+		topLeftPixel = releasePosition
+		bottomRightPixel = clickPosition
 	case clickPosition.X > releasePosition.X && clickPosition.Y < releasePosition.Y:
-		topLeftPixelPos = PixelPosition{releasePosition.X, clickPosition.Y}
-		bottomRightPixelPos = PixelPosition{clickPosition.X, releasePosition.Y}
+		topLeftPixel = Pixel{releasePosition.X, clickPosition.Y}
+		bottomRightPixel = Pixel{clickPosition.X, releasePosition.Y}
 	case clickPosition.X < releasePosition.X && clickPosition.Y > releasePosition.Y:
-		topLeftPixelPos = PixelPosition{clickPosition.X, releasePosition.Y}
-		bottomRightPixelPos = PixelPosition{releasePosition.X, clickPosition.Y}
+		topLeftPixel = Pixel{clickPosition.X, releasePosition.Y}
+		bottomRightPixel = Pixel{releasePosition.X, clickPosition.Y}
 	}
 
 	// TODO: Fix bad UI behavior when cursor ends off screen. Right now, when a cursor
@@ -914,8 +914,8 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 	// usually causes too much selection to occur. The behavior is correct when
 	// the cursor ends right or below window. It is tricky and error prone to fix this
 	// due to hexagon LUT repetition, so I am punting it.
-	topLeftGridPos, _ := s.grid.getGridPos(topLeftPixelPos)
-	bottomRightGridPos := s.grid.getGridPosOutbounds(bottomRightPixelPos)
+	topLeftGridPos, _ := s.grid.getGridPos(topLeftPixel)
+	bottomRightGridPos := s.grid.getGridPosOutbounds(bottomRightPixel)
 
 	var firstSelectedNode *node
 	for _, n := range s.nodes {
@@ -939,10 +939,10 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 
 	if s.developerMode {
 		for u := range s.units() {
-			if (topLeftPixelPos.X < u.X) &&
-				(u.X < bottomRightPixelPos.X) &&
-				(topLeftPixelPos.Y < u.Y) &&
-				(u.Y < bottomRightPixelPos.Y) {
+			if (topLeftPixel.X < u.X) &&
+				(u.X < bottomRightPixel.X) &&
+				(topLeftPixel.Y < u.Y) &&
+				(u.Y < bottomRightPixel.Y) {
 				u.selected = true
 			} else {
 				u.selected = false
@@ -950,11 +950,11 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 		}
 
 		for _, h := range s.hexagons {
-			p := s.grid.getPixelPosOutbounds(h.gridPos, hpCenter)
-			if (topLeftPixelPos.X < p.X) &&
-				(p.X < bottomRightPixelPos.X) &&
-				(topLeftPixelPos.Y < p.Y) &&
-				(p.Y < bottomRightPixelPos.Y) {
+			p := s.grid.getPixelOutbounds(h.gridPos, hpCenter)
+			if (topLeftPixel.X < p.X) &&
+				(p.X < bottomRightPixel.X) &&
+				(topLeftPixel.Y < p.Y) &&
+				(p.Y < bottomRightPixel.Y) {
 				h.selected = true
 			} else {
 				h.selected = false
@@ -962,11 +962,11 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 		}
 
 		for _, n := range s.nodes {
-			p := s.grid.getPixelPosOutbounds(n.gridPos, hpCenter)
-			if (topLeftPixelPos.X < p.X) &&
-				(p.X < bottomRightPixelPos.X) &&
-				(topLeftPixelPos.Y < p.Y) &&
-				(p.Y < bottomRightPixelPos.Y) {
+			p := s.grid.getPixelOutbounds(n.gridPos, hpCenter)
+			if (topLeftPixel.X < p.X) &&
+				(p.X < bottomRightPixel.X) &&
+				(topLeftPixel.Y < p.Y) &&
+				(p.Y < bottomRightPixel.Y) {
 				n.selected = true
 			} else {
 				n.selected = false
@@ -982,10 +982,10 @@ func (s *state) updateSelected(clickPosition PixelPosition, releasePosition Pixe
 			}
 			visited[obstaclePoint.visibilityGridId] = struct{}{}
 			for i, op := range *o.visibilityGrid {
-				if (topLeftPixelPos.X < op.X) &&
-					(op.X < bottomRightPixelPos.X) &&
-					(topLeftPixelPos.Y < op.Y) &&
-					(op.Y < bottomRightPixelPos.Y) {
+				if (topLeftPixel.X < op.X) &&
+					(op.X < bottomRightPixel.X) &&
+					(topLeftPixel.Y < op.Y) &&
+					(op.Y < bottomRightPixel.Y) {
 					op.selected = true
 				} else {
 					op.selected = false
@@ -1085,11 +1085,11 @@ func (s *state) produceUnits() {
 		}
 
 		// TODO: determine behavior for producing units during collision
-		pixelPos, ok := s.grid.getPixelPos(n.gridPos, hpCenter)
+		pixel, ok := s.grid.getPixel(n.gridPos, hpCenter)
 		if !ok {
 			panic("could not get pixel pos for produce units")
 		}
-		p := position{n.unitConfig.produceLayer, pixelPos}
+		p := position{n.unitConfig.produceLayer, pixel}
 		u := newUnit(
 			n.unitConfig,
 			p,

@@ -69,7 +69,7 @@ func (part partitioner) partitions(u unit, pa partitionAnalysis, buffer int) par
 		panic(fmt.Sprintf("partitions: cannot get partitions for unit %s, analysis %s and buffer %d", u.name, pa.String(), buffer))
 	}
 
-	positions = part.defaultPartitions(u.PixelPosition, radius)
+	positions = part.defaultPartitions(u.Pixel, radius)
 	var ps partitions
 	for _, p := range positions {
 		ps = append(ps, part.hexagons[p])
@@ -82,7 +82,7 @@ func (part partitioner) partitions(u unit, pa partitionAnalysis, buffer int) par
 // For example, analyzing partitions for collision detection between two circles would be invalid
 // if the circle with the position and distance not passed has a radius which exceeds the
 // conservative hex radius. Unoptimized because the hexagon collision uses conservative circles.
-func (part partitioner) defaultPartitions(p PixelPosition, d int) []GridPosition {
+func (part partitioner) defaultPartitions(p Pixel, d int) []GridPosition {
 	gridPos, ok := part.grid.getGridPos(p)
 	if !ok {
 		panic(fmt.Sprintf("defaultPartitions: cannot find grid pos for %s", p.log()))

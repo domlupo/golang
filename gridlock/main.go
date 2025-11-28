@@ -161,7 +161,7 @@ func (g *Game) Update() error {
 
 	x := float32(graphicalX) / g.windowMultiplier
 	y := float32(graphicalY) / g.windowMultiplier
-	pixelPos := PixelPosition{int(x), int(y)}
+	pixel := Pixel{int(x), int(y)}
 
 	g.priorLeftMouseClicked = g.leftMouseClicked
 	g.leftMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
@@ -170,7 +170,7 @@ func (g *Game) Update() error {
 
 	g.currentSelectedX = x
 	g.currentSelectedY = y
-	g.debugger.pixel = pixelPos
+	g.debugger.pixel = pixel
 	if g.priorLeftMouseClicked && !g.leftMouseClicked {
 		g.leftMouseReleased = true
 	} else if !g.priorLeftMouseClicked && g.leftMouseClicked {
@@ -180,19 +180,19 @@ func (g *Game) Update() error {
 		g.leftMouseHeld = true
 	}
 	if g.developerMode && g.middleMouseScrollClicked {
-		g.debugger.debug(pixelPos)
+		g.debugger.debug(pixel)
 	}
 	if g.rightMouseClicked {
 		filter := []player{pNeutral}
 		filter = append(filter, g.computers.active()...)
-		g.gameState.updateTargets(position{lLand, pixelPos}, filter)
+		g.gameState.updateTargets(position{lLand, pixel}, filter)
 	}
 
 	// update game state after player actions
 	if g.leftMouseReleased {
 		g.gameState.updateSelected(
-			PixelPosition{int(g.initialSelectedX), int(g.initialSelectedY)},
-			PixelPosition{int(g.currentSelectedX), int(g.currentSelectedY)})
+			Pixel{int(g.initialSelectedX), int(g.initialSelectedY)},
+			Pixel{int(g.currentSelectedX), int(g.currentSelectedY)})
 	}
 
 	var xSum int
@@ -220,9 +220,9 @@ func (g *Game) Update() error {
 			unknownCount++
 		}
 	}
-	var avgUnitPos PixelPosition
+	var avgUnitPos Pixel
 	if totalCount != 0 {
-		avgUnitPos = PixelPosition{X: xSum / totalCount, Y: ySum / totalCount}
+		avgUnitPos = Pixel{X: xSum / totalCount, Y: ySum / totalCount}
 	}
 	logger.log(infoLevel, mainLogic, "unit counts",
 		slog.Int("total_units", totalCount),

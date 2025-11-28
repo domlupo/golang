@@ -48,7 +48,7 @@ func (hl hexLayer) log() []slog.Attr {
 	if hl.linkedList == nil {
 		a = append(a, slog.String("linkedlist", "none"))
 	} else {
-		a = append(a, nest("linkedList", hl.linkedList.PixelPosition.log()))
+		a = append(a, nest("linkedList", hl.linkedList.Pixel.log()))
 	}
 	a = append(a, slog.Int("unitCount", hl.unitCount))
 	a = append(a, slog.Int("unitCountPOne", hl.unitCountPOne))

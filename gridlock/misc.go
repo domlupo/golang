@@ -43,7 +43,7 @@ type bounds struct {
 	yMax int
 }
 
-func (bounds bounds) contains(p PixelPosition) bool {
+func (bounds bounds) contains(p Pixel) bool {
 	return !(p.X < bounds.xMin || p.X > bounds.xMax-1 || p.Y < bounds.yMin || p.Y > bounds.yMax-1)
 }
 

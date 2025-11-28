@@ -74,7 +74,7 @@ func newDebuggerConfig() *debuggerConfig {
 type debugger struct {
 	*state
 	*debuggerConfig
-	pixel                       PixelPosition
+	pixel                       Pixel
 	obstacleLUTUnwalkable       heatmap
 	obstacleLUTDistance         heatmap
 	nodeLUTDistance             heatmap
@@ -85,7 +85,7 @@ type debugger struct {
 }
 
 // A typical heatmap. Used for visual debugging.
-type heatmap map[PixelPosition]int
+type heatmap map[Pixel]int
 
 func newDebugger(state *state, toggleCooldown time.Duration) debugger {
 	c := newDebuggerConfig()
@@ -105,21 +105,21 @@ func (d *debugger) setupHeatmaps() {
 	d.obstacleLUTDistance = make(heatmap)
 	d.nodeLUTDistance = make(heatmap)
 
-	for pixelPos, info := range d.oLUT {
+	for pixel, info := range d.oLUT {
 		switch info.Walkable {
 		case true:
-			d.obstacleLUTUnwalkable[pixelPos] = 0
+			d.obstacleLUTUnwalkable[pixel] = 0
 		case false:
-			d.obstacleLUTUnwalkable[pixelPos] = 1
+			d.obstacleLUTUnwalkable[pixel] = 1
 		}
 	}
 
-	for pixelPos, info := range d.oLUT {
-		d.obstacleLUTDistance[pixelPos] = info.UnwalkableChebyshevDistance
+	for pixel, info := range d.oLUT {
+		d.obstacleLUTDistance[pixel] = info.UnwalkableChebyshevDistance
 	}
 
-	for pixelPos, info := range d.nLUT {
-		d.nodeLUTDistance[pixelPos] = info.ChebyshevDistance
+	for pixel, info := range d.nLUT {
+		d.nodeLUTDistance[pixel] = info.ChebyshevDistance
 	}
 }
 
@@ -177,7 +177,7 @@ func (d *debugger) setupToggles(cooldown time.Duration) {
 	d.toggles = toggles
 }
 
-func (d *debugger) debug(p PixelPosition) {
+func (d *debugger) debug(p Pixel) {
 	d.logPixel(p)
 	d.logVisibilityGridObstaclePoints()
 	d.logHexagons()
@@ -185,8 +185,8 @@ func (d *debugger) debug(p PixelPosition) {
 	d.createUnitPathfindHeatmap()
 }
 
-func (d *debugger) logPixel(p PixelPosition) {
-	attrs := []slog.Attr{nest("PixelPosition", p.log())}
+func (d *debugger) logPixel(p Pixel) {
+	attrs := []slog.Attr{nest("Pixel", p.log())}
 	if gridPos, ok := d.grid.getGridPos(p); ok {
 		attrs = append(attrs, nest("GridPosition", gridPos.log()))
 	} else {
@@ -268,7 +268,7 @@ func (d *debugger) createUnitPathfindHeatmap() {
 	defer stop()
 	pixelCount := 0
 	wc := newWindowConfig()
-	for pixelPos, info := range d.oLUT {
+	for pixel, info := range d.oLUT {
 		select {
 		case <-ctx.Done():
 			return
@@ -280,9 +280,9 @@ func (d *debugger) createUnitPathfindHeatmap() {
 			}
 
 			if info.Walkable {
-				unit.updateTarget(globalTarget, position{layer: unit.layer, PixelPosition: pixelPos})
+				unit.updateTarget(globalTarget, position{layer: unit.layer, Pixel: pixel})
 				distance := unit.pathfindGlobalTarget(d.obstacles, d.oLUT, d.grid)
-				d.unitPathfind[pixelPos] = distance
+				d.unitPathfind[pixel] = distance
 			}
 		}
 	}
@@ -346,7 +346,7 @@ func (d debugger) draw(c drawConfig) {
 			}
 		} else {
 			for _, h := range d.hexagons {
-				center := d.grid.getPixelPosOutbounds(h.gridPos, hpCenter)
+				center := d.grid.getPixelOutbounds(h.gridPos, hpCenter)
 				center.draw(c, *d.debuggerConfig, color.White, false)
 				if h.selected {
 					drawHexHighlight(c, h.gridPos)
@@ -369,7 +369,7 @@ func (d debugger) draw(c drawConfig) {
 	}
 }
 
-func (p PixelPosition) draw(c drawConfig, dC debuggerConfig, color color.Color, spotlight bool) {
+func (p Pixel) draw(c drawConfig, dC debuggerConfig, color color.Color, spotlight bool) {
 	vector.FillRect(
 		c.screen,
 		float32(p.X)*c.windowMultiplier,
@@ -396,7 +396,7 @@ func (heatmap heatmap) draw(c drawConfig, dC debuggerConfig, heatmapPercent int)
 		maxV = max(maxV, v)
 	}
 	trimmedV := maxV * heatmapPercent / maxPercent
-	for pixelPos, v := range heatmap {
+	for pixel, v := range heatmap {
 		v := min(v, trimmedV)
 		color := color.RGBA{
 			dC.heatmapR,
@@ -405,8 +405,8 @@ func (heatmap heatmap) draw(c drawConfig, dC debuggerConfig, heatmapPercent int)
 			uint8(float64(v) / float64(trimmedV) * float64(dC.heatmapAlphaMaxLimit))}
 		vector.FillRect(
 			c.screen,
-			float32(pixelPos.X)*c.windowMultiplier,
-			float32(pixelPos.Y)*c.windowMultiplier,
+			float32(pixel.X)*c.windowMultiplier,
+			float32(pixel.Y)*c.windowMultiplier,
 			1*c.windowMultiplier,
 			1*c.windowMultiplier,
 			color,
@@ -543,19 +543,19 @@ func drawHexGrid(c drawConfig, dC debuggerConfig) {
 
 			p := GridPosition{i, j}
 
-			n := c.grid.getPixelPosOutbounds(p, hpNorth)
+			n := c.grid.getPixelOutbounds(p, hpNorth)
 			nX := float32(n.X) * c.windowMultiplier
 			nY := float32(n.Y) * c.windowMultiplier
 
-			nw := c.grid.getPixelPosOutbounds(p, hpNorthwest)
+			nw := c.grid.getPixelOutbounds(p, hpNorthwest)
 			nwX := float32(nw.X) * c.windowMultiplier
 			nwY := float32(nw.Y) * c.windowMultiplier
 
-			ne := c.grid.getPixelPosOutbounds(p, hpNortheast)
+			ne := c.grid.getPixelOutbounds(p, hpNortheast)
 			neX := float32(ne.X+1) * c.windowMultiplier
 			neY := float32(ne.Y) * c.windowMultiplier
 
-			sw := c.grid.getPixelPosOutbounds(p, hpSouthwest)
+			sw := c.grid.getPixelOutbounds(p, hpSouthwest)
 			swX := float32(sw.X) * c.windowMultiplier
 			swY := float32(sw.Y+1) * c.windowMultiplier
 

@@ -35,7 +35,7 @@ func newComputers(s *state) computers {
 	for i := range c.count {
 		computers = append(computers, newComputer(s, i))
 	}
-	computers.updateNodetargets(true, PixelPosition{})
+	computers.updateNodetargets(true, Pixel{})
 	return computers
 }
 
@@ -66,7 +66,7 @@ func (computers computers) active() []player {
 	return a
 }
 
-func (computers *computers) updateNodetargets(nodeCapture bool, avgUnitPos PixelPosition) {
+func (computers *computers) updateNodetargets(nodeCapture bool, avgUnitPos Pixel) {
 	for _, c := range *computers {
 		if nodeCapture {
 			c.updateForNodeCapture()
@@ -75,7 +75,7 @@ func (computers *computers) updateNodetargets(nodeCapture bool, avgUnitPos Pixel
 	}
 }
 
-func (c *computer) updateNodeTargets(avgUnitPos PixelPosition) {
+func (c *computer) updateNodeTargets(avgUnitPos Pixel) {
 	var opponent player
 	switch c.player {
 	case pOne:
@@ -88,7 +88,7 @@ func (c *computer) updateNodeTargets(avgUnitPos PixelPosition) {
 
 	diffs := c.state.hexagons.maxUnitDifferential(opponent, lLand)
 	validDiffsIndex := -1
-	var positions []PixelPosition
+	var positions []Pixel
 	for _, d := range diffs {
 		if d.diff > c.minUnitDifferential {
 			validDiffsIndex++
@@ -122,7 +122,7 @@ func (c *computer) updateNodeTargets(avgUnitPos PixelPosition) {
 				selfNode.targets = []position{{lLand, positions[0]}}
 			}
 		case missileHeatSeeking, missileAntiBallistic, missileRadarActive:
-			if !avgUnitPos.equals(PixelPosition{}) {
+			if !avgUnitPos.equals(Pixel{}) {
 				selfNode.targets = []position{{lLand, avgUnitPos}}
 			}
 		case fighter:
@@ -165,7 +165,7 @@ func (c *computer) updateForNodeCapture() {
 
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
-				var targetPixelPos, ok = c.grid.getPixelPos(otherNodePos, hpCenter)
+				var targetPixelPos, ok = c.grid.getPixel(otherNodePos, hpCenter)
 				if !ok {
 					panic("could not get pixel pos for update computer node targets")
 				}
@@ -194,7 +194,7 @@ func (c *computer) updateForNodeCapture() {
 				continue
 			}
 
-			nPixelPos, ok := c.grid.getPixelPos(n.gridPos, hpCenter)
+			nPixelPos, ok := c.grid.getPixel(n.gridPos, hpCenter)
 			if !ok {
 				panic("could not get pixel pos for update computer unit targets")
 			}
@@ -210,7 +210,7 @@ func (c *computer) updateForNodeCapture() {
 	}
 }
 
-func (c *computer) planBombs(n *node, targets []PixelPosition) {
+func (c *computer) planBombs(n *node, targets []Pixel) {
 	n.targets = []position{}
 	n.actions = []action{}
 
@@ -220,9 +220,9 @@ func (c *computer) planBombs(n *node, targets []PixelPosition) {
 		n.actions = append(n.actions, action{position: p, do: func() {
 			u := newUnit(
 				bombGravityConfig,
-				position{layer: bombGravityConfig.produceLayer, PixelPosition: p.PixelPosition},
+				position{layer: bombGravityConfig.produceLayer, Pixel: p.Pixel},
 				c.player,
-				[]position{{layer: lLand, PixelPosition: p.PixelPosition}},
+				[]position{{layer: lLand, Pixel: p.Pixel}},
 				[]action{},
 				GridPosition{},
 				false)
@@ -234,5 +234,5 @@ func (c *computer) planBombs(n *node, targets []PixelPosition) {
 	if !ok {
 		panic(fmt.Sprintf("planBombs: cannot get node pixel position %s", nP.log()))
 	}
-	n.targets = append(n.targets, position{layer: bomberConfig.produceLayer, PixelPosition: nP})
+	n.targets = append(n.targets, position{layer: bomberConfig.produceLayer, Pixel: nP})
 }

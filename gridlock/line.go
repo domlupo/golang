@@ -10,8 +10,8 @@ import (
 
 // Two unordered connected points.
 type line struct {
-	p1 PixelPosition
-	p2 PixelPosition
+	p1 Pixel
+	p2 Pixel
 }
 
 func (l line) log() []slog.Attr {
@@ -25,7 +25,7 @@ func (l line) isVertical() bool {
 	return l.p1.X == l.p2.X
 }
 
-func onSegment(p1 PixelPosition, p2 PixelPosition, p3 PixelPosition) bool {
+func onSegment(p1 Pixel, p2 Pixel, p3 Pixel) bool {
 	return p2.X <= max(p1.X, p3.X) && p2.X >= min(p1.X, p3.X) && p2.Y <= max(p1.Y, p3.Y) && p2.Y >= min(p1.Y, p3.Y)
 }
 
@@ -57,15 +57,15 @@ func (l1 line) intersects(l2 line) bool {
 // Assumes the line should be drawn in the top left corner of the grid square. Sloped lines
 // determine point direction of split grid squares via which point has more area.
 // Trims any points outside the passed optional bounds. Accepts passed lines outside the passed bounds.
-func (l line) adjacentPoints(d direction, bounds *bounds) []PixelPosition {
+func (l line) adjacentPoints(d direction, bounds *bounds) []Pixel {
 	switch d {
 	case north, south, west, east:
 	default:
 		panic(fmt.Sprintf("adjacentPoints: cannot get points in direction %s since it is unimplemented", d.string()))
 	}
 
-	var w PixelPosition
-	var e PixelPosition
+	var w Pixel
+	var e Pixel
 	switch {
 	case l.p1.X < l.p2.X:
 		w = l.p1
@@ -77,26 +77,26 @@ func (l line) adjacentPoints(d direction, bounds *bounds) []PixelPosition {
 	nY := max(l.p1.Y, l.p2.Y)
 	sY := min(l.p1.Y, l.p2.Y)
 
-	var points []PixelPosition
+	var points []Pixel
 	switch {
 	case l.isVertical() && d == west:
 		y := sY
 		for y <= nY {
-			points = append(points, PixelPosition{w.X - 1, y})
+			points = append(points, Pixel{w.X - 1, y})
 			y += 1
 		}
 	case l.isVertical() && d == east:
 		y := sY
 		for y <= nY {
-			points = append(points, PixelPosition{w.X, y})
+			points = append(points, Pixel{w.X, y})
 			y += 1
 		}
 	case !l.isVertical() && d == west, !l.isVertical() && d == east:
 		panic(fmt.Sprintf("adjacentPoints: cannot get points in direction %s for non vertical lines since it is unimplemented", d.string()))
 	case l.isVertical() && d == north:
-		points = append(points, PixelPosition{w.X, sY - 1})
+		points = append(points, Pixel{w.X, sY - 1})
 	case l.isVertical() && d == south:
-		points = append(points, PixelPosition{w.X, nY})
+		points = append(points, Pixel{w.X, nY})
 	default:
 		// Ebitengine y is opposite of typical cartesian grid, slope equation is not typical.
 		// e.Y - w.Y instead of typical w.Y - e.Y
@@ -121,12 +121,12 @@ func (l line) adjacentPoints(d direction, bounds *bounds) []PixelPosition {
 			if d == south {
 				yOffset++
 			}
-			points = append(points, PixelPosition{xInt, yInt + yOffset})
+			points = append(points, Pixel{xInt, yInt + yOffset})
 			x += 1
 		}
 	}
 
-	var trimmedPoints []PixelPosition
+	var trimmedPoints []Pixel
 	for _, p := range points {
 		if bounds == nil || bounds.contains(p) {
 			trimmedPoints = append(trimmedPoints, p)

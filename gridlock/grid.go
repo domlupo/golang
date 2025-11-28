@@ -111,7 +111,7 @@ type hexSide int
 // the hexagon is aligned with x=0. The top point of the hexagon is aligned with y=0.
 // By motif definition, x must be less than hex width and y must be less than hex height.
 type demotif struct {
-	PixelPosition
+	Pixel
 }
 
 func newGrid(hc hexConfig) grid {
@@ -130,7 +130,7 @@ func (g grid) setupHexTriangleLUT() []hexagonTriangle {
 	yMin := min(nw.p1.Y, nw.p2.Y, ne.p1.Y, ne.p2.Y)
 	yMax := max(nw.p1.Y, nw.p2.Y, ne.p1.Y, ne.p2.Y)
 
-	switchTriangle := make(map[PixelPosition]hexagonTriangle)
+	switchTriangle := make(map[Pixel]hexagonTriangle)
 	bounds := bounds{
 		xMin: xMin,
 		xMax: xMax,
@@ -154,7 +154,7 @@ func (g grid) setupHexTriangleLUT() []hexagonTriangle {
 	for y := yMin; y < yMax; y++ {
 		triangle := leftHexTriangle
 		for x := xMin; x < xMax; x++ {
-			p := PixelPosition{x, y}
+			p := Pixel{x, y}
 			if t, ok := switchTriangle[p]; ok {
 				triangle = t
 			}
@@ -339,29 +339,29 @@ func (g grid) isAdjacent(gp1 GridPosition, gp2 GridPosition) bool {
 		(nwOk && nw.equals(gp2))
 }
 
-func (g grid) getPixelPos(gp GridPosition, hexPoint hexPoint) (PixelPosition, bool) {
-	p := g.getPixelPosOutbounds(gp, hexPoint)
+func (g grid) getPixel(gp GridPosition, hexPoint hexPoint) (Pixel, bool) {
+	p := g.getPixelOutbounds(gp, hexPoint)
 	if !newWindowConfig().contains(p) {
-		return PixelPosition{}, false
+		return Pixel{}, false
 	} else {
 		return p, true
 	}
 }
 
-func (g grid) getCenterWithFallback(gp GridPosition) (PixelPosition, bool) {
-	if p, ok := g.getPixelPos(gp, hpCenter); ok {
+func (g grid) getCenterWithFallback(gp GridPosition) (Pixel, bool) {
+	if p, ok := g.getPixel(gp, hpCenter); ok {
 		return p, true
 	}
 
 	for _, hp := range hexPoints() {
-		if p, ok := g.getPixelPos(gp, hp); ok {
+		if p, ok := g.getPixel(gp, hp); ok {
 			return p, true
 		}
 	}
-	return PixelPosition{}, false
+	return Pixel{}, false
 }
 
-func (g grid) getPixelPosOutbounds(gp GridPosition, hexPoint hexPoint) PixelPosition {
+func (g grid) getPixelOutbounds(gp GridPosition, hexPoint hexPoint) Pixel {
 	x := gp.X * g.hexWidth
 	y := gp.Y * (g.hexHeight / 4 * 3)
 	if gp.Y%2 == 1 {
@@ -393,10 +393,10 @@ func (g grid) getPixelPosOutbounds(gp GridPosition, hexPoint hexPoint) PixelPosi
 		y -= 1
 	}
 
-	return PixelPosition{x + g.xOffset, y + g.yOffset}
+	return Pixel{x + g.xOffset, y + g.yOffset}
 }
 
-func (g grid) getGridPos(p PixelPosition) (GridPosition, bool) {
+func (g grid) getGridPos(p Pixel) (GridPosition, bool) {
 	wc := newWindowConfig()
 	if !wc.contains(p) {
 		return GridPosition{}, false
@@ -404,7 +404,7 @@ func (g grid) getGridPos(p PixelPosition) (GridPosition, bool) {
 	return g.getGridPosOutbounds(p), true
 }
 
-func (g grid) getGridPosOutbounds(p PixelPosition) GridPosition {
+func (g grid) getGridPosOutbounds(p Pixel) GridPosition {
 	xIndex := (p.X+g.hexWidth-g.xOffset)/g.hexWidth - 1
 	yIndex := (p.Y+(g.hexHeight/4*3)-g.yOffset)/(g.hexHeight/4*3) - 2
 	innerX := (p.X + g.hexWidth - g.xOffset) % g.hexWidth
@@ -477,7 +477,7 @@ func (g grid) getGridPosOutbounds(p PixelPosition) GridPosition {
 // hexagon structure shared amongst all hexagons. The left side of the hexagon is
 // aligned with x=0. The top point of the hexagon is aligned with y=0. By motif
 // definition, x must be less than hex width and y must be less than hex height.
-func (g grid) demotif(p PixelPosition) (demotif, bool) {
+func (g grid) demotif(p Pixel) (demotif, bool) {
 	gp, ok := g.getGridPos(p)
 	if !ok {
 		return demotif{}, false

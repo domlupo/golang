@@ -40,10 +40,6 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-Refactor positions.go. Specifically the struct names.
-  - I think PixelPosition -> Pixel. Clarify or rename others structs as well now that there are several.
-  - split into separate files if needed or move stuff aroud.
-
 Determine if I should clarify file names
   - It is weird that I have some singular and some plural. I think I should make all files singular.
   - def should be single
@@ -438,8 +434,8 @@ Determine if I should clarify file names
     this is done at runtime. I think it is a bit too complex to optimize ahead of time.
   - Need to handle edge case where line of sight reaches target, but unit travel
     collides with impassable terran due to unit radius. To solve this for circular units,
-    At game startup, store the distance of each pixelPos to nearest impassable terrain and
-    also the pixelPos of the impassable terrain. Then colliison can be easily checked.
+    At game startup, store the distance of each pixel to nearest impassable terrain and
+    also the pixel of the impassable terrain. Then colliison can be easily checked.
     Non circular collision can be handled at a later time.
   - I think caching at startup is going to be the best speed up for global targeting. If I can 
     verify what visbiltiy grids a unit should take when targetting a pixel pos with a given grid 
@@ -557,8 +553,8 @@ Determine if I should clarify file names
  - I am unsure if this is needed because this code is already performant, but it is in
    a very hot loop so even minimal gains might be worth it.
   - Right now, hex triangle LUT are created at startup which are used at runtime to get hex position
-  - Instead, I can do more calculation at startup and use a LUT to store pixelPos -> hex 
-    directly. This avoids doing pixelPos -> hex triangle -> hex calculations at runtime.
+  - Instead, I can do more calculation at startup and use a LUT to store pixel -> hex 
+    directly. This avoids doing pixel -> hex triangle -> hex calculations at runtime.
 
 - Currently heatmap creation stops game update ticks. This means when creating a heatmap via button click
   multiple button clicks are processed. I fixed this by only allowing one heat map to ever be created. Ideally, 

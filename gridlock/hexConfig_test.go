@@ -9,21 +9,21 @@ func TestDemotifHexLine(t *testing.T) {
 	t.Parallel()
 	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
 
-	nw := PixelPosition{0, 10}
-	n := PixelPosition{23, 0}
-	ne := PixelPosition{46, 10}
+	nw := Pixel{0, 10}
+	n := Pixel{23, 0}
+	ne := Pixel{46, 10}
 
-	sw := PixelPosition{0, 30}
-	s := PixelPosition{23, 40}
-	se := PixelPosition{46, 30}
+	sw := Pixel{0, 30}
+	s := Pixel{23, 40}
+	se := Pixel{46, 30}
 
 	var tests = []struct {
 		hs        hexSide
-		p1        PixelPosition
-		p2        PixelPosition
+		p1        Pixel
+		p2        Pixel
 		wantPanic bool
 	}{
-		{hsNone, PixelPosition{}, PixelPosition{}, true},
+		{hsNone, Pixel{}, Pixel{}, true},
 		{hsWest, nw, sw, false},
 		{hsNorthwest, n, nw, false},
 		{hsNortheast, n, ne, false},

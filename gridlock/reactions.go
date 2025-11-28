@@ -36,7 +36,7 @@ func reactions(n name) []reaction {
 					// TODO: bresenham is not guaranteed to get to final position. I have not seen
 					// aircraft not reach their final destination but missiles have. Need to ensure
 					// this is not error prone or make it more conservative.
-					return bomber.PixelPosition.equals(bomber.sourcePosition) && bomber.isPayloadNotFull()
+					return bomber.Pixel.equals(bomber.sourcePosition) && bomber.isPayloadNotFull()
 				},
 				do: func(bomber *unit) {
 					bomber.refillPayload()
@@ -53,7 +53,7 @@ func reactions(n name) []reaction {
 					// TODO: bresenham is not guaranteed to get to final position. I have not seen
 					// aircraft not reach their final destination but missiles have. Need to ensure
 					// this is not error prone or make it more conservative.
-					return fighter.PixelPosition.equals(fighter.sourcePosition) && fighter.isPayloadNotFull()
+					return fighter.Pixel.equals(fighter.sourcePosition) && fighter.isPayloadNotFull()
 				},
 				do: func(fighter *unit) {
 					fighter.refillPayload()
@@ -83,7 +83,7 @@ func reactions(n name) []reaction {
 					}
 					spawn := newUnit(
 						uc,
-						position{layer: uc.produceLayer, PixelPosition: fighter.PixelPosition},
+						position{layer: uc.produceLayer, Pixel: fighter.Pixel},
 						fighter.player,
 						[]position{fighter.nearest.position},
 						[]action{},
@@ -110,7 +110,7 @@ func reactChaff(fireOrdnanceDelay uint64) reaction {
 		do: func(u *unit) {
 			chaff := newUnit(
 				chaffConfig,
-				position{layer: chaffConfig.produceLayer, PixelPosition: u.PixelPosition},
+				position{layer: chaffConfig.produceLayer, Pixel: u.Pixel},
 				u.player,
 				[]position{u.position},
 				[]action{},
@@ -131,7 +131,7 @@ func reactFlare(fireOrdnanceDelay uint64) reaction {
 		do: func(u *unit) {
 			flare := newUnit(
 				flareConfig,
-				position{layer: flareConfig.produceLayer, PixelPosition: u.PixelPosition},
+				position{layer: flareConfig.produceLayer, Pixel: u.Pixel},
 				u.player,
 				[]position{u.nearest.position},
 				[]action{},
