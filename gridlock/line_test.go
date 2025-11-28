@@ -57,52 +57,6 @@ func TestIntersects(t *testing.T) {
 
 }
 
-func TestInclusivePoints(t *testing.T) {
-	t.Parallel()
-	var tests = []struct {
-		l          line
-		wantPoints []PixelPosition
-		wantPanic  bool
-	}{
-		// horizontal lines
-		{line{PixelPosition{0, 0}, PixelPosition{1, 0}}, []PixelPosition{{0, 0}, {1, 0}}, false},
-		{line{PixelPosition{0, 0}, PixelPosition{2, 0}}, []PixelPosition{{0, 0}, {1, 0}, {2, 0}}, false},
-		{line{PixelPosition{1, 0}, PixelPosition{0, 0}}, []PixelPosition{{0, 0}, {1, 0}}, false},
-		{line{PixelPosition{2, 0}, PixelPosition{0, 0}}, []PixelPosition{{0, 0}, {1, 0}, {2, 0}}, false},
-
-		// vertical lines
-		{line{PixelPosition{0, 0}, PixelPosition{0, 1}}, []PixelPosition{{0, 0}, {0, 1}}, false},
-		{line{PixelPosition{0, 0}, PixelPosition{0, 2}}, []PixelPosition{{0, 0}, {0, 1}, {0, 2}}, false},
-		{line{PixelPosition{0, 1}, PixelPosition{0, 0}}, []PixelPosition{{0, 0}, {0, 1}}, false},
-		{line{PixelPosition{0, 2}, PixelPosition{0, 0}}, []PixelPosition{{0, 0}, {0, 1}, {0, 2}}, false},
-
-		// lines not either horizontal or vertical
-		{line{}, []PixelPosition{}, true},
-		{line{PixelPosition{0, 0}, PixelPosition{1, 1}}, []PixelPosition{}, true},
-		{line{PixelPosition{1, 1}, PixelPosition{1, 1}}, []PixelPosition{}, true},
-	}
-
-	for _, tt := range tests {
-		testname := fmt.Sprintf("test inclusive points for line %s", tt.l.log())
-		t.Run(testname, func(t *testing.T) {
-			defer func() {
-				r := recover()
-				switch {
-				case r == nil && tt.wantPanic:
-					t.Errorf("want panic but did not panic")
-				case r != nil && !tt.wantPanic:
-					t.Errorf("do not want panic but did panic")
-				}
-			}()
-
-			inclusivePoints := tt.l.inclusivePoints()
-			if !slices.Equal(inclusivePoints, tt.wantPoints) {
-				t.Errorf("inclusive points %#v not equal to wanted points %#v", inclusivePoints, tt.wantPoints)
-			}
-		})
-	}
-}
-
 func TestAdjacentPointsNoBounds(t *testing.T) {
 	l := line{PixelPosition{-1, -1}, PixelPosition{-1, -1}}
 	point := l.adjacentPoints(south, nil)[0]

@@ -46,33 +46,6 @@ func (l1 line) intersects(l2 line) bool {
 	}
 }
 
-func (l line) inclusivePoints() []PixelPosition {
-	var inner []PixelPosition
-	switch {
-	case l.p1.X == l.p2.X && l.p1.Y == l.p2.Y:
-		panic("inclusivePoints: cannot find inclusive points for a point")
-	case l.p1.X == l.p2.X:
-		start := min(l.p1.Y, l.p2.Y)
-		end := max(l.p1.Y, l.p2.Y)
-		y := start
-		for y <= end {
-			inner = append(inner, PixelPosition{l.p1.X, y})
-			y += 1
-		}
-	case l.p1.Y == l.p2.Y:
-		start := min(l.p1.X, l.p2.X)
-		end := max(l.p1.X, l.p2.X)
-		x := start
-		for x <= end {
-			inner = append(inner, PixelPosition{x, l.p1.Y})
-			x += 1
-		}
-	default:
-		panic("inclusivePoints: cannot find inclusive points for line that is not either horizontal or vertical")
-	}
-	return inner
-}
-
 // Returns the adjacent points in the passed direction. The function has multiple assumptions.
 // Assumes a square grid with typical compass directions. Assumes a square grid where east is
 // positive x and south is positive y. x is typical and y is opposite of typical for catesian graph.
