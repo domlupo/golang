@@ -1,4 +1,4 @@
-// TODO
+// A line is two unordered connected pixels.
 
 package main
 
@@ -8,6 +8,7 @@ import (
 	"math"
 )
 
+// Two unordered connected points.
 type line struct {
 	p1 PixelPosition
 	p2 PixelPosition
@@ -18,6 +19,10 @@ func (l line) log() []slog.Attr {
 	a = append(a, nest("p1", l.p1.log()))
 	a = append(a, nest("p2", l.p2.log()))
 	return a
+}
+
+func (l line) isVertical() bool {
+	return l.p1.X == l.p2.X
 }
 
 func onSegment(p1 PixelPosition, p2 PixelPosition, p3 PixelPosition) bool {
@@ -72,26 +77,25 @@ func (l line) adjacentPoints(d direction, bounds *bounds) []PixelPosition {
 	nY := max(l.p1.Y, l.p2.Y)
 	sY := min(l.p1.Y, l.p2.Y)
 
-	lineIsVertical := w.X == e.X
 	var points []PixelPosition
 	switch {
-	case lineIsVertical && d == west:
+	case l.isVertical() && d == west:
 		y := sY
 		for y <= nY {
 			points = append(points, PixelPosition{w.X - 1, y})
 			y += 1
 		}
-	case lineIsVertical && d == east:
+	case l.isVertical() && d == east:
 		y := sY
 		for y <= nY {
 			points = append(points, PixelPosition{w.X, y})
 			y += 1
 		}
-	case !lineIsVertical && d == west, !lineIsVertical && d == east:
+	case !l.isVertical() && d == west, !l.isVertical() && d == east:
 		panic(fmt.Sprintf("adjacentPoints: cannot get points in direction %s for non vertical lines since it is unimplemented", d.string()))
-	case lineIsVertical && d == north:
+	case l.isVertical() && d == north:
 		points = append(points, PixelPosition{w.X, sY - 1})
-	case lineIsVertical && d == south:
+	case l.isVertical() && d == south:
 		points = append(points, PixelPosition{w.X, nY})
 	default:
 		// Ebitengine y is opposite of typical cartesian grid, slope equation is not typical.

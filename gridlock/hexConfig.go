@@ -95,6 +95,9 @@ func (hc hexConfig) demotifHexPixels() []PixelPosition {
 	for i, np := range northPixels {
 		sp := southPixels[i]
 		l := line{np, sp}
+		if !l.isVertical() {
+			panic("demotifHexPixels: expect line to be vertical")
+		}
 		demotifPixels = append(demotifPixels, l.adjacentPoints(east, nil)...)
 	}
 	return demotifPixels
