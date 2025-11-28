@@ -40,6 +40,10 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
+Refactor positions.go. Specifically the struct names.
+  - I think PixelPosition -> Pixel. Clarify or rename others structs as well now that there are several.
+  - split into separate files if needed or move stuff aroud.
+
 Determine if I should clarify file names
   - It is weird that I have some singular and some plural. I think I should make all files singular.
   - def should be single
