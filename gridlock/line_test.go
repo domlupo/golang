@@ -77,7 +77,7 @@ func TestInclusivePoints(t *testing.T) {
 		{line{PixelPosition{0, 2}, PixelPosition{0, 0}}, []PixelPosition{{0, 0}, {0, 1}, {0, 2}}, false},
 
 		// lines not either horizontal or vertical
-		{line{PixelPosition{0, 0}, PixelPosition{0, 0}}, []PixelPosition{}, true},
+		{line{}, []PixelPosition{}, true},
 		{line{PixelPosition{0, 0}, PixelPosition{1, 1}}, []PixelPosition{}, true},
 		{line{PixelPosition{1, 1}, PixelPosition{1, 1}}, []PixelPosition{}, true},
 	}
@@ -121,12 +121,12 @@ func TestAdjacentPoints(t *testing.T) {
 		wantPanic  bool
 	}{
 		// trims points out of bounds 1
-		{line{PixelPosition{0, 0}, PixelPosition{0, 0}}, north, []PixelPosition{}, false},
-		{line{PixelPosition{0, 0}, PixelPosition{0, 0}}, south, []PixelPosition{{0, 0}}, false},
+		{line{}, north, []PixelPosition{}, false},
+		{line{}, south, []PixelPosition{{0, 0}}, false},
+		{line{}, west, []PixelPosition{}, false},
+		{line{}, east, []PixelPosition{{0, 0}}, false},
 		{line{PixelPosition{0, -1}, PixelPosition{0, -1}}, north, []PixelPosition{}, false},
 		{line{PixelPosition{0, -1}, PixelPosition{0, -1}}, south, []PixelPosition{}, false},
-		{line{PixelPosition{0, 0}, PixelPosition{0, 0}}, west, []PixelPosition{}, false},
-		{line{PixelPosition{0, 0}, PixelPosition{0, 0}}, east, []PixelPosition{{0, 0}}, false},
 		{line{PixelPosition{-1, 0}, PixelPosition{-1, 0}}, west, []PixelPosition{}, false},
 		{line{PixelPosition{-1, 0}, PixelPosition{-1, 0}}, east, []PixelPosition{}, false},
 		//trims points out of bounds 2
