@@ -37,12 +37,22 @@ func (p player) String() string {
 }
 
 type bounds struct {
-	width  int
-	height int
+	xMin int
+	xMax int
+	yMin int
+	yMax int
 }
 
 func (bounds bounds) contains(p PixelPosition) bool {
-	return !(p.X < 0 || p.X > bounds.width-1 || p.Y < 0 || p.Y > bounds.height-1)
+	return !(p.X < bounds.xMin || p.X > bounds.xMax-1 || p.Y < bounds.yMin || p.Y > bounds.yMax-1)
+}
+
+func (bounds bounds) width() int {
+	return bounds.xMax - bounds.xMin
+}
+
+func (bounds bounds) height() int {
+	return bounds.yMax - bounds.yMin
 }
 
 type windowConfig struct {
@@ -52,15 +62,17 @@ type windowConfig struct {
 func newWindowConfig() windowConfig {
 	wc := windowConfig{
 		bounds{
-			width:  1280,
-			height: 720,
+			xMin: 0,
+			xMax: 1280,
+			yMin: 0,
+			yMax: 720,
 		},
 	}
 	return wc
 }
 
 func (wc windowConfig) maxPixels() int {
-	return wc.height * wc.width
+	return wc.width() * wc.height()
 }
 
 // Stores a callback to invoke when a position is reached.

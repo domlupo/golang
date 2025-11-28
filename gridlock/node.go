@@ -136,11 +136,11 @@ func (info nodeInfo) log() []slog.Attr {
 func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 	start := time.Now()
 	wc := newWindowConfig()
-	distanceLimit := max(wc.width, wc.height)
+	distanceLimit := max(wc.width(), wc.height())
 	nodeLUT := make(map[PixelPosition]nodeInfo, wc.maxPixels())
 
-	for x := range wc.width {
-		for y := range wc.height {
+	for x := range wc.width() {
+		for y := range wc.height() {
 			p := PixelPosition{X: x, Y: y}
 			gridPos, ok := g.getGridPos(p)
 			if !ok {
@@ -164,8 +164,8 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 		priorCount = count
 		count = 0
 
-		for x := range wc.width {
-			for y := range wc.height {
+		for x := range wc.width() {
+			for y := range wc.height() {
 				p := PixelPosition{X: x, Y: y}
 				oInfo := oLUT[p]
 				nInfo := nodeLUT[p]
@@ -217,7 +217,7 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 			fmt.Sprintf("setupNodeLUT: %.1f%% total pixels calculated. %d pixels of distance %d", percent, count-priorCount, distance))
 
 		distance++
-		if distance > max(wc.height, wc.width) {
+		if distance > max(wc.height(), wc.width()) {
 			panic("setupNodeLUT: invalid setup because distance is greater than max distance allowed by window.")
 		}
 	}
@@ -225,8 +225,8 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 	percent := float64(count) / float64(wc.maxPixels()) * maxPercent
 	logger.log(infoLevel, setupLogic, fmt.Sprintf("setupNodeLUT: %.0f%% total pixels not skipped with a distance limit of %d", percent, distanceLimit))
 
-	for x := range wc.width {
-		for y := range wc.height {
+	for x := range wc.width() {
+		for y := range wc.height() {
 			p := PixelPosition{X: x, Y: y}
 			oInfo := oLUT[p]
 			if !oInfo.Walkable {

@@ -22,8 +22,8 @@ func newHexConfig(wc windowConfig, hexWidth int, hexHeight int, xOffset int, yOf
 		hexHeight: hexHeight,
 		xOffset:   xOffset,
 		yOffset:   yOffset,
-		xIndexMax: wc.width/hexWidth + 2,
-		yIndexMax: wc.height/(hexHeight/4*3) + 1,
+		xIndexMax: wc.width()/hexWidth + 2,
+		yIndexMax: wc.height()/(hexHeight/4*3) + 1,
 	}
 	return hc
 }
