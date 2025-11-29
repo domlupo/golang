@@ -531,11 +531,9 @@ func (g grid) demotifLinePixels(hs hexSide, side side) []Pixel {
 		trim = append(trim, Pixel{sw.X - 1, sw.Y})
 	case hs == hsNorthwest && side == sExclusive:
 		d = north
-		trim = append(trim, Pixel{(hc.hexWidth / 2) - 1, -1})
 		trim = append(trim, Pixel{hc.hexWidth / 2, -1})
 	case hs == hsNortheast && side == sExclusive:
 		d = north
-		trim = append(trim, Pixel{hc.hexWidth / 2, -1})
 		trim = append(trim, Pixel{hc.hexWidth, hc.hexHeight/4 - 1})
 	case hs == hsEast && side == sExclusive:
 		d = east
@@ -590,6 +588,17 @@ func (g grid) demotifHexPixels() []Pixel {
 			panic("demotifHexPixels: expect line to be vertical")
 		}
 		demotifPixels = append(demotifPixels, l.adjacentPoints(east)...)
+	}
+	return demotifPixels
+}
+
+// Returns all pixels adjacent to the demotif hexagon.
+func (g grid) demotifHexPixelsAdjacent() map[Pixel]hexSide {
+	demotifPixels := make(map[Pixel]hexSide)
+	for _, hs := range hexSides() {
+		for _, p := range g.demotifLinePixels(hs, sExclusive) {
+			demotifPixels[p] = hs
+		}
 	}
 	return demotifPixels
 }

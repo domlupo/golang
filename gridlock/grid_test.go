@@ -1301,7 +1301,7 @@ func TestDemotifLinePixels(t *testing.T) {
 			{5, 7}, {6, 6}, {7, 6}, {8, 5}, {9, 5},
 			{10, 4}, {11, 4}, {12, 4}, {13, 3}, {14, 3},
 			{15, 2}, {16, 2}, {17, 1}, {18, 1}, {19, 1},
-			{20, 0}, {21, 0},
+			{20, 0}, {21, 0}, {22, -1},
 		}, false},
 		{hsNortheast, sInclusive, []Pixel{
 			{23, 0}, {24, 1}, {25, 1}, {26, 2}, {27, 2},
@@ -1311,7 +1311,7 @@ func TestDemotifLinePixels(t *testing.T) {
 			{43, 9}, {44, 9}, {45, 10},
 		}, false},
 		{hsNortheast, sExclusive, []Pixel{
-			{24, 0}, {25, 0}, {26, 1}, {27, 1},
+			{23, -1}, {24, 0}, {25, 0}, {26, 1}, {27, 1},
 			{28, 1}, {29, 2}, {30, 2}, {31, 3}, {32, 3},
 			{33, 4}, {34, 4}, {35, 4}, {36, 5}, {37, 5},
 			{38, 6}, {39, 6}, {40, 7}, {41, 7}, {42, 7},
@@ -1385,7 +1385,95 @@ func TestDemotifPixels(t *testing.T) {
 	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
 	g := newGrid(hc)
 	demotifPixels := g.demotifHexPixels()
-	if len(demotifPixels) != 1380 {
-		t.Error("demotifPixels sanity check failed")
+	length := len(demotifPixels)
+	if length != 1380 {
+		t.Error("demotifPixels sanity check failed because lengths is", length)
+	}
+}
+
+func TestDemotifHexPixelsAdjacent(t *testing.T) {
+	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
+	g := newGrid(hc)
+	demotifPixelsAdjacent := g.demotifHexPixelsAdjacent()
+
+	length := len(demotifPixelsAdjacent)
+	ePixelCount, wPixelCount := hc.hexHeight/2, hc.hexHeight/2
+	nwPixelCount, nePixelCount, swPixelCount, sePixelCount := hc.hexWidth/2, hc.hexWidth/2, hc.hexWidth/2, hc.hexWidth/2
+	expectedLength := ePixelCount + wPixelCount + nwPixelCount + nePixelCount + swPixelCount + sePixelCount
+	if length != expectedLength {
+		t.Errorf("demotifPixels sanity check failed because length is %d rather than expected %d", length, expectedLength)
+		fmt.Println(demotifPixelsAdjacent)
+	}
+
+	wPixels := []Pixel{
+		{-1, 10}, {-1, 11}, {-1, 12}, {-1, 13}, {-1, 14},
+		{-1, 15}, {-1, 16}, {-1, 17}, {-1, 18}, {-1, 19},
+		{-1, 20}, {-1, 21}, {-1, 22}, {-1, 23}, {-1, 24},
+		{-1, 25}, {-1, 26}, {-1, 27}, {-1, 28}, {-1, 29},
+	}
+	nwPixels := []Pixel{
+		{0, 9}, {1, 8}, {2, 8}, {3, 7}, {4, 7},
+		{5, 7}, {6, 6}, {7, 6}, {8, 5}, {9, 5},
+		{10, 4}, {11, 4}, {12, 4}, {13, 3}, {14, 3},
+		{15, 2}, {16, 2}, {17, 1}, {18, 1}, {19, 1},
+		{20, 0}, {21, 0}, {22, -1},
+	}
+	nePixels := []Pixel{
+		{23, -1}, {24, 0}, {25, 0}, {26, 1}, {27, 1},
+		{28, 1}, {29, 2}, {30, 2}, {31, 3}, {32, 3},
+		{33, 4}, {34, 4}, {35, 4}, {36, 5}, {37, 5},
+		{38, 6}, {39, 6}, {40, 7}, {41, 7}, {42, 7},
+		{43, 8}, {44, 8}, {45, 9},
+	}
+	ePixels := []Pixel{
+		{46, 10}, {46, 11}, {46, 12}, {46, 13}, {46, 14},
+		{46, 15}, {46, 16}, {46, 17}, {46, 18}, {46, 19},
+		{46, 20}, {46, 21}, {46, 22}, {46, 23}, {46, 24},
+		{46, 25}, {46, 26}, {46, 27}, {46, 28}, {46, 29},
+	}
+	swPixels := []Pixel{
+		{0, 30}, {1, 31}, {2, 31}, {3, 32}, {4, 32},
+		{5, 32}, {6, 33}, {7, 33}, {8, 34}, {9, 34},
+		{10, 35}, {11, 35}, {12, 35}, {13, 36}, {14, 36},
+		{15, 37}, {16, 37}, {17, 38}, {18, 38}, {19, 38},
+		{20, 39}, {21, 39}, {22, 40},
+	}
+	sePixels := []Pixel{
+		{23, 40}, {24, 39}, {25, 39}, {26, 38}, {27, 38},
+		{28, 38}, {29, 37}, {30, 37}, {31, 36}, {32, 36},
+		{33, 35}, {34, 35}, {35, 35}, {36, 34}, {37, 34},
+		{38, 33}, {39, 33}, {40, 32}, {41, 32}, {42, 32},
+		{43, 31}, {44, 31}, {45, 30},
+	}
+	format := "expected pixel %s to be %s"
+	for _, pixel := range wPixels {
+		if demotifPixelsAdjacent[pixel] != hsWest {
+			t.Error(format, pixel.log(), hsWest.string())
+		}
+	}
+	for _, pixel := range nwPixels {
+		if demotifPixelsAdjacent[pixel] != hsNorthwest {
+			t.Error(format, pixel.log(), hsNorthwest.string())
+		}
+	}
+	for _, pixel := range nePixels {
+		if demotifPixelsAdjacent[pixel] != hsNortheast {
+			t.Error(format, pixel.log(), hsNortheast.string())
+		}
+	}
+	for _, pixel := range ePixels {
+		if demotifPixelsAdjacent[pixel] != hsEast {
+			t.Error(format, pixel.log(), hsEast.string())
+		}
+	}
+	for _, pixel := range swPixels {
+		if demotifPixelsAdjacent[pixel] != hsSouthwest {
+			t.Error(format, pixel.log(), hsSouthwest.string())
+		}
+	}
+	for _, pixel := range sePixels {
+		if demotifPixelsAdjacent[pixel] != hsSoutheast {
+			t.Error(format, pixel.log(), hsSoutheast.string())
+		}
 	}
 }
