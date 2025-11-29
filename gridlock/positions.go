@@ -185,9 +185,9 @@ func orientation(p1 Pixel, p2 Pixel, p3 Pixel) pointOrientation {
 
 func collidesWithBorder(p position, offset int) bool {
 	wc := newWindowConfig()
-	if p.X+offset > wc.width() ||
+	if p.X+offset > wc.width ||
 		p.X-offset < 0 ||
-		p.Y+offset > wc.height() ||
+		p.Y+offset > wc.height ||
 		p.Y-offset < 0 {
 		return true
 	} else {

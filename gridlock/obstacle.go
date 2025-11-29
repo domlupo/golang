@@ -125,12 +125,12 @@ func (os obstacles) setup(g grid) obstacleLUT {
 func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 	start := time.Now()
 	wc := newWindowConfig()
-	distanceLimit := max(wc.width(), wc.height())
+	distanceLimit := max(wc.width, wc.height)
 	nearestUnwalkables := make(map[Pixel][]Pixel)
-	oLUT := make(map[Pixel]obstacleInfo, wc.width()*wc.height())
+	oLUT := make(map[Pixel]obstacleInfo, wc.width*wc.height)
 
-	for x := range wc.width() {
-		for y := range wc.height() {
+	for x := range wc.width {
+		for y := range wc.height {
 			p := Pixel{X: x, Y: y}
 			gridPos, ok := g.getGridPos(p)
 			if !ok {
@@ -146,8 +146,8 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 		}
 	}
 
-	for x := range wc.width() {
-		for y := range wc.height() {
+	for x := range wc.width {
+		for y := range wc.height {
 			p := Pixel{X: x, Y: y}
 			info := oLUT[p]
 			if !info.Walkable {
@@ -168,8 +168,8 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 		priorCount = count
 		count = 0
 
-		for x := range wc.width() {
-			for y := range wc.height() {
+		for x := range wc.width {
+			for y := range wc.height {
 				p := Pixel{X: x, Y: y}
 				info := oLUT[p]
 
@@ -217,8 +217,8 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 		// may lead to very hard to deubg issues which I want to avoid. Another potential error prone
 		// optmization that I am avoiding is summing the pixel position as they are added to the array.
 		// Optimizing may be needed in the future to speed up setup, but LUT caching is sufficient for now.
-		for x := range wc.width() {
-			for y := range wc.height() {
+		for x := range wc.width {
+			for y := range wc.height {
 				p := Pixel{X: x, Y: y}
 				n := nearestUnwalkables[p]
 
