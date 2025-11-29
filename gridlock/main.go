@@ -66,12 +66,10 @@ type Game struct {
 }
 
 func newGame() Game {
-	drawConfig := newDrawConfig()
 	g := Game{
 		developerMode:           true,
 		obstacleSetup:           multiObstacle,
 		nodeSetup:               leftVsRightVerticalOffsetAircraftAndOrdnance,
-		drawConfig:              drawConfig,
 		backgroundColor:         color.RGBA{200, 200, 200, 255},
 		produceWait:             1_000_000 * time.Second,
 		slowTickInterval:        1 * time.Second,
@@ -92,6 +90,8 @@ func newGame() Game {
 		cpuProfilerFileName:     "cpu.prof",
 		memProfilerFileName:     "mem.prof",
 	}
+	logger = setupLogger(g.developerToggleCooldown)
+	g.drawConfig = newDrawConfig()
 	return g
 }
 
@@ -308,9 +308,6 @@ func main() {
 
 	wc := newWindowConfig()
 	ebiten.SetWindowSize(int(float32(wc.width())*g.windowMultiplier), int(float32(wc.height())*g.windowMultiplier))
-
-	logger = setupLogger(g.developerToggleCooldown)
-
 	os.Mkdir(g.outputDirectoryName, 0755)
 
 	g.developerToggles[g.cpuProfilerToggleName] = newToggle(
