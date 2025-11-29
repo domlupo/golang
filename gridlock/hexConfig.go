@@ -73,22 +73,10 @@ func (hc hexConfig) demotifHexLine(hs hexSide) line {
 func (hc hexConfig) demotifHexPixels() []Pixel {
 	demotifPixels := []Pixel{}
 
-	leftBounds := &bounds{
-		xMin: 0,
-		xMax: hc.hexWidth / 2,
-		yMin: 0,
-		yMax: hc.hexHeight,
-	}
-	rightBounds := &bounds{
-		xMin: hc.hexWidth / 2,
-		xMax: hc.hexWidth,
-		yMin: 0,
-		yMax: hc.hexHeight,
-	}
-	nwPixels := hc.demotifHexLine(hsNorthwest).adjacentPoints(south, leftBounds)
-	nePixles := hc.demotifHexLine(hsNortheast).adjacentPoints(south, rightBounds)
-	swPixels := hc.demotifHexLine(hsSouthwest).adjacentPoints(north, leftBounds)
-	sePixels := hc.demotifHexLine(hsSoutheast).adjacentPoints(north, rightBounds)
+	nwPixels := hc.demotifHexLine(hsNorthwest).adjacentPoints(south)
+	nePixles := hc.demotifHexLine(hsNortheast).adjacentPoints(south)
+	swPixels := hc.demotifHexLine(hsSouthwest).adjacentPoints(north)
+	sePixels := hc.demotifHexLine(hsSoutheast).adjacentPoints(north)
 
 	northPixels := append(nwPixels, nePixles...)
 	southPixels := append(swPixels, sePixels...)
@@ -98,7 +86,7 @@ func (hc hexConfig) demotifHexPixels() []Pixel {
 		if !l.isVertical() {
 			panic("demotifHexPixels: expect line to be vertical")
 		}
-		demotifPixels = append(demotifPixels, l.adjacentPoints(east, nil)...)
+		demotifPixels = append(demotifPixels, l.adjacentPoints(east)...)
 	}
 	return demotifPixels
 }

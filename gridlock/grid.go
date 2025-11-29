@@ -131,22 +131,16 @@ func (g grid) setupHexTriangleLUT() []hexagonTriangle {
 	yMax := max(nw.p1.Y, nw.p2.Y, ne.p1.Y, ne.p2.Y)
 
 	switchTriangle := make(map[Pixel]hexagonTriangle)
-	bounds := bounds{
-		xMin: xMin,
-		xMax: xMax,
-		yMin: yMin,
-		yMax: yMax,
-	}
-	for _, p := range nw.adjacentPoints(north, &bounds) {
+	for _, p := range nw.adjacentPoints(north) {
 		switchTriangle[p] = leftHexTriangle
 	}
-	for _, p := range nw.adjacentPoints(south, &bounds) {
+	for _, p := range nw.adjacentPoints(south) {
 		switchTriangle[p] = middleHexTriangle
 	}
-	for _, p := range ne.adjacentPoints(north, &bounds) {
+	for _, p := range ne.adjacentPoints(north) {
 		switchTriangle[p] = rightHexTriangle
 	}
-	for _, p := range ne.adjacentPoints(south, &bounds) {
+	for _, p := range ne.adjacentPoints(south) {
 		switchTriangle[p] = middleHexTriangle
 	}
 

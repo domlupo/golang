@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math"
+	"slices"
 )
 
 // Two unordered connected points.
@@ -56,8 +57,8 @@ func (l1 line) intersects(l2 line) bool {
 // positive x and south is positive y. x is typical and y is opposite of typical for catesian graph.
 // Assumes the line should be drawn in the top left corner of the grid square. Sloped lines
 // determine point direction of split grid squares via which point has more area.
-// Trims any points outside the passed optional bounds. Accepts passed lines outside the passed bounds.
-func (l line) adjacentPoints(d direction, bounds *bounds) []Pixel {
+// Trims any points passed as trim but panics if they are not an adjacent point.
+func (l line) adjacentPoints(d direction, trim ...Pixel) []Pixel {
 	switch d {
 	case north, south, west, east:
 	default:
@@ -126,11 +127,12 @@ func (l line) adjacentPoints(d direction, bounds *bounds) []Pixel {
 		}
 	}
 
-	var trimmedPoints []Pixel
-	for _, p := range points {
-		if bounds == nil || bounds.contains(p) {
-			trimmedPoints = append(trimmedPoints, p)
+	for _, p := range trim {
+		i := slices.Index(points, p)
+		if i == -1 {
+			panic(fmt.Sprintf("adjacentPoints: cannot trim %s since it is not an adjacent point", p.log()))
 		}
+		points = slices.Delete(points, i, i+1)
 	}
-	return trimmedPoints
+	return points
 }

@@ -57,132 +57,106 @@ func TestIntersects(t *testing.T) {
 
 }
 
-func TestAdjacentPointsNoBounds(t *testing.T) {
-	l := line{Pixel{-1, -1}, Pixel{-1, -1}}
-	point := l.adjacentPoints(south, nil)[0]
-	if !point.equals(Pixel{-1, -1}) {
-		t.Error("A point should be returned when bounds is nil")
-	}
+type adjacentPointsTest struct {
+	l          line
+	d          direction
+	wantPoints []Pixel
+	wantPanic  bool
+	trim       []Pixel
 }
 
 func TestAdjacentPoints(t *testing.T) {
 	t.Parallel()
-	wc := newWindowConfig()
-	var tests = []struct {
-		l          line
-		d          direction
-		wantPoints []Pixel
-		wantPanic  bool
-	}{
-		// trims points out of bounds 1
-		{line{}, north, []Pixel{}, false},
-		{line{}, south, []Pixel{{0, 0}}, false},
-		{line{}, west, []Pixel{}, false},
-		{line{}, east, []Pixel{{0, 0}}, false},
-		{line{Pixel{0, -1}, Pixel{0, -1}}, north, []Pixel{}, false},
-		{line{Pixel{0, -1}, Pixel{0, -1}}, south, []Pixel{}, false},
-		{line{Pixel{-1, 0}, Pixel{-1, 0}}, west, []Pixel{}, false},
-		{line{Pixel{-1, 0}, Pixel{-1, 0}}, east, []Pixel{}, false},
-		//trims points out of bounds 2
-		{line{Pixel{-1, 1}, Pixel{-1, 1}}, north, []Pixel{}, false},
-		{line{Pixel{-1, 1}, Pixel{-1, 1}}, south, []Pixel{}, false},
-		{line{Pixel{-1, 1}, Pixel{-1, 1}}, east, []Pixel{}, false},
-		{line{Pixel{-1, 1}, Pixel{-1, 1}}, west, []Pixel{}, false},
-		// trims point out of bounds 3
-		{line{Pixel{wc.width(), 1}, Pixel{wc.width(), 1}}, north, []Pixel{}, false},
-		{line{Pixel{wc.width(), 1}, Pixel{wc.width(), 1}}, south, []Pixel{}, false},
-		{line{Pixel{wc.width(), 1}, Pixel{wc.width(), 1}}, west, []Pixel{{wc.width() - 1, 1}}, false},
-		{line{Pixel{wc.width(), 1}, Pixel{wc.width(), 1}}, east, []Pixel{}, false},
-		// trims points out of bounds 4
-		{line{Pixel{1, wc.height()}, Pixel{1, wc.height()}}, north, []Pixel{{1, wc.height() - 1}}, false},
-		{line{Pixel{1, wc.height()}, Pixel{1, wc.height()}}, south, []Pixel{}, false},
-		{line{Pixel{1, wc.height()}, Pixel{1, wc.height()}}, west, []Pixel{}, false},
-		{line{Pixel{1, wc.height()}, Pixel{1, wc.height()}}, east, []Pixel{}, false},
-		{line{Pixel{1, wc.height() - 1}, Pixel{1, wc.height() - 1}}, north, []Pixel{{1, wc.height() - 2}}, false},
-		{line{Pixel{1, wc.height() - 1}, Pixel{1, wc.height() - 1}}, south, []Pixel{{1, wc.height() - 1}}, false},
-		{line{Pixel{1, wc.height() - 1}, Pixel{1, wc.height() - 1}}, west, []Pixel{{0, wc.height() - 1}}, false},
-		{line{Pixel{1, wc.height() - 1}, Pixel{1, wc.height() - 1}}, east, []Pixel{{1, wc.height() - 1}}, false},
-		// trims points out of bounds 5
-		{line{Pixel{0, -3}, Pixel{0, 0}}, north, []Pixel{}, false},
-		{line{Pixel{0, -3}, Pixel{0, 0}}, south, []Pixel{{0, 0}}, false},
-		{line{Pixel{0, -3}, Pixel{0, -1}}, north, []Pixel{}, false},
-		{line{Pixel{0, -3}, Pixel{0, -1}}, south, []Pixel{}, false},
+	var tests = []adjacentPointsTest{
+		// trim panic
+		{line{Pixel{1, 1}, Pixel{1, 1}}, south, []Pixel{}, true, []Pixel{{0, 0}}},
+		{line{Pixel{1, 1}, Pixel{1, 1}}, south, []Pixel{}, true, []Pixel{{1, 1}, {0, 0}}},
+		{line{Pixel{1, 1}, Pixel{1, 1}}, south, []Pixel{}, true, []Pixel{{1, 1}, {1, 1}}},
+
+		// trim success
+		{line{Pixel{0, 0}, Pixel{0, 0}}, south, []Pixel{}, false, []Pixel{{0, 0}}},
+		{line{Pixel{1, 1}, Pixel{1, 1}}, south, []Pixel{}, false, []Pixel{{1, 1}}},
+		{line{Pixel{1, 1}, Pixel{2, 1}}, south, []Pixel{{2, 1}}, false, []Pixel{{1, 1}}},
+		{line{Pixel{1, 1}, Pixel{2, 1}}, south, []Pixel{{1, 1}}, false, []Pixel{{2, 1}}},
+		{line{Pixel{1, 1}, Pixel{3, 1}}, south, []Pixel{{1, 1}, {3, 1}}, false, []Pixel{{2, 1}}},
+		{line{Pixel{1, 1}, Pixel{3, 1}}, south, []Pixel{{2, 1}}, false, []Pixel{{1, 1}, {3, 1}}},
+		{line{Pixel{1, 1}, Pixel{3, 1}}, south, []Pixel{}, false, []Pixel{{1, 1}, {2, 1}, {3, 1}}},
 
 		// point 1
-		{line{Pixel{1, 1}, Pixel{1, 1}}, north, []Pixel{{1, 0}}, false},
-		{line{Pixel{1, 1}, Pixel{1, 1}}, south, []Pixel{{1, 1}}, false},
-		{line{Pixel{1, 1}, Pixel{1, 1}}, west, []Pixel{{0, 1}}, false},
-		{line{Pixel{1, 1}, Pixel{1, 1}}, east, []Pixel{{1, 1}}, false},
+		{line{Pixel{1, 1}, Pixel{1, 1}}, north, []Pixel{{1, 0}}, false, []Pixel{}},
+		{line{Pixel{1, 1}, Pixel{1, 1}}, south, []Pixel{{1, 1}}, false, []Pixel{}},
+		{line{Pixel{1, 1}, Pixel{1, 1}}, west, []Pixel{{0, 1}}, false, []Pixel{}},
+		{line{Pixel{1, 1}, Pixel{1, 1}}, east, []Pixel{{1, 1}}, false, []Pixel{}},
 		// point 2
-		{line{Pixel{2, 3}, Pixel{2, 3}}, north, []Pixel{{2, 2}}, false},
-		{line{Pixel{2, 3}, Pixel{2, 3}}, south, []Pixel{{2, 3}}, false},
-		{line{Pixel{2, 3}, Pixel{2, 3}}, west, []Pixel{{1, 3}}, false},
-		{line{Pixel{2, 3}, Pixel{2, 3}}, east, []Pixel{{2, 3}}, false},
+		{line{Pixel{2, 3}, Pixel{2, 3}}, north, []Pixel{{2, 2}}, false, []Pixel{}},
+		{line{Pixel{2, 3}, Pixel{2, 3}}, south, []Pixel{{2, 3}}, false, []Pixel{}},
+		{line{Pixel{2, 3}, Pixel{2, 3}}, west, []Pixel{{1, 3}}, false, []Pixel{}},
+		{line{Pixel{2, 3}, Pixel{2, 3}}, east, []Pixel{{2, 3}}, false, []Pixel{}},
 		// point 3
-		{line{Pixel{3, 2}, Pixel{3, 2}}, north, []Pixel{{3, 1}}, false},
-		{line{Pixel{3, 2}, Pixel{3, 2}}, south, []Pixel{{3, 2}}, false},
-		{line{Pixel{3, 2}, Pixel{3, 2}}, east, []Pixel{{3, 2}}, false},
-		{line{Pixel{3, 2}, Pixel{3, 2}}, west, []Pixel{{2, 2}}, false},
+		{line{Pixel{3, 2}, Pixel{3, 2}}, north, []Pixel{{3, 1}}, false, []Pixel{}},
+		{line{Pixel{3, 2}, Pixel{3, 2}}, south, []Pixel{{3, 2}}, false, []Pixel{}},
+		{line{Pixel{3, 2}, Pixel{3, 2}}, east, []Pixel{{3, 2}}, false, []Pixel{}},
+		{line{Pixel{3, 2}, Pixel{3, 2}}, west, []Pixel{{2, 2}}, false, []Pixel{}},
 
 		// vertical line 1
-		{line{Pixel{1, 1}, Pixel{1, 2}}, north, []Pixel{{1, 0}}, false},
-		{line{Pixel{1, 1}, Pixel{1, 2}}, south, []Pixel{{1, 2}}, false},
-		{line{Pixel{1, 2}, Pixel{1, 1}}, north, []Pixel{{1, 0}}, false},
-		{line{Pixel{1, 2}, Pixel{1, 1}}, south, []Pixel{{1, 2}}, false},
-		{line{Pixel{1, 1}, Pixel{1, 2}}, west, []Pixel{{0, 1}, {0, 2}}, false},
-		{line{Pixel{1, 1}, Pixel{1, 2}}, east, []Pixel{{1, 1}, {1, 2}}, false},
-		{line{Pixel{1, 2}, Pixel{1, 1}}, west, []Pixel{{0, 1}, {0, 2}}, false},
-		{line{Pixel{1, 2}, Pixel{1, 1}}, east, []Pixel{{1, 1}, {1, 2}}, false},
+		{line{Pixel{1, 1}, Pixel{1, 2}}, north, []Pixel{{1, 0}}, false, []Pixel{}},
+		{line{Pixel{1, 1}, Pixel{1, 2}}, south, []Pixel{{1, 2}}, false, []Pixel{}},
+		{line{Pixel{1, 2}, Pixel{1, 1}}, north, []Pixel{{1, 0}}, false, []Pixel{}},
+		{line{Pixel{1, 2}, Pixel{1, 1}}, south, []Pixel{{1, 2}}, false, []Pixel{}},
+		{line{Pixel{1, 1}, Pixel{1, 2}}, west, []Pixel{{0, 1}, {0, 2}}, false, []Pixel{}},
+		{line{Pixel{1, 1}, Pixel{1, 2}}, east, []Pixel{{1, 1}, {1, 2}}, false, []Pixel{}},
+		{line{Pixel{1, 2}, Pixel{1, 1}}, west, []Pixel{{0, 1}, {0, 2}}, false, []Pixel{}},
+		{line{Pixel{1, 2}, Pixel{1, 1}}, east, []Pixel{{1, 1}, {1, 2}}, false, []Pixel{}},
 		// vertical line 2
-		{line{Pixel{1, 1}, Pixel{1, 3}}, north, []Pixel{{1, 0}}, false},
-		{line{Pixel{1, 1}, Pixel{1, 3}}, south, []Pixel{{1, 3}}, false},
-		{line{Pixel{1, 3}, Pixel{1, 1}}, north, []Pixel{{1, 0}}, false},
-		{line{Pixel{1, 3}, Pixel{1, 1}}, south, []Pixel{{1, 3}}, false},
-		{line{Pixel{1, 1}, Pixel{1, 3}}, west, []Pixel{{0, 1}, {0, 2}, {0, 3}}, false},
-		{line{Pixel{1, 1}, Pixel{1, 3}}, east, []Pixel{{1, 1}, {1, 2}, {1, 3}}, false},
-		{line{Pixel{1, 3}, Pixel{1, 1}}, west, []Pixel{{0, 1}, {0, 2}, {0, 3}}, false},
-		{line{Pixel{1, 3}, Pixel{1, 1}}, east, []Pixel{{1, 1}, {1, 2}, {1, 3}}, false},
+		{line{Pixel{1, 1}, Pixel{1, 3}}, north, []Pixel{{1, 0}}, false, []Pixel{}},
+		{line{Pixel{1, 1}, Pixel{1, 3}}, south, []Pixel{{1, 3}}, false, []Pixel{}},
+		{line{Pixel{1, 3}, Pixel{1, 1}}, north, []Pixel{{1, 0}}, false, []Pixel{}},
+		{line{Pixel{1, 3}, Pixel{1, 1}}, south, []Pixel{{1, 3}}, false, []Pixel{}},
+		{line{Pixel{1, 1}, Pixel{1, 3}}, west, []Pixel{{0, 1}, {0, 2}, {0, 3}}, false, []Pixel{}},
+		{line{Pixel{1, 1}, Pixel{1, 3}}, east, []Pixel{{1, 1}, {1, 2}, {1, 3}}, false, []Pixel{}},
+		{line{Pixel{1, 3}, Pixel{1, 1}}, west, []Pixel{{0, 1}, {0, 2}, {0, 3}}, false, []Pixel{}},
+		{line{Pixel{1, 3}, Pixel{1, 1}}, east, []Pixel{{1, 1}, {1, 2}, {1, 3}}, false, []Pixel{}},
 		// vertical line 3
-		{line{Pixel{2, 2}, Pixel{2, 4}}, north, []Pixel{{2, 1}}, false},
-		{line{Pixel{2, 2}, Pixel{2, 4}}, south, []Pixel{{2, 4}}, false},
-		{line{Pixel{2, 4}, Pixel{2, 2}}, north, []Pixel{{2, 1}}, false},
-		{line{Pixel{2, 4}, Pixel{2, 2}}, south, []Pixel{{2, 4}}, false},
-		{line{Pixel{2, 2}, Pixel{2, 4}}, west, []Pixel{{1, 2}, {1, 3}, {1, 4}}, false},
-		{line{Pixel{2, 2}, Pixel{2, 4}}, east, []Pixel{{2, 2}, {2, 3}, {2, 4}}, false},
-		{line{Pixel{2, 4}, Pixel{2, 2}}, west, []Pixel{{1, 2}, {1, 3}, {1, 4}}, false},
-		{line{Pixel{2, 4}, Pixel{2, 2}}, east, []Pixel{{2, 2}, {2, 3}, {2, 4}}, false},
+		{line{Pixel{2, 2}, Pixel{2, 4}}, north, []Pixel{{2, 1}}, false, []Pixel{}},
+		{line{Pixel{2, 2}, Pixel{2, 4}}, south, []Pixel{{2, 4}}, false, []Pixel{}},
+		{line{Pixel{2, 4}, Pixel{2, 2}}, north, []Pixel{{2, 1}}, false, []Pixel{}},
+		{line{Pixel{2, 4}, Pixel{2, 2}}, south, []Pixel{{2, 4}}, false, []Pixel{}},
+		{line{Pixel{2, 2}, Pixel{2, 4}}, west, []Pixel{{1, 2}, {1, 3}, {1, 4}}, false, []Pixel{}},
+		{line{Pixel{2, 2}, Pixel{2, 4}}, east, []Pixel{{2, 2}, {2, 3}, {2, 4}}, false, []Pixel{}},
+		{line{Pixel{2, 4}, Pixel{2, 2}}, west, []Pixel{{1, 2}, {1, 3}, {1, 4}}, false, []Pixel{}},
+		{line{Pixel{2, 4}, Pixel{2, 2}}, east, []Pixel{{2, 2}, {2, 3}, {2, 4}}, false, []Pixel{}},
 
 		// unimplemented horizontal line
-		{line{Pixel{1, 1}, Pixel{2, 1}}, west, []Pixel{{}}, true},
-		{line{Pixel{2, 1}, Pixel{1, 1}}, east, []Pixel{{}}, true},
-		{line{Pixel{1, 1}, Pixel{2, 1}}, west, []Pixel{{}}, true},
-		{line{Pixel{2, 1}, Pixel{1, 1}}, east, []Pixel{{}}, true},
+		{line{Pixel{1, 1}, Pixel{2, 1}}, west, []Pixel{{}}, true, []Pixel{}},
+		{line{Pixel{2, 1}, Pixel{1, 1}}, east, []Pixel{{}}, true, []Pixel{}},
+		{line{Pixel{1, 1}, Pixel{2, 1}}, west, []Pixel{{}}, true, []Pixel{}},
+		{line{Pixel{2, 1}, Pixel{1, 1}}, east, []Pixel{{}}, true, []Pixel{}},
 		// horizontal line 1
-		{line{Pixel{1, 1}, Pixel{2, 1}}, north, []Pixel{{1, 0}, {2, 0}}, false},
-		{line{Pixel{2, 1}, Pixel{1, 1}}, north, []Pixel{{1, 0}, {2, 0}}, false},
-		{line{Pixel{1, 1}, Pixel{2, 1}}, south, []Pixel{{1, 1}, {2, 1}}, false},
-		{line{Pixel{2, 1}, Pixel{1, 1}}, south, []Pixel{{1, 1}, {2, 1}}, false},
+		{line{Pixel{1, 1}, Pixel{2, 1}}, north, []Pixel{{1, 0}, {2, 0}}, false, []Pixel{}},
+		{line{Pixel{2, 1}, Pixel{1, 1}}, north, []Pixel{{1, 0}, {2, 0}}, false, []Pixel{}},
+		{line{Pixel{1, 1}, Pixel{2, 1}}, south, []Pixel{{1, 1}, {2, 1}}, false, []Pixel{}},
+		{line{Pixel{2, 1}, Pixel{1, 1}}, south, []Pixel{{1, 1}, {2, 1}}, false, []Pixel{}},
 		// horizontal line 2
-		{line{Pixel{1, 1}, Pixel{3, 1}}, north, []Pixel{{1, 0}, {2, 0}, {3, 0}}, false},
-		{line{Pixel{3, 1}, Pixel{1, 1}}, north, []Pixel{{1, 0}, {2, 0}, {3, 0}}, false},
-		{line{Pixel{1, 1}, Pixel{3, 1}}, south, []Pixel{{1, 1}, {2, 1}, {3, 1}}, false},
-		{line{Pixel{3, 1}, Pixel{1, 1}}, south, []Pixel{{1, 1}, {2, 1}, {3, 1}}, false},
+		{line{Pixel{1, 1}, Pixel{3, 1}}, north, []Pixel{{1, 0}, {2, 0}, {3, 0}}, false, []Pixel{}},
+		{line{Pixel{3, 1}, Pixel{1, 1}}, north, []Pixel{{1, 0}, {2, 0}, {3, 0}}, false, []Pixel{}},
+		{line{Pixel{1, 1}, Pixel{3, 1}}, south, []Pixel{{1, 1}, {2, 1}, {3, 1}}, false, []Pixel{}},
+		{line{Pixel{3, 1}, Pixel{1, 1}}, south, []Pixel{{1, 1}, {2, 1}, {3, 1}}, false, []Pixel{}},
 		// horizontal line 3
-		{line{Pixel{2, 3}, Pixel{4, 3}}, north, []Pixel{{2, 2}, {3, 2}, {4, 2}}, false},
-		{line{Pixel{4, 3}, Pixel{2, 3}}, north, []Pixel{{2, 2}, {3, 2}, {4, 2}}, false},
-		{line{Pixel{2, 3}, Pixel{4, 3}}, south, []Pixel{{2, 3}, {3, 3}, {4, 3}}, false},
-		{line{Pixel{4, 3}, Pixel{2, 3}}, south, []Pixel{{2, 3}, {3, 3}, {4, 3}}, false},
+		{line{Pixel{2, 3}, Pixel{4, 3}}, north, []Pixel{{2, 2}, {3, 2}, {4, 2}}, false, []Pixel{}},
+		{line{Pixel{4, 3}, Pixel{2, 3}}, north, []Pixel{{2, 2}, {3, 2}, {4, 2}}, false, []Pixel{}},
+		{line{Pixel{2, 3}, Pixel{4, 3}}, south, []Pixel{{2, 3}, {3, 3}, {4, 3}}, false, []Pixel{}},
+		{line{Pixel{4, 3}, Pixel{2, 3}}, south, []Pixel{{2, 3}, {3, 3}, {4, 3}}, false, []Pixel{}},
 
 		// unimplemented postitive slop
-		{line{Pixel{19, 20}, Pixel{42, 10}}, west, []Pixel{}, true},
-		{line{Pixel{42, 10}, Pixel{19, 20}}, east, []Pixel{}, true},
-		{line{Pixel{19, 20}, Pixel{42, 10}}, west, []Pixel{}, true},
-		{line{Pixel{42, 10}, Pixel{19, 20}}, east, []Pixel{}, true},
+		{line{Pixel{19, 20}, Pixel{42, 10}}, west, []Pixel{}, true, []Pixel{}},
+		{line{Pixel{42, 10}, Pixel{19, 20}}, east, []Pixel{}, true, []Pixel{}},
+		{line{Pixel{19, 20}, Pixel{42, 10}}, west, []Pixel{}, true, []Pixel{}},
+		{line{Pixel{42, 10}, Pixel{19, 20}}, east, []Pixel{}, true, []Pixel{}},
 		// unimplemented negative slop
-		{line{Pixel{42, 10}, Pixel{65, 20}}, west, []Pixel{}, true},
-		{line{Pixel{65, 20}, Pixel{42, 10}}, east, []Pixel{}, true},
-		{line{Pixel{42, 10}, Pixel{65, 20}}, west, []Pixel{}, true},
-		{line{Pixel{65, 20}, Pixel{42, 10}}, east, []Pixel{}, true},
+		{line{Pixel{42, 10}, Pixel{65, 20}}, west, []Pixel{}, true, []Pixel{}},
+		{line{Pixel{65, 20}, Pixel{42, 10}}, east, []Pixel{}, true, []Pixel{}},
+		{line{Pixel{42, 10}, Pixel{65, 20}}, west, []Pixel{}, true, []Pixel{}},
+		{line{Pixel{65, 20}, Pixel{42, 10}}, east, []Pixel{}, true, []Pixel{}},
 
 		// positive slope 1
 		{line{Pixel{19, 20}, Pixel{42, 10}}, north,
@@ -192,7 +166,7 @@ func TestAdjacentPoints(t *testing.T) {
 				{29, 14}, {30, 14}, {31, 14}, {32, 13}, {33, 13},
 				{34, 12}, {35, 12}, {36, 11}, {37, 11}, {38, 11},
 				{39, 10}, {40, 10}, {41, 9}, {42, 9}},
-			false},
+			false, []Pixel{}},
 		{line{Pixel{42, 10}, Pixel{19, 20}}, north,
 			[]Pixel{
 				{19, 19}, {20, 18}, {21, 18}, {22, 17}, {23, 17},
@@ -200,7 +174,7 @@ func TestAdjacentPoints(t *testing.T) {
 				{29, 14}, {30, 14}, {31, 14}, {32, 13}, {33, 13},
 				{34, 12}, {35, 12}, {36, 11}, {37, 11}, {38, 11},
 				{39, 10}, {40, 10}, {41, 9}, {42, 9}},
-			false},
+			false, []Pixel{}},
 		{line{Pixel{19, 20}, Pixel{42, 10}}, south,
 			[]Pixel{
 				{19, 20}, {20, 19}, {21, 19}, {22, 18}, {23, 18},
@@ -208,7 +182,7 @@ func TestAdjacentPoints(t *testing.T) {
 				{29, 15}, {30, 15}, {31, 15}, {32, 14}, {33, 14},
 				{34, 13}, {35, 13}, {36, 12}, {37, 12}, {38, 12},
 				{39, 11}, {40, 11}, {41, 10}, {42, 10}},
-			false},
+			false, []Pixel{}},
 		{line{Pixel{42, 10}, Pixel{19, 20}}, south,
 			[]Pixel{
 				{19, 20}, {20, 19}, {21, 19}, {22, 18}, {23, 18},
@@ -216,7 +190,7 @@ func TestAdjacentPoints(t *testing.T) {
 				{29, 15}, {30, 15}, {31, 15}, {32, 14}, {33, 14},
 				{34, 13}, {35, 13}, {36, 12}, {37, 12}, {38, 12},
 				{39, 11}, {40, 11}, {41, 10}, {42, 10}},
-			false},
+			false, []Pixel{}},
 		// positive slope 2
 		{line{Pixel{42, 50}, Pixel{65, 40}}, north,
 			[]Pixel{
@@ -225,7 +199,7 @@ func TestAdjacentPoints(t *testing.T) {
 				{52, 44}, {53, 44}, {54, 44}, {55, 43}, {56, 43},
 				{57, 42}, {58, 42}, {59, 41}, {60, 41}, {61, 41},
 				{62, 40}, {63, 40}, {64, 39}, {65, 39}},
-			false},
+			false, []Pixel{}},
 		{line{Pixel{65, 40}, Pixel{42, 50}}, north,
 			[]Pixel{
 				{42, 49}, {43, 48}, {44, 48}, {45, 47}, {46, 47},
@@ -233,7 +207,7 @@ func TestAdjacentPoints(t *testing.T) {
 				{52, 44}, {53, 44}, {54, 44}, {55, 43}, {56, 43},
 				{57, 42}, {58, 42}, {59, 41}, {60, 41}, {61, 41},
 				{62, 40}, {63, 40}, {64, 39}, {65, 39}},
-			false},
+			false, []Pixel{}},
 		{line{Pixel{42, 50}, Pixel{65, 40}}, south,
 			[]Pixel{
 				{42, 50}, {43, 49}, {44, 49}, {45, 48}, {46, 48},
@@ -241,7 +215,7 @@ func TestAdjacentPoints(t *testing.T) {
 				{52, 45}, {53, 45}, {54, 45}, {55, 44}, {56, 44},
 				{57, 43}, {58, 43}, {59, 42}, {60, 42}, {61, 42},
 				{62, 41}, {63, 41}, {64, 40}, {65, 40}},
-			false},
+			false, []Pixel{}},
 		{line{Pixel{65, 40}, Pixel{42, 50}}, south,
 			[]Pixel{
 				{42, 50}, {43, 49}, {44, 49}, {45, 48}, {46, 48},
@@ -249,7 +223,7 @@ func TestAdjacentPoints(t *testing.T) {
 				{52, 45}, {53, 45}, {54, 45}, {55, 44}, {56, 44},
 				{57, 43}, {58, 43}, {59, 42}, {60, 42}, {61, 42},
 				{62, 41}, {63, 41}, {64, 40}, {65, 40}},
-			false},
+			false, []Pixel{}},
 
 		// negative slope 1
 		{line{Pixel{42, 10}, Pixel{65, 20}}, north,
@@ -259,7 +233,7 @@ func TestAdjacentPoints(t *testing.T) {
 				{52, 14}, {53, 14}, {54, 14}, {55, 15}, {56, 15},
 				{57, 16}, {58, 16}, {59, 17}, {60, 17}, {61, 17},
 				{62, 18}, {63, 18}, {64, 19}, {65, 19}},
-			false},
+			false, []Pixel{}},
 		{line{Pixel{65, 20}, Pixel{42, 10}}, north,
 			[]Pixel{
 				{42, 9}, {43, 10}, {44, 10}, {45, 11}, {46, 11},
@@ -267,7 +241,7 @@ func TestAdjacentPoints(t *testing.T) {
 				{52, 14}, {53, 14}, {54, 14}, {55, 15}, {56, 15},
 				{57, 16}, {58, 16}, {59, 17}, {60, 17}, {61, 17},
 				{62, 18}, {63, 18}, {64, 19}, {65, 19}},
-			false},
+			false, []Pixel{}},
 		{line{Pixel{42, 10}, Pixel{65, 20}}, south,
 			[]Pixel{
 				{42, 10}, {43, 11}, {44, 11}, {45, 12}, {46, 12},
@@ -275,7 +249,7 @@ func TestAdjacentPoints(t *testing.T) {
 				{52, 15}, {53, 15}, {54, 15}, {55, 16}, {56, 16},
 				{57, 17}, {58, 17}, {59, 18}, {60, 18}, {61, 18},
 				{62, 19}, {63, 19}, {64, 20}, {65, 20}},
-			false},
+			false, []Pixel{}},
 		{line{Pixel{65, 20}, Pixel{42, 10}}, south,
 			[]Pixel{
 				{42, 10}, {43, 11}, {44, 11}, {45, 12}, {46, 12},
@@ -283,7 +257,7 @@ func TestAdjacentPoints(t *testing.T) {
 				{52, 15}, {53, 15}, {54, 15}, {55, 16}, {56, 16},
 				{57, 17}, {58, 17}, {59, 18}, {60, 18}, {61, 18},
 				{62, 19}, {63, 19}, {64, 20}, {65, 20}},
-			false},
+			false, []Pixel{}},
 		// negative slope 2
 		{line{Pixel{19, 40}, Pixel{42, 50}}, north,
 			[]Pixel{
@@ -292,7 +266,7 @@ func TestAdjacentPoints(t *testing.T) {
 				{29, 44}, {30, 44}, {31, 44}, {32, 45}, {33, 45},
 				{34, 46}, {35, 46}, {36, 47}, {37, 47}, {38, 47},
 				{39, 48}, {40, 48}, {41, 49}, {42, 49}},
-			false},
+			false, []Pixel{}},
 		{line{Pixel{42, 50}, Pixel{19, 40}}, north,
 			[]Pixel{
 				{19, 39}, {20, 40}, {21, 40}, {22, 41}, {23, 41},
@@ -300,7 +274,7 @@ func TestAdjacentPoints(t *testing.T) {
 				{29, 44}, {30, 44}, {31, 44}, {32, 45}, {33, 45},
 				{34, 46}, {35, 46}, {36, 47}, {37, 47}, {38, 47},
 				{39, 48}, {40, 48}, {41, 49}, {42, 49}},
-			false},
+			false, []Pixel{}},
 		{line{Pixel{19, 40}, Pixel{42, 50}}, south,
 			[]Pixel{
 				{19, 40}, {20, 41}, {21, 41}, {22, 42}, {23, 42},
@@ -308,7 +282,7 @@ func TestAdjacentPoints(t *testing.T) {
 				{29, 45}, {30, 45}, {31, 45}, {32, 46}, {33, 46},
 				{34, 47}, {35, 47}, {36, 48}, {37, 48}, {38, 48},
 				{39, 49}, {40, 49}, {41, 50}, {42, 50}},
-			false},
+			false, []Pixel{}},
 		{line{Pixel{42, 50}, Pixel{19, 40}}, south,
 			[]Pixel{
 				{19, 40}, {20, 41}, {21, 41}, {22, 42}, {23, 42},
@@ -316,22 +290,17 @@ func TestAdjacentPoints(t *testing.T) {
 				{29, 45}, {30, 45}, {31, 45}, {32, 46}, {33, 46},
 				{34, 47}, {35, 47}, {36, 48}, {37, 48}, {38, 48},
 				{39, 49}, {40, 49}, {41, 50}, {42, 50}},
-			false},
+			false, []Pixel{}},
 
-		{line{Pixel{}, Pixel{}}, noDirecton, []Pixel{}, true},
+		{line{Pixel{}, Pixel{}}, noDirecton, []Pixel{}, true, []Pixel{}},
 	}
+
 	for _, d := range directions() {
 		switch d {
 		case north, south, west, east:
 			continue
 		}
-		test := struct {
-			l          line
-			d          direction
-			wantPoints []Pixel
-			wantPanic  bool
-		}{
-			line{Pixel{}, Pixel{}}, d, []Pixel{}, true}
+		test := adjacentPointsTest{line{Pixel{}, Pixel{}}, d, []Pixel{}, true, []Pixel{}}
 		tests = append(tests, test)
 	}
 
@@ -347,8 +316,7 @@ func TestAdjacentPoints(t *testing.T) {
 					t.Errorf("do not want panic but did panic")
 				}
 			}()
-			wc := newWindowConfig()
-			points := tt.l.adjacentPoints(tt.d, &wc.bounds)
+			points := tt.l.adjacentPoints(tt.d, tt.trim...)
 			if !slices.Equal(points, tt.wantPoints) {
 				t.Errorf("points %s of line %s returned %#v. not equal to wanted points\n %#v", tt.d.string(), tt.l.log(), points, tt.wantPoints)
 			}
