@@ -4,6 +4,14 @@ package main
 
 import "fmt"
 
+type side int
+
+const (
+	sNone side = iota
+	sInclusive
+	sExclusive
+)
+
 // Hexagon configuration
 type hexConfig struct {
 	hexWidth  int
@@ -69,14 +77,89 @@ func (hc hexConfig) demotifHexLine(hs hexSide) line {
 	}
 }
 
+func (hc hexConfig) demotifLinePixels(hs hexSide, side side) []Pixel {
+	nw := Pixel{0, hc.hexHeight / 4}
+	n := Pixel{hc.hexWidth / 2, 0}
+	ne := Pixel{hc.hexWidth, hc.hexHeight / 4}
+	sw := Pixel{0, hc.hexHeight * 3 / 4}
+	s := Pixel{hc.hexWidth / 2, hc.hexHeight}
+	se := Pixel{hc.hexWidth, hc.hexHeight * 3 / 4}
+
+	var d direction
+	trim := []Pixel{}
+	switch {
+	case hs == hsWest && side == sInclusive:
+		d = east
+		trim = append(trim, sw)
+	case hs == hsNorthwest && side == sInclusive:
+		d = south
+		trim = append(trim, n)
+	case hs == hsNortheast && side == sInclusive:
+		d = south
+		trim = append(trim, ne)
+	case hs == hsEast && side == sInclusive:
+		d = west
+		trim = append(trim, Pixel{hc.hexWidth - 1, hc.hexHeight * 3 / 4})
+	case hs == hsSouthwest && side == sInclusive:
+		d = north
+		trim = append(trim, Pixel{hc.hexWidth / 2, hc.hexHeight - 1})
+	case hs == hsSoutheast && side == sInclusive:
+		d = north
+		trim = append(trim, Pixel{hc.hexWidth, hc.hexHeight*3/4 - 1})
+	case hs == hsWest && side == sExclusive:
+		d = west
+		trim = append(trim, Pixel{sw.X - 1, sw.Y})
+	case hs == hsNorthwest && side == sExclusive:
+		d = north
+		trim = append(trim, Pixel{(hc.hexWidth / 2) - 1, -1})
+		trim = append(trim, Pixel{hc.hexWidth / 2, -1})
+	case hs == hsNortheast && side == sExclusive:
+		d = north
+		trim = append(trim, Pixel{hc.hexWidth / 2, -1})
+		trim = append(trim, Pixel{hc.hexWidth, hc.hexHeight/4 - 1})
+	case hs == hsEast && side == sExclusive:
+		d = east
+		trim = append(trim, Pixel{hc.hexWidth, hc.hexHeight * 3 / 4})
+	case hs == hsSouthwest && side == sExclusive:
+		d = south
+		trim = append(trim, Pixel{hc.hexWidth / 2, hc.hexHeight})
+	case hs == hsSoutheast && side == sExclusive:
+		d = south
+		trim = append(trim, Pixel{hc.hexWidth, hc.hexHeight * 3 / 4})
+	default:
+		panic("demotifLinePixels unknown hex side and side combination")
+	}
+
+	var l line
+	switch hs {
+	case hsNone:
+		panic("demotifLinePixels: hex side none does not have pixels")
+	case hsWest:
+		l = line{nw, sw}
+	case hsNorthwest:
+		l = line{nw, n}
+	case hsNortheast:
+		l = line{n, ne}
+	case hsEast:
+		l = line{ne, se}
+	case hsSouthwest:
+		l = line{s, sw}
+	case hsSoutheast:
+		l = line{s, se}
+	default:
+		panic(fmt.Sprintf("demotifLinePixels: unknown hex side %s", hs.string()))
+	}
+	return l.adjacentPoints(d, trim...)
+}
+
 // Returns all pixels within the demotif hexagon.
 func (hc hexConfig) demotifHexPixels() []Pixel {
 	demotifPixels := []Pixel{}
 
-	nwPixels := hc.demotifHexLine(hsNorthwest).adjacentPoints(south)
-	nePixles := hc.demotifHexLine(hsNortheast).adjacentPoints(south)
-	swPixels := hc.demotifHexLine(hsSouthwest).adjacentPoints(north)
-	sePixels := hc.demotifHexLine(hsSoutheast).adjacentPoints(north)
+	nwPixels := hc.demotifLinePixels(hsNorthwest, sInclusive)
+	nePixles := hc.demotifLinePixels(hsNortheast, sInclusive)
+	swPixels := hc.demotifLinePixels(hsSouthwest, sInclusive)
+	sePixels := hc.demotifLinePixels(hsSoutheast, sInclusive)
 
 	northPixels := append(nwPixels, nePixles...)
 	southPixels := append(swPixels, sePixels...)
