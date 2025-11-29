@@ -46,37 +46,6 @@ func (hc hexConfig) conservativeHexRadius() int {
 	return max(hc.hexWidth, hc.hexHeight) / 2
 }
 
-// Base hexagon structure shared amongst all hexagons. The left side of
-// the hexagon is aligned with x=0. The top point of the hexagon is aligned with y=0.
-func (hc hexConfig) demotifHexLine(hs hexSide) line {
-	nw := Pixel{0, hc.hexHeight / 4}
-	n := Pixel{hc.hexWidth / 2, 0}
-	ne := Pixel{hc.hexWidth, hc.hexHeight / 4}
-
-	sw := Pixel{0, (hc.hexHeight * 3) / 4}
-	s := Pixel{hc.hexWidth / 2, hc.hexHeight}
-	se := Pixel{hc.hexWidth, (hc.hexHeight * 3) / 4}
-
-	switch hs {
-	case hsNone:
-		panic("demotifHexLine: hex side none does not have a demotif hex line")
-	case hsWest:
-		return line{nw, sw}
-	case hsNorthwest:
-		return line{n, nw}
-	case hsNortheast:
-		return line{n, ne}
-	case hsEast:
-		return line{ne, se}
-	case hsSouthwest:
-		return line{s, sw}
-	case hsSoutheast:
-		return line{s, se}
-	default:
-		panic(fmt.Sprintf("demotifHexLine: unknown hex side %s", hs.string()))
-	}
-}
-
 func (hc hexConfig) demotifLinePixels(hs hexSide, side side) []Pixel {
 	nw := Pixel{0, hc.hexHeight / 4}
 	n := Pixel{hc.hexWidth / 2, 0}

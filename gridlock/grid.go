@@ -122,32 +122,24 @@ func newGrid(hc hexConfig) grid {
 
 // Setup a look up table to help determine grid position
 func (g grid) setupHexTriangleLUT() []hexagonTriangle {
-	nw := g.demotifHexLine(hsNorthwest)
-	ne := g.demotifHexLine(hsNortheast)
-
-	xMin := min(nw.p1.X, nw.p2.X)
-	xMax := max(ne.p1.X, ne.p2.X)
-	yMin := min(nw.p1.Y, nw.p2.Y, ne.p1.Y, ne.p2.Y)
-	yMax := max(nw.p1.Y, nw.p2.Y, ne.p1.Y, ne.p2.Y)
-
 	switchTriangle := make(map[Pixel]hexagonTriangle)
-	for _, p := range nw.adjacentPoints(north) {
+	for _, p := range g.demotifLinePixels(hsNorthwest, sExclusive) {
 		switchTriangle[p] = leftHexTriangle
 	}
-	for _, p := range nw.adjacentPoints(south) {
+	for _, p := range g.demotifLinePixels(hsNorthwest, sInclusive) {
 		switchTriangle[p] = middleHexTriangle
 	}
-	for _, p := range ne.adjacentPoints(north) {
+	for _, p := range g.demotifLinePixels(hsNortheast, sInclusive) {
+		switchTriangle[p] = middleHexTriangle
+	}
+	for _, p := range g.demotifLinePixels(hsNortheast, sExclusive) {
 		switchTriangle[p] = rightHexTriangle
-	}
-	for _, p := range ne.adjacentPoints(south) {
-		switchTriangle[p] = middleHexTriangle
 	}
 
 	var lut []hexagonTriangle
-	for y := yMin; y < yMax; y++ {
+	for y := 0; y < (g.hexHeight / 4); y++ {
 		triangle := leftHexTriangle
-		for x := xMin; x < xMax; x++ {
+		for x := 0; x < g.hexWidth; x++ {
 			p := Pixel{x, y}
 			if t, ok := switchTriangle[p]; ok {
 				triangle = t
@@ -171,9 +163,14 @@ func (g grid) setupHexTriangleLUT() []hexagonTriangle {
 			rightTriangleCount++
 		}
 	}
+	logger.log(infoLevel, setupLogic, "setupHexTriangleLUT",
+		slog.Int("leftHexTriangleCount", leftTriangleCount),
+		slog.Int("MiddleHexTriangleCount", middleTriangleCount),
+		slog.Int("RightHexTriangleCount", rightTriangleCount),
+	)
 	if leftTriangleCount+rightTriangleCount != middleTriangleCount {
-		panic("stupHexTriangleLUT: This may be fine but I added this conservative protection " +
-			"since it may help debug future issues. Verify this isn't a bug.")
+		panic("setupHexTriangleLUT: invalid hex triangle counts. " +
+			"This panic might be a false positive if hex width isn't 46 and hex height isn't 40")
 	}
 	return lut
 }
