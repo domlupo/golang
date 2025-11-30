@@ -684,6 +684,10 @@ Determine if I should clarify file names
 
 ## Game Design Questions
 
+- I wonder if you should be able to see your opponents upgrades or if it should be hidden. If it is the same tech 
+  tree there could be a way to track what the player picked. It add an element of tracking to the game. I also
+  can add an upgrade or unit where you can see more of your opponenets upgrades. It could have a nice UI. There
+  can also be an upgrade to see further in the tech tree or see where your opponent is at.
 - I like the look of mosaics and mosaic the word sounds cool. The hexagon grid pattern reminds me
   of mosaics a lot. Should I incorporate this in this game or a future game? Should I use mosaics to
   inspire art direction over other games like catan, risk and gnorp analogue? Maybe polish is
