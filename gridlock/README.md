@@ -489,6 +489,11 @@ Determine if I should clarify file names
 
 ### Punted Checkpoints
 
+- Campaigns could be added. Non random maps with specific objectives and setups.
+
+- A map maker could be added where placers can create specific setups. And tweak game values.
+  - If tiles ever had different production values this would help add some variety.
+
 - I am using multiple grids instead of a single in grid in application memory. This is a potential optimization
   in the future. Right now it is too low hanging fruit and but should be revisited. Right now I prefer the
   more idiomatic code with better readability.
