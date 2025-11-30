@@ -125,6 +125,9 @@ Determine if I should clarify file names
     - semi active radar homing
     - active radar homing
 
+- Whenever I optimized line of sight or intersection checks i will need to add visual debugging to debugger.go
+  - Prior intersect and line of sight work was complex. I need it to verify issues.
+
 - Implement fighter and bomber
   - scoped out work
     - Add fighter signal jamming
