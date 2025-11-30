@@ -48,6 +48,7 @@ type Game struct {
 	currentSelectedX           float32
 	currentSelectedY           float32
 	gameState                  *state
+	drawer                     drawer
 	debugger                   debugger
 	developerMode              bool
 	developerToggles           map[string]*toggle
@@ -118,6 +119,7 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 
 	g.gameState = newState(nodes, obstacles, hexagons, oLUT, nLUT, g.drawConfig.grid, g.developerMode)
 	g.debugger = newDebugger(g.gameState, g.developerToggleCooldown)
+	g.drawer = newDrawer(g.gameState, &g.debugger)
 	g.computers = newComputers(g.gameState)
 }
 
@@ -272,10 +274,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.drawConfig.screen = screen
 	}
 
-	screen.Fill(g.drawConfig.backgroundColor)
-
-	g.debugger.draw(*g.drawConfig)
-	g.gameState.draw(*g.drawConfig)
+	g.drawer.draw(screen, *g.drawConfig)
 
 	if g.leftMouseHeld {
 		drawUnfilledBoxFloat32(
