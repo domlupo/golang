@@ -40,46 +40,17 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-Determine if I should clarify file names
-  - It is weird that I have some singular and some plural. I think I should make all files singular.
-  - def should be single
-    - debugger
-    - file handler
-    - grid
-    - logger
-    - main
-    - misc
-    - partitioner
-    - state
-  - less sure if singular or plural
-    - computer
-    - draws
-    - hexagon
-    - layer
-    - node
-    - obstacle
-    - positions
-    - reactions
-    - setups
-    - toggle
-    - unit
-    - unitConfigs
-
-- Determine if ordance on air units should be used to indicate ready to fire. e.g. a unit in process of reloading would have one missing? 
-  - This might look bad with several units
-  - It might be confusing because it seems like units are generating ordnance rather than picking it up from a node.
-
-- Optimize state.partitions for infantry
-  - There are several ways to optimize this.
-  - There are also several ways to refactor grid.partitions
-    - Might be best to have separate methods for infantry and all other units.
-  - Braindump
-    - Circle detect a hexagon at middle point.
-      - If collides with this circleo only return thi hexagon.
-      - If it is outside this then what? Need to think through more.
-    - Can circle detect infatry radius multiple by 2 then check collisions
-      for circle hexagon?
-    - There are others. Think about it a bit more before implementing.
+- Research every play testing MVP units in depth. Ensure no unrealistic work planned.
+  - relative speed between units 
+    - ballistic missiles are faster than cruise missiles
+  - unrealistic unit behaviors
+    - fighters used to shoot down gravity bombs which isn't realistic
+  - what missiles should nodes fire?
+    - cruise
+    - ballistic
+    - heat seeking
+    - semi active radar homing
+    - active radar homing
 
 - Chaff follow ups
   - Think through chaff behavior more:
@@ -113,19 +84,36 @@ Determine if I should clarify file names
 
 - Debug hangs. It seems to occur when fighter and bomber collide in air.
 
-- Research every play testing MVP units in depth. Ensure no unrealistic work planned.
-  - relative speed between units 
-    - ballistic missiles are faster than cruise missiles
-  - unrealistic unit behaviors
-    - fighters used to shoot down gravity bombs which isn't realistic
-  - what missiles should nodes fire?
-    - cruise
-    - ballistic
-    - heat seeking
-    - semi active radar homing
-    - active radar homing
+Determine if I should clarify file names
+  - It is weird that I have some singular and some plural. I think I should make all files singular.
+  - def should be single
+    - debugger
+    - file handler
+    - grid
+    - logger
+    - main
+    - misc
+    - partitioner
+    - state
+  - less sure if singular or plural
+    - computer
+    - draws
+    - hexagon
+    - layer
+    - node
+    - obstacle
+    - positions
+    - reactions
+    - setups
+    - toggle
+    - unit
+    - unitConfigs
 
-- Whenever I optimized line of sight or intersection checks i will need to add visual debugging to debugger.go
+- Determine if ordance on air units should be used to indicate ready to fire. e.g. a unit in process of reloading would have one missing? 
+  - This might look bad with several units
+  - It might be confusing because it seems like units are generating ordnance rather than picking it up from a node.
+
+- Whenever I optimize line of sight or intersection checks i will need to add visual debugging to debugger.go
   - Prior intersect and line of sight work was complex. I need it to verify issues.
 
 - Implement fighter and bomber
@@ -349,15 +337,6 @@ Determine if I should clarify file names
   - How to avoid this?
   - How to simplify this?
   - How to make this CPU performant?
-
-- Optimize spatial partition for collision and nearestUnitWithinVision checks
-  - Add a hexagon LUT where pixel position returns a sorted slice of relative grid positions.
-    The slice is sorted by chebyshev distance from the pixel pos (prob need a determinate tie break)
-    At runtime, store the largest unit radius in each hex partition layer in hexagon.go
-    At runtime, use the relative grid pos to check if the hex exists and the largest unit radius to
-    check if the units within the hex should be checked. An even further possible optimization that is 
-    probably unneeded would be keeping the unit linked list sorted by unit radius. This could be worse
-    if sorted the linked list takes more CPU than the checking more units. 
 
  - Fix unit selection for single node and multi node. Right now air unit are ignored.
    - Need to add an iter to hexagon which iters through all layers
