@@ -17,7 +17,6 @@ import (
 
 // Debugger Configurations
 type debuggerConfig struct {
-	debugHexGrid                  bool
 	debugNodes                    bool
 	debugNodeLUT                  bool
 	debugObstacleLUT              bool
@@ -25,9 +24,6 @@ type debuggerConfig struct {
 	debugPOneTargets              bool
 	debugPTwoTargets              bool
 	debugHexagons                 bool
-	hexGridLineWidth              int
-	hexGridIndexCount             int
-	hexGridColor                  color.Color
 	visibilityGridLineWidth       int
 	visibilityGridPointRadius     int
 	visibilityGridHighlightOffset int
@@ -43,10 +39,6 @@ type debuggerConfig struct {
 
 func newDebuggerConfig() *debuggerConfig {
 	dc := debuggerConfig{
-		debugHexGrid:                  true,
-		hexGridLineWidth:              1,
-		hexGridIndexCount:             32,
-		hexGridColor:                  color.White,
 		visibilityGridLineWidth:       1,
 		visibilityGridPointRadius:     3,
 		visibilityGridHighlightOffset: 3,
@@ -130,13 +122,11 @@ func (d *debugger) setupToggles(cooldown time.Duration) {
 		func() {
 			var toggle = !(d.debugPOneTargets &&
 				d.debugPTwoTargets &&
-				d.debugHexGrid &&
 				d.debugVisibilityGrids &&
 				d.debugHexagons &&
 				d.debugNodes)
 			d.debugPOneTargets = toggle
 			d.debugPTwoTargets = toggle
-			d.debugHexGrid = toggle
 			d.debugVisibilityGrids = toggle
 			d.debugHexagons = toggle
 			d.debugNodes = toggle
@@ -149,10 +139,6 @@ func (d *debugger) setupToggles(cooldown time.Duration) {
 	toggles["debugRedTargets"] = newToggle(
 		ebiten.KeyR,
 		func() { d.debugPTwoTargets = !d.debugPTwoTargets },
-		cooldown)
-	toggles["debugHexGrid"] = newToggle(
-		ebiten.KeyG,
-		func() { d.debugHexGrid = !d.debugHexGrid },
 		cooldown)
 	toggles["debugVisibilityGrids"] = newToggle(
 		ebiten.KeyV,
@@ -302,10 +288,6 @@ func (d *debugger) updateHeatmapPercent(delta int) {
 }
 
 func (d debugger) draw(c drawConfig) {
-	if d.debugHexGrid {
-		drawHexGrid(c, *d.debuggerConfig, d.grid)
-	}
-
 	if d.debugObstacleLUT {
 		d.obstacleLUTUnwalkable.draw(c, *d.debuggerConfig, d.heatmapPercent)
 		d.obstacleLUTDistance.draw(c, *d.debuggerConfig, d.heatmapPercent)
@@ -513,94 +495,6 @@ func (u *unit) drawDebug(c drawConfig, dC debuggerConfig) {
 			if j == len(dC.roygbivColors) {
 				j = 0
 			}
-		}
-	}
-}
-
-// This is likely to be become apart of game and then it should be removed from debugger.go
-func drawHexGrid(c drawConfig, dC debuggerConfig, g grid) {
-	// This is the pattern drawn.
-	//    / \
-	//   |
-	//   |
-	//
-	// when repeated, it forms a hexagonal grid.
-	//    / \ / \
-	//   |   |
-	//   |   |
-	//  / \ / \ / \
-	// |   |   |
-	// |   |   |
-	//    / \ / \
-	//   |   |
-	//   |   |
-
-	for i := 0; i < g.xIndexMax; i++ {
-		for j := 0; j < g.yIndexMax; j++ {
-			if j%2 == 0 && i == g.xIndexMax-1 {
-				continue
-			}
-
-			p := GridPosition{i, j}
-
-			n := g.getPixelOutbounds(p, hpNorth)
-			nX := float32(n.X) * c.windowMultiplier
-			nY := float32(n.Y) * c.windowMultiplier
-
-			nw := g.getPixelOutbounds(p, hpNorthwest)
-			nwX := float32(nw.X) * c.windowMultiplier
-			nwY := float32(nw.Y) * c.windowMultiplier
-
-			ne := g.getPixelOutbounds(p, hpNortheast)
-			neX := float32(ne.X+1) * c.windowMultiplier
-			neY := float32(ne.Y) * c.windowMultiplier
-
-			sw := g.getPixelOutbounds(p, hpSouthwest)
-			swX := float32(sw.X) * c.windowMultiplier
-			swY := float32(sw.Y+1) * c.windowMultiplier
-
-			// draw west side
-			//    / \
-			//  *|*
-			//  *|*
-			vector.StrokeLine(
-				c.screen,
-				nwX,
-				nwY,
-				swX,
-				swY,
-				float32(dC.hexGridLineWidth)*c.windowMultiplier,
-				dC.hexGridColor,
-				false)
-
-			// draw northwest
-			//   */*\
-			//   |
-			//   |
-			vector.StrokeLine(
-				c.screen,
-				nX,
-				nY,
-				nwX,
-				nwY,
-				float32(dC.hexGridLineWidth)*c.windowMultiplier,
-				dC.hexGridColor,
-				false)
-
-			// draw northeast
-			//    /*\*
-			//   |
-			//   |
-			vector.StrokeLine(
-				c.screen,
-				nX,
-				nY,
-				neX,
-				neY,
-				float32(dC.hexGridLineWidth)*c.windowMultiplier,
-				dC.hexGridColor,
-				false)
-
 		}
 	}
 }

@@ -31,6 +31,8 @@ type drawConfig struct {
 	targetNodeLineWidth           int
 	hexLineWidth                  int
 	pixelSize                     int
+	hexGridLineWidth              int
+	hexGridIndexCount             int
 	backgroundColor               color.RGBA
 	highlightColor                color.RGBA
 	unitHealthColor               color.RGBA
@@ -42,6 +44,7 @@ type drawConfig struct {
 	pTwoUnitColor                 color.RGBA
 	pTwoInfantryColor             color.RGBA
 	pNeutralNodeTargetColor       color.RGBA
+	hexGridColor                  color.Color
 	drawTriangleDefaultImage      *ebiten.Image
 	pOneNodeColor                 drawTriangleColor
 	pTwoNodeColor                 drawTriangleColor
@@ -85,6 +88,8 @@ func newDrawConfig() *drawConfig {
 		targetNodeLineWidth:           2,
 		hexLineWidth:                  2,
 		pixelSize:                     1,
+		hexGridLineWidth:              1,
+		hexGridIndexCount:             32,
 		backgroundColor:               color.RGBA{200, 200, 200, 255},
 		highlightColor:                highlightColor,
 		unitHealthColor:               highlightColor,
@@ -96,6 +101,7 @@ func newDrawConfig() *drawConfig {
 		pTwoUnitColor:                 color.RGBA{255, 0, 0, 100},
 		pTwoInfantryColor:             color.RGBA{255, 0, 0, 50},
 		pNeutralNodeTargetColor:       color.RGBA{100, 60, 100, 200},
+		hexGridColor:                  color.White,
 		drawTriangleDefaultImage:      drawTriangleDefaultImage,
 		pOneNodeColor:                 drawTriangleColor{red: 0.5, blue: 1, green: 0.5, alpha: 0.5},
 		pTwoNodeColor:                 drawTriangleColor{red: 1, blue: 0.5, green: 0.5, alpha: 0.5},

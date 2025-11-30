@@ -1107,30 +1107,3 @@ func (s *state) produceUnits() {
 		}
 	}
 }
-
-func (s *state) draw(dc drawConfig) {
-	for _, n := range s.nodes {
-		n.drawNode(dc, s.grid)
-	}
-	for _, o := range s.obstacles {
-		o.drawObstacle(dc, s.grid)
-	}
-	for _, u := range s.landUnits {
-		u.draw(dc, u.selected)
-	}
-	for _, u := range s.chaffUnits {
-		u.draw(dc, u.selected)
-	}
-	for _, u := range s.bombGravityUnits {
-		u.draw(dc, u.selected)
-	}
-	for _, u := range s.ordanceUnits {
-		u.draw(dc, u.selected)
-	}
-	for _, u := range s.aircraftUnits {
-		u.draw(dc, u.selected)
-	}
-	for _, u := range s.ballisticUnits {
-		u.draw(dc, u.selected)
-	}
-}
