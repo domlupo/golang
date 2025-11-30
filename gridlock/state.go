@@ -1110,10 +1110,10 @@ func (s *state) produceUnits() {
 
 func (s *state) draw(dc drawConfig) {
 	for _, n := range s.nodes {
-		n.drawNode(dc)
+		n.drawNode(dc, s.grid)
 	}
 	for _, o := range s.obstacles {
-		o.drawObstacle(dc)
+		o.drawObstacle(dc, s.grid)
 	}
 	for _, u := range s.landUnits {
 		u.draw(dc, u.selected)

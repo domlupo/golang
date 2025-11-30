@@ -555,11 +555,11 @@ func (op *obstaclePoint) connectCwTo(other *obstaclePoint) {
 	other.ccwDistance = distance
 }
 
-func (o obstacle) drawObstacle(dc drawConfig) {
+func (o obstacle) drawObstacle(dc drawConfig, g grid) {
 	switch o.kind {
 	case lowMountain:
-		drawHex(dc, o.gridPos, drawTriangleColor{red: 0.2, blue: 0.2, green: 0.2, alpha: 0.8}, false)
+		drawHex(dc, g, o.gridPos, drawTriangleColor{red: 0.2, blue: 0.2, green: 0.2, alpha: 0.8}, false)
 	case highMountain:
-		drawHex(dc, o.gridPos, drawTriangleColor{red: 0.0, blue: 0.0, green: 0.0, alpha: 0.8}, false)
+		drawHex(dc, g, o.gridPos, drawTriangleColor{red: 0.0, blue: 0.0, green: 0.0, alpha: 0.8}, false)
 	}
 }

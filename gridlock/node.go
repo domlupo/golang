@@ -312,7 +312,7 @@ func (nodes nodes) setupControl(g grid, hexagons hexagons, oLUT obstacleLUT) {
 	}
 }
 
-func (n *node) drawNode(dc drawConfig) {
+func (n *node) drawNode(dc drawConfig, g grid) {
 	var drawTriangleColor drawTriangleColor
 	switch n.player {
 	case pOne:
@@ -324,12 +324,12 @@ func (n *node) drawNode(dc drawConfig) {
 	default:
 		panic("unknown player cannot drawNode")
 	}
-	drawHex(dc, n.gridPos, drawTriangleColor, n.multiSelect)
+	drawHex(dc, g, n.gridPos, drawTriangleColor, n.multiSelect)
 
 	if n.currentHealth != n.maxHealth {
-		c := dc.grid.getPixelOutbounds(n.gridPos, hpCenter)
-		ne := dc.grid.getPixelOutbounds(n.gridPos, hpNortheast)
-		nw := dc.grid.getPixelOutbounds(n.gridPos, hpNorthwest)
+		c := g.getPixelOutbounds(n.gridPos, hpCenter)
+		ne := g.getPixelOutbounds(n.gridPos, hpNortheast)
+		nw := g.getPixelOutbounds(n.gridPos, hpNorthwest)
 		width := ne.X - nw.X
 		healthLineLength := (float32(n.currentHealth) / float32(n.maxHealth)) * float32(width)
 
@@ -347,14 +347,14 @@ func (n *node) drawNode(dc drawConfig) {
 	if n.singleSelect {
 		for _, h := range n.control {
 			if !n.gridPos.equals(h.gridPos) {
-				drawHex(dc, h.gridPos, dc.nodeControlColor, false)
+				drawHex(dc, g, h.gridPos, dc.nodeControlColor, false)
 			}
 		}
 
 	}
 }
 
-func (n *node) drawTargets(dc drawConfig, drawPOneTargets bool, drawPTwoTargets bool) {
+func (n *node) drawTargets(dc drawConfig, g grid, drawPOneTargets bool, drawPTwoTargets bool) {
 	var color color.Color
 	switch n.player {
 	case pOne:
@@ -368,7 +368,7 @@ func (n *node) drawTargets(dc drawConfig, drawPOneTargets bool, drawPTwoTargets 
 	}
 
 	if !n.isZero() && ((n.player == pOne && drawPOneTargets) || (n.player == pTwo && drawPTwoTargets)) {
-		var center, ok = dc.grid.getPixel(n.gridPos, hpCenter)
+		var center, ok = g.getPixel(n.gridPos, hpCenter)
 		if !ok {
 			panic("could not get pixel pos for node draw targets")
 		}

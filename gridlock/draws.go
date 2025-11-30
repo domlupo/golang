@@ -20,7 +20,6 @@ type drawTriangleColor struct {
 // Drawing Configurations for game components which are shown to player
 type drawConfig struct {
 	screen *ebiten.Image
-	grid   grid
 	// windowMultiplier must only be used for drawing images and windows.
 	// Never use for game logic. float32 rather than idiomatic float64
 	// because the Ebiten draw APIs I use are often float32 over float64.
@@ -64,7 +63,6 @@ func newDrawConfig() *drawConfig {
 	highlightColor := color.RGBA{70, 255, 0, 200}
 	// For 1280p * 720p resolution, a hexagon height of 40p is ideally 80/sqrt(3) wide.
 	// 80/sqrt(3) is 46.188 which is approximately 46p.
-	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
 	pngBomer, _, bomberErr := ebitenutil.NewImageFromFile("assets/bomber.png")
 	if bomberErr != nil {
 		panic("newDrawConfig: cannot load bomber png")
@@ -80,7 +78,6 @@ func newDrawConfig() *drawConfig {
 	dc := drawConfig{
 		screen:                        nil,
 		windowMultiplier:              2.5,
-		grid:                          newGrid(hc),
 		defaultLineWidth:              1,
 		selectectionBoxLineWidth:      1,
 		missileExplodeRadiusLineWidth: 1,
@@ -170,14 +167,14 @@ func drawUnfilledBoxInt(dc drawConfig, color color.Color, initialX int, initialY
 	drawUnfilledBoxFloat32(dc, color, float32(initialX), float32(initialY), float32(finalX), float32(finalY))
 }
 
-func drawHex(dc drawConfig, p GridPosition, color drawTriangleColor, selected bool) {
-	center := dc.grid.getPixelOutbounds(p, hpCenter)
-	north := dc.grid.getPixelOutbounds(p, hpNorth)
-	northeast := dc.grid.getPixelOutbounds(p, hpNortheast)
-	southeast := dc.grid.getPixelOutbounds(p, hpSoutheast)
-	southwest := dc.grid.getPixelOutbounds(p, hpSouthwest)
-	south := dc.grid.getPixelOutbounds(p, hpSouth)
-	northwest := dc.grid.getPixelOutbounds(p, hpNorthwest)
+func drawHex(dc drawConfig, g grid, p GridPosition, color drawTriangleColor, selected bool) {
+	center := g.getPixelOutbounds(p, hpCenter)
+	north := g.getPixelOutbounds(p, hpNorth)
+	northeast := g.getPixelOutbounds(p, hpNortheast)
+	southeast := g.getPixelOutbounds(p, hpSoutheast)
+	southwest := g.getPixelOutbounds(p, hpSouthwest)
+	south := g.getPixelOutbounds(p, hpSouth)
+	northwest := g.getPixelOutbounds(p, hpNorthwest)
 
 	// The one pixel offsets for inclusive or exclusive hex points are handled at the game logic layer.
 	// The window multiplier offsets are handled here since window multiplier is a draw concept.
@@ -203,34 +200,34 @@ func drawHex(dc drawConfig, p GridPosition, color drawTriangleColor, selected bo
 	dc.screen.DrawTriangles(vertices, indices, dc.drawTriangleDefaultImage, &ebiten.DrawTrianglesOptions{})
 
 	if selected {
-		drawHexHighlight(dc, p)
+		drawHexHighlight(dc, g, p)
 	}
 }
 
-func drawHexHighlight(dc drawConfig, p GridPosition) {
+func drawHexHighlight(dc drawConfig, g grid, p GridPosition) {
 	lineWidth := float32(dc.hexLineWidth) * dc.windowMultiplier
 
-	north := dc.grid.getPixelOutbounds(p, hpNorth)
+	north := g.getPixelOutbounds(p, hpNorth)
 	nX := float32(north.X) * dc.windowMultiplier
 	nY := float32(north.Y) * dc.windowMultiplier
 
-	nw := dc.grid.getPixelOutbounds(p, hpNorthwest)
+	nw := g.getPixelOutbounds(p, hpNorthwest)
 	nwX := float32(nw.X) * dc.windowMultiplier
 	nwY := float32(nw.Y) * dc.windowMultiplier
 
-	ne := dc.grid.getPixelOutbounds(p, hpNortheast)
+	ne := g.getPixelOutbounds(p, hpNortheast)
 	neX := float32(ne.X+1) * dc.windowMultiplier
 	neY := float32(ne.Y) * dc.windowMultiplier
 
-	sw := dc.grid.getPixelOutbounds(p, hpSouthwest)
+	sw := g.getPixelOutbounds(p, hpSouthwest)
 	swX := float32(sw.X) * dc.windowMultiplier
 	swY := float32(sw.Y+1) * dc.windowMultiplier
 
-	se := dc.grid.getPixelOutbounds(p, hpSoutheast)
+	se := g.getPixelOutbounds(p, hpSoutheast)
 	seX := float32(se.X+1) * dc.windowMultiplier
 	seY := float32(se.Y+1) * dc.windowMultiplier
 
-	s := dc.grid.getPixelOutbounds(p, hpSouth)
+	s := g.getPixelOutbounds(p, hpSouth)
 	sX := float32(s.X) * dc.windowMultiplier
 	sY := float32(s.Y+1) * dc.windowMultiplier
 

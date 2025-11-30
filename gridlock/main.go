@@ -98,13 +98,12 @@ func newGame() Game {
 
 func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify bool) {
 	// TODO: Need to restart timers, etc
-
-	// TODO: Determine if grid being passed here is correct. It might be best to have both lower level grid
-	// for positions and a higher level struct for the grid components
 	start := time.Now()
-	hexagons := setupHexagons(g.drawConfig.grid)
-	obstacles, oLUT := setupObstacles(obstacleSetup, g.drawConfig.grid)
-	nodes, nLUT := setupNodes(nodeSetup, g.drawConfig.grid, g.initialNodeHealth, hexagons, oLUT)
+	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
+	grid := newGrid(hc)
+	hexagons := setupHexagons(grid)
+	obstacles, oLUT := setupObstacles(obstacleSetup, grid)
+	nodes, nLUT := setupNodes(nodeSetup, grid, g.initialNodeHealth, hexagons, oLUT)
 	logger.log(infoLevel, setupLogic, fmt.Sprintf("Setup required %0.2f seconds", float64(time.Since(start).Seconds())))
 
 	if verify {
@@ -117,7 +116,7 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 		}
 	}
 
-	g.gameState = newState(nodes, obstacles, hexagons, oLUT, nLUT, g.drawConfig.grid, g.developerMode)
+	g.gameState = newState(nodes, obstacles, hexagons, oLUT, nLUT, grid, g.developerMode)
 	g.debugger = newDebugger(g.gameState, g.developerToggleCooldown)
 	g.drawer = newDrawer(g.gameState, &g.debugger)
 	g.computers = newComputers(g.gameState)

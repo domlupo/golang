@@ -303,7 +303,7 @@ func (d *debugger) updateHeatmapPercent(delta int) {
 
 func (d debugger) draw(c drawConfig) {
 	if d.debugHexGrid {
-		drawHexGrid(c, *d.debuggerConfig)
+		drawHexGrid(c, *d.debuggerConfig, d.grid)
 	}
 
 	if d.debugObstacleLUT {
@@ -320,7 +320,7 @@ func (d debugger) draw(c drawConfig) {
 		d.nodeLUTDistance.draw(c, *d.debuggerConfig, d.heatmapPercent)
 
 		for _, p := range d.nLUT[d.pixel].NearestNodes {
-			drawHexHighlight(c, p)
+			drawHexHighlight(c, d.grid, p)
 		}
 	}
 
@@ -329,7 +329,7 @@ func (d debugger) draw(c drawConfig) {
 	}
 
 	for _, n := range d.nodes {
-		n.drawTargets(c, d.debugPOneTargets, d.debugPTwoTargets)
+		n.drawTargets(c, d.grid, d.debugPOneTargets, d.debugPTwoTargets)
 	}
 
 	for u := range d.units() {
@@ -342,14 +342,14 @@ func (d debugger) draw(c drawConfig) {
 			logger.log(infoLevel, devTool, "debugHexagons", d.partitionAnalysis.log())
 			partitions := d.partitions(*u, d.partitionAnalysis)
 			for _, h := range partitions {
-				drawHexHighlight(c, h.gridPos)
+				drawHexHighlight(c, d.grid, h.gridPos)
 			}
 		} else {
 			for _, h := range d.hexagons {
 				center := d.grid.getPixelOutbounds(h.gridPos, hpCenter)
 				center.draw(c, *d.debuggerConfig, color.White, false)
 				if h.selected {
-					drawHexHighlight(c, h.gridPos)
+					drawHexHighlight(c, d.grid, h.gridPos)
 				}
 			}
 		}
@@ -518,7 +518,7 @@ func (u *unit) drawDebug(c drawConfig, dC debuggerConfig) {
 }
 
 // This is likely to be become apart of game and then it should be removed from debugger.go
-func drawHexGrid(c drawConfig, dC debuggerConfig) {
+func drawHexGrid(c drawConfig, dC debuggerConfig, g grid) {
 	// This is the pattern drawn.
 	//    / \
 	//   |
@@ -535,27 +535,27 @@ func drawHexGrid(c drawConfig, dC debuggerConfig) {
 	//   |   |
 	//   |   |
 
-	for i := 0; i < c.grid.xIndexMax; i++ {
-		for j := 0; j < c.grid.yIndexMax; j++ {
-			if j%2 == 0 && i == c.grid.xIndexMax-1 {
+	for i := 0; i < g.xIndexMax; i++ {
+		for j := 0; j < g.yIndexMax; j++ {
+			if j%2 == 0 && i == g.xIndexMax-1 {
 				continue
 			}
 
 			p := GridPosition{i, j}
 
-			n := c.grid.getPixelOutbounds(p, hpNorth)
+			n := g.getPixelOutbounds(p, hpNorth)
 			nX := float32(n.X) * c.windowMultiplier
 			nY := float32(n.Y) * c.windowMultiplier
 
-			nw := c.grid.getPixelOutbounds(p, hpNorthwest)
+			nw := g.getPixelOutbounds(p, hpNorthwest)
 			nwX := float32(nw.X) * c.windowMultiplier
 			nwY := float32(nw.Y) * c.windowMultiplier
 
-			ne := c.grid.getPixelOutbounds(p, hpNortheast)
+			ne := g.getPixelOutbounds(p, hpNortheast)
 			neX := float32(ne.X+1) * c.windowMultiplier
 			neY := float32(ne.Y) * c.windowMultiplier
 
-			sw := c.grid.getPixelOutbounds(p, hpSouthwest)
+			sw := g.getPixelOutbounds(p, hpSouthwest)
 			swX := float32(sw.X) * c.windowMultiplier
 			swY := float32(sw.Y+1) * c.windowMultiplier
 
