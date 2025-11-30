@@ -112,7 +112,7 @@ var infantryConfig = unitConfig{
 	radius:            3,
 	maxHealth:         50,
 	attack:            1,
-	vision:            30,
+	vision:            17, // This must be 20 - infantry.radius until partitioner.go supports higher order hexagon LUT
 	reach:             5,
 	produceLayer:      lLand,
 	targetLayers:      []layer{lLand},

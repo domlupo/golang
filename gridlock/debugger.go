@@ -55,7 +55,7 @@ func newDebuggerConfig() *debuggerConfig {
 		heatmapG:                      0,
 		heatmapB:                      0,
 		heatmapAlphaMaxLimit:          200,
-		partitionAnalysis:             paCollision,
+		partitionAnalysis:             paVision,
 		heatmapPercent:                maxPercent,
 		roygbivColors: []color.RGBA{
 			{200, 0, 0, 255},

@@ -51,6 +51,7 @@ type partitioner struct {
 	grid                 grid
 	hexagons             hexagons
 	infantryCollisionLUT partitionLUT
+	infantryVisionLUT    partitionLUT
 }
 
 func newPartitioner(g grid, h hexagons) partitioner {
@@ -59,6 +60,7 @@ func newPartitioner(g grid, h hexagons) partitioner {
 		hexagons: h,
 	}
 	p.infantryCollisionLUT = p.setupPartitionLUT(infantryConfig, infantryConfig, paCollision)
+	p.infantryVisionLUT = p.setupPartitionLUT(infantryConfig, infantryConfig, paVision)
 	return p
 }
 
@@ -66,38 +68,56 @@ func (part partitioner) partitions(u unit, pa partitionAnalysis, buffer int) par
 	var positions []GridPosition
 	radius := buffer
 	switch {
-	case u.name == infantry && pa == paCollision:
-		demotif, demotifOk := part.grid.demotif(u.Pixel)
-		if !demotifOk {
-			panic(fmt.Sprintf("partitions: could not demotif pixel %s", u.Pixel.log()))
-		}
-		hexSides := part.infantryCollisionLUT[demotif]
-		gp, gpOk := part.grid.getGridPos(u.Pixel)
-		positions = append(positions, gp)
-		if !gpOk {
-			panic(fmt.Sprintf("partitions: could not find grid position for pixel %s", u.Pixel.log()))
-		}
-		for _, hs := range hexSides {
-			if gp, ok := part.grid.adjacent(gp, hs); ok {
-				positions = append(positions, gp)
-			}
-		}
+	case u.name == infantry && pa != paSteer:
+		return part.lookUpPartitions(u, pa)
 	case pa == paCollision:
 		radius += u.radius
-		positions = part.defaultPartitions(u.Pixel, radius)
 	case pa == paVision:
 		radius += u.vision
-		positions = part.defaultPartitions(u.Pixel, radius)
 	case pa == paSteer:
 		radius += 0
-		positions = part.defaultPartitions(u.Pixel, radius)
 	default:
 		panic(fmt.Sprintf("partitions: unknown partitions analysis %s", pa.string()))
 	}
+
 	if pa == paSteer && u.name != infantry {
 		panic(fmt.Sprintf("partitions: cannot get partitions for unit %s, analysis %s and buffer %d", u.name, pa.string(), buffer))
 	}
 
+	positions = part.defaultPartitions(u.Pixel, radius)
+	var ps partitions
+	for _, p := range positions {
+		ps = append(ps, part.hexagons[p])
+	}
+	return ps
+}
+
+func (part partitioner) lookUpPartitions(u unit, pa partitionAnalysis) partitions {
+	var lut partitionLUT
+	switch pa {
+	case paCollision:
+		lut = part.infantryCollisionLUT
+	case paVision:
+		lut = part.infantryVisionLUT
+	default:
+		panic(fmt.Sprintf("lookUpPartitions: unknown partition analysis %s", pa.string()))
+	}
+
+	demotif, demotifOk := part.grid.demotif(u.Pixel)
+	if !demotifOk {
+		panic(fmt.Sprintf("partitions: could not demotif pixel %s", u.Pixel.log()))
+	}
+	hexSides := lut[demotif]
+	gp, gpOk := part.grid.getGridPos(u.Pixel)
+	positions := []GridPosition{gp}
+	if !gpOk {
+		panic(fmt.Sprintf("partitions: could not find grid position for pixel %s", u.Pixel.log()))
+	}
+	for _, hs := range hexSides {
+		if gp, ok := part.grid.adjacent(gp, hs); ok {
+			positions = append(positions, gp)
+		}
+	}
 	var ps partitions
 	for _, p := range positions {
 		ps = append(ps, part.hexagons[p])
@@ -164,6 +184,9 @@ func (part partitioner) setupPartitionLUT(internalUC unitConfig, externalUC unit
 	switch pa {
 	case paCollision:
 		internalRadius = internalUC.radius
+		externalRadius = externalUC.radius
+	case paVision:
+		internalRadius = internalUC.vision
 		externalRadius = externalUC.radius
 	default:
 		panic(fmt.Sprintf("setupPartitionsLUT: unsupported partition analysis %s", pa.string()))
