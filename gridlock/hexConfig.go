@@ -22,12 +22,20 @@ type hexConfig struct {
 	yIndexMax int
 }
 
-func newHexConfig(wc windowConfig, hexWidth int, hexHeight int, xOffset int, yOffset int) hexConfig {
+// For 1280p * 720p resolution, a hexagon height of 40p is ideally 80/sqrt(3) wide.
+// 80/sqrt(3) is 46.188 which is approximately 46p.
+
+func newHexConfig() hexConfig {
+	wc := newWindowConfig()
+	// For 1280p * 720p resolution, a hexagon height of 40p is ideally 80/sqrt(3) wide.
+	// 80/sqrt(3) is 46.188 which is approximately 46p.
+	hexWidth := 46
+	hexHeight := 40
 	hc := hexConfig{
 		hexWidth:  hexWidth,
 		hexHeight: hexHeight,
-		xOffset:   xOffset,
-		yOffset:   yOffset,
+		xOffset:   19,
+		yOffset:   10,
 		xIndexMax: wc.width/hexWidth + 2,
 		yIndexMax: wc.height/(hexHeight/4*3) + 1,
 	}

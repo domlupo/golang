@@ -63,8 +63,6 @@ func newDrawConfig() drawConfig {
 	drawTriangleDefaultImage := ebiten.NewImage(1, 1)
 	drawTriangleDefaultImage.Fill(color.White)
 	highlightColor := color.RGBA{70, 255, 0, 200}
-	// For 1280p * 720p resolution, a hexagon height of 40p is ideally 80/sqrt(3) wide.
-	// 80/sqrt(3) is 46.188 which is approximately 46p.
 	pngBomer, _, bomberErr := ebitenutil.NewImageFromFile("assets/bomber.png")
 	if bomberErr != nil {
 		panic("newDrawConfig: cannot load bomber png")

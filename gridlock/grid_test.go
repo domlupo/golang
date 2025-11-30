@@ -99,8 +99,7 @@ func TestGetPixelPos(t *testing.T) {
 			tt.wantPixelPos.log(),
 			sWantOk)
 
-		hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
-		g := newGrid(hc)
+		g := newGrid()
 		t.Run(testname, func(t *testing.T) {
 			pos, ok := g.getPixel(tt.gridPos, tt.hexPoint)
 			if ok != tt.wantOk {
@@ -851,8 +850,7 @@ func TestGetGridPos(t *testing.T) {
 			tt.wantPos.log(),
 			sWantOk)
 
-		hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
-		g := newGrid(hc)
+		g := newGrid()
 		t.Run(testname, func(t *testing.T) {
 			pos, ok := g.getGridPos(tt.pixel)
 			if ok != tt.wantOk {
@@ -988,8 +986,7 @@ func TestAdjacent(t *testing.T) {
 			tt.wantGridPos.log(),
 			sWantOk)
 
-		hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
-		g := newGrid(hc)
+		g := newGrid()
 		t.Run(testname, func(t *testing.T) {
 			pos, ok := g.adjacent(tt.gridPos, tt.hexSide)
 			if ok != tt.wantOk {
@@ -1237,8 +1234,7 @@ func TestDemotif(t *testing.T) {
 		{Pixel{1280, 720}, demotif{Pixel{0, 0}}, false},
 	}
 
-	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
-	g := newGrid(hc)
+	g := newGrid()
 	for _, tt := range tests {
 		var sWantOk string
 		if tt.wantOk {
@@ -1359,8 +1355,7 @@ func TestDemotifLinePixels(t *testing.T) {
 		}, false},
 	}
 
-	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
-	g := newGrid(hc)
+	g := newGrid()
 	for _, tt := range tests {
 		testname := fmt.Sprintf("test demotif hex line for hex side %s", tt.hs.string())
 		t.Run(testname, func(t *testing.T) {
@@ -1382,8 +1377,7 @@ func TestDemotifLinePixels(t *testing.T) {
 }
 
 func TestDemotifPixels(t *testing.T) {
-	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
-	g := newGrid(hc)
+	g := newGrid()
 	demotifPixels := g.demotifHexPixels()
 	length := len(demotifPixels)
 	if length != 1380 {
@@ -1392,13 +1386,12 @@ func TestDemotifPixels(t *testing.T) {
 }
 
 func TestDemotifHexPixelsAdjacent(t *testing.T) {
-	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
-	g := newGrid(hc)
+	g := newGrid()
 	demotifPixelsAdjacent := g.demotifHexPixelsAdjacent()
 
 	length := len(demotifPixelsAdjacent)
-	ePixelCount, wPixelCount := hc.hexHeight/2, hc.hexHeight/2
-	nwPixelCount, nePixelCount, swPixelCount, sePixelCount := hc.hexWidth/2, hc.hexWidth/2, hc.hexWidth/2, hc.hexWidth/2
+	ePixelCount, wPixelCount := g.hexHeight/2, g.hexHeight/2
+	nwPixelCount, nePixelCount, swPixelCount, sePixelCount := g.hexWidth/2, g.hexWidth/2, g.hexWidth/2, g.hexWidth/2
 	expectedLength := ePixelCount + wPixelCount + nwPixelCount + nePixelCount + swPixelCount + sePixelCount
 	if length != expectedLength {
 		t.Errorf("demotifPixels sanity check failed because length is %d rather than expected %d", length, expectedLength)

@@ -114,8 +114,8 @@ type demotif struct {
 	Pixel
 }
 
-func newGrid(hc hexConfig) grid {
-	g := grid{hexConfig: hc}
+func newGrid() grid {
+	g := grid{hexConfig: newHexConfig()}
 	g.hexTriangleLUT = g.setupHexTriangleLUT()
 	return g
 }
