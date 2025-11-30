@@ -160,6 +160,9 @@ Determine if I should clarify file names
     - semi active missile (aircraft must follow target aka once out of vision don't home to target)
     - active (fire and forget)
   - Once steer/boids is understood better, can add avoidance
+  - Add anti radiation missiles to counter signal jamming?
+    - It can add the ability for units to have loadouts
+      - missile sequences e.g. shoot radar guided, then shoot anti radiation at same target.
 
 - Potential cruise missile upgrade
   - drop emitted heat by X
@@ -328,6 +331,8 @@ Determine if I should clarify file names
 ### Future Checkpoints
 
  Add more units
+  - Determine if other units listed in unit brain storm should be considered?
+  - Should any of these units not be implemented?
   - Design, scope and implement AC130
   - Design, scope and implement paratroopers
   - Design, scope and implement apache
@@ -687,7 +692,7 @@ Determine if I should clarify file names
 - I wonder if you should be able to see your opponents upgrades or if it should be hidden. If it is the same tech 
   tree there could be a way to track what the player picked. It add an element of tracking to the game. I also
   can add an upgrade or unit where you can see more of your opponenets upgrades. It could have a nice UI. There
-  can also be an upgrade to see further in the tech tree or see where your opponent is at.
+  can also be an upgrade to see further in the tech tree or see what upgrade count your opponent is at.
 - I like the look of mosaics and mosaic the word sounds cool. The hexagon grid pattern reminds me
   of mosaics a lot. Should I incorporate this in this game or a future game? Should I use mosaics to
   inspire art direction over other games like catan, risk and gnorp analogue? Maybe polish is
@@ -1072,20 +1077,26 @@ Have read through several college publications and game ai pro articles not link
   - Land:
     - infantry
   - Air
-    - bomber (plane is high air, bombs are low air)
-    - fighter (high air tech tree is used for stealth)
-    - paratroopers (plane is high air, units are low air)
-    - ac130 gunship  (low air)
-    - apache (low air)
-    - stealth bomber? (low air, not sure if enough for a separate unit)
-    - drone (not sure)
-    - uav (not sure)
+    - bomber
+    - fighter
+    - paratroopers
+    - ac130 gunship
+    - apache
+    - stealth bomber
   - Node
-    - missile (high air)
-    - counter missile (high air)
+    - missile
+    - counter missile
   - Other 
-    - nuke
-    - satelite
+
+- Units to consider:
+  - satelite
+  - drone
+  - uav
+  - air refueler
+  - Growler (electronic warfare support)
+  - black hawk (stealth helicopter)
+  - nuke (long time to build, but devastating?)
+
 
 #### Brainstorm Bomber Unit
 
