@@ -52,6 +52,19 @@ Is there a mobile equivalent for war/4x games?
     - semi active radar homing
     - active radar homing
 
+- drawer.go follow ups:
+  - I don't like how developerMode flag is spread everywhere. Also I feel like it should be on controller.go not game.go
+    but I need to confirm this.
+  - I don't like how newWindowConfig() is essentially a global.
+    - I also don't like that windowMulitipler is critical to both input from players and output from game.
+      that is probably unavoidable but can be structured better?
+  - Determine if drawer.go should only handle controlling drawing or do drawing itself
+    - This will clarify if structs like node and obstacle should have draw methods or
+      the drawer handle its.
+    - This will clarify if drawer should know about unit specifics.
+    - I don't like that drawConfig has screen attached to it. It kind of makes it a context type struct.
+  - There is some code in state.go that should be moved into controller.go. Specifically updateSelected
+
 - Chaff follow ups
   - Think through chaff behavior more:
     - Should chaff emitted from a plane counter missiles shot from same plane?

@@ -37,14 +37,16 @@ func (p player) String() string {
 }
 
 type windowConfig struct {
-	width  int
-	height int
+	width      int
+	height     int
+	multiplier float32
 }
 
 func newWindowConfig() windowConfig {
 	wc := windowConfig{
-		width:  1280,
-		height: 720,
+		width:      1280,
+		height:     720,
+		multiplier: 2.5,
 	}
 	return wc
 }

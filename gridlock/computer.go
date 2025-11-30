@@ -29,14 +29,14 @@ func newComputersConfig() computersConfig {
 	return c
 }
 
-func newComputers(s *state) computers {
+func newComputers(s *state) *computers {
 	var computers = make(computers, 0)
 	c := newComputersConfig()
 	for i := range c.count {
 		computers = append(computers, newComputer(s, i))
 	}
 	computers.updateNodetargets(true, Pixel{})
-	return computers
+	return &computers
 }
 
 func newComputer(s *state, i int) computer {

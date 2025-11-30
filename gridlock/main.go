@@ -22,34 +22,24 @@ import (
 var logger l
 
 type Game struct {
-	*drawConfig
 	nodeSetup                  nodeSetup
 	obstacleSetup              obstacleSetup
-	computers                  computers
 	backgroundColor            color.RGBA
 	produceWait                time.Duration
 	slowTickInterval           time.Duration
 	slowTickTime               time.Time
 	priorTime                  time.Time
 	currentTime                time.Time
-	leftMouseClicked           bool
-	leftMouseHeld              bool
-	priorLeftMouseClicked      bool
-	leftMouseReleased          bool
-	middleMouseScrollClicked   bool
-	rightMouseClicked          bool
 	paused                     bool
 	hotRestart                 bool
 	slowTick                   bool
 	cpuProfilerOn              bool
 	memoryProfilerOn           bool
-	initialSelectedX           float32
-	initialSelectedY           float32
-	currentSelectedX           float32
-	currentSelectedY           float32
 	gameState                  *state
-	drawer                     drawer
-	debugger                   debugger
+	drawer                     *drawer
+	computers                  *computers
+	controller                 *controller
+	debugger                   *debugger
 	developerMode              bool
 	developerToggles           map[string]*toggle
 	developerToggleCooldown    time.Duration
@@ -77,10 +67,6 @@ func newGame() Game {
 		slowTickTime:            time.Now(),
 		priorTime:               time.Now(),
 		currentTime:             time.Now(),
-		initialSelectedX:        float32(-1.0),
-		initialSelectedY:        float32(-1.0),
-		currentSelectedX:        float32(-1.0),
-		currentSelectedY:        float32(-1.0),
 		hotRestart:              true,
 		cpuProfilerToggleName:   "cpuProfiler",
 		memProfilerToggleName:   "memProfiler",
@@ -92,7 +78,6 @@ func newGame() Game {
 		memProfilerFileName:     "mem.prof",
 	}
 	logger = setupLogger(g.developerToggleCooldown)
-	g.drawConfig = newDrawConfig()
 	return g
 }
 
@@ -101,7 +86,7 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 	start := time.Now()
 	hc := newHexConfig(newWindowConfig(), 46, 40, 19, 10)
 	grid := newGrid(hc)
-	hexagons := setupHexagons(grid)
+	hexagons := newHexagons(grid)
 	obstacles, oLUT := setupObstacles(obstacleSetup, grid)
 	nodes, nLUT := setupNodes(nodeSetup, grid, g.initialNodeHealth, hexagons, oLUT)
 	logger.log(infoLevel, setupLogic, fmt.Sprintf("Setup required %0.2f seconds", float64(time.Since(start).Seconds())))
@@ -118,8 +103,10 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 
 	g.gameState = newState(nodes, obstacles, hexagons, oLUT, nLUT, grid, g.developerMode)
 	g.debugger = newDebugger(g.gameState, g.developerToggleCooldown)
-	g.drawer = newDrawer(g.gameState, &g.debugger)
 	g.computers = newComputers(g.gameState)
+	g.controller = newController(g.gameState, g.computers, g.debugger)
+	// TODO: I should only invoke newDrawConfig once per game not every restart
+	g.drawer = newDrawer(newDrawConfig(), g.gameState, g.controller, g.debugger)
 }
 
 func (g *Game) Update() error {
@@ -143,10 +130,6 @@ func (g *Game) Update() error {
 		t.checkToggle(g.currentTime)
 	}
 
-	// refresh
-	g.leftMouseReleased = false
-	g.leftMouseHeld = false
-
 	// update game state prior to player actions
 	if !g.paused && !(g.slowTick && (g.currentTime.Sub(g.slowTickTime) < g.slowTickInterval)) {
 		if g.slowTick {
@@ -154,47 +137,7 @@ func (g *Game) Update() error {
 		}
 		g.gameState.tick()
 	}
-
-	// player actions
-	graphicalX, graphicalY := ebiten.CursorPosition()
-	_, mouseWheelDelta := ebiten.Wheel()
-	g.debugger.updateHeatmapPercent(-int(mouseWheelDelta))
-
-	x := float32(graphicalX) / g.windowMultiplier
-	y := float32(graphicalY) / g.windowMultiplier
-	pixel := Pixel{int(x), int(y)}
-
-	g.priorLeftMouseClicked = g.leftMouseClicked
-	g.leftMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
-	g.middleMouseScrollClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonMiddle)
-	g.rightMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight)
-
-	g.currentSelectedX = x
-	g.currentSelectedY = y
-	g.debugger.pixel = pixel
-	if g.priorLeftMouseClicked && !g.leftMouseClicked {
-		g.leftMouseReleased = true
-	} else if !g.priorLeftMouseClicked && g.leftMouseClicked {
-		g.initialSelectedX = x
-		g.initialSelectedY = y
-	} else if g.leftMouseClicked {
-		g.leftMouseHeld = true
-	}
-	if g.developerMode && g.middleMouseScrollClicked {
-		g.debugger.debug(pixel)
-	}
-	if g.rightMouseClicked {
-		filter := []player{pNeutral}
-		filter = append(filter, g.computers.active()...)
-		g.gameState.updateTargets(position{lLand, pixel}, filter)
-	}
-
-	// update game state after player actions
-	if g.leftMouseReleased {
-		g.gameState.updateSelected(
-			Pixel{int(g.initialSelectedX), int(g.initialSelectedY)},
-			Pixel{int(g.currentSelectedX), int(g.currentSelectedY)})
-	}
+	g.controller.control()
 
 	var xSum int
 	var ySum int
@@ -269,27 +212,12 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	if g.drawConfig.screen == nil {
-		g.drawConfig.screen = screen
-	}
-
-	g.drawer.draw(screen, *g.drawConfig)
-
-	if g.leftMouseHeld {
-		drawUnfilledBoxFloat32(
-			*g.drawConfig,
-			g.drawConfig.highlightColor,
-			g.initialSelectedX,
-			g.initialSelectedY,
-			g.currentSelectedX,
-			g.currentSelectedY,
-		)
-	}
+	g.drawer.draw(screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	wc := newWindowConfig()
-	return int(float32(wc.width) * g.windowMultiplier), int(float32(wc.height) * g.windowMultiplier)
+	return int(float32(wc.width) * wc.multiplier), int(float32(wc.height) * wc.multiplier)
 }
 
 func main() {
@@ -305,7 +233,7 @@ func main() {
 	}
 
 	wc := newWindowConfig()
-	ebiten.SetWindowSize(int(float32(wc.width)*g.windowMultiplier), int(float32(wc.height)*g.windowMultiplier))
+	ebiten.SetWindowSize(int(float32(wc.width)*wc.multiplier), int(float32(wc.height)*wc.multiplier))
 	os.Mkdir(g.outputDirectoryName, 0755)
 
 	g.developerToggles[g.cpuProfilerToggleName] = newToggle(

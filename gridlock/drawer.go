@@ -10,49 +10,68 @@ import (
 )
 
 type drawer struct {
+	drawConfig
 	*state
+	*controller
 	debugger *debugger
 }
 
-func newDrawer(s *state, d *debugger) drawer {
+func newDrawer(c drawConfig, s *state, controller *controller, d *debugger) *drawer {
 	drawer := drawer{
-		state:    s,
-		debugger: d,
+		drawConfig: c,
+		state:      s,
+		controller: controller,
+		debugger:   d,
 	}
-	return drawer
+	return &drawer
 }
 
-func (d drawer) draw(screen *ebiten.Image, dc drawConfig) {
-	screen.Fill(dc.backgroundColor)
-	d.drawHexGrid(dc)
+func (d drawer) draw(screen *ebiten.Image) {
+	if d.drawConfig.screen == nil {
+		d.screen = screen
+	}
+	d.screen.Fill(d.backgroundColor)
+	d.drawHexGrid()
 	for _, n := range d.nodes {
-		n.drawNode(dc, d.grid)
+		n.drawNode(d.drawConfig, d.grid)
 	}
 	for _, o := range d.obstacles {
-		o.drawObstacle(dc, d.grid)
+		o.drawObstacle(d.drawConfig, d.grid)
 	}
 	for _, u := range d.landUnits {
-		u.draw(dc, u.selected)
+		u.draw(d.drawConfig, u.selected)
 	}
 	for _, u := range d.chaffUnits {
-		u.draw(dc, u.selected)
+		u.draw(d.drawConfig, u.selected)
 	}
 	for _, u := range d.bombGravityUnits {
-		u.draw(dc, u.selected)
+		u.draw(d.drawConfig, u.selected)
 	}
 	for _, u := range d.ordanceUnits {
-		u.draw(dc, u.selected)
+		u.draw(d.drawConfig, u.selected)
 	}
 	for _, u := range d.aircraftUnits {
-		u.draw(dc, u.selected)
+		u.draw(d.drawConfig, u.selected)
 	}
 	for _, u := range d.ballisticUnits {
-		u.draw(dc, u.selected)
+		u.draw(d.drawConfig, u.selected)
 	}
-	d.debugger.draw(dc)
+
+	d.debugger.draw(d.drawConfig)
+
+	if d.leftMouseHeld {
+		drawUnfilledBoxFloat32(
+			d.drawConfig,
+			d.drawConfig.highlightColor,
+			d.initialSelectedX,
+			d.initialSelectedY,
+			d.currentSelectedX,
+			d.currentSelectedY,
+		)
+	}
 }
 
-func (d drawer) drawHexGrid(c drawConfig) {
+func (d drawer) drawHexGrid() {
 	// This is the pattern drawn.
 	//    / \
 	//   |
@@ -78,33 +97,33 @@ func (d drawer) drawHexGrid(c drawConfig) {
 			p := GridPosition{i, j}
 
 			n := d.grid.getPixelOutbounds(p, hpNorth)
-			nX := float32(n.X) * c.windowMultiplier
-			nY := float32(n.Y) * c.windowMultiplier
+			nX := float32(n.X) * d.windowMultiplier
+			nY := float32(n.Y) * d.windowMultiplier
 
 			nw := d.grid.getPixelOutbounds(p, hpNorthwest)
-			nwX := float32(nw.X) * c.windowMultiplier
-			nwY := float32(nw.Y) * c.windowMultiplier
+			nwX := float32(nw.X) * d.windowMultiplier
+			nwY := float32(nw.Y) * d.windowMultiplier
 
 			ne := d.grid.getPixelOutbounds(p, hpNortheast)
-			neX := float32(ne.X+1) * c.windowMultiplier
-			neY := float32(ne.Y) * c.windowMultiplier
+			neX := float32(ne.X+1) * d.windowMultiplier
+			neY := float32(ne.Y) * d.windowMultiplier
 
 			sw := d.grid.getPixelOutbounds(p, hpSouthwest)
-			swX := float32(sw.X) * c.windowMultiplier
-			swY := float32(sw.Y+1) * c.windowMultiplier
+			swX := float32(sw.X) * d.windowMultiplier
+			swY := float32(sw.Y+1) * d.windowMultiplier
 
 			// draw west side
 			//    / \
 			//  *|*
 			//  *|*
 			vector.StrokeLine(
-				c.screen,
+				d.screen,
 				nwX,
 				nwY,
 				swX,
 				swY,
-				float32(c.hexGridLineWidth)*c.windowMultiplier,
-				c.hexGridColor,
+				float32(d.hexGridLineWidth)*d.windowMultiplier,
+				d.hexGridColor,
 				false)
 
 			// draw northwest
@@ -112,13 +131,13 @@ func (d drawer) drawHexGrid(c drawConfig) {
 			//   |
 			//   |
 			vector.StrokeLine(
-				c.screen,
+				d.screen,
 				nX,
 				nY,
 				nwX,
 				nwY,
-				float32(c.hexGridLineWidth)*c.windowMultiplier,
-				c.hexGridColor,
+				float32(d.hexGridLineWidth)*d.windowMultiplier,
+				d.hexGridColor,
 				false)
 
 			// draw northeast
@@ -126,13 +145,13 @@ func (d drawer) drawHexGrid(c drawConfig) {
 			//   |
 			//   |
 			vector.StrokeLine(
-				c.screen,
+				d.screen,
 				nX,
 				nY,
 				neX,
 				neY,
-				float32(c.hexGridLineWidth)*c.windowMultiplier,
-				c.hexGridColor,
+				float32(d.hexGridLineWidth)*d.windowMultiplier,
+				d.hexGridColor,
 				false)
 		}
 	}

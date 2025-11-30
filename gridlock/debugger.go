@@ -79,7 +79,7 @@ type debugger struct {
 // A typical heatmap. Used for visual debugging.
 type heatmap map[Pixel]int
 
-func newDebugger(state *state, toggleCooldown time.Duration) debugger {
+func newDebugger(state *state, toggleCooldown time.Duration) *debugger {
 	c := newDebuggerConfig()
 	debugger := debugger{
 		state:           state,
@@ -89,7 +89,7 @@ func newDebugger(state *state, toggleCooldown time.Duration) debugger {
 	}
 	debugger.setupHeatmaps()
 	debugger.setupToggles(toggleCooldown)
-	return debugger
+	return &debugger
 }
 
 func (d *debugger) setupHeatmaps() {

@@ -75,7 +75,7 @@ func (h *hexagon) get(l layer) *hexLayer {
 	}
 }
 
-func setupHexagons(g grid) map[GridPosition]*hexagon {
+func newHexagons(g grid) map[GridPosition]*hexagon {
 	hexagons := make(map[GridPosition]*hexagon)
 	for i := range g.xIndexMax {
 		for j := range g.yIndexMax {

@@ -57,7 +57,7 @@ type drawConfig struct {
 
 // Invoke only once per game session. NewImage calls are expensive and are not
 // idempotent for specific edge cases. https://github.com/hajimehoshi/ebiten/issues/3335
-func newDrawConfig() *drawConfig {
+func newDrawConfig() drawConfig {
 	// TODO: check if this should use a subimage if final game uses draw triangle.
 	// Not investigating now since draw triangle may not be used in final game.
 	drawTriangleDefaultImage := ebiten.NewImage(1, 1)
@@ -77,9 +77,10 @@ func newDrawConfig() *drawConfig {
 	if missileErr != nil {
 		panic("newDrawConfig: cannot load missile png")
 	}
+	wc := newWindowConfig()
 	dc := drawConfig{
 		screen:                        nil,
-		windowMultiplier:              2.5,
+		windowMultiplier:              wc.multiplier,
 		defaultLineWidth:              1,
 		selectectionBoxLineWidth:      1,
 		missileExplodeRadiusLineWidth: 1,
@@ -112,5 +113,5 @@ func newDrawConfig() *drawConfig {
 		// TODO: Add flare png
 		pngFlare: pngMissile,
 	}
-	return &dc
+	return dc
 }
