@@ -5,12 +5,21 @@ package main
 import (
 	"fmt"
 	"log/slog"
+	"slices"
 )
 
 type partitions []*hexagon
 
 // The type of analysis which will process the partitions.
 type partitionAnalysis int
+
+// A look up table (LUT) to find an optimized number of partitions. It avoids runtime collision in two ways.
+// First, collision checks for all 1380 Pixels in the demotif hexagon are done at startup for the
+// 132 adjacent Pixels. If a collision occurs the hexSide which caused it is stored. Second, optimized
+// number of partitions means no extra partitions are considered for unit <-> unit collisions since spatial
+// partioning checks all units within the partition. The LUT is utilized via: Unit Pixel -> demotif ->
+// hex sides from LUT -> check unit grid position for collision -> check hex sides from LUT for collision.
+type partitionLUT map[demotif][]hexSide
 
 const (
 	paNone partitionAnalysis = iota
@@ -19,7 +28,7 @@ const (
 	paSteer
 )
 
-func (pa partitionAnalysis) String() string {
+func (pa partitionAnalysis) string() string {
 	switch pa {
 	case paNone:
 		return "paNone"
@@ -35,12 +44,13 @@ func (pa partitionAnalysis) String() string {
 }
 
 func (pa partitionAnalysis) log() slog.Attr {
-	return slog.String("partitionAnalysis", pa.String())
+	return slog.String("partitionAnalysis", pa.string())
 }
 
 type partitioner struct {
-	grid     grid
-	hexagons hexagons
+	grid                 grid
+	hexagons             hexagons
+	infantryCollisionLUT partitionLUT
 }
 
 func newPartitioner(g grid, h hexagons) partitioner {
@@ -48,28 +58,46 @@ func newPartitioner(g grid, h hexagons) partitioner {
 		grid:     g,
 		hexagons: h,
 	}
+	p.infantryCollisionLUT = p.setupPartitionLUT(infantryConfig, infantryConfig, paCollision)
 	return p
 }
 
 func (part partitioner) partitions(u unit, pa partitionAnalysis, buffer int) partitions {
 	var positions []GridPosition
 	radius := buffer
-	switch pa {
-	case paCollision:
+	switch {
+	case u.name == infantry && pa == paCollision:
+		demotif, demotifOk := part.grid.demotif(u.Pixel)
+		if !demotifOk {
+			panic(fmt.Sprintf("partitions: could not demotif pixel %s", u.Pixel.log()))
+		}
+		hexSides := part.infantryCollisionLUT[demotif]
+		gp, gpOk := part.grid.getGridPos(u.Pixel)
+		positions = append(positions, gp)
+		if !gpOk {
+			panic(fmt.Sprintf("partitions: could not find grid position for pixel %s", u.Pixel.log()))
+		}
+		for _, hs := range hexSides {
+			if gp, ok := part.grid.adjacent(gp, hs); ok {
+				positions = append(positions, gp)
+			}
+		}
+	case pa == paCollision:
 		radius += u.radius
-	case paVision:
+		positions = part.defaultPartitions(u.Pixel, radius)
+	case pa == paVision:
 		radius += u.vision
-	case paSteer:
+		positions = part.defaultPartitions(u.Pixel, radius)
+	case pa == paSteer:
 		radius += 0
+		positions = part.defaultPartitions(u.Pixel, radius)
 	default:
-		panic(fmt.Sprintf("partitions: unknown partitions analysis %s", pa.String()))
+		panic(fmt.Sprintf("partitions: unknown partitions analysis %s", pa.string()))
 	}
-
 	if pa == paSteer && u.name != infantry {
-		panic(fmt.Sprintf("partitions: cannot get partitions for unit %s, analysis %s and buffer %d", u.name, pa.String(), buffer))
+		panic(fmt.Sprintf("partitions: cannot get partitions for unit %s, analysis %s and buffer %d", u.name, pa.string(), buffer))
 	}
 
-	positions = part.defaultPartitions(u.Pixel, radius)
 	var ps partitions
 	for _, p := range positions {
 		ps = append(ps, part.hexagons[p])
@@ -128,4 +156,32 @@ func (part partitioner) defaultPartitions(p Pixel, d int) []GridPosition {
 		i++
 	}
 	return partitions
+}
+
+func (part partitioner) setupPartitionLUT(internalUC unitConfig, externalUC unitConfig, pa partitionAnalysis) partitionLUT {
+	var internalRadius int
+	var externalRadius int
+	switch pa {
+	case paCollision:
+		internalRadius = internalUC.radius
+		externalRadius = externalUC.radius
+	default:
+		panic(fmt.Sprintf("setupPartitionsLUT: unsupported partition analysis %s", pa.string()))
+	}
+
+	lut := make(partitionLUT)
+	collisionSources := part.grid.demotifHexPixelsAdjacent()
+	pixels := part.grid.demotifHexPixels()
+	for externalP, hs := range collisionSources {
+		for _, internalP := range pixels {
+			if _, ok := collides(internalP, externalP, internalRadius, externalRadius); ok {
+				hexSides := lut[demotif{internalP}]
+				if !slices.Contains(hexSides, hs) {
+					hexSides = append(hexSides, hs)
+					lut[demotif{internalP}] = hexSides
+				}
+			}
+		}
+	}
+	return lut
 }
