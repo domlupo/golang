@@ -5,7 +5,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"image/color"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -24,8 +23,6 @@ var logger l
 type Game struct {
 	nodeSetup                  nodeSetup
 	obstacleSetup              obstacleSetup
-	backgroundColor            color.RGBA
-	produceWait                time.Duration
 	slowTickInterval           time.Duration
 	slowTickTime               time.Time
 	priorTime                  time.Time
@@ -61,8 +58,6 @@ func newGame() Game {
 		developerMode:           true,
 		obstacleSetup:           multiObstacle,
 		nodeSetup:               leftVsRightVerticalOffsetAircraftAndOrdnance,
-		backgroundColor:         color.RGBA{200, 200, 200, 255},
-		produceWait:             1_000_000 * time.Second,
 		slowTickInterval:        1 * time.Second,
 		slowTickTime:            time.Now(),
 		priorTime:               time.Now(),
