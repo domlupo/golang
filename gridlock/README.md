@@ -340,6 +340,10 @@ Determine if I should clarify file names
 
 ### Future Checkpoints
 
+- I think I should lean into the hexagon theme and for code reuse. For example, the menu screen 
+  should probably use hexagons for buttons. The game UI might be able to reuse hexagons as well.
+  The menu screen can also have some units running around in background with boid behavior.
+
  Add more units
   - Determine if other units listed in unit brain storm should be considered?
   - Should any of these units not be implemented?
