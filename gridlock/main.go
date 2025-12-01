@@ -79,8 +79,6 @@ func newGame() Game {
 func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify bool) {
 	// TODO: Need to restart timers, etc
 	start := time.Now()
-	// For 1280p * 720p resolution, a hexagon height of 40p is ideally 80/sqrt(3) wide.
-	// 80/sqrt(3) is 46.188 which is approximately 46p.
 	grid := newGrid(newGridConfig())
 	hexagons := newHexagons(grid)
 	obstacles, oLUT := setupObstacles(obstacleSetup, grid)
