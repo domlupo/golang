@@ -703,6 +703,14 @@ Determine if I should clarify file names
 
 ## Game Design Questions
 
+- A few ideas for a good comeback mechanic or high risk high reward play 
+  - higher risk, higher award unit upgrades 
+  - A bet mechanic where you can get a random upgrade for a discounted cost since its random
+  - A skip or reroll mechanic to try and counter you opponent
+  - A remove mechanic where you randomly get 2 of the remaining
+  - upgrade salvage mechanic where you sell off tech to acquire other tech
+  - node salvage mchanic where you sell off a node to acquire stuff
+  - I feel like the tech tree might end up looking like a shop you can essentailly barter with.
 - I wonder if you should be able to see your opponents upgrades or if it should be hidden. If it is the same tech 
   tree there could be a way to track what the player picked. It add an element of tracking to the game. I also
   can add an upgrade or unit where you can see more of your opponenets upgrades. It could have a nice UI. There
