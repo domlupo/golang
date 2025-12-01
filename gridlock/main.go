@@ -32,7 +32,7 @@ type Game struct {
 	slowTick                   bool
 	cpuProfilerOn              bool
 	memoryProfilerOn           bool
-	gameState                  *state
+	state                      *state
 	drawer                     *drawer
 	computers                  *computers
 	controller                 *controller
@@ -97,12 +97,12 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 		}
 	}
 
-	g.gameState = newState(nodes, obstacles, hexagons, oLUT, nLUT, grid, g.developerMode)
-	g.debugger = newDebugger(g.gameState, g.developerToggleCooldown)
-	g.computers = newComputers(g.gameState)
-	g.controller = newController(g.gameState, g.computers, g.debugger)
+	g.state = newState(nodes, obstacles, hexagons, oLUT, nLUT, grid, g.developerMode)
+	g.debugger = newDebugger(g.state, g.developerToggleCooldown)
+	g.computers = newComputers(g.state)
+	g.controller = newController(g.state, g.computers, g.debugger)
 	// TODO: I should only invoke newDrawConfig once per game not every restart
-	g.drawer = newDrawer(newDrawConfig(), g.gameState, g.controller, g.debugger)
+	g.drawer = newDrawer(newDrawConfig(), g.state, g.controller, g.debugger)
 }
 
 func (g *Game) Update() error {
@@ -131,9 +131,9 @@ func (g *Game) Update() error {
 		if g.slowTick {
 			logger.log(infoLevel, devTool, "slowTick")
 		}
-		g.gameState.tick()
+		g.state.tick()
 	}
-	g.controller.control()
+	g.controller.processInput()
 
 	var xSum int
 	var ySum int
@@ -143,7 +143,7 @@ func (g *Game) Update() error {
 	var bomberCount int
 	var fighterCount int
 	var unknownCount int
-	for u := range g.gameState.units() {
+	for u := range g.state.units() {
 		xSum += u.X
 		ySum += u.Y
 		totalCount++
@@ -177,7 +177,7 @@ func (g *Game) Update() error {
 	// than the same game state being sent to each one before a final update occurs.
 	// This is a hack, but will probably be fine for awhile.
 	if !g.paused && !(g.slowTick && (g.currentTime.Sub(g.slowTickTime) < g.slowTickInterval)) {
-		nodeCapture := g.gameState.updateForNodeCapture()
+		nodeCapture := g.state.updateForNodeCapture()
 		g.computers.updateNodetargets(nodeCapture, avgUnitPos)
 		g.slowTickTime = time.Now()
 	}
@@ -185,7 +185,7 @@ func (g *Game) Update() error {
 	var pOneNodeCount int
 	var pTwoNodeCount int
 
-	for _, node := range g.gameState.nodes {
+	for _, node := range g.state.nodes {
 		switch node.player {
 		case pOne:
 			pOneNodeCount++
@@ -221,10 +221,11 @@ func main() {
 
 	var monitors []*ebiten.MonitorType
 	monitors = ebiten.AppendMonitors(monitors)
-	// TODO: Remove before release in order to avoid bugs for customers which own this monitor
-	for _, m := range monitors {
-		if m.Name() == "DELL U2720Q" {
-			ebiten.SetMonitor(m)
+	if g.developerMode {
+		for _, m := range monitors {
+			if m.Name() == "DELL U2720Q" {
+				ebiten.SetMonitor(m)
+			}
 		}
 	}
 

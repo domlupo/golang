@@ -37,7 +37,7 @@ func newController(s *state, c *computers, d *debugger) *controller {
 	return &controller
 }
 
-func (c *controller) control() {
+func (c *controller) processInput() {
 	c.leftMouseReleased = false
 	c.leftMouseHeld = false
 
