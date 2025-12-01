@@ -180,7 +180,7 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 					continue
 				}
 
-				adjacent := p.allAdjacent(g)
+				adjacent := g.allAdjacentPixels(p)
 
 				for _, a := range adjacent {
 					aInfo := oLUT[a]
@@ -433,27 +433,27 @@ func (points obstaclePoints) createAllPoints(os obstacles, g grid) {
 		sw := g.getPixelOutbounds(o.gridPos, hpSouthwest)
 		nw := g.getPixelOutbounds(o.gridPos, hpNorthwest)
 
-		if nPoint, ok := n.add(nOffset, g); ok {
+		if nPoint, ok := g.add(n, nOffset); ok {
 			nObstaclePoint.Pixel = nPoint
 			points[nPoint] = nObstaclePoint
 		}
-		if neTarget, ok := ne.add(neOffset, g); ok {
+		if neTarget, ok := g.add(ne, neOffset); ok {
 			neObstaclePoint.Pixel = neTarget
 			points[neTarget] = neObstaclePoint
 		}
-		if seTarget, ok := se.add(seOffset, g); ok {
+		if seTarget, ok := g.add(se, seOffset); ok {
 			seObstaclePoint.Pixel = seTarget
 			points[seTarget] = seObstaclePoint
 		}
-		if sTarget, ok := s.add(sOffset, g); ok {
+		if sTarget, ok := g.add(s, sOffset); ok {
 			sObstaclePoint.Pixel = sTarget
 			points[sTarget] = sObstaclePoint
 		}
-		if swTarget, ok := sw.add(swOffset, g); ok {
+		if swTarget, ok := g.add(sw, swOffset); ok {
 			swObstaclePoint.Pixel = swTarget
 			points[swTarget] = swObstaclePoint
 		}
-		if nwTarget, ok := nw.add(nwOffset, g); ok {
+		if nwTarget, ok := g.add(nw, nwOffset); ok {
 			nwObstaclePoint.Pixel = nwTarget
 			points[nwTarget] = nwObstaclePoint
 		}

@@ -177,7 +177,7 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 					continue
 				}
 
-				adjacent := p.allAdjacent(g)
+				adjacent := g.allAdjacentPixels(p)
 
 				for _, a := range adjacent {
 					if !oLUT[a].Walkable {

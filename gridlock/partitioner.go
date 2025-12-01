@@ -143,7 +143,7 @@ func (part partitioner) defaultPartitions(p Pixel, d int) []GridPosition {
 		current := q[0]
 		q = q[1:]
 
-		for _, a := range part.grid.allAdjacent(current) {
+		for _, a := range part.grid.allAdjacentGridPos(current) {
 			if _, ok := visited[a]; !ok {
 				visited[a] = struct{}{}
 				// TODO: Fix this. This isn't correct but will probably work fine for awhile.

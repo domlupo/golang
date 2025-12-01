@@ -134,6 +134,12 @@ type grid struct {
 // As shown above, the prior section's middle triangle is now converted into
 // this section's left and right triangle.
 
+// Position for multi pixel game components such as nodes, obstacles, hexagons, etc
+type GridPosition struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+}
+
 type side int
 
 const (
@@ -141,12 +147,6 @@ const (
 	sInclusive
 	sExclusive
 )
-
-// Position for multi pixel game components such as nodes, obstacles, hexagons, etc
-type GridPosition struct {
-	X int `json:"x"`
-	Y int `json:"y"`
-}
 
 // A value stored in a lookup table to help determine grid position.
 type hexagonTriangle int
@@ -162,6 +162,49 @@ type hexSide int
 // By motif definition, x must be less than hex width and y must be less than hex height.
 type demotif struct {
 	Pixel
+}
+
+type direction int
+
+const (
+	noDirecton direction = iota
+	north
+	northeast
+	east
+	southeast
+	south
+	southwest
+	west
+	northwest
+)
+
+func directions() []direction {
+	return []direction{north, northeast, east, southeast, south, southwest, west, northwest}
+}
+
+func (d direction) string() string {
+	switch d {
+	case noDirecton:
+		return "noDirection"
+	case north:
+		return "north"
+	case northeast:
+		return "northeast"
+	case east:
+		return "east"
+	case southeast:
+		return "southeast"
+	case south:
+		return "south"
+	case southwest:
+		return "southwest"
+	case west:
+		return "west"
+	case northwest:
+		return "northwest"
+	default:
+		panic(fmt.Sprintf("Cannot convert direction to string: %d", d))
+	}
 }
 
 func newGrid(gc gridConfig) grid {
@@ -315,7 +358,7 @@ func (gp GridPosition) equals(other GridPosition) bool {
 	return gp.X == other.X && gp.Y == other.Y
 }
 
-func (g grid) allAdjacent(gp GridPosition) []GridPosition {
+func (g grid) allAdjacentGridPos(gp GridPosition) []GridPosition {
 	a := []GridPosition{}
 	for _, hs := range hexSides() {
 		if p, ok := g.adjacent(gp, hs); ok {
@@ -656,4 +699,71 @@ func (g grid) contains(p Pixel) bool {
 	xContained := p.X >= 0 && p.X < g.width
 	yContained := p.Y >= 0 && p.Y < g.height
 	return xContained && yContained
+}
+
+func (g grid) collidesWithBorder(p position, offset int) bool {
+	if p.X+offset > g.width ||
+		p.X-offset < 0 ||
+		p.Y+offset > g.height ||
+		p.Y-offset < 0 {
+		return true
+	} else {
+		return false
+	}
+}
+
+func (g grid) add(p1 Pixel, p2 Pixel) (Pixel, bool) {
+	p := Pixel{X: p1.X + p2.X, Y: p1.Y + p2.Y}
+	if !g.contains(p) {
+		return Pixel{}, false
+	} else {
+		return p, true
+	}
+}
+
+func (g grid) allAdjacentPixels(p Pixel) []Pixel {
+	a := []Pixel{}
+	for _, d := range directions() {
+		if pos, ok := g.adjacentPixel(p, d); ok {
+			a = append(a, pos)
+		}
+	}
+	return a
+}
+
+func (g grid) adjacentPixel(p Pixel, d direction) (Pixel, bool) {
+	var x int
+	var y int
+
+	switch d {
+	case north:
+		y = -1
+	case northeast:
+		x = 1
+		y = -1
+	case east:
+		x = 1
+	case southeast:
+		x = 1
+		y = 1
+	case south:
+		y = 1
+	case southwest:
+		x = -1
+		y = 1
+	case west:
+		x = -1
+		x = -1
+	case northwest:
+		x = -1
+		y = -1
+	default:
+		panic(fmt.Sprintf("cannot get adjacent pixel position for %s unknown direction: %d", p.log(), d))
+	}
+
+	a := Pixel{X: p.X + x, Y: p.Y + y}
+	if !g.contains(a) {
+		return Pixel{}, false
+	}
+	return a, true
 }

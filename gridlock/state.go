@@ -510,10 +510,10 @@ func (s *state) moveUnits() {
 		if move.equals(position{}) {
 			// TODO: Should this be optimized to only perform this check when the unit
 			// does not typically move e.g. chaff
-			collidedBorder = collidesWithBorder(u.position, u.radius, s.grid)
+			collidedBorder = s.grid.collidesWithBorder(u.position, u.radius)
 			collidedUnitPos, collidesWithUnit = s.collidesWithUnit(u.position, *u)
 		} else {
-			collidedBorder = collidesWithBorder(move.position, u.radius, s.grid)
+			collidedBorder = s.grid.collidesWithBorder(move.position, u.radius)
 			collidedUnitPos, collidesWithUnit = s.collidesWithUnit(move.position, *u)
 		}
 
