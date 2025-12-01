@@ -39,22 +39,22 @@ func (d drawer) draw(screen *ebiten.Image) {
 		o.drawObstacle(d.drawConfig, d.grid)
 	}
 	for _, u := range d.landUnits {
-		u.draw(d.drawConfig, u.selected)
+		u.draw(d.drawConfig, u.selected, d.grid.pixelMultiplier)
 	}
 	for _, u := range d.chaffUnits {
-		u.draw(d.drawConfig, u.selected)
+		u.draw(d.drawConfig, u.selected, d.grid.pixelMultiplier)
 	}
 	for _, u := range d.bombGravityUnits {
-		u.draw(d.drawConfig, u.selected)
+		u.draw(d.drawConfig, u.selected, d.grid.pixelMultiplier)
 	}
 	for _, u := range d.ordanceUnits {
-		u.draw(d.drawConfig, u.selected)
+		u.draw(d.drawConfig, u.selected, d.grid.pixelMultiplier)
 	}
 	for _, u := range d.aircraftUnits {
-		u.draw(d.drawConfig, u.selected)
+		u.draw(d.drawConfig, u.selected, d.grid.pixelMultiplier)
 	}
 	for _, u := range d.ballisticUnits {
-		u.draw(d.drawConfig, u.selected)
+		u.draw(d.drawConfig, u.selected, d.grid.pixelMultiplier)
 	}
 
 	d.debugger.draw(d.drawConfig)
@@ -67,6 +67,7 @@ func (d drawer) draw(screen *ebiten.Image) {
 			d.initialSelectedY,
 			d.currentSelectedX,
 			d.currentSelectedY,
+			d.grid.pixelMultiplier,
 		)
 	}
 }
@@ -97,20 +98,20 @@ func (d drawer) drawHexGrid() {
 			p := GridPosition{i, j}
 
 			n := d.grid.getPixelOutbounds(p, hpNorth)
-			nX := float32(n.X) * d.windowMultiplier
-			nY := float32(n.Y) * d.windowMultiplier
+			nX := float32(n.X) * d.grid.pixelMultiplier
+			nY := float32(n.Y) * d.grid.pixelMultiplier
 
 			nw := d.grid.getPixelOutbounds(p, hpNorthwest)
-			nwX := float32(nw.X) * d.windowMultiplier
-			nwY := float32(nw.Y) * d.windowMultiplier
+			nwX := float32(nw.X) * d.grid.pixelMultiplier
+			nwY := float32(nw.Y) * d.grid.pixelMultiplier
 
 			ne := d.grid.getPixelOutbounds(p, hpNortheast)
-			neX := float32(ne.X+1) * d.windowMultiplier
-			neY := float32(ne.Y) * d.windowMultiplier
+			neX := float32(ne.X+1) * d.grid.pixelMultiplier
+			neY := float32(ne.Y) * d.grid.pixelMultiplier
 
 			sw := d.grid.getPixelOutbounds(p, hpSouthwest)
-			swX := float32(sw.X) * d.windowMultiplier
-			swY := float32(sw.Y+1) * d.windowMultiplier
+			swX := float32(sw.X) * d.grid.pixelMultiplier
+			swY := float32(sw.Y+1) * d.grid.pixelMultiplier
 
 			// draw west side
 			//    / \
@@ -122,7 +123,7 @@ func (d drawer) drawHexGrid() {
 				nwY,
 				swX,
 				swY,
-				float32(d.hexGridLineWidth)*d.windowMultiplier,
+				float32(d.hexGridLineWidth)*d.grid.pixelMultiplier,
 				d.hexGridColor,
 				false)
 
@@ -136,7 +137,7 @@ func (d drawer) drawHexGrid() {
 				nY,
 				nwX,
 				nwY,
-				float32(d.hexGridLineWidth)*d.windowMultiplier,
+				float32(d.hexGridLineWidth)*d.grid.pixelMultiplier,
 				d.hexGridColor,
 				false)
 
@@ -150,19 +151,27 @@ func (d drawer) drawHexGrid() {
 				nY,
 				neX,
 				neY,
-				float32(d.hexGridLineWidth)*d.windowMultiplier,
+				float32(d.hexGridLineWidth)*d.grid.pixelMultiplier,
 				d.hexGridColor,
 				false)
 		}
 	}
 }
 
-func drawUnfilledBoxFloat32(dc drawConfig, color color.Color, initialX float32, initialY float32, finalX float32, finalY float32) {
-	initialXGraphical := float32(initialX) * dc.windowMultiplier
-	initialYGraphical := float32(initialY) * dc.windowMultiplier
-	finalXGraphical := float32(finalX) * dc.windowMultiplier
-	finalYGraphical := float32(finalY) * dc.windowMultiplier
-	selectectionBoxLineWidth := float32(dc.selectectionBoxLineWidth) * dc.windowMultiplier
+func drawUnfilledBoxFloat32(
+	dc drawConfig,
+	color color.Color,
+	initialX float32,
+	initialY float32,
+	finalX float32,
+	finalY float32,
+	windowpixelMultiplier float32) {
+
+	initialXGraphical := float32(initialX) * windowpixelMultiplier
+	initialYGraphical := float32(initialY) * windowpixelMultiplier
+	finalXGraphical := float32(finalX) * windowpixelMultiplier
+	finalYGraphical := float32(finalY) * windowpixelMultiplier
+	selectectionBoxLineWidth := float32(dc.selectectionBoxLineWidth) * windowpixelMultiplier
 
 	// draw top line
 	vector.StrokeLine(
@@ -210,8 +219,8 @@ func drawUnfilledBoxFloat32(dc drawConfig, color color.Color, initialX float32, 
 	)
 }
 
-func drawUnfilledBoxInt(dc drawConfig, color color.Color, initialX int, initialY int, finalX int, finalY int) {
-	drawUnfilledBoxFloat32(dc, color, float32(initialX), float32(initialY), float32(finalX), float32(finalY))
+func drawUnfilledBoxInt(dc drawConfig, color color.Color, initialX int, initialY int, finalX int, finalY int, windowpixelMultiplier float32) {
+	drawUnfilledBoxFloat32(dc, color, float32(initialX), float32(initialY), float32(finalX), float32(finalY), windowpixelMultiplier)
 }
 
 func drawHex(dc drawConfig, g grid, p GridPosition, color drawTriangleColor, selected bool) {
@@ -224,14 +233,14 @@ func drawHex(dc drawConfig, g grid, p GridPosition, color drawTriangleColor, sel
 	northwest := g.getPixelOutbounds(p, hpNorthwest)
 
 	// The one pixel offsets for inclusive or exclusive hex points are handled at the game logic layer.
-	// The window multiplier offsets are handled here since window multiplier is a draw concept.
-	xCenter, yCenter := float32(center.X)*dc.windowMultiplier, float32(center.Y)*dc.windowMultiplier
-	xNorth, yNorth := float32(north.X)*dc.windowMultiplier, float32(north.Y)*dc.windowMultiplier
-	xNortheast, yNortheast := float32(northeast.X+1)*dc.windowMultiplier, float32(northeast.Y)*dc.windowMultiplier
-	xSoutheast, ySoutheast := float32(southeast.X+1)*dc.windowMultiplier, float32(southeast.Y+1)*dc.windowMultiplier
-	xSouthwest, ySouthwest := float32(southwest.X)*dc.windowMultiplier, float32(southwest.Y+1)*dc.windowMultiplier
-	xSouth, ySouth := float32(south.X)*dc.windowMultiplier, float32(south.Y+1)*dc.windowMultiplier
-	xNorthwest, yNorthwest := float32(northwest.X)*dc.windowMultiplier, float32(northwest.Y)*dc.windowMultiplier
+	// The window pixelMultiplier offsets are handled here since window pixelMultiplier is a draw concept.
+	xCenter, yCenter := float32(center.X)*g.pixelMultiplier, float32(center.Y)*g.pixelMultiplier
+	xNorth, yNorth := float32(north.X)*g.pixelMultiplier, float32(north.Y)*g.pixelMultiplier
+	xNortheast, yNortheast := float32(northeast.X+1)*g.pixelMultiplier, float32(northeast.Y)*g.pixelMultiplier
+	xSoutheast, ySoutheast := float32(southeast.X+1)*g.pixelMultiplier, float32(southeast.Y+1)*g.pixelMultiplier
+	xSouthwest, ySouthwest := float32(southwest.X)*g.pixelMultiplier, float32(southwest.Y+1)*g.pixelMultiplier
+	xSouth, ySouth := float32(south.X)*g.pixelMultiplier, float32(south.Y+1)*g.pixelMultiplier
+	xNorthwest, yNorthwest := float32(northwest.X)*g.pixelMultiplier, float32(northwest.Y)*g.pixelMultiplier
 
 	indices := []uint16{0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 1}
 	vertices := []ebiten.Vertex{
@@ -252,31 +261,31 @@ func drawHex(dc drawConfig, g grid, p GridPosition, color drawTriangleColor, sel
 }
 
 func drawHexHighlight(dc drawConfig, g grid, p GridPosition) {
-	lineWidth := float32(dc.hexLineWidth) * dc.windowMultiplier
+	lineWidth := float32(dc.hexLineWidth) * g.pixelMultiplier
 
 	north := g.getPixelOutbounds(p, hpNorth)
-	nX := float32(north.X) * dc.windowMultiplier
-	nY := float32(north.Y) * dc.windowMultiplier
+	nX := float32(north.X) * g.pixelMultiplier
+	nY := float32(north.Y) * g.pixelMultiplier
 
 	nw := g.getPixelOutbounds(p, hpNorthwest)
-	nwX := float32(nw.X) * dc.windowMultiplier
-	nwY := float32(nw.Y) * dc.windowMultiplier
+	nwX := float32(nw.X) * g.pixelMultiplier
+	nwY := float32(nw.Y) * g.pixelMultiplier
 
 	ne := g.getPixelOutbounds(p, hpNortheast)
-	neX := float32(ne.X+1) * dc.windowMultiplier
-	neY := float32(ne.Y) * dc.windowMultiplier
+	neX := float32(ne.X+1) * g.pixelMultiplier
+	neY := float32(ne.Y) * g.pixelMultiplier
 
 	sw := g.getPixelOutbounds(p, hpSouthwest)
-	swX := float32(sw.X) * dc.windowMultiplier
-	swY := float32(sw.Y+1) * dc.windowMultiplier
+	swX := float32(sw.X) * g.pixelMultiplier
+	swY := float32(sw.Y+1) * g.pixelMultiplier
 
 	se := g.getPixelOutbounds(p, hpSoutheast)
-	seX := float32(se.X+1) * dc.windowMultiplier
-	seY := float32(se.Y+1) * dc.windowMultiplier
+	seX := float32(se.X+1) * g.pixelMultiplier
+	seY := float32(se.Y+1) * g.pixelMultiplier
 
 	s := g.getPixelOutbounds(p, hpSouth)
-	sX := float32(s.X) * dc.windowMultiplier
-	sY := float32(s.Y+1) * dc.windowMultiplier
+	sX := float32(s.X) * g.pixelMultiplier
+	sY := float32(s.Y+1) * g.pixelMultiplier
 
 	vector.StrokeLine(
 		dc.screen,

@@ -36,31 +36,6 @@ func (p player) String() string {
 	}
 }
 
-type windowConfig struct {
-	width      int
-	height     int
-	multiplier float32
-}
-
-func newWindowConfig() windowConfig {
-	wc := windowConfig{
-		width:      1280,
-		height:     720,
-		multiplier: 2.5,
-	}
-	return wc
-}
-
-func (wc windowConfig) maxPixels() int {
-	return wc.width * wc.height
-}
-
-func (wc windowConfig) contains(p Pixel) bool {
-	xContained := p.X >= 0 && p.X < wc.width
-	yContained := p.Y >= 0 && p.Y < wc.height
-	return xContained && yContained
-}
-
 // Stores a callback to invoke when a position is reached.
 type action struct {
 	position

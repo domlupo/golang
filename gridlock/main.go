@@ -81,7 +81,7 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 	start := time.Now()
 	// For 1280p * 720p resolution, a hexagon height of 40p is ideally 80/sqrt(3) wide.
 	// 80/sqrt(3) is 46.188 which is approximately 46p.
-	grid := newGrid()
+	grid := newGrid(newGridConfig())
 	hexagons := newHexagons(grid)
 	obstacles, oLUT := setupObstacles(obstacleSetup, grid)
 	nodes, nLUT := setupNodes(nodeSetup, grid, g.initialNodeHealth, hexagons, oLUT)
@@ -103,6 +103,7 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 	g.controller = newController(g.state, g.computers, g.debugger)
 	// TODO: I should only invoke newDrawConfig once per game not every restart
 	g.drawer = newDrawer(newDrawConfig(), g.state, g.controller, g.debugger)
+	ebiten.SetWindowSize(int(float32(g.state.grid.width)*g.state.grid.pixelMultiplier), int(float32(g.state.grid.height)*g.state.grid.pixelMultiplier))
 }
 
 func (g *Game) Update() error {
@@ -212,8 +213,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	wc := newWindowConfig()
-	return int(float32(wc.width) * wc.multiplier), int(float32(wc.height) * wc.multiplier)
+	return int(float32(g.state.grid.width) * g.state.grid.pixelMultiplier), int(float32(g.state.grid.height) * g.state.grid.pixelMultiplier)
 }
 
 func main() {
@@ -229,8 +229,6 @@ func main() {
 		}
 	}
 
-	wc := newWindowConfig()
-	ebiten.SetWindowSize(int(float32(wc.width)*wc.multiplier), int(float32(wc.height)*wc.multiplier))
 	os.Mkdir(g.outputDirectoryName, 0755)
 
 	g.developerToggles[g.cpuProfilerToggleName] = newToggle(

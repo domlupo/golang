@@ -135,12 +135,11 @@ func (info nodeInfo) log() []slog.Attr {
 // processed. This continues until the all pixels are procesed.
 func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 	start := time.Now()
-	wc := newWindowConfig()
-	distanceLimit := max(wc.width, wc.height)
-	nodeLUT := make(map[Pixel]nodeInfo, wc.maxPixels())
+	distanceLimit := g.chebyshevDistanceLimit
+	nodeLUT := make(map[Pixel]nodeInfo, g.basePixels)
 
-	for x := range wc.width {
-		for y := range wc.height {
+	for x := range g.width {
+		for y := range g.height {
 			p := Pixel{X: x, Y: y}
 			gridPos, ok := g.getGridPos(p)
 			if !ok {
@@ -160,12 +159,12 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 	distance := 0
 	var priorCount int
 	var count int
-	for count != wc.maxPixels() {
+	for count != g.basePixels {
 		priorCount = count
 		count = 0
 
-		for x := range wc.width {
-			for y := range wc.height {
+		for x := range g.width {
+			for y := range g.height {
 				p := Pixel{X: x, Y: y}
 				oInfo := oLUT[p]
 				nInfo := nodeLUT[p]
@@ -178,7 +177,7 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 					continue
 				}
 
-				adjacent := p.allAdjacent()
+				adjacent := p.allAdjacent(g)
 
 				for _, a := range adjacent {
 					if !oLUT[a].Walkable {
@@ -210,23 +209,23 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 			}
 		}
 
-		percent := float64(count) / float64(wc.maxPixels()) * maxPercent
+		percent := float64(count) / float64(g.basePixels) * maxPercent
 		logger.log(
 			infoLevel,
 			setupLogic,
 			fmt.Sprintf("setupNodeLUT: %.1f%% total pixels calculated. %d pixels of distance %d", percent, count-priorCount, distance))
 
 		distance++
-		if distance > max(wc.height, wc.width) {
+		if distance > max(g.height, g.width) {
 			panic("setupNodeLUT: invalid setup because distance is greater than max distance allowed by window.")
 		}
 	}
 
-	percent := float64(count) / float64(wc.maxPixels()) * maxPercent
+	percent := float64(count) / float64(g.basePixels) * maxPercent
 	logger.log(infoLevel, setupLogic, fmt.Sprintf("setupNodeLUT: %.0f%% total pixels not skipped with a distance limit of %d", percent, distanceLimit))
 
-	for x := range wc.width {
-		for y := range wc.height {
+	for x := range g.width {
+		for y := range g.height {
 			p := Pixel{X: x, Y: y}
 			oInfo := oLUT[p]
 			if !oInfo.Walkable {
@@ -238,6 +237,12 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 	}
 
 	logger.log(infoLevel, setupLogic, fmt.Sprintf("setupNodeLUT: required %d seconds", int(time.Since(start).Seconds())))
+
+	if len(nodeLUT) != g.basePixels {
+		logger.log(errorLevel, setupLogic, "setupNodeLUT: cannot setup node look up table since created LUT is an invalid size")
+		panic("setupNodeLUT: game requires a node LUT to start")
+	}
+
 	return nodeLUT
 }
 
@@ -335,11 +340,11 @@ func (n *node) drawNode(dc drawConfig, g grid) {
 
 		vector.StrokeLine(
 			dc.screen,
-			float32(c.X-(width/2))*dc.windowMultiplier,
-			float32(c.Y)*dc.windowMultiplier,
-			(float32(c.X-(width/2))+healthLineLength)*dc.windowMultiplier,
-			float32(c.Y)*dc.windowMultiplier,
-			float32(dc.healthLineWidth)*dc.windowMultiplier,
+			float32(c.X-(width/2))*g.pixelMultiplier,
+			float32(c.Y)*g.pixelMultiplier,
+			(float32(c.X-(width/2))+healthLineLength)*g.pixelMultiplier,
+			float32(c.Y)*g.pixelMultiplier,
+			float32(dc.healthLineWidth)*g.pixelMultiplier,
 			dc.nodeHealthColor,
 			false)
 	}
@@ -375,11 +380,11 @@ func (n *node) drawTargets(dc drawConfig, g grid, drawPOneTargets bool, drawPTwo
 		for _, t := range n.targets {
 			vector.StrokeLine(
 				dc.screen,
-				float32(center.X)*dc.windowMultiplier,
-				float32(center.Y)*dc.windowMultiplier,
-				float32(t.X)*dc.windowMultiplier,
-				float32(t.Y)*dc.windowMultiplier,
-				float32(dc.targetNodeLineWidth)*dc.windowMultiplier,
+				float32(center.X)*g.pixelMultiplier,
+				float32(center.Y)*g.pixelMultiplier,
+				float32(t.X)*g.pixelMultiplier,
+				float32(t.Y)*g.pixelMultiplier,
+				float32(dc.targetNodeLineWidth)*g.pixelMultiplier,
 				color,
 				false,
 			)

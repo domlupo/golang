@@ -124,13 +124,12 @@ func (os obstacles) setup(g grid) obstacleLUT {
 // the pixels 1 pixel away are processed. This continues until all the pixels are processed.
 func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 	start := time.Now()
-	wc := newWindowConfig()
-	distanceLimit := max(wc.width, wc.height)
+	distanceLimit := max(g.width, g.height)
 	nearestUnwalkables := make(map[Pixel][]Pixel)
-	oLUT := make(map[Pixel]obstacleInfo, wc.width*wc.height)
+	oLUT := make(map[Pixel]obstacleInfo, g.width*g.height)
 
-	for x := range wc.width {
-		for y := range wc.height {
+	for x := range g.width {
+		for y := range g.height {
 			p := Pixel{X: x, Y: y}
 			gridPos, ok := g.getGridPos(p)
 			if !ok {
@@ -146,8 +145,8 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 		}
 	}
 
-	for x := range wc.width {
-		for y := range wc.height {
+	for x := range g.width {
+		for y := range g.height {
 			p := Pixel{X: x, Y: y}
 			info := oLUT[p]
 			if !info.Walkable {
@@ -164,12 +163,12 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 	distance := 0
 	var priorCount int
 	var count int
-	for count != wc.maxPixels() {
+	for count != g.basePixels {
 		priorCount = count
 		count = 0
 
-		for x := range wc.width {
-			for y := range wc.height {
+		for x := range g.width {
+			for y := range g.height {
 				p := Pixel{X: x, Y: y}
 				info := oLUT[p]
 
@@ -181,7 +180,7 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 					continue
 				}
 
-				adjacent := p.allAdjacent()
+				adjacent := p.allAdjacent(g)
 
 				for _, a := range adjacent {
 					aInfo := oLUT[a]
@@ -205,7 +204,7 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 			}
 		}
 
-		percent := float64(count) / float64(wc.maxPixels()) * maxPercent
+		percent := float64(count) / float64(g.basePixels) * maxPercent
 		logger.log(
 			infoLevel,
 			setupLogic,
@@ -217,8 +216,8 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 		// may lead to very hard to deubg issues which I want to avoid. Another potential error prone
 		// optmization that I am avoiding is summing the pixel position as they are added to the array.
 		// Optimizing may be needed in the future to speed up setup, but LUT caching is sufficient for now.
-		for x := range wc.width {
-			for y := range wc.height {
+		for x := range g.width {
+			for y := range g.height {
 				p := Pixel{X: x, Y: y}
 				n := nearestUnwalkables[p]
 
@@ -240,7 +239,7 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 		distance++
 	}
 
-	percent := float64(count) / float64(wc.maxPixels()) * maxPercent
+	percent := float64(count) / float64(g.basePixels) * maxPercent
 	logger.log(
 		infoLevel,
 		setupLogic,
@@ -250,6 +249,13 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 			distanceLimit))
 
 	logger.log(infoLevel, setupLogic, fmt.Sprintf("setupObstacleLUT: required %d seconds", int(time.Since(start).Seconds())))
+
+	if len(oLUT) != g.basePixels {
+		logger.log(errorLevel, setupLogic, fmt.Sprintf("setupObstacleLUT: cannot setup obstacle look up table since created LUT is "+
+			"%d pixels rather than expected %d", len(oLUT), g.basePixels))
+		panic("setupObstacleLUT: game requires an obstacle LUT to start")
+	}
+
 	return oLUT
 }
 
@@ -427,27 +433,27 @@ func (points obstaclePoints) createAllPoints(os obstacles, g grid) {
 		sw := g.getPixelOutbounds(o.gridPos, hpSouthwest)
 		nw := g.getPixelOutbounds(o.gridPos, hpNorthwest)
 
-		if nPoint, ok := n.add(nOffset); ok {
+		if nPoint, ok := n.add(nOffset, g); ok {
 			nObstaclePoint.Pixel = nPoint
 			points[nPoint] = nObstaclePoint
 		}
-		if neTarget, ok := ne.add(neOffset); ok {
+		if neTarget, ok := ne.add(neOffset, g); ok {
 			neObstaclePoint.Pixel = neTarget
 			points[neTarget] = neObstaclePoint
 		}
-		if seTarget, ok := se.add(seOffset); ok {
+		if seTarget, ok := se.add(seOffset, g); ok {
 			seObstaclePoint.Pixel = seTarget
 			points[seTarget] = seObstaclePoint
 		}
-		if sTarget, ok := s.add(sOffset); ok {
+		if sTarget, ok := s.add(sOffset, g); ok {
 			sObstaclePoint.Pixel = sTarget
 			points[sTarget] = sObstaclePoint
 		}
-		if swTarget, ok := sw.add(swOffset); ok {
+		if swTarget, ok := sw.add(swOffset, g); ok {
 			swObstaclePoint.Pixel = swTarget
 			points[swTarget] = swObstaclePoint
 		}
-		if nwTarget, ok := nw.add(nwOffset); ok {
+		if nwTarget, ok := nw.add(nwOffset, g); ok {
 			nwObstaclePoint.Pixel = nwTarget
 			points[nwTarget] = nwObstaclePoint
 		}

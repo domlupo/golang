@@ -585,17 +585,17 @@ func (u unit) logShort() []slog.Attr {
 	return a
 }
 
-func (u unit) angleDraw(dc drawConfig) *ebiten.DrawImageOptions {
+func (u unit) angleDraw(dc drawConfig, pixelMultiplier float32) *ebiten.DrawImageOptions {
 	op := ebiten.DrawImageOptions{}
 	xMult := math.Sin(u.angle) - math.Cos(u.angle)
 	yMult := -math.Sqrt2 * math.Sin(u.angle+(math.Pi/4))
 	op.GeoM.Rotate(u.angle)
 	op.GeoM.Translate(float64(u.X)+float64(u.radius)*xMult, float64(u.Y)+float64(u.radius)*yMult)
-	op.GeoM.Scale(float64(dc.windowMultiplier), float64(dc.windowMultiplier))
+	op.GeoM.Scale(float64(pixelMultiplier), float64(pixelMultiplier))
 	return &op
 }
 
-func (u unit) draw(dc drawConfig, selected bool) {
+func (u unit) draw(dc drawConfig, selected bool, pixelMultiplier float32) {
 	var unitColor color.Color
 	switch u.player {
 	case pOne:
@@ -608,29 +608,29 @@ func (u unit) draw(dc drawConfig, selected bool) {
 
 	switch u.name {
 	case fighter:
-		dc.screen.DrawImage(dc.pngFighter, u.angleDraw(dc))
+		dc.screen.DrawImage(dc.pngFighter, u.angleDraw(dc, pixelMultiplier))
 
 		if u.selected {
 			vector.StrokeCircle(
 				dc.screen,
-				float32(u.X)*dc.windowMultiplier,
-				float32(u.Y)*dc.windowMultiplier,
-				float32(u.vision)*dc.windowMultiplier,
-				float32(dc.defaultLineWidth)*dc.windowMultiplier,
+				float32(u.X)*pixelMultiplier,
+				float32(u.Y)*pixelMultiplier,
+				float32(u.vision)*pixelMultiplier,
+				float32(dc.defaultLineWidth)*pixelMultiplier,
 				dc.highlightColor,
 				false,
 			)
 		}
 	case bomber:
-		dc.screen.DrawImage(dc.pngBomber, u.angleDraw(dc))
+		dc.screen.DrawImage(dc.pngBomber, u.angleDraw(dc, pixelMultiplier))
 
 		if u.selected {
 			vector.StrokeCircle(
 				dc.screen,
-				float32(u.X)*dc.windowMultiplier,
-				float32(u.Y)*dc.windowMultiplier,
-				float32(u.vision)*dc.windowMultiplier,
-				float32(dc.defaultLineWidth)*dc.windowMultiplier,
+				float32(u.X)*pixelMultiplier,
+				float32(u.Y)*pixelMultiplier,
+				float32(u.vision)*pixelMultiplier,
+				float32(dc.defaultLineWidth)*pixelMultiplier,
 				dc.highlightColor,
 				false,
 			)
@@ -639,40 +639,40 @@ func (u unit) draw(dc drawConfig, selected bool) {
 		for _, a := range u.actions {
 			vector.StrokeCircle(
 				dc.screen,
-				float32(a.X)*dc.windowMultiplier,
-				float32(a.Y)*dc.windowMultiplier,
+				float32(a.X)*pixelMultiplier,
+				float32(a.Y)*pixelMultiplier,
 				// TODO: hard coded value. Needed because this is the first instance of a unit
 				// drawing another unit config. It is Low priority to fix this. Also this pattern
 				// will occur in the future. Easier to fix once more examples to understand structure.
-				20.0*dc.windowMultiplier,
-				float32(dc.missileExplodeRadiusLineWidth)*dc.windowMultiplier,
+				20.0*pixelMultiplier,
+				float32(dc.missileExplodeRadiusLineWidth)*pixelMultiplier,
 				dc.highlightColor,
 				false,
 			)
 		}
 	case missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, missileRadarActive:
-		dc.screen.DrawImage(dc.pngMissile, u.angleDraw(dc))
+		dc.screen.DrawImage(dc.pngMissile, u.angleDraw(dc, pixelMultiplier))
 
 		if u.selected && (u.name == missileHeatSeeking || u.name == missileAntiBallistic || u.name == missileRadarActive) {
 			vector.StrokeCircle(
 				dc.screen,
-				float32(u.X)*dc.windowMultiplier,
-				float32(u.Y)*dc.windowMultiplier,
-				float32(u.vision)*dc.windowMultiplier,
-				float32(dc.missileExplodeRadiusLineWidth)*dc.windowMultiplier,
+				float32(u.X)*pixelMultiplier,
+				float32(u.Y)*pixelMultiplier,
+				float32(u.vision)*pixelMultiplier,
+				float32(dc.missileExplodeRadiusLineWidth)*pixelMultiplier,
 				dc.highlightColor,
 				false,
 			)
 		}
 	case flare:
-		dc.screen.DrawImage(dc.pngFlare, u.angleDraw(dc))
+		dc.screen.DrawImage(dc.pngFlare, u.angleDraw(dc, pixelMultiplier))
 	case chaff:
 		vector.StrokeCircle(
 			dc.screen,
-			float32(u.X)*dc.windowMultiplier,
-			float32(u.Y)*dc.windowMultiplier,
-			float32(u.radius)*dc.windowMultiplier,
-			float32(dc.defaultLineWidth)*dc.windowMultiplier,
+			float32(u.X)*pixelMultiplier,
+			float32(u.Y)*pixelMultiplier,
+			float32(u.radius)*pixelMultiplier,
+			float32(dc.defaultLineWidth)*pixelMultiplier,
 			unitColor,
 			false,
 		)
@@ -688,18 +688,18 @@ func (u unit) draw(dc drawConfig, selected bool) {
 		}
 		vector.FillCircle(
 			dc.screen,
-			float32(u.X)*dc.windowMultiplier,
-			float32(u.Y)*dc.windowMultiplier,
-			float32(u.radius)*dc.windowMultiplier,
+			float32(u.X)*pixelMultiplier,
+			float32(u.Y)*pixelMultiplier,
+			float32(u.radius)*pixelMultiplier,
 			color,
 			false,
 		)
 	default:
 		vector.FillCircle(
 			dc.screen,
-			float32(u.X)*dc.windowMultiplier,
-			float32(u.Y)*dc.windowMultiplier,
-			float32(u.radius)*dc.windowMultiplier,
+			float32(u.X)*pixelMultiplier,
+			float32(u.Y)*pixelMultiplier,
+			float32(u.radius)*pixelMultiplier,
 			unitColor,
 			false,
 		)
@@ -713,6 +713,7 @@ func (u unit) draw(dc drawConfig, selected bool) {
 			u.Y-u.radius,
 			u.X+u.radius,
 			u.Y+u.radius,
+			pixelMultiplier,
 		)
 	}
 
@@ -720,10 +721,10 @@ func (u unit) draw(dc drawConfig, selected bool) {
 		if u.name == missileCruise {
 			vector.StrokeCircle(
 				dc.screen,
-				float32(u.activeTarget.X)*dc.windowMultiplier,
-				float32(u.activeTarget.Y)*dc.windowMultiplier,
-				float32(u.explodeRadius)*dc.windowMultiplier,
-				float32(dc.missileExplodeRadiusLineWidth)*dc.windowMultiplier,
+				float32(u.activeTarget.X)*pixelMultiplier,
+				float32(u.activeTarget.Y)*pixelMultiplier,
+				float32(u.explodeRadius)*pixelMultiplier,
+				float32(dc.missileExplodeRadiusLineWidth)*pixelMultiplier,
 				dc.highlightColor,
 				false,
 			)
@@ -735,10 +736,10 @@ func (u unit) draw(dc drawConfig, selected bool) {
 
 		vector.FillRect(
 			dc.screen,
-			float32(u.X-u.radius)*dc.windowMultiplier,
-			float32(u.Y-u.radius)*dc.windowMultiplier,
-			healthLineLength*dc.windowMultiplier,
-			float32(u.radius)*dc.windowMultiplier,
+			float32(u.X-u.radius)*pixelMultiplier,
+			float32(u.Y-u.radius)*pixelMultiplier,
+			healthLineLength*pixelMultiplier,
+			float32(u.radius)*pixelMultiplier,
 			dc.unitHealthColor,
 			false,
 		)

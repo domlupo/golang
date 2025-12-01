@@ -45,9 +45,8 @@ func (c *controller) processInput() {
 	_, mouseWheelDelta := ebiten.Wheel()
 	c.debugger.updateHeatmapPercent(-int(mouseWheelDelta))
 
-	wc := newWindowConfig()
-	x := float32(graphicalX) / wc.multiplier
-	y := float32(graphicalY) / wc.multiplier
+	x := float32(graphicalX) / c.state.grid.pixelMultiplier
+	y := float32(graphicalY) / c.state.grid.pixelMultiplier
 	pixel := Pixel{int(x), int(y)}
 
 	c.priorLeftMouseClicked = c.leftMouseClicked

@@ -55,9 +55,6 @@ Is there a mobile equivalent for war/4x games?
 - drawer.go follow ups:
   - I don't like how developerMode flag is spread everywhere. Also I feel like it should be on controller.go not game.go
     but I need to confirm this.
-  - I don't like how newWindowConfig() is essentially a global.
-    - I also don't like that windowMulitipler is critical to both input from players and output from game.
-      that is probably unavoidable but can be structured better?
   - Determine if drawer.go should only handle controlling drawing or do drawing itself
     - This will clarify if structs like node and obstacle should have draw methods or
       the drawer handle its.

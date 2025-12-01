@@ -21,7 +21,7 @@ func newStateConfig(g grid) stateConfig {
 		moveUnits:                true,
 		produceUnits:             true,
 		produceUnitsStepInterval: 180,
-		spawnUnitRadiusLimit:     g.minimumDistanceBetweenNonAdjacentHexagons(),
+		spawnUnitRadiusLimit:     g.minimumDistanceBetweenNonAdjacentHexagons,
 	}
 	return c
 }
@@ -510,10 +510,10 @@ func (s *state) moveUnits() {
 		if move.equals(position{}) {
 			// TODO: Should this be optimized to only perform this check when the unit
 			// does not typically move e.g. chaff
-			collidedBorder = collidesWithBorder(u.position, u.radius)
+			collidedBorder = collidesWithBorder(u.position, u.radius, s.grid)
 			collidedUnitPos, collidesWithUnit = s.collidesWithUnit(u.position, *u)
 		} else {
-			collidedBorder = collidesWithBorder(move.position, u.radius)
+			collidedBorder = collidesWithBorder(move.position, u.radius, s.grid)
 			collidedUnitPos, collidesWithUnit = s.collidesWithUnit(move.position, *u)
 		}
 

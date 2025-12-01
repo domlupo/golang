@@ -104,7 +104,7 @@ func (p position) equals(other position) bool {
 	return p.layer == other.layer && p.Pixel.equals(other.Pixel)
 }
 
-func (p Pixel) adjacent(d direction) (Pixel, bool) {
+func (p Pixel) adjacent(d direction, g grid) (Pixel, bool) {
 	var x int
 	var y int
 
@@ -135,16 +135,16 @@ func (p Pixel) adjacent(d direction) (Pixel, bool) {
 	}
 
 	a := Pixel{X: p.X + x, Y: p.Y + y}
-	if !newWindowConfig().contains(a) {
+	if !g.contains(a) {
 		return Pixel{}, false
 	}
 	return a, true
 }
 
-func (p Pixel) allAdjacent() []Pixel {
+func (p Pixel) allAdjacent(g grid) []Pixel {
 	a := []Pixel{}
 	for _, d := range directions() {
-		if pos, ok := p.adjacent(d); ok {
+		if pos, ok := p.adjacent(d, g); ok {
 			a = append(a, pos)
 		}
 	}
@@ -158,9 +158,9 @@ func (p position) log() []slog.Attr {
 	return a
 }
 
-func (p1 Pixel) add(p2 Pixel) (Pixel, bool) {
+func (p1 Pixel) add(p2 Pixel, g grid) (Pixel, bool) {
 	p := Pixel{X: p1.X + p2.X, Y: p1.Y + p2.Y}
-	if !newWindowConfig().contains(p) {
+	if !g.contains(p) {
 		return Pixel{}, false
 	} else {
 		return p, true
@@ -183,11 +183,10 @@ func orientation(p1 Pixel, p2 Pixel, p3 Pixel) pointOrientation {
 	}
 }
 
-func collidesWithBorder(p position, offset int) bool {
-	wc := newWindowConfig()
-	if p.X+offset > wc.width ||
+func collidesWithBorder(p position, offset int, g grid) bool {
+	if p.X+offset > g.width ||
 		p.X-offset < 0 ||
-		p.Y+offset > wc.height ||
+		p.Y+offset > g.height ||
 		p.Y-offset < 0 {
 		return true
 	} else {

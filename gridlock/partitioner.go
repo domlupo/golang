@@ -154,7 +154,7 @@ func (part partitioner) defaultPartitions(p Pixel, d int) []GridPosition {
 				if !okA {
 					panic(fmt.Sprintf("defaultPartitions: cannot find center for pos %s", a.log()))
 				}
-				_, collides := collides(p, pa, d, part.grid.conservativeHexRadius())
+				_, collides := collides(p, pa, d, part.grid.conservativeHexRadius)
 				if collides {
 					nextQ = append(nextQ, a)
 				}

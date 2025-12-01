@@ -18,11 +18,7 @@ type drawTriangleColor struct {
 
 // Drawing Configurations for game components which are shown to player
 type drawConfig struct {
-	screen *ebiten.Image
-	// windowMultiplier must only be used for drawing images and windows.
-	// Never use for game logic. float32 rather than idiomatic float64
-	// because the Ebiten draw APIs I use are often float32 over float64.
-	windowMultiplier              float32
+	screen                        *ebiten.Image
 	defaultLineWidth              int
 	selectectionBoxLineWidth      int
 	missileExplodeRadiusLineWidth int
@@ -75,10 +71,8 @@ func newDrawConfig() drawConfig {
 	if missileErr != nil {
 		panic("newDrawConfig: cannot load missile png")
 	}
-	wc := newWindowConfig()
 	dc := drawConfig{
 		screen:                        nil,
-		windowMultiplier:              wc.multiplier,
 		defaultLineWidth:              1,
 		selectectionBoxLineWidth:      1,
 		missileExplodeRadiusLineWidth: 1,
