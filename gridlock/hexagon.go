@@ -113,6 +113,7 @@ func (hs hexagons) maxUnitDifferential(opponent player, l layer) []unitDifferent
 		diffs = append(diffs, unitDifferential{p, d})
 	}
 
+	// TODO: Update to SortFunc
 	sort.Slice(diffs, func(i, j int) bool {
 		return diffs[i].diff > diffs[j].diff
 	})

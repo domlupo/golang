@@ -29,16 +29,35 @@ Is there a mobile equivalent for war/4x games?
       - research tech/upgrades
     - randomized tech tree
       - select 1 of 3 upgrades
-      - skip mechanic?
-    - randomized map generation
+      - combeback mechanics (skip, salvage, etc)
     - human vs computer
     - deploy to web
+    - UI
+    - user controls
     - art
-    - no sound
+    - Maybe
+      - unit attack plans or attack patterns
+      - randomized map generation
+      - comeback mechanics
+    - Don't include
+      - menu or screen transitions
+      - sound
+      - save file
+
 
 ## Checkpoints
 
 ### Next Checkpoints
+
+- Constantly evaluate order to finish MVP work
+  - I think adding more unit upgrades is higher priority
+  - I need to add structures for:
+    - production resource and how its used for infantry, other units and tech
+    - randomized tech tree
+    - deploy to web
+    - UI
+    - controls
+  - I think a good deadline for all this is Feb 1st. It should be ~450-500 hours with 60 hours a week.
 
 - Research every play testing MVP units in depth. Ensure no unrealistic work planned.
   - relative speed between units 
@@ -52,6 +71,10 @@ Is there a mobile equivalent for war/4x games?
     - semi active radar homing
     - active radar homing
 
+- I need to verify that unit speed from steering, etc doesn't break collision engine. 
+  - infantry having a max speed of 1 might be a great way to simplify. 
+  - Air units probably need to go faster. Sub ticking seems best to keep stuff cohesive.
+
 - drawer.go follow ups:
   - I don't like how developerMode flag is spread everywhere. Also I feel like it should be on controller.go not game.go
     but I need to confirm this.
@@ -59,8 +82,6 @@ Is there a mobile equivalent for war/4x games?
     - This will clarify if structs like node and obstacle should have draw methods or
       the drawer handle its.
     - This will clarify if drawer should know about unit specifics.
-    - I don't like that drawConfig has screen attached to it. It kind of makes it a context type struct.
-  - There is some code in state.go that should be moved into controller.go. Specifically updateSelected
 
 - Chaff follow ups
   - Think through chaff behavior more:
@@ -674,7 +695,7 @@ Determine if I should clarify file names
   - ordnance is for temporary air units (bombs, paratroopers, etc)
   - It is not the most realistic but I think it is fine:
     - brood war only uses a single air layer
-    - Simplifies a lot of design questions 
+    - Simplifies a lot of design questions
       - avoids "what units fly in what layer?"
       - avoids "Is fighter only unit able to switch layers?"
     - Avoids implementation work
@@ -703,6 +724,11 @@ Determine if I should clarify file names
 
 ## Game Design Questions
 
+- It might be interesting if the tech tree has a direct conflict via a race. e.g. your opponent
+  can block you from researching something rather than them researching something for themselves.
+  Or they can block 1 of the 3 options.
+- I think slay the spire ascensions is a great way to adjust computer difficulty. Especially
+  if I invest in all of these upgrades and tech trees. I can easily reuse them.
 - A few ideas for a good comeback mechanic or high risk high reward play 
   - higher risk, higher award unit upgrades 
   - A bet mechanic where you can get a random upgrade for a discounted cost since its random
