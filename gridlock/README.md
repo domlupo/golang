@@ -404,6 +404,7 @@ Determine if I should clarify file names
   - Design, scope and implement stealth bomber
 
 - Post MVP potential unit upgrades or changes
+  - semi active radar missile
   - eletronic signal theme
     - draw animation will probably be complex. Shows waves like (((O)))
     - spoofing

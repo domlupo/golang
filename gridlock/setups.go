@@ -413,6 +413,7 @@ const (
 	leftVsRightHorizontalOffset
 	leftVsRightVerticalOffset
 	leftVsRightVerticalOffsetMissileCruise
+	leftVsRightVerticalOffsetFighters
 	leftVsRightVerticalOffsetAircraftAndOrdnance
 	topVsBottom
 	topVsBottomHorizontalOffset
@@ -434,6 +435,7 @@ func nodeSetups() []nodeSetup {
 		leftVsRightHorizontalOffset,
 		leftVsRightVerticalOffset,
 		leftVsRightVerticalOffsetMissileCruise,
+		leftVsRightVerticalOffsetFighters,
 		leftVsRightVerticalOffsetAircraftAndOrdnance,
 		topVsBottom,
 		topVsBottomHorizontalOffset,
@@ -468,6 +470,8 @@ func (ns nodeSetup) String() string {
 		return "leftVsRightVerticalOffset"
 	case leftVsRightVerticalOffsetMissileCruise:
 		return "leftVsRightVerticalOffsetMissileCruise"
+	case leftVsRightVerticalOffsetFighters:
+		return "leftVsRightVerticalOffsetFighters"
 	case leftVsRightVerticalOffsetAircraftAndOrdnance:
 		return "leftVsRightVerticalOffsetAircraftAndOrdnance"
 	case topVsBottom:
@@ -734,6 +738,45 @@ func (nodes nodes) setupPositions(s nodeSetup, initialNodeHealth int) {
 			{GridPosition{21, 23}, pTwo, uc},
 			{GridPosition{26, 23}, pTwo, uc},
 		}
+	case leftVsRightVerticalOffsetFighters:
+		uc := infantryConfig
+		nodeSetupInputs = []nodeSetupInput{
+			{GridPosition{2, 2}, pOne, uc},
+			{GridPosition{6, 1}, pOne, uc},
+			{GridPosition{11, 2}, pNeutral, uc},
+			{GridPosition{16, 4}, pNeutral, uc},
+			{GridPosition{21, 3}, pTwo, uc},
+			{GridPosition{26, 3}, pTwo, uc},
+
+			{GridPosition{1, 6}, pOne, uc},
+			{GridPosition{6, 6}, pOne, uc},
+			{GridPosition{11, 7}, pNeutral, uc},
+			{GridPosition{16, 9}, pNeutral, uc},
+			{GridPosition{21, 8}, pTwo, uc},
+			{GridPosition{26, 8}, pTwo, uc},
+
+			{GridPosition{1, 11}, pOne, fighterConfig},
+			{GridPosition{6, 11}, pOne, uc},
+			{GridPosition{11, 12}, pNeutral, uc},
+			{GridPosition{16, 14}, pNeutral, uc},
+			{GridPosition{21, 13}, pTwo, uc},
+			{GridPosition{26, 13}, pTwo, fighterConfig},
+
+			{GridPosition{1, 16}, pOne, uc},
+			{GridPosition{6, 16}, pOne, uc},
+			{GridPosition{11, 17}, pNeutral, uc},
+			{GridPosition{16, 19}, pNeutral, uc},
+			{GridPosition{21, 18}, pTwo, uc},
+			{GridPosition{26, 18}, pTwo, uc},
+
+			{GridPosition{1, 21}, pOne, uc},
+			{GridPosition{6, 21}, pOne, uc},
+			{GridPosition{11, 22}, pNeutral, uc},
+			{GridPosition{16, 22}, pNeutral, uc},
+			{GridPosition{21, 23}, pTwo, uc},
+			{GridPosition{26, 23}, pTwo, uc},
+		}
+
 	case leftVsRightVerticalOffsetAircraftAndOrdnance:
 		uc := infantryConfig
 		nodeSetupInputs = []nodeSetupInput{
