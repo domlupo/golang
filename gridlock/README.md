@@ -16,8 +16,8 @@ Is there a mobile equivalent for war/4x games?
 3. Playtesting MVP. -> Don't invest major engineering effort into wrong tasks.
   - Playtesting MVP
     - units: 
-      - fighter
-      - bomber
+      - fighter (F-22)
+      - bomber (B-1 Lancer)
       - infantry
       - node ballistic missile
       - node cruise missile
@@ -49,7 +49,7 @@ Is there a mobile equivalent for war/4x games?
 
 ### Next Checkpoints
 
-- Constantly evaluate order to finish MVP work
+- Constantly review work to cut from MVP. Also constantly evaluate order to finish MVP work
   - I think adding more unit upgrades is higher priority
   - I need to add structures for:
     - production resource and how its used for infantry, other units and tech
@@ -62,6 +62,7 @@ Is there a mobile equivalent for war/4x games?
 - Research every play testing MVP units in depth. Ensure no unrealistic work planned.
   - relative speed between units 
     - ballistic missiles are faster than cruise missiles
+  - fighter should be more manuerverable than bomber
   - unrealistic unit behaviors
     - fighters used to shoot down gravity bombs which isn't realistic
   - what missiles should nodes fire?
@@ -70,6 +71,12 @@ Is there a mobile equivalent for war/4x games?
     - heat seeking
     - semi active radar homing
     - active radar homing
+  - other upgrades
+    - glide bombs
+    - jdam
+    - fast maintenance -> less down time
+    - More waypoints
+    - More fuel -> faster
 
 - I need to verify that unit speed from steering, etc doesn't break collision engine. 
   - infantry having a max speed of 1 might be a great way to simplify. 
@@ -89,10 +96,6 @@ Is there a mobile equivalent for war/4x games?
     - Should chaff counter other planes from same player missles?
     - Should chaff counter node missiles from same player?
   - Document difference between chaff and signal jamming behaviors
-    - signal jamming
-      - no ammo
-      - counters only opposing radar missiles
-      - counters a single missile at a itme
     - chaff
       - uses ammo
       - counters multiple missiles at a time
@@ -114,6 +117,10 @@ Is there a mobile equivalent for war/4x games?
       - This seems like a good candidate for not 100% realistic but makes player experience better.
 
 - Debug hangs. It seems to occur when fighter and bomber collide in air.
+
+- I think I should lean into the hexagon theme and for code reuse. For example, the menu screen 
+  should probably use hexagons for buttons. The game UI might be able to reuse hexagons as well.
+  The menu screen can also have some units running around in background with boid behavior.
 
 Determine if I should clarify file names
   - It is weird that I have some singular and some plural. I think I should make all files singular.
@@ -357,27 +364,6 @@ Determine if I should clarify file names
     - bomber stealth
     - turn radius + paths that arc (not sure if I even want this for player experience)
 
----
-
-### Future Checkpoints
-
-- I think I should lean into the hexagon theme and for code reuse. For example, the menu screen 
-  should probably use hexagons for buttons. The game UI might be able to reuse hexagons as well.
-  The menu screen can also have some units running around in background with boid behavior.
-
- Add more units
-  - Determine if other units listed in unit brain storm should be considered?
-  - Should any of these units not be implemented?
-  - Design, scope and implement AC130
-  - Design, scope and implement paratroopers
-  - Design, scope and implement apache
-  - Design, scope and implement stealth bomber
-
-- Do units need different pathing algorithms or only different steer?
-  - How to avoid this?
-  - How to simplify this?
-  - How to make this CPU performant?
-
  - Fix unit selection for single node and multi node. Right now air unit are ignored.
    - Need to add an iter to hexagon which iters through all layers
 
@@ -399,6 +385,52 @@ Determine if I should clarify file names
 
 - Verify that unit movement using any 3 Bresenham's movements which reduce error is fine.
   - I am not 100% certain choosing the second or third option does not cause issues with the algorithm.
+
+- Determine behavior for overkill
+  - what order should main game actions occur e.g. target acquisition, attack units, attack nodes, attack positions, move units?
+  - How is overkill handled?
+  - Should units retarget if they lose their initial target?
+
+---
+
+### Future Checkpoints
+
+ Add more units
+  - Determine if other units listed in unit brain storm should be considered?
+  - Should any of these units not be implemented?
+  - Design, scope and implement AC130
+  - Design, scope and implement paratroopers
+  - Design, scope and implement apache
+  - Design, scope and implement stealth bomber
+
+- Post MVP potential unit upgrades or changes
+  - eletronic signal theme
+    - draw animation will probably be complex. Shows waves like (((O)))
+    - spoofing
+      - counters GPS
+      - what else does it counter?
+    - cover jammming
+      - counters radar guided missiles
+      - how does this differ from chaff from a design perspective?
+      - what else 
+    - anti radiation missile
+    - notching/beams: 
+      - turning 90 degrees to radar guided threat
+      - I am not sure this would cause misses or if missiles should have an accuracy component
+  - misc
+    - thrust vectoring?
+    - dead reackoning can get better over time?
+    - anti satelite missiles
+    - rockets, launching satelites should be an option with a sucess rate?
+    - GPS (f22 did not start with GPS)
+    - inertial navigation system (INS)
+    - radio towers that you need to build in cities?
+    - pilots get better navigation over time?
+
+- Do units need different pathing algorithms or only different steer?
+  - How to avoid this?
+  - How to simplify this?
+  - How to make this CPU performant?
 
 - Look into optimize heatmap draws.
   - heatmaps are causing large stutters. I highly doubt this cannot be optimized.
@@ -502,11 +534,6 @@ Determine if I should clarify file names
 - Determine if unit collision not occuring for static units is correct behavior.
   - This behavior probably redcues CPU usage
   - This behavior probably leads to more bugs where dynamic unit colliding into static unit has no effect occur on static unit.
-
-- Determine behavior for overkill
-  - what order should main game actions occur e.g. target acquisition, attack units, attack nodes, attack positions, move units?
-  - How is overkill handled?
-  - Should units retarget if they lose their initial target?
 
 - Should attack units occur deterministicly?
   - maps in go by default are not deterministic. Currently, a unit can oscillate attacks. Probably wrong behavior
@@ -626,6 +653,8 @@ Determine if I should clarify file names
 
 ## Closed Decisions
 
+Stale: 15
+
 1. No worker unit or resource collection
     - Adds complexity
     - Nodes can produce cargo units which more aligned with multi use nodes
@@ -681,6 +710,7 @@ Determine if I should clarify file names
     slightly more complex. If hexagon configuration changes in the future, probably should prioritze
     simplifying getGridPos over getPixelPos.
 13. Infantry is only simple ground unit. Less artwork, less animations, less design decisions.
+    Infantry are simple background visual but main visuals are air units above them.
     If needed, infantry can have upgrades which can helps tech tree idea.
   - sniper -> range upgrade
   - marine -> cross shallow water
@@ -711,6 +741,7 @@ Determine if I should clarify file names
   - I don't think non infantry land units are required to create desired game loop.
   - Would increase complexity of infantry behavior alot.
   - If the game is popular enough, it would be a good theme for an expansion.
+  - It avoids distracted or overwhelmed players trying to closely follow 2 different altitudes.
 18. Punt multiplayer for initial release
   - There is enough complexity, polish and work for single player.
   - Single player games can be very popular and successful. 
@@ -724,6 +755,9 @@ Determine if I should clarify file names
 
 ## Game Design Questions
 
+- Should payload affect stealth? Stuff like this seems minor and hard to implement so probably not.
+- Spy upgrade should allow blocking tech, lowering satelite launch success, etc
+- Wind could be an interesting mechanic but unneeded. It could mess with aircrafts.
 - It might be interesting if the tech tree has a direct conflict via a race. e.g. your opponent
   can block you from researching something rather than them researching something for themselves.
   Or they can block 1 of the 3 options.
@@ -1138,13 +1172,14 @@ Have read through several college publications and game ai pro articles not link
 
 - Units to consider:
   - satelite
+  - rocket
   - drone
   - uav
   - air refueler
   - Growler (electronic warfare support)
   - black hawk (stealth helicopter)
   - nuke (long time to build, but devastating?)
-
+  - spy or espionage
 
 #### Brainstorm Bomber Unit
 
@@ -1157,7 +1192,7 @@ Have read through several college publications and game ai pro articles not link
   - is it going to be harder to target corners?
   - is it going to be harder to target edges?
   - When it crashes does it do ground damage? I think it should.
-  - Does crashing pre or post bomb differ? I think it should.
+  - Does crashing wtih different payload amount matters? I think it should.
   - Should be less maneuverable than a fighter
 - control
   - multi click for path to bombing run
@@ -1167,7 +1202,7 @@ Have read through several college publications and game ai pro articles not link
   - Then multi click return path same as prior control
   - This means only one bomb run can happen. This seems fine. It is complex and hard to allow multiple bomb 
     runs to occur since a future run would change the auto targets of the prior run. 
-  - Should bomber path and bominb update after it has taken off if viable?
+  - Should bomber path and change bomb target after it has taken off be viable?
   - Need to display current and future path irrespective off how often update occurs.
 - targetting
   - X bombs, dragging shows path
@@ -1191,20 +1226,14 @@ Have read through several college publications and game ai pro articles not link
 - bomb type:
   - gravity bombs
   - guided bombs (drop directly over target and steer towards units or something else)
-  - bunker buster (hits node?)
-  - chemical
-  - incendiary (fire)
+  - bunker buster (hits node?, seems like a good high risk high reward option)
+  - chemical (infantry gas masks counter)
+  - incendiary (fire, can reuse plane crash fire)
   - glide bombs (fired from range and fly towards target)
   - nuclear bomb
 
 #### Brainstorm Fighter Unit
 
-- behavior
-  - should be more manuerverable than bomber
-  - it should be f22 over f35 since no other air to air unit exists yet
-  - adding external payload should make stealth worse
-- control
-  - first implementation is just airport -> p1 -> p2 -> airport
 
 #### Brainstorm upgrades
 
@@ -1272,9 +1301,11 @@ Listing out potential upgrades for a single unit might help:
 
 #### Pixel Art Notes
 
-b1 lancer is 146' long and 40 pixels -> 3.65
-b1 lancer is 137' wide and 38 pixles -> 3.6
-f22 is 62' long -> 17
-f22 is 44' wide -> 12
-
----
+- b1 lancer bomber
+  - https://en.wikipedia.org/wiki/Rockwell_B-1_Lancer#Specifications_(B-1B)
+  - b1 lancer is 146' long and 40 pixels -> 3.65
+  - b1 lancer is 137' wide and 38 pixles -> 3.6
+- f22 fighter
+  - https://en.wikipedia.org/wiki/Lockheed_Martin_F-22_Raptor#Specifications_(F-22A)
+  - f22 is 62' long -> 17
+  - f22 is 44' wide -> 12
