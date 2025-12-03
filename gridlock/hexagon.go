@@ -5,7 +5,7 @@ package main
 import (
 	"fmt"
 	"log/slog"
-	"sort"
+	"slices"
 )
 
 // All hexagons on map
@@ -113,9 +113,15 @@ func (hs hexagons) maxUnitDifferential(opponent player, l layer) []unitDifferent
 		diffs = append(diffs, unitDifferential{p, d})
 	}
 
-	// TODO: Update to SortFunc
-	sort.Slice(diffs, func(i, j int) bool {
-		return diffs[i].diff > diffs[j].diff
+	slices.SortFunc(diffs, func(i, j unitDifferential) int {
+		switch {
+		case i.diff < j.diff:
+			return 1
+		case i.diff > j.diff:
+			return -1
+		default:
+			return 1
+		}
 	})
 
 	return diffs
