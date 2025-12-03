@@ -1,0 +1,3 @@
+[commit-msg]
+[commit-msg.commands.validate]
+run = "./gridlock/hooks/valid_git_prefix.sh {1}"
