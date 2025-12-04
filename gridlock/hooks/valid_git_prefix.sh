@@ -1,7 +1,19 @@
 #!/bin/sh
 
+# This client side check can easily be bypassed.
+# git rebase and git commit --amend both bypass it.
+# Passing env var LEFTHOOK=0 also bypasses.
+# Ideally this client side check and a server side
+# pre-receive hook would be used. I am not
+# convinced it it worth the development effort.
+
+# Running a script to check for invalid and
+# improper prefixs during prefix analysis is
+# sufficient.
+
 DIRECTORY="gridlock"
-VALID_PREFIXS="^(fix|add|update|remove|rewrite|refactor|optimize|plan|comment|style|test|tool|misc):"
+VALID_PREFIXS='^(fix|add|update|remove|rewrite|refactor|optimize|plan'\
+'|comment|style|test|tool|misc):|^w$|^wip$'
 # git passes different args for different git hooks
 # commit-msg hook only passes the commit message
 # https://lefthook.dev/usage/features/git-args.html
