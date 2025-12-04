@@ -745,3 +745,15 @@ func (u unit) draw(dc drawConfig, selected bool, pixelMultiplier float32) {
 		)
 	}
 }
+
+func (u unit) drawVision(dc drawConfig, pixelMultiplier float32) {
+	vector.StrokeCircle(
+		dc.screen,
+		float32(u.X)*pixelMultiplier,
+		float32(u.Y)*pixelMultiplier,
+		float32(u.vision)*pixelMultiplier,
+		float32(dc.defaultLineWidth)*pixelMultiplier,
+		dc.highlightColor,
+		false,
+	)
+}

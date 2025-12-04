@@ -20,6 +20,7 @@ type debuggerConfig struct {
 	debugNodes                    bool
 	debugNodeLUT                  bool
 	debugObstacleLUT              bool
+	debugUnitVision               bool
 	debugVisibilityGrids          bool
 	debugNodeTargets              bool
 	debugHexagons                 bool
@@ -120,10 +121,12 @@ func (d *debugger) setupToggles(cooldown time.Duration) {
 		ebiten.KeyA,
 		func() {
 			var toggle = !(d.debugNodeTargets &&
+				d.debugUnitVision &&
 				d.debugVisibilityGrids &&
 				d.debugHexagons &&
 				d.debugNodes)
 			d.debugNodeTargets = toggle
+			d.debugUnitVision = toggle
 			d.debugVisibilityGrids = toggle
 			d.debugHexagons = toggle
 			d.debugNodes = toggle
@@ -132,6 +135,10 @@ func (d *debugger) setupToggles(cooldown time.Duration) {
 	toggles["debugNodeTargets"] = newToggle(
 		ebiten.KeyN,
 		func() { d.debugNodeTargets = !d.debugNodeTargets },
+		cooldown)
+	toggles["debugUnitVision"] = newToggle(
+		ebiten.KeyB,
+		func() { d.debugUnitVision = !d.debugUnitVision },
 		cooldown)
 	toggles["debugVisibilityGrids"] = newToggle(
 		ebiten.KeyV,
@@ -326,6 +333,13 @@ func (d debugger) draw(c drawConfig) {
 					drawHexHighlight(c, d.grid, h.gridPos)
 				}
 			}
+		}
+	}
+
+	if d.debugUnitVision {
+		u := d.selectedUnit()
+		if u != nil {
+			u.drawVision(c, d.grid.pixelMultiplier)
 		}
 	}
 

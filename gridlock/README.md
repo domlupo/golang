@@ -56,7 +56,6 @@ Is there a mobile equivalent for war/4x games?
 
 - Scope rotary cannon
   - Order
-    - implement basic visual debugger for one unit vision combo
     - implement circle <-> square collision. 
       - use w/e is easiest for square
   - Add generic visual debugger for unit vision and nearest target
