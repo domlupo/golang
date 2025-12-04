@@ -26,6 +26,9 @@ func newStateConfig(g grid) stateConfig {
 	return c
 }
 
+// A counter for game ticks
+type step = uint64
+
 // A request to modify state.
 type request struct {
 	spawn    *unit
@@ -50,7 +53,7 @@ type state struct {
 	chaffUnits       units
 	reactiveUnits    map[id]*unit
 	requesterUnits   map[id]*unit
-	step             uint64
+	step             step
 	developerMode    bool
 	unitSpawnTotal   int
 	unitDespawnTotal int

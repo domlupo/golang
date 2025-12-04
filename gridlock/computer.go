@@ -126,12 +126,12 @@ func (c *computer) updateNodeTargets(avgUnitPos Pixel) {
 				selfNode.targets = []position{{lLand, avgUnitPos}}
 			}
 		case fighter:
-			if fighterConfig.bombGravityCountMax <= validDiffsIndex+1 {
-				c.planBombs(selfNode, positions[:fighterConfig.bombGravityCountMax])
+			if fighterConfig.consumables[bombGravity].count <= validDiffsIndex+1 {
+				c.planBombs(selfNode, positions[:fighterConfig.consumables[bombGravity].count])
 			}
 		case bomber:
-			if bomberConfig.bombGravityCountMax <= validDiffsIndex+1 {
-				c.planBombs(selfNode, positions[:bomberConfig.bombGravityCountMax])
+			if bomberConfig.consumables[bombGravity].count <= validDiffsIndex+1 {
+				c.planBombs(selfNode, positions[:bomberConfig.consumables[bombGravity].count])
 			}
 		}
 	}

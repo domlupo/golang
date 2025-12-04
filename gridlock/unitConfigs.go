@@ -57,48 +57,44 @@ func (n name) String() string {
 	}
 }
 
+type consumable struct {
+	count     int
+	countMax  int
+	fireDelay step
+}
+
 type unitConfig struct {
-	name                       name
-	radius                     int
-	vision                     int
-	maxHealth                  int
-	attack                     int
-	reach                      int
-	produceLayer               layer
-	staticTarget               bool
-	targetLayers               layers
-	collisionLayers            layers
-	explodeRadius              int
-	terminalWhenMoveDone       bool
-	terminalStepDelay          uint64
-	terminalStep               uint64
-	explodeWhenTerminal        bool
-	despawnWhenTerminal        bool
-	reloadPayloadDelay         uint64
-	maxAlivePerNode            int
-	speedFactor                float64
-	reactions                  []reaction
-	reactive                   bool
-	requests                   []request
-	requester                  bool
-	bombGravityCount           int
-	bombGravityCountMax        int
-	chaffCount                 int
-	chaffCountMax              int
-	flareCount                 int
-	flareCountMax              int
-	missileHeatSeekingCount    int
-	missileHeatSeekingCountMax int
-	missileRadarActiveCount    int
-	missileRadarActiveCountMax int
-	fireOrdnanceDelay          uint64
-	heated                     bool
-	heatSeeking                bool
-	radarGuided                bool
-	ignore                     func(u, t *unit) bool
-	ignoreTarget               func(t *unit) bool
-	ignoreCollision            func(other *unit) bool
-	survivesCollision          bool
+	name                 name
+	radius               int
+	vision               int
+	maxHealth            int
+	attack               int
+	reach                int
+	produceLayer         layer
+	staticTarget         bool
+	targetLayers         layers
+	collisionLayers      layers
+	explodeRadius        int
+	terminalWhenMoveDone bool
+	terminalStepDelay    step
+	terminalStep         step
+	explodeWhenTerminal  bool
+	despawnWhenTerminal  bool
+	reloadPayloadDelay   uint64
+	maxAlivePerNode      int
+	speedFactor          float64
+	reactions            []reaction
+	reactive             bool
+	requests             []request
+	requester            bool
+	consumables          map[name]consumable
+	heated               bool
+	heatSeeking          bool
+	radarGuided          bool
+	ignore               func(u, t *unit) bool
+	ignoreTarget         func(t *unit) bool
+	ignoreCollision      func(other *unit) bool
+	survivesCollision    bool
 	// This flag should rarely be used. If it is used often then write a function to avoid bugs.
 	// This is safe to enable iff the unit only collides with units that have radiuses less
 	// than state.spawnUnitRadiusLimit. For example, chaff only collides with radarGuided units
@@ -124,46 +120,51 @@ var infantryConfig = unitConfig{
 }
 
 var fighterConfig = unitConfig{
-	name:                fighter,
-	radius:              8,
-	maxHealth:           1,
-	vision:              800,
-	produceLayer:        lAircraft,
-	targetLayers:        []layer{lOrdnance, lAircraft},
-	collisionLayers:     []layer{lAircraft},
-	explodeRadius:       100,
-	maxAlivePerNode:     1,
-	bombGravityCountMax: 1,
-	speedFactor:         1.0,
-	reactive:            true,
-	requester:           true,
-	flareCountMax:       1000,
-	fireOrdnanceDelay:   50,
-	heated:              true,
+	name:            fighter,
+	radius:          8,
+	maxHealth:       1,
+	vision:          800,
+	produceLayer:    lAircraft,
+	targetLayers:    []layer{lOrdnance, lAircraft},
+	collisionLayers: []layer{lAircraft},
+	explodeRadius:   100,
+	maxAlivePerNode: 1,
+	consumables: map[name]consumable{
+		bombGravity:        {countMax: 1, fireDelay: 50},
+		flare:              {countMax: 1000, fireDelay: 50},
+		chaff:              {countMax: 0, fireDelay: 50},
+		missileHeatSeeking: {countMax: 0, fireDelay: 50},
+		missileRadarActive: {countMax: 0, fireDelay: 50},
+	},
+	speedFactor: 1.0,
+	reactive:    true,
+	requester:   true,
+	heated:      true,
 	ignoreTarget: func(t *unit) bool {
 		return t.name == flare
 	},
 }
 
 var bomberConfig = unitConfig{
-	name:                bomber,
-	radius:              20,
-	maxHealth:           1,
-	vision:              200,
-	produceLayer:        lAircraft,
-	targetLayers:        []layer{lOrdnance},
-	collisionLayers:     []layer{lAircraft},
-	explodeRadius:       100,
-	maxAlivePerNode:     1,
-	bombGravityCountMax: 4,
-	flareCountMax:       1000,
-	chaffCountMax:       1000,
-	fireOrdnanceDelay:   30,
-	speedFactor:         1.0,
-	heated:              true,
-	reactive:            true,
-	requester:           true,
-	ignore:              func(u, t *unit) bool { return slices.Contains(u.skipTargets, t.id) },
+	name:            bomber,
+	radius:          20,
+	maxHealth:       1,
+	vision:          200,
+	produceLayer:    lAircraft,
+	targetLayers:    []layer{lOrdnance},
+	collisionLayers: []layer{lAircraft},
+	explodeRadius:   100,
+	maxAlivePerNode: 1,
+	consumables: map[name]consumable{
+		bombGravity: {countMax: 4, fireDelay: 30},
+		flare:       {countMax: 1000, fireDelay: 30},
+		chaff:       {countMax: 1000, fireDelay: 30},
+	},
+	speedFactor: 1.0,
+	heated:      true,
+	reactive:    true,
+	requester:   true,
+	ignore:      func(u, t *unit) bool { return slices.Contains(u.skipTargets, t.id) },
 }
 
 var bombGravityConfig = unitConfig{
@@ -305,7 +306,6 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.Int("reach", uc.reach))
 	a = append(a, slog.Bool("staticTarget", uc.staticTarget))
 	a = append(a, slog.Bool("heatSeeking", uc.heatSeeking))
-	a = append(a, slog.Int("missileHeatSeekingCount", uc.missileHeatSeekingCount))
 	a = append(a, slog.Bool("explodeWhenTerminal", uc.explodeWhenTerminal))
 	a = append(a, slog.Bool("despawnWhenTerminal", uc.despawnWhenTerminal))
 	a = append(a, slog.Uint64("terminalStepDelay", uc.terminalStepDelay))

@@ -11,19 +11,20 @@ type reaction struct {
 }
 
 func (u unit) isPayloadNotFull() bool {
-	return u.missileHeatSeekingCount != u.missileHeatSeekingCountMax ||
-		u.flareCount != u.flareCountMax ||
-		u.bombGravityCount != u.bombGravityCountMax ||
-		u.missileRadarActiveCount != u.missileRadarActiveCountMax ||
-		u.chaffCount != u.chaffCountMax
+	for _, v := range u.consumables {
+		if v.count != v.countMax {
+			return true
+		}
+	}
+	return false
 }
 
 func (u *unit) refillPayload() {
-	u.missileHeatSeekingCount = u.missileHeatSeekingCountMax
-	u.flareCount = u.flareCountMax
-	u.bombGravityCount = u.bombGravityCountMax
-	u.missileRadarActiveCount = u.missileRadarActiveCountMax
-	u.chaffCount = u.chaffCountMax
+	for k := range u.consumables {
+		c := u.consumables[k]
+		c.count = c.countMax
+		u.consumables[k] = c
+	}
 }
 
 // Returns the reactions for the passed unit name.
@@ -43,8 +44,8 @@ func reactions(n name) []reaction {
 				},
 				delay: bomberConfig.reloadPayloadDelay,
 			},
-			reactFlare(bomberConfig.fireOrdnanceDelay),
-			reactChaff(bomberConfig.fireOrdnanceDelay),
+			reactFlare(bomberConfig.consumables[flare].fireDelay),
+			reactChaff(bomberConfig.consumables[chaff].fireDelay),
 		}
 	case fighter:
 		return []reaction{
@@ -72,15 +73,16 @@ func reactions(n name) []reaction {
 					// TODO: determine fighter missile preference? Configurable by player?
 					// Arbitrarily set radar to have higher priority than heat seeking.
 					switch {
-					case fighter.missileRadarActiveCount > 0 && !missileRadarActiveConfig.ignoreTarget(fighter.nearest):
-						fighter.missileRadarActiveCount--
+					case fighter.consumables[missileRadarActive].count > 0 && !missileRadarActiveConfig.ignoreTarget(fighter.nearest):
 						uc = missileRadarActiveConfig
-					case fighter.missileHeatSeekingCount > 0 && !missileHeatSeekingConfig.ignoreTarget(fighter.nearest):
-						fighter.missileHeatSeekingCount--
+					case fighter.consumables[missileHeatSeeking].count > 0 && !missileHeatSeekingConfig.ignoreTarget(fighter.nearest):
 						uc = missileHeatSeekingConfig
 					default:
 						return
 					}
+					missiles := fighter.consumables[uc.name]
+					missiles.count -= 1
+					fighter.consumables[uc.name] = missiles
 					spawn := newUnit(
 						uc,
 						position{layer: uc.produceLayer, Pixel: fighter.Pixel},
@@ -92,10 +94,11 @@ func reactions(n name) []reaction {
 					spawn.sourceUnit = fighter.id
 					fighter.requests = append(fighter.requests, request{spawn: &spawn})
 				},
-				delay: fighterConfig.fireOrdnanceDelay,
+				// TODO: fix this. delay needs to be conditional on something.
+				delay: 50,
 			},
-			reactChaff(fighterConfig.fireOrdnanceDelay),
-			reactFlare(fighterConfig.fireOrdnanceDelay),
+			reactChaff(fighterConfig.consumables[chaff].fireDelay),
+			reactFlare(fighterConfig.consumables[flare].fireDelay),
 		}
 	default:
 		return []reaction{}
@@ -105,7 +108,7 @@ func reactions(n name) []reaction {
 func reactChaff(fireOrdnanceDelay uint64) reaction {
 	return reaction{
 		when: func(u *unit) bool {
-			return u.nearest != nil && u.nearest.name == missileRadarActive && u.chaffCount > 0
+			return u.nearest != nil && u.nearest.name == missileRadarActive && u.consumables[chaff].count > 0
 		},
 		do: func(u *unit) {
 			chaff := newUnit(
@@ -117,7 +120,9 @@ func reactChaff(fireOrdnanceDelay uint64) reaction {
 				GridPosition{},
 				u.selected)
 			u.requests = append(u.requests, request{spawn: &chaff})
-			u.chaffCount--
+			consumeable := u.consumables[chaffConfig.name]
+			consumeable.count -= 1
+			u.consumables[chaffConfig.name] = consumeable
 		},
 		delay: fireOrdnanceDelay,
 	}
@@ -126,7 +131,7 @@ func reactChaff(fireOrdnanceDelay uint64) reaction {
 func reactFlare(fireOrdnanceDelay uint64) reaction {
 	return reaction{
 		when: func(u *unit) bool {
-			return u.nearest != nil && u.nearest.name == missileHeatSeeking && u.flareCount > 0
+			return u.nearest != nil && u.nearest.name == missileHeatSeeking && u.consumables[flare].count > 0
 		},
 		do: func(u *unit) {
 			flare := newUnit(
@@ -138,7 +143,9 @@ func reactFlare(fireOrdnanceDelay uint64) reaction {
 				GridPosition{},
 				u.selected)
 			u.requests = append(u.requests, request{spawn: &flare})
-			u.flareCount--
+			consumeable := u.consumables[flareConfig.name]
+			consumeable.count -= 1
+			u.consumables[chaffConfig.name] = consumeable
 		},
 		delay: fireOrdnanceDelay,
 	}
