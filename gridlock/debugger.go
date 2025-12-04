@@ -21,8 +21,7 @@ type debuggerConfig struct {
 	debugNodeLUT                  bool
 	debugObstacleLUT              bool
 	debugVisibilityGrids          bool
-	debugPOneTargets              bool
-	debugPTwoTargets              bool
+	debugNodeTargets              bool
 	debugHexagons                 bool
 	visibilityGridLineWidth       int
 	visibilityGridPointRadius     int
@@ -120,25 +119,19 @@ func (d *debugger) setupToggles(cooldown time.Duration) {
 	toggles["debugAll"] = newToggle(
 		ebiten.KeyA,
 		func() {
-			var toggle = !(d.debugPOneTargets &&
-				d.debugPTwoTargets &&
+			var toggle = !(d.debugNodeTargets &&
 				d.debugVisibilityGrids &&
 				d.debugHexagons &&
 				d.debugNodes)
-			d.debugPOneTargets = toggle
-			d.debugPTwoTargets = toggle
+			d.debugNodeTargets = toggle
 			d.debugVisibilityGrids = toggle
 			d.debugHexagons = toggle
 			d.debugNodes = toggle
 		},
 		cooldown)
-	toggles["debugBlueTargets"] = newToggle(
-		ebiten.KeyB,
-		func() { d.debugPOneTargets = !d.debugPOneTargets },
-		cooldown)
-	toggles["debugRedTargets"] = newToggle(
-		ebiten.KeyR,
-		func() { d.debugPTwoTargets = !d.debugPTwoTargets },
+	toggles["debugNodeTargets"] = newToggle(
+		ebiten.KeyN,
+		func() { d.debugNodeTargets = !d.debugNodeTargets },
 		cooldown)
 	toggles["debugVisibilityGrids"] = newToggle(
 		ebiten.KeyV,
@@ -310,7 +303,7 @@ func (d debugger) draw(c drawConfig) {
 	}
 
 	for _, n := range d.nodes {
-		n.drawTargets(c, d.grid, d.debugPOneTargets, d.debugPTwoTargets)
+		n.drawTargets(c, d.grid, d.debugNodeTargets)
 	}
 
 	for u := range d.units() {

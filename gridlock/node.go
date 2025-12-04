@@ -359,7 +359,7 @@ func (n *node) drawNode(dc drawConfig, g grid) {
 	}
 }
 
-func (n *node) drawTargets(dc drawConfig, g grid, drawPOneTargets bool, drawPTwoTargets bool) {
+func (n *node) drawTargets(dc drawConfig, g grid, debugNodeTargets bool) {
 	var color color.Color
 	switch n.player {
 	case pOne:
@@ -372,7 +372,7 @@ func (n *node) drawTargets(dc drawConfig, g grid, drawPOneTargets bool, drawPTwo
 		panic("unknown player for drawTargets")
 	}
 
-	if !n.isZero() && ((n.player == pOne && drawPOneTargets) || (n.player == pTwo && drawPTwoTargets)) {
+	if !n.isZero() && debugNodeTargets {
 		var center, ok = g.getPixel(n.gridPos, hpCenter)
 		if !ok {
 			panic("could not get pixel pos for node draw targets")
