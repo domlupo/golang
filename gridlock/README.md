@@ -756,6 +756,10 @@ Stale: 15
 
 ## Game Design Questions
 
+- It would be cool optional polish setting if over time the battle field slightly changed colors
+  - frequently traveled hex changed colors -> can reuse hex linked list logic
+  - plane explosions left burn marks
+  - bombs left marks
 - Should payload affect stealth? Stuff like this seems minor and hard to implement so probably not.
 - Spy upgrade should allow blocking tech, lowering satelite launch success, etc
 - Wind could be an interesting mechanic but unneeded. It could mess with aircrafts.
