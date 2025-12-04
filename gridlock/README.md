@@ -79,6 +79,12 @@ Is there a mobile equivalent for war/4x games?
         - nukes?
     - add visual debugger for rotary cannon vision check and nearest unit
   - Implement circle <-> square collision detection:
+    - Future units will probably require triangle and circle checks. I should think through
+      the relationship between vision, partitions and collision detection. I probably should
+      have a collision detection class?
+    - Specifically, the f22 has a weaker circular radar then a stronger 120 degree front radar. I can
+      also make an upgrade for from no radar -> first rader chosen by player -> second radar chosen by
+      player.
     - I think I eventually need to implement separating axis theorem collision detection for aircraft
     - I think I should implement circle <-> box collision for now because it is more performant and less complex
     - I probably don't need separating axis theorem for MVP
