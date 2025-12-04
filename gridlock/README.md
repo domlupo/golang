@@ -33,6 +33,11 @@ Is there a mobile equivalent for war/4x games?
     - human vs computer
     - deploy to web
     - UI
+       - two main options
+      - bar at bottom of screen (star craft)
+        - helps with CPU
+      - small overlays (mini metro)
+        - more units allowed?
     - user controls
     - art
     - Maybe
@@ -48,6 +53,68 @@ Is there a mobile equivalent for war/4x games?
 ## Checkpoints
 
 ### Next Checkpoints
+
+- Scope rotary cannon
+  - Order
+    - implement basic visual debugger for one unit vision combo
+    - implement circle <-> square collision. 
+      - use w/e is easiest for square
+  - Add generic visual debugger for unit vision and nearest target
+    - not sure if I should implement a simple version of this and then while working on rotary cannon
+      expand it to multiple unit options.
+    - this is going to be needed for rotary cannon circle <-> square check
+    - I see this being useful for other units with different attack patterns
+      - ac 130
+        - verify this before implementing in future
+        - 30 mm auto cannon
+        - 105 mm howitzer
+        - hell fire missiles
+        - small bombs
+        - griffin missiles
+      - b1 lancer
+        - verify this before implementing in future
+        - gravity bombs
+        - guidded boms
+        - cruise missiles
+        - cluster munitions
+        - nukes?
+    - add visual debugger for rotary cannon vision check and nearest unit
+  - Implement circle <-> square collision detection:
+    - I think I eventually need to implement separating axis theorem collision detection for aircraft
+    - I think I should implement circle <-> box collision for now because it is more performant and less complex
+    - I probably don't need separating axis theorem for MVP
+    - Best video I found for circle <-> box collision https://www.youtube.com/watch?v=cXryhth2Tzo
+    - I can't use existing LOS checks because they are specific to static collisions
+  - Update nearestTarget to handle different types of vision checks
+    - I need to think about how to affects target structure. I still need to finalize target structure
+    - I need to think this through alot more
+    - This issue is not all checks are circle around unit. rotary cannon, ac130 will differ
+    - Also not all of them will have a single point to draw hexagons from....
+    -  brain dump
+      - less than fighter vision
+      - long term I think the vision will be a cone off fighter itself.
+      - short term I could make vision a circle offset from fighter but this seems a bit wrong.
+        It might be able to be resued for steer pursue a unit or avoid units.
+      - I think best short term is to use angle and 
+      - new struct:
+        - weapon, consumable, ordnance, equipment, ammo
+        - maxCount, currentCount, range, 
+  - draw: unsure of what to do here. 
+    - For performance reasons I can't draw every bullet
+    - Maybe I just draw a line to current target and over time the line disappears?
+    - w/e I do should be able to be reused for apache and ac130
+    - Should I indicate it is not accurate by having bullet spray?
+    - Should I focus on just doing simple for mvp?
+ - bullet:
+    - should bullet or bullet stream be a unit?
+    - or is another struct fine?
+    - I probably don't need to add a struct
+    - If a bullet is a projectile, other aircraft should be able to dodge it right?
+ - misc
+    - how much damage does it do to infantry or fighter?
+    - fighter health bars
+    - risk vs reward mechanic could be how damage a fighter must be before repair. Or it could just
+      always have to be repaired to 100% before next flight.
 
 - Constantly review work to cut from MVP. Also constantly evaluate order to finish MVP work
   - I think adding more unit upgrades is higher priority
@@ -418,6 +485,23 @@ Determine if I should clarify file names
     - notching/beams: 
       - turning 90 degrees to radar guided threat
       - I am not sure this would cause misses or if missiles should have an accuracy component
+  - fighter / rotary modes
+    - I can do opprtunistic and preseve for MVP but i think it is too low priority
+    - aggresive -> pursue targets
+    - opportunistic -> attack targets if sighted
+    - preserve -> attack only when returning to airport
+    - defensive -> use only for defense
+    - Should movement modes decide what is does (this might need punted since it is a steer behavior)
+    - Initial implementation might just have a vision scope opportunity. 
+      - If in vision shoot
+      - If outside vision do nothing
+      - In future I can add pursue mechanics
+      - I cannot add "mode" component until I have pursue but I can do prioritize
+  - fighter configurable attack prioritization: 
+    - Should it prioritize shooting infantry, bombers, fighters, etc?
+    - what other units or weapons require prioritization
+    - what happens when a new unit type enters the field?
+    - UI to choose this?
   - misc
     - thrust vectoring?
     - dead reackoning can get better over time?
@@ -427,6 +511,9 @@ Determine if I should clarify file names
     - inertial navigation system (INS)
     - radio towers that you need to build in cities?
     - pilots get better navigation over time?
+
+- There might be an opportunity to optimize partitons for nearest target. I am not sure how
+  useful it is. I don't have to analyze every hex is a hex guaranteed to have closer units already found one...
 
 - Do units need different pathing algorithms or only different steer?
   - How to avoid this?
