@@ -187,10 +187,168 @@ func newUnitConfig(name name) unitConfig {
 	if !ok {
 		panic(fmt.Sprintf("newUnitConfig: unknown unit name %s", name.string()))
 	}
+	uc.setRadius()
+	uc.setMaxHealth()
+	uc.setAttack()
+	uc.setVision()
+	uc.setReach()
+	uc.setExplodeRadius()
+	uc.setMaxAlivePerNode()
+	uc.setSpeedFactor()
+	uc.setSurvivesCollision()
 	uc.setTracks()
 	uc.setTracksLayers()
 	uc.setConsumables()
 	return uc
+}
+
+func (uc *unitConfig) setRadius() {
+	var radius int
+	switch uc.name {
+	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare:
+		radius = 3
+	case bombGravity:
+		radius = 4
+	case fighter:
+		radius = 8
+	case bomber:
+		radius = 20
+	case chaff:
+		radius = 100
+	default:
+		panic(fmt.Sprintf("setRadius: cannot set radius for unknown unit %s", uc.name.string()))
+	}
+	uc.radius = radius
+}
+
+func (uc *unitConfig) setMaxHealth() {
+	var maxHealth int
+	switch uc.name {
+	case infantry:
+		maxHealth = 50
+	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare,
+		bombGravity, fighter, bomber, chaff:
+		maxHealth = 1
+	default:
+		panic(fmt.Sprintf("setMaxHealth: cannot set max health for unknown unit %s", uc.name.string()))
+	}
+	uc.maxHealth = maxHealth
+}
+
+func (uc *unitConfig) setAttack() {
+	var attack int
+	switch uc.name {
+	case infantry:
+		attack = 1
+	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare,
+		bombGravity, fighter, bomber, chaff:
+	default:
+		panic(fmt.Sprintf("setAttack: cannot set attack for unknown unit %s", uc.name.string()))
+	}
+	uc.attack = attack
+}
+
+func (uc *unitConfig) setVision() {
+	var vision int
+	switch uc.name {
+	case infantry:
+		vision = 20 - uc.radius
+		if vision >= 20 {
+			panic("setVision: temporary protection for partitioner.go infantry limitation. It needs to support higher order hexagon LUT")
+		}
+	case fighter:
+		vision = 800
+	case bomber:
+		vision = 200
+	case missileRadarActive, missileHeatSeeking, missileAntiBallistic:
+		vision = 300
+	case chaff:
+		vision = 100
+	case bombGravity, missileCruise, flare, missileBallistic:
+		vision = uc.radius
+	default:
+		panic(fmt.Sprintf("setVision: cannot set vision for unknown unit %s", uc.name.string()))
+	}
+	uc.vision = vision
+	if uc.vision < uc.radius {
+		panic("setVision: unit radius and vision are both relative to center. vision < radius is invalid.")
+	}
+}
+
+func (uc *unitConfig) setReach() {
+	var reach int
+	switch uc.name {
+	case infantry:
+		reach = 5
+	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare,
+		bombGravity, fighter, bomber, chaff:
+		reach = uc.radius
+	default:
+		panic(fmt.Sprintf("setReach: cannot set reach for unknown unit %s", uc.name.string()))
+	}
+	uc.reach = reach
+	if uc.reach < uc.radius {
+		panic("setReach: unit radius and reach are both relative to center. reach < radius is invalid.")
+	}
+	uc.reach = reach
+}
+
+func (uc *unitConfig) setExplodeRadius() {
+	var explodeRadius int
+	switch uc.name {
+	case infantry, flare, chaff:
+		explodeRadius = 0
+	case fighter, bomber:
+		explodeRadius = 100
+	case bombGravity, missileCruise, missileBallistic, missileRadarActive, missileHeatSeeking, missileAntiBallistic:
+		explodeRadius = 20
+	default:
+		panic(fmt.Sprintf("setExplodeRadius: cannot set explode radius unknown unit %s", uc.name.string()))
+	}
+	uc.explodeRadius = explodeRadius
+}
+
+func (uc *unitConfig) setMaxAlivePerNode() {
+	var maxAlivePerNode int
+	switch uc.name {
+	case infantry, flare, chaff, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, bombGravity:
+		maxAlivePerNode = math.MaxInt
+	case fighter, bomber:
+		maxAlivePerNode = 1
+	default:
+		panic(fmt.Sprintf("setMaxAlivePerNode: cannot set max alive per node for unknown unit %s", uc.name.string()))
+	}
+	uc.maxAlivePerNode = maxAlivePerNode
+}
+
+func (uc *unitConfig) setSpeedFactor() {
+	var speedFactor float64
+	switch uc.name {
+	case infantry:
+		speedFactor = 2.0
+	case fighter, bomber, missileCruise, missileBallistic, missileAntiBallistic:
+		speedFactor = 1.0
+	case missileRadarActive, missileHeatSeeking, flare:
+		speedFactor = 0.5
+	case chaff, bombGravity:
+		speedFactor = 0
+	default:
+		panic(fmt.Sprintf("setSpeedFactor: cannot set speed factor for unknown unit %s", uc.name.string()))
+	}
+	uc.speedFactor = speedFactor
+}
+
+func (uc *unitConfig) setSurvivesCollision() {
+	var survivesCollision bool
+	switch uc.name {
+	case infantry, chaff:
+		survivesCollision = true
+	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare,
+		bombGravity, fighter, bomber:
+	default:
+		panic(fmt.Sprintf("setSurvivesCollision: cannot set survives collision for unknown unit %s", uc.name.string()))
+	}
+	uc.survivesCollision = survivesCollision
 }
 
 func (uc *unitConfig) setTracks() {
@@ -206,7 +364,7 @@ func (uc *unitConfig) setTracks() {
 		tracks = func(uc unitConfig) bool { return uc.name == missileBallistic }
 	case fighter, bomber, bombGravity, missileCruise, missileBallistic, flare, chaff:
 	default:
-		panic(fmt.Sprintf("setTracks : cannot set tracks for unknown consumable %s", uc.name.string()))
+		panic(fmt.Sprintf("setTracks : cannot set tracks for unknown unit %s", uc.name.string()))
 	}
 	uc.tracks = tracks
 }
@@ -247,30 +405,15 @@ func (uc *unitConfig) setConsumables() {
 
 // Note: unit radius set to an odd number is better for testing due to division bugs
 var infantryUnitConfig = unitConfig{
-	name:              infantry,
-	radius:            3,
-	maxHealth:         50,
-	attack:            1,
-	vision:            17, // This must be 20 - infantry.radius until partitioner.go supports higher order hexagon LUT
-	reach:             5,
-	produceLayer:      lLand,
-	collisionLayers:   []layer{lLand},
-	explodeRadius:     0,
-	maxAlivePerNode:   math.MaxInt,
-	speedFactor:       2.0,
-	survivesCollision: true,
+	name:            infantry,
+	produceLayer:    lLand,
+	collisionLayers: []layer{lLand},
 }
 
 var fighterUnitConfig = unitConfig{
 	name:            fighter,
-	radius:          8,
-	maxHealth:       1,
-	vision:          800,
 	produceLayer:    lAircraft,
 	collisionLayers: []layer{lAircraft},
-	explodeRadius:   100,
-	maxAlivePerNode: 1,
-	speedFactor:     1.0,
 	reactive:        true,
 	requester:       true,
 	emitsHeat:       true,
@@ -282,14 +425,8 @@ var fighterUnitConfig = unitConfig{
 
 var bomberUnitConfig = unitConfig{
 	name:            bomber,
-	radius:          20,
-	maxHealth:       1,
-	vision:          200,
 	produceLayer:    lAircraft,
 	collisionLayers: []layer{lAircraft},
-	explodeRadius:   100,
-	maxAlivePerNode: 1,
-	speedFactor:     1.0,
 	emitsHeat:       true,
 	emitsRadar:      true,
 	reactive:        true,
@@ -299,29 +436,19 @@ var bomberUnitConfig = unitConfig{
 
 var bombGravityUnitConfig = unitConfig{
 	name:                bombGravity,
-	radius:              4,
-	vision:              4,
-	maxHealth:           1,
 	produceLayer:        lBombGravity,
 	collisionLayers:     []layer{lBombGravity},
 	staticTarget:        true,
-	explodeRadius:       20,
 	terminalStepDelay:   300,
-	maxAlivePerNode:     math.MaxInt,
 	explodeWhenTerminal: true,
 }
 
 var missileRadarActiveUnitConfig = unitConfig{
 	name:                 missileRadarActive,
-	radius:               3,
-	maxHealth:            1,
-	vision:               300,
 	produceLayer:         lOrdnance,
 	collisionLayers:      []layer{lOrdnance, lAircraft, lChaff},
 	staticTarget:         true,
 	despawnWhenTerminal:  true,
-	speedFactor:          0.5,
-	maxAlivePerNode:      math.MaxInt,
 	ignoreTarget:         func(t *unit) bool { return t.name == flare },
 	terminalWhenMoveDone: true,
 	radarGuided:          true,
@@ -329,92 +456,60 @@ var missileRadarActiveUnitConfig = unitConfig{
 
 var missileHeatSeekingUnitConfig = unitConfig{
 	name:                 missileHeatSeeking,
-	radius:               3,
-	maxHealth:            1,
-	vision:               300,
 	produceLayer:         lOrdnance,
 	collisionLayers:      []layer{lOrdnance, lAircraft},
 	staticTarget:         true,
 	despawnWhenTerminal:  true,
 	heatSeeking:          true,
-	speedFactor:          0.5,
-	maxAlivePerNode:      math.MaxInt,
 	ignoreTarget:         func(t *unit) bool { return !t.emitsHeat },
 	terminalWhenMoveDone: true,
 }
 
 var missileCruiseUnitConfig = unitConfig{
 	name:                 missileCruise,
-	radius:               3,
-	vision:               3,
-	maxHealth:            1,
 	produceLayer:         lOrdnance,
 	collisionLayers:      layers{lOrdnance},
 	staticTarget:         true,
 	explodeWhenTerminal:  true,
-	explodeRadius:        20,
-	speedFactor:          1,
-	maxAlivePerNode:      math.MaxInt,
 	terminalWhenMoveDone: true,
 }
 
 var missileBallisticUnitConfig = unitConfig{
 	name:                 missileBallistic,
-	radius:               3,
-	vision:               3,
-	maxHealth:            1,
 	produceLayer:         lBallistic,
 	collisionLayers:      []layer{lBallistic},
 	staticTarget:         true,
 	explodeWhenTerminal:  true,
-	explodeRadius:        20,
-	speedFactor:          1,
-	maxAlivePerNode:      math.MaxInt,
 	terminalWhenMoveDone: true,
 }
 
 var missileAntiBallisticUnitConfig = unitConfig{
 	name:                 missileAntiBallistic,
-	radius:               3,
-	maxHealth:            1,
-	vision:               300,
 	produceLayer:         lBallistic,
 	collisionLayers:      []layer{lBallistic},
 	staticTarget:         true,
 	despawnWhenTerminal:  true,
-	explodeRadius:        20,
-	speedFactor:          1,
-	maxAlivePerNode:      math.MaxInt,
 	terminalWhenMoveDone: true,
 }
 
 var flareUnitConfig = unitConfig{
 	name:                 flare,
-	radius:               3,
-	vision:               3,
-	maxHealth:            1,
 	produceLayer:         lOrdnance,
 	collisionLayers:      []layer{lOrdnance},
 	staticTarget:         true,
 	despawnWhenTerminal:  true,
-	speedFactor:          0.5,
 	emitsHeat:            true,
 	terminalWhenMoveDone: true,
 }
 
 var chaffUnitConfig = unitConfig{
 	name:                 chaff,
-	radius:               100,
-	vision:               100,
-	maxHealth:            1,
 	produceLayer:         lChaff,
 	collisionLayers:      []layer{lOrdnance},
 	staticTarget:         true,
-	maxAlivePerNode:      math.MaxInt,
 	terminalStepDelay:    300,
 	despawnWhenTerminal:  true,
 	ignoreCollision:      func(other *unit) bool { return !other.radarGuided },
-	survivesCollision:    true,
 	skipSpawnRadiusCheck: true,
 }
 

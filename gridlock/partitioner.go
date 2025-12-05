@@ -59,8 +59,8 @@ func newPartitioner(g grid, h hexagons) partitioner {
 		grid:     g,
 		hexagons: h,
 	}
-	p.infantryCollisionLUT = p.setupPartitionLUT(infantryUnitConfig, infantryUnitConfig, paCollision)
-	p.infantryVisionLUT = p.setupPartitionLUT(infantryUnitConfig, infantryUnitConfig, paVision)
+	p.infantryCollisionLUT = p.setupPartitionLUT(infantry, infantry, paCollision)
+	p.infantryVisionLUT = p.setupPartitionLUT(infantry, infantry, paVision)
 	return p
 }
 
@@ -178,9 +178,11 @@ func (part partitioner) defaultPartitions(p Pixel, d int) []GridPosition {
 	return partitions
 }
 
-func (part partitioner) setupPartitionLUT(internalUC unitConfig, externalUC unitConfig, pa partitionAnalysis) partitionLUT {
+func (part partitioner) setupPartitionLUT(internalUnitName name, externalUnitName name, pa partitionAnalysis) partitionLUT {
 	var internalRadius int
 	var externalRadius int
+	internalUC := newUnitConfig(internalUnitName)
+	externalUC := newUnitConfig(externalUnitName)
 	switch pa {
 	case paCollision:
 		internalRadius = internalUC.radius
