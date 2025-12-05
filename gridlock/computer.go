@@ -174,7 +174,7 @@ func (c *computer) updateForNodeCapture() {
 	}
 
 	for u := range c.units() {
-		if u.staticTarget ||
+		if u.isStaticTarget ||
 			u.name == bomber ||
 			u.name == fighter {
 			continue

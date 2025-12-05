@@ -112,9 +112,9 @@ func (c *consumable) setFiresAt(name name) {
 	firesAt := func(uc unitConfig) bool { return false }
 	switch name {
 	case missileHeatSeeking:
-		firesAt = func(uc unitConfig) bool { return uc.emitsHeat && uc.name != flare }
+		firesAt = func(uc unitConfig) bool { return uc.isEmitsHeat && uc.name != flare }
 	case missileRadarActive:
-		firesAt = func(uc unitConfig) bool { return uc.emitsRadar && uc.name != chaff }
+		firesAt = func(uc unitConfig) bool { return uc.isEmitsRadar && uc.name != chaff }
 	case bombGravity, flare, chaff:
 	default:
 		panic(fmt.Sprintf("setFiresAt: cannot set fires at for unknown consumable %s", name.string()))
@@ -142,39 +142,39 @@ func (c consumable) log() []slog.Attr {
 }
 
 type unitConfig struct {
-	name                 name
-	radius               int
-	vision               int
-	maxHealth            int
-	attack               int
-	reach                int
-	produceLayer         layer
-	staticTarget         bool
-	tracks               func(t unitConfig) bool
-	trackLayers          layers
-	collisionLayers      layers
-	explodeRadius        int
-	terminalWhenMoveDone bool
-	terminalStepDelay    step
-	terminalStep         step
-	explodeWhenTerminal  bool
-	despawnWhenTerminal  bool
-	reloadPayloadDelay   uint64
-	maxAlivePerNode      int
-	speedFactor          float64
-	reactions            []reaction
-	reactive             bool
-	requests             []request
-	requester            bool
-	consumables          map[name]consumable
-	emitsHeat            bool
-	emitsRadar           bool
-	heatSeeking          bool
-	radarGuided          bool
-	ignore               func(u, t *unit) bool
-	ignoreTarget         func(t *unit) bool
-	ignoreCollision      func(other *unit) bool
-	survivesCollision    bool
+	name                   name
+	radius                 int
+	vision                 int
+	maxHealth              int
+	attack                 int
+	reach                  int
+	produceLayer           layer
+	isStaticTarget         bool
+	tracks                 func(t unitConfig) bool
+	trackLayers            layers
+	collisionLayers        layers
+	explodeRadius          int
+	isTerminalWhenMoveDone bool
+	terminalStepDelay      step
+	terminalStep           step
+	isExplodeWhenTerminal  bool
+	isDespawnWhenTerminal  bool
+	reloadPayloadDelay     uint64
+	maxAlivePerNode        int
+	speedFactor            float64
+	reactions              []reaction
+	reactive               bool
+	requests               []request
+	isRequester            bool
+	consumables            map[name]consumable
+	isEmitsHeat            bool
+	isEmitsRadar           bool
+	isHeatSeeking          bool
+	isRadarGuided          bool
+	ignore                 func(u, t *unit) bool
+	ignoreTarget           func(t *unit) bool
+	ignoreCollision        func(other *unit) bool
+	isSurvivesCollision    bool
 	// This flag should rarely be used. If it is used often then write a function to avoid bugs.
 	// This is safe to enable iff the unit only collides with units that have radiuses less
 	// than state.spawnUnitRadiusLimit. For example, chaff only collides with radarGuided units
@@ -352,31 +352,31 @@ func (uc *unitConfig) setSurvivesCollision() {
 	default:
 		panic(fmt.Sprintf("setSurvivesCollision: cannot set survives collision for unknown unit %s", uc.name.string()))
 	}
-	uc.survivesCollision = survivesCollision
+	uc.isSurvivesCollision = survivesCollision
 }
 
 func (uc *unitConfig) setEmitsHeat() {
-	var emitsHeat bool
+	var isEmitsHeat bool
 	switch uc.name {
 	case fighter, bomber, flare:
-		emitsHeat = true
+		isEmitsHeat = true
 	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, bombGravity:
 	default:
 		panic(fmt.Sprintf("setEmitsHeat: cannot set emits heat for unknown unit %s", uc.name.string()))
 	}
-	uc.emitsHeat = emitsHeat
+	uc.isEmitsHeat = isEmitsHeat
 }
 
 func (uc *unitConfig) setEmitsRadar() {
-	var emitsRadar bool
+	var isEmitsRadar bool
 	switch uc.name {
 	case fighter, bomber:
-		emitsRadar = true
+		isEmitsRadar = true
 	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity:
 	default:
 		panic(fmt.Sprintf("setEmitsRadar: cannot set emits radar for unknown unit %s", uc.name.string()))
 	}
-	uc.emitsRadar = emitsRadar
+	uc.isEmitsRadar = isEmitsRadar
 }
 
 func (uc *unitConfig) setRequester() {
@@ -388,7 +388,7 @@ func (uc *unitConfig) setRequester() {
 	default:
 		panic(fmt.Sprintf("setRequester: cannot set requester for unknown unit %s", uc.name.string()))
 	}
-	uc.requester = requester
+	uc.isRequester = requester
 }
 
 func (uc *unitConfig) setReactive() {
@@ -409,9 +409,9 @@ func (uc *unitConfig) setTracks() {
 	case infantry:
 		tracks = func(uc unitConfig) bool { return uc.name == infantry }
 	case missileHeatSeeking:
-		tracks = func(uc unitConfig) bool { return uc.emitsHeat }
+		tracks = func(uc unitConfig) bool { return uc.isEmitsHeat }
 	case missileRadarActive:
-		tracks = func(uc unitConfig) bool { return uc.emitsRadar }
+		tracks = func(uc unitConfig) bool { return uc.isEmitsRadar }
 	case missileAntiBallistic:
 		tracks = func(uc unitConfig) bool { return uc.name == missileBallistic }
 	case fighter, bomber, bombGravity, missileCruise, missileBallistic, flare, chaff:
@@ -479,81 +479,81 @@ var bomberUnitConfig = unitConfig{
 }
 
 var bombGravityUnitConfig = unitConfig{
-	name:                bombGravity,
-	produceLayer:        lBombGravity,
-	collisionLayers:     []layer{lBombGravity},
-	staticTarget:        true,
-	terminalStepDelay:   300,
-	explodeWhenTerminal: true,
+	name:                  bombGravity,
+	produceLayer:          lBombGravity,
+	collisionLayers:       []layer{lBombGravity},
+	isStaticTarget:        true,
+	terminalStepDelay:     300,
+	isExplodeWhenTerminal: true,
 }
 
 var missileRadarActiveUnitConfig = unitConfig{
-	name:                 missileRadarActive,
-	produceLayer:         lOrdnance,
-	collisionLayers:      []layer{lOrdnance, lAircraft, lChaff},
-	staticTarget:         true,
-	despawnWhenTerminal:  true,
-	ignoreTarget:         func(t *unit) bool { return t.name == flare },
-	terminalWhenMoveDone: true,
-	radarGuided:          true,
+	name:                   missileRadarActive,
+	produceLayer:           lOrdnance,
+	collisionLayers:        []layer{lOrdnance, lAircraft, lChaff},
+	isStaticTarget:         true,
+	isDespawnWhenTerminal:  true,
+	ignoreTarget:           func(t *unit) bool { return t.name == flare },
+	isTerminalWhenMoveDone: true,
+	isRadarGuided:          true,
 }
 
 var missileHeatSeekingUnitConfig = unitConfig{
-	name:                 missileHeatSeeking,
-	produceLayer:         lOrdnance,
-	collisionLayers:      []layer{lOrdnance, lAircraft},
-	staticTarget:         true,
-	despawnWhenTerminal:  true,
-	heatSeeking:          true,
-	ignoreTarget:         func(t *unit) bool { return !t.emitsHeat },
-	terminalWhenMoveDone: true,
+	name:                   missileHeatSeeking,
+	produceLayer:           lOrdnance,
+	collisionLayers:        []layer{lOrdnance, lAircraft},
+	isStaticTarget:         true,
+	isDespawnWhenTerminal:  true,
+	isHeatSeeking:          true,
+	ignoreTarget:           func(t *unit) bool { return !t.isEmitsHeat },
+	isTerminalWhenMoveDone: true,
 }
 
 var missileCruiseUnitConfig = unitConfig{
-	name:                 missileCruise,
-	produceLayer:         lOrdnance,
-	collisionLayers:      layers{lOrdnance},
-	staticTarget:         true,
-	explodeWhenTerminal:  true,
-	terminalWhenMoveDone: true,
+	name:                   missileCruise,
+	produceLayer:           lOrdnance,
+	collisionLayers:        layers{lOrdnance},
+	isStaticTarget:         true,
+	isExplodeWhenTerminal:  true,
+	isTerminalWhenMoveDone: true,
 }
 
 var missileBallisticUnitConfig = unitConfig{
-	name:                 missileBallistic,
-	produceLayer:         lBallistic,
-	collisionLayers:      []layer{lBallistic},
-	staticTarget:         true,
-	explodeWhenTerminal:  true,
-	terminalWhenMoveDone: true,
+	name:                   missileBallistic,
+	produceLayer:           lBallistic,
+	collisionLayers:        []layer{lBallistic},
+	isStaticTarget:         true,
+	isExplodeWhenTerminal:  true,
+	isTerminalWhenMoveDone: true,
 }
 
 var missileAntiBallisticUnitConfig = unitConfig{
-	name:                 missileAntiBallistic,
-	produceLayer:         lBallistic,
-	collisionLayers:      []layer{lBallistic},
-	staticTarget:         true,
-	despawnWhenTerminal:  true,
-	terminalWhenMoveDone: true,
+	name:                   missileAntiBallistic,
+	produceLayer:           lBallistic,
+	collisionLayers:        []layer{lBallistic},
+	isStaticTarget:         true,
+	isDespawnWhenTerminal:  true,
+	isTerminalWhenMoveDone: true,
 }
 
 var flareUnitConfig = unitConfig{
-	name:                 flare,
-	produceLayer:         lOrdnance,
-	collisionLayers:      []layer{lOrdnance},
-	staticTarget:         true,
-	despawnWhenTerminal:  true,
-	terminalWhenMoveDone: true,
+	name:                   flare,
+	produceLayer:           lOrdnance,
+	collisionLayers:        []layer{lOrdnance},
+	isStaticTarget:         true,
+	isDespawnWhenTerminal:  true,
+	isTerminalWhenMoveDone: true,
 }
 
 var chaffUnitConfig = unitConfig{
-	name:                 chaff,
-	produceLayer:         lChaff,
-	collisionLayers:      []layer{lOrdnance},
-	staticTarget:         true,
-	terminalStepDelay:    300,
-	despawnWhenTerminal:  true,
-	ignoreCollision:      func(other *unit) bool { return !other.radarGuided },
-	skipSpawnRadiusCheck: true,
+	name:                  chaff,
+	produceLayer:          lChaff,
+	collisionLayers:       []layer{lOrdnance},
+	isStaticTarget:        true,
+	terminalStepDelay:     300,
+	isDespawnWhenTerminal: true,
+	ignoreCollision:       func(other *unit) bool { return !other.isRadarGuided },
+	skipSpawnRadiusCheck:  true,
 }
 
 // This log method is frequently used for debugging. Also it is typically logged at the end of unit.log().
@@ -565,10 +565,10 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.Int("attack", uc.attack))
 	a = append(a, slog.Int("vision", uc.vision))
 	a = append(a, slog.Int("reach", uc.reach))
-	a = append(a, slog.Bool("staticTarget", uc.staticTarget))
-	a = append(a, slog.Bool("heatSeeking", uc.heatSeeking))
-	a = append(a, slog.Bool("explodeWhenTerminal", uc.explodeWhenTerminal))
-	a = append(a, slog.Bool("despawnWhenTerminal", uc.despawnWhenTerminal))
+	a = append(a, slog.Bool("staticTarget", uc.isStaticTarget))
+	a = append(a, slog.Bool("heatSeeking", uc.isHeatSeeking))
+	a = append(a, slog.Bool("explodeWhenTerminal", uc.isExplodeWhenTerminal))
+	a = append(a, slog.Bool("despawnWhenTerminal", uc.isDespawnWhenTerminal))
 	a = append(a, slog.Uint64("terminalStepDelay", uc.terminalStepDelay))
 	a = append(a, slog.Uint64("terminalStep", uc.terminalStep))
 	a = append(a, slog.String("collisionLayers", uc.collisionLayers.string()))

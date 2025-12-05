@@ -194,7 +194,7 @@ func (s *state) spawn(u *unit) {
 	if u.reactive {
 		s.reactiveUnits[u.id] = u
 	}
-	if u.requester {
+	if u.isRequester {
 		s.requesterUnits[u.id] = u
 	}
 
@@ -713,10 +713,10 @@ func (s *state) processTerminalUnits() {
 		if !u.terminal(s.step) {
 			continue
 		}
-		if u.explodeWhenTerminal {
+		if u.isExplodeWhenTerminal {
 			s.explode(u)
 		}
-		if u.despawnWhenTerminal {
+		if u.isDespawnWhenTerminal {
 			u.health = 0
 		}
 	}
@@ -772,7 +772,7 @@ func (s *state) despawnUnits() {
 	var despawnUnitTurnCount int
 
 	for u := range s.units() {
-		if u.health <= 0 || (u.collidedThisturn && !u.survivesCollision) {
+		if u.health <= 0 || (u.collidedThisturn && !u.isSurvivesCollision) {
 			gridPos, ok := s.grid.getGridPos(u.Pixel)
 			if !ok {
 				panic(fmt.Sprintf("despawnUnits: expected grid pos to exist for %s", u.Pixel.log()))

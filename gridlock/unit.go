@@ -153,7 +153,7 @@ func newUnit(
 }
 
 func (u unit) terminal(step uint64) bool {
-	if u.moveDone && u.terminalWhenMoveDone {
+	if u.moveDone && u.isTerminalWhenMoveDone {
 		return true
 	}
 	if step >= u.terminalStep {
