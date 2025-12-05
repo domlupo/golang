@@ -196,6 +196,10 @@ func newUnitConfig(name name) unitConfig {
 	uc.setMaxAlivePerNode()
 	uc.setSpeedFactor()
 	uc.setSurvivesCollision()
+	uc.setEmitsHeat()
+	uc.setEmitsRadar()
+	uc.setRequester()
+	uc.setReactive()
 	uc.setTracks()
 	uc.setTracksLayers()
 	uc.setConsumables()
@@ -351,6 +355,54 @@ func (uc *unitConfig) setSurvivesCollision() {
 	uc.survivesCollision = survivesCollision
 }
 
+func (uc *unitConfig) setEmitsHeat() {
+	var emitsHeat bool
+	switch uc.name {
+	case fighter, bomber, flare:
+		emitsHeat = true
+	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, bombGravity:
+	default:
+		panic(fmt.Sprintf("setEmitsHeat: cannot set emits heat for unknown unit %s", uc.name.string()))
+	}
+	uc.emitsHeat = emitsHeat
+}
+
+func (uc *unitConfig) setEmitsRadar() {
+	var emitsRadar bool
+	switch uc.name {
+	case fighter, bomber:
+		emitsRadar = true
+	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity:
+	default:
+		panic(fmt.Sprintf("setEmitsRadar: cannot set emits radar for unknown unit %s", uc.name.string()))
+	}
+	uc.emitsRadar = emitsRadar
+}
+
+func (uc *unitConfig) setRequester() {
+	var requester bool
+	switch uc.name {
+	case fighter, bomber:
+		requester = true
+	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity:
+	default:
+		panic(fmt.Sprintf("setRequester: cannot set requester for unknown unit %s", uc.name.string()))
+	}
+	uc.requester = requester
+}
+
+func (uc *unitConfig) setReactive() {
+	var reactive bool
+	switch uc.name {
+	case fighter, bomber:
+		reactive = true
+	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity:
+	default:
+		panic(fmt.Sprintf("setReactive: cannot set reacctive for unknown unit %s", uc.name.string()))
+	}
+	uc.reactive = reactive
+}
+
 func (uc *unitConfig) setTracks() {
 	tracks := func(uc unitConfig) bool { return false }
 	switch uc.name {
@@ -414,10 +466,6 @@ var fighterUnitConfig = unitConfig{
 	name:            fighter,
 	produceLayer:    lAircraft,
 	collisionLayers: []layer{lAircraft},
-	reactive:        true,
-	requester:       true,
-	emitsHeat:       true,
-	emitsRadar:      true,
 	ignoreTarget: func(t *unit) bool {
 		return t.name == flare
 	},
@@ -427,10 +475,6 @@ var bomberUnitConfig = unitConfig{
 	name:            bomber,
 	produceLayer:    lAircraft,
 	collisionLayers: []layer{lAircraft},
-	emitsHeat:       true,
-	emitsRadar:      true,
-	reactive:        true,
-	requester:       true,
 	ignore:          func(u, t *unit) bool { return slices.Contains(u.skipTargets, t.id) },
 }
 
@@ -498,7 +542,6 @@ var flareUnitConfig = unitConfig{
 	collisionLayers:      []layer{lOrdnance},
 	staticTarget:         true,
 	despawnWhenTerminal:  true,
-	emitsHeat:            true,
 	terminalWhenMoveDone: true,
 }
 
