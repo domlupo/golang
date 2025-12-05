@@ -181,7 +181,7 @@ func (s state) unitsLayer(l layer) *units {
 
 func (s *state) spawn(u *unit) {
 	// TODO: Verify if this should be >= rather than more conservative >
-	if u.radius > s.config.spawnUnitRadiusLimit && !u.skipSpawnRadiusCheck {
+	if u.radius > s.config.spawnUnitRadiusLimit && !u.isSkipSpawnRadiusCheck {
 		panic(fmt.Sprintf("spawn: cannot spawn unit radius %d exceeds spawn radius limit %d", u.radius, s.config.spawnUnitRadiusLimit))
 	}
 	p, ok := s.grid.getGridPos(u.Pixel)
@@ -191,7 +191,7 @@ func (s *state) spawn(u *unit) {
 	hex := s.hexagons[p]
 	hex.add(u)
 
-	if u.reactive {
+	if u.isReactive {
 		s.reactiveUnits[u.id] = u
 	}
 	if u.isRequester {

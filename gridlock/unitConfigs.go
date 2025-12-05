@@ -149,37 +149,37 @@ type unitConfig struct {
 	attack                 int
 	reach                  int
 	produceLayer           layer
-	isStaticTarget         bool
 	tracks                 func(t unitConfig) bool
 	trackLayers            layers
 	collisionLayers        layers
 	explodeRadius          int
-	isTerminalWhenMoveDone bool
 	terminalStepDelay      step
 	terminalStep           step
-	isExplodeWhenTerminal  bool
-	isDespawnWhenTerminal  bool
 	reloadPayloadDelay     uint64
 	maxAlivePerNode        int
 	speedFactor            float64
 	reactions              []reaction
-	reactive               bool
 	requests               []request
-	isRequester            bool
 	consumables            map[name]consumable
+	isReactive             bool
 	isEmitsHeat            bool
 	isEmitsRadar           bool
 	isHeatSeeking          bool
 	isRadarGuided          bool
+	isRequester            bool
+	isSurvivesCollision    bool
+	isSkipSpawnRadiusCheck bool
+	isExplodeWhenTerminal  bool
+	isDespawnWhenTerminal  bool
+	isTerminalWhenMoveDone bool
+	isStaticTarget         bool
 	ignore                 func(u, t *unit) bool
 	ignoreTarget           func(t *unit) bool
 	ignoreCollision        func(other *unit) bool
-	isSurvivesCollision    bool
 	// This flag should rarely be used. If it is used often then write a function to avoid bugs.
 	// This is safe to enable iff the unit only collides with units that have radiuses less
 	// than state.spawnUnitRadiusLimit. For example, chaff only collides with radarGuided units
 	// which are all less than the 20 pixels.
-	skipSpawnRadiusCheck bool
 }
 
 func newUnitConfig(name name) unitConfig {
@@ -187,6 +187,22 @@ func newUnitConfig(name name) unitConfig {
 	if !ok {
 		panic(fmt.Sprintf("newUnitConfig: unknown unit name %s", name.string()))
 	}
+
+	// TODO: Once unit is more finalized add set methods for these fields.
+	// I suspect these might change in the near future so I am punting them for a bit
+	switch uc.name {
+	case fighter:
+		uc.ignoreTarget = func(t *unit) bool { return t.name == flare }
+	case bomber:
+		uc.ignore = func(u, t *unit) bool { return slices.Contains(u.skipTargets, t.id) }
+	case missileRadarActive:
+		uc.ignoreTarget = func(t *unit) bool { return t.name == flare }
+	case missileHeatSeeking:
+		uc.ignoreTarget = func(t *unit) bool { return !t.isEmitsHeat }
+	case chaff:
+		uc.ignoreCollision = func(other *unit) bool { return !other.isRadarGuided }
+	}
+
 	uc.setRadius()
 	uc.setMaxHealth()
 	uc.setAttack()
@@ -195,12 +211,25 @@ func newUnitConfig(name name) unitConfig {
 	uc.setExplodeRadius()
 	uc.setMaxAlivePerNode()
 	uc.setSpeedFactor()
-	uc.setSurvivesCollision()
-	uc.setEmitsHeat()
-	uc.setEmitsRadar()
-	uc.setRequester()
-	uc.setReactive()
+	uc.setIsSurvivesCollision()
+	uc.setIsEmitsHeat()
+	uc.setIsEmitsRadar()
+	uc.setIsRequester()
+	uc.setIsReactive()
+	uc.setTerminalStepDelay()
+	uc.setIsExplodeWhenTerminal()
+	uc.setIsStaticTarget()
+	uc.setIsDespawnWhenTerminal()
+	uc.setIsTerminalWhenMoveDone()
+	uc.setIsRadarGuided()
+	uc.setIsHeatSeeking()
+	uc.setIsSkipSpawnRadiusCheck()
 	uc.setTracks()
+	uc.setProduceLayer()
+	uc.setCollisionLayers()
+	// TODO: Refactor this. The order needed is all unit configs are initialized. Then they are analyzed. Then they are fetched.
+	// unit config initialization and unit fetch order cannot be coupled.
+	unitConfigs[uc.name] = uc
 	uc.setTracksLayers()
 	uc.setConsumables()
 	return uc
@@ -342,7 +371,7 @@ func (uc *unitConfig) setSpeedFactor() {
 	uc.speedFactor = speedFactor
 }
 
-func (uc *unitConfig) setSurvivesCollision() {
+func (uc *unitConfig) setIsSurvivesCollision() {
 	var survivesCollision bool
 	switch uc.name {
 	case infantry, chaff:
@@ -350,57 +379,192 @@ func (uc *unitConfig) setSurvivesCollision() {
 	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare,
 		bombGravity, fighter, bomber:
 	default:
-		panic(fmt.Sprintf("setSurvivesCollision: cannot set survives collision for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf("setIsSurvivesCollision: cannot set isSurvivesCollision for unknown unit %s", uc.name.string()))
 	}
 	uc.isSurvivesCollision = survivesCollision
 }
 
-func (uc *unitConfig) setEmitsHeat() {
+func (uc *unitConfig) setIsEmitsHeat() {
 	var isEmitsHeat bool
 	switch uc.name {
 	case fighter, bomber, flare:
 		isEmitsHeat = true
 	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, bombGravity:
 	default:
-		panic(fmt.Sprintf("setEmitsHeat: cannot set emits heat for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf("setIsEmitsHeat: cannot set isEmitsHeats for unknown unit %s", uc.name.string()))
 	}
 	uc.isEmitsHeat = isEmitsHeat
 }
 
-func (uc *unitConfig) setEmitsRadar() {
+func (uc *unitConfig) setIsEmitsRadar() {
 	var isEmitsRadar bool
 	switch uc.name {
 	case fighter, bomber:
 		isEmitsRadar = true
 	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity:
 	default:
-		panic(fmt.Sprintf("setEmitsRadar: cannot set emits radar for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf("setIsEmitsRadar: cannot set isEmitsRadar for unknown unit %s", uc.name.string()))
 	}
 	uc.isEmitsRadar = isEmitsRadar
 }
 
-func (uc *unitConfig) setRequester() {
-	var requester bool
+func (uc *unitConfig) setIsRequester() {
+	var isRequester bool
 	switch uc.name {
 	case fighter, bomber:
-		requester = true
+		isRequester = true
 	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity:
 	default:
-		panic(fmt.Sprintf("setRequester: cannot set requester for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf("setIsRequester: cannot set isRequester for unknown unit %s", uc.name.string()))
 	}
-	uc.isRequester = requester
+	uc.isRequester = isRequester
 }
 
-func (uc *unitConfig) setReactive() {
-	var reactive bool
+func (uc *unitConfig) setIsReactive() {
+	var isReactive bool
 	switch uc.name {
 	case fighter, bomber:
-		reactive = true
+		isReactive = true
 	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity:
 	default:
-		panic(fmt.Sprintf("setReactive: cannot set reacctive for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf("setIsReactive: cannot set isReactive for unknown unit %s", uc.name.string()))
 	}
-	uc.reactive = reactive
+	uc.isReactive = isReactive
+}
+
+func (uc *unitConfig) setProduceLayer() {
+	var produceLayer layer
+	switch uc.name {
+	case infantry:
+		produceLayer = lLand
+	case fighter, bomber:
+		produceLayer = lAircraft
+	case missileRadarActive, missileHeatSeeking, missileCruise, flare:
+		produceLayer = lOrdnance
+	case missileBallistic, missileAntiBallistic:
+		produceLayer = lBallistic
+	case chaff:
+		produceLayer = lChaff
+	case bombGravity:
+		produceLayer = lBombGravity
+	default:
+		panic(fmt.Sprintf("setProduceLayer: cannot set produceLayer for unknown unit %s", uc.name.string()))
+	}
+	uc.produceLayer = produceLayer
+}
+
+func (uc *unitConfig) setTerminalStepDelay() {
+	var terminalStepDelay step
+	switch uc.name {
+	case bombGravity:
+		terminalStepDelay = 300
+	case infantry, fighter, bomber, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare:
+	default:
+		panic(fmt.Sprintf("setTerminalStepDelay: cannot set terminal step delay for unknown unit %s", uc.name.string()))
+	}
+	uc.terminalStepDelay = terminalStepDelay
+}
+
+func (uc *unitConfig) setIsExplodeWhenTerminal() {
+	var isExplodeWhenTerminal bool
+	switch uc.name {
+	case bombGravity, missileCruise, missileBallistic:
+		isExplodeWhenTerminal = true
+	case infantry, fighter, bomber, missileRadarActive, missileHeatSeeking, missileAntiBallistic, flare:
+	default:
+		panic(fmt.Sprintf("setIsExplodeWhenTerminal: cannot set is explode when terminal for unknown unit %s", uc.name.string()))
+	}
+	uc.isExplodeWhenTerminal = isExplodeWhenTerminal
+}
+
+func (uc *unitConfig) setIsStaticTarget() {
+	var isStatictarget bool
+	switch uc.name {
+	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity:
+		isStatictarget = true
+	case infantry, fighter, bomber:
+	default:
+		panic(fmt.Sprintf("setIsStaticTarget: cannot set isStaticTarget for unknown unit %s", uc.name.string()))
+	}
+	uc.isStaticTarget = isStatictarget
+}
+
+func (uc *unitConfig) setIsDespawnWhenTerminal() {
+	var isDespawnWhenTerminal bool
+	switch uc.name {
+	case missileRadarActive, missileHeatSeeking, missileAntiBallistic, flare, chaff:
+		isDespawnWhenTerminal = true
+	case infantry, fighter, bomber, missileCruise, missileBallistic, bombGravity:
+	default:
+		panic(fmt.Sprintf("setIsDespawnWhenTermianl: cannot set isDespawnWhenTerminal for unknown unit %s", uc.name.string()))
+	}
+	uc.isDespawnWhenTerminal = isDespawnWhenTerminal
+}
+
+func (uc *unitConfig) setIsTerminalWhenMoveDone() {
+	var isTerminalWhenMoveDone bool
+	switch uc.name {
+	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare:
+		isTerminalWhenMoveDone = true
+	case infantry, fighter, bomber, bombGravity, chaff:
+	default:
+		panic(fmt.Sprintf("setIsTerminalWhenMoveDone: cannot set isTerminalWhenMoveDone for unknown unit %s", uc.name.string()))
+	}
+	uc.isTerminalWhenMoveDone = isTerminalWhenMoveDone
+}
+
+func (uc *unitConfig) setIsRadarGuided() {
+	var isRadarGuided bool
+	switch uc.name {
+	case missileRadarActive:
+		isRadarGuided = true
+	case infantry, fighter, bomber, bombGravity, chaff, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare:
+	default:
+		panic(fmt.Sprintf("setIsRadarGuided: cannot set isRadarGuided for unknown unit %s", uc.name.string()))
+	}
+	uc.isRadarGuided = isRadarGuided
+}
+
+func (uc *unitConfig) setIsHeatSeeking() {
+	var isHeatSeeking bool
+	switch uc.name {
+	case missileHeatSeeking:
+		isHeatSeeking = true
+	case infantry, fighter, bomber, bombGravity, chaff, missileRadarActive, missileCruise, missileBallistic, missileAntiBallistic, flare:
+	default:
+		panic(fmt.Sprintf("setIsHeatSeeking: cannot set isHeatSeeking for unknown unit %s", uc.name.string()))
+	}
+	uc.isHeatSeeking = isHeatSeeking
+}
+
+func (uc *unitConfig) setIsSkipSpawnRadiusCheck() {
+	var isSkipSpawnRadiusCheck bool
+	switch uc.name {
+	case chaff:
+		isSkipSpawnRadiusCheck = true
+	case missileHeatSeeking, infantry, fighter, bomber, bombGravity, missileRadarActive, missileCruise,
+		missileBallistic, missileAntiBallistic, flare:
+	default:
+		panic(fmt.Sprintf("setIsSkipSpawnRadiusCheck: cannot set isSkipSpawnRadiusCheck for unknown unit %s", uc.name.string()))
+	}
+	uc.isSkipSpawnRadiusCheck = isSkipSpawnRadiusCheck
+}
+
+func (uc *unitConfig) setCollisionLayers() {
+	var collisionLayers layers
+	switch uc.name {
+	case infantry, fighter, bomber, bombGravity, missileCruise, missileBallistic, missileAntiBallistic, flare:
+		collisionLayers = []layer{uc.produceLayer}
+	case missileRadarActive:
+		collisionLayers = []layer{lOrdnance, lAircraft, lChaff}
+	case missileHeatSeeking:
+		collisionLayers = []layer{lOrdnance, lAircraft}
+	case chaff:
+		collisionLayers = []layer{lOrdnance}
+	default:
+		panic(fmt.Sprintf("setCollisionLayers: cannot set collision layers for unknown unit %s", uc.name.string()))
+	}
+	uc.collisionLayers = collisionLayers
 }
 
 func (uc *unitConfig) setTracks() {
@@ -457,103 +621,47 @@ func (uc *unitConfig) setConsumables() {
 
 // Note: unit radius set to an odd number is better for testing due to division bugs
 var infantryUnitConfig = unitConfig{
-	name:            infantry,
-	produceLayer:    lLand,
-	collisionLayers: []layer{lLand},
+	name: infantry,
 }
 
 var fighterUnitConfig = unitConfig{
-	name:            fighter,
-	produceLayer:    lAircraft,
-	collisionLayers: []layer{lAircraft},
-	ignoreTarget: func(t *unit) bool {
-		return t.name == flare
-	},
+	name: fighter,
 }
 
 var bomberUnitConfig = unitConfig{
-	name:            bomber,
-	produceLayer:    lAircraft,
-	collisionLayers: []layer{lAircraft},
-	ignore:          func(u, t *unit) bool { return slices.Contains(u.skipTargets, t.id) },
+	name: bomber,
 }
 
 var bombGravityUnitConfig = unitConfig{
-	name:                  bombGravity,
-	produceLayer:          lBombGravity,
-	collisionLayers:       []layer{lBombGravity},
-	isStaticTarget:        true,
-	terminalStepDelay:     300,
-	isExplodeWhenTerminal: true,
+	name: bombGravity,
 }
 
 var missileRadarActiveUnitConfig = unitConfig{
-	name:                   missileRadarActive,
-	produceLayer:           lOrdnance,
-	collisionLayers:        []layer{lOrdnance, lAircraft, lChaff},
-	isStaticTarget:         true,
-	isDespawnWhenTerminal:  true,
-	ignoreTarget:           func(t *unit) bool { return t.name == flare },
-	isTerminalWhenMoveDone: true,
-	isRadarGuided:          true,
+	name: missileRadarActive,
 }
 
 var missileHeatSeekingUnitConfig = unitConfig{
-	name:                   missileHeatSeeking,
-	produceLayer:           lOrdnance,
-	collisionLayers:        []layer{lOrdnance, lAircraft},
-	isStaticTarget:         true,
-	isDespawnWhenTerminal:  true,
-	isHeatSeeking:          true,
-	ignoreTarget:           func(t *unit) bool { return !t.isEmitsHeat },
-	isTerminalWhenMoveDone: true,
+	name: missileHeatSeeking,
 }
 
 var missileCruiseUnitConfig = unitConfig{
-	name:                   missileCruise,
-	produceLayer:           lOrdnance,
-	collisionLayers:        layers{lOrdnance},
-	isStaticTarget:         true,
-	isExplodeWhenTerminal:  true,
-	isTerminalWhenMoveDone: true,
+	name: missileCruise,
 }
 
 var missileBallisticUnitConfig = unitConfig{
-	name:                   missileBallistic,
-	produceLayer:           lBallistic,
-	collisionLayers:        []layer{lBallistic},
-	isStaticTarget:         true,
-	isExplodeWhenTerminal:  true,
-	isTerminalWhenMoveDone: true,
+	name: missileBallistic,
 }
 
 var missileAntiBallisticUnitConfig = unitConfig{
-	name:                   missileAntiBallistic,
-	produceLayer:           lBallistic,
-	collisionLayers:        []layer{lBallistic},
-	isStaticTarget:         true,
-	isDespawnWhenTerminal:  true,
-	isTerminalWhenMoveDone: true,
+	name: missileAntiBallistic,
 }
 
 var flareUnitConfig = unitConfig{
-	name:                   flare,
-	produceLayer:           lOrdnance,
-	collisionLayers:        []layer{lOrdnance},
-	isStaticTarget:         true,
-	isDespawnWhenTerminal:  true,
-	isTerminalWhenMoveDone: true,
+	name: flare,
 }
 
 var chaffUnitConfig = unitConfig{
-	name:                  chaff,
-	produceLayer:          lChaff,
-	collisionLayers:       []layer{lOrdnance},
-	isStaticTarget:        true,
-	terminalStepDelay:     300,
-	isDespawnWhenTerminal: true,
-	ignoreCollision:       func(other *unit) bool { return !other.isRadarGuided },
-	skipSpawnRadiusCheck:  true,
+	name: chaff,
 }
 
 // This log method is frequently used for debugging. Also it is typically logged at the end of unit.log().
@@ -572,7 +680,8 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.Uint64("terminalStepDelay", uc.terminalStepDelay))
 	a = append(a, slog.Uint64("terminalStep", uc.terminalStep))
 	a = append(a, slog.String("collisionLayers", uc.collisionLayers.string()))
-	a = append(a, uc.produceLayer.log())
+	a = append(a, slog.String("trackLayers", uc.trackLayers.string()))
+	a = append(a, slog.String("produceLayer", uc.produceLayer.string()))
 	for k, v := range uc.consumables {
 		a = append(a, nest(k.string(), v.log()))
 	}
