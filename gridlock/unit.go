@@ -147,7 +147,7 @@ func newUnit(
 	u.reactions = reactions(u.name)
 
 	if u.vision < u.radius {
-		panic(fmt.Sprintf("newUnit: vision should not be less than radius for %s", uc.name))
+		panic(fmt.Sprintf("newUnit: vision should not be less than radius for %s", uc.name.string()))
 	}
 	return u
 }

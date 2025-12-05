@@ -26,7 +26,7 @@ const (
 	chaff
 )
 
-func (n name) String() string {
+func (n name) string() string {
 	switch n {
 	case noName:
 		return "noName"
@@ -57,10 +57,88 @@ func (n name) String() string {
 	}
 }
 
+var unitConfigs map[name]unitConfig = map[name]unitConfig{
+	infantry:             infantryUnitConfig,
+	fighter:              fighterUnitConfig,
+	bomber:               bomberUnitConfig,
+	bombGravity:          bombGravityUnitConfig,
+	missileCruise:        missileCruiseUnitConfig,
+	missileHeatSeeking:   missileHeatSeekingUnitConfig,
+	missileRadarActive:   missileRadarActiveUnitConfig,
+	missileBallistic:     missileBallisticUnitConfig,
+	missileAntiBallistic: missileAntiBallisticUnitConfig,
+	flare:                flareUnitConfig,
+	chaff:                chaffUnitConfig,
+}
+
 type consumable struct {
-	count     int
-	countMax  int
-	fireDelay step
+	count         int
+	countMax      int
+	fireDelay     step
+	firesAt       func(uc unitConfig) bool
+	firesAtLayers layers
+}
+
+func newConsumable(name name, countMax int) consumable {
+	c := consumable{
+		countMax: countMax,
+		count:    countMax,
+	}
+	c.setFireDelay(name)
+	c.setFiresAt(name)
+	c.setFiresAtLayers()
+	return c
+}
+
+func (c *consumable) setFireDelay(name name) {
+	var fireDelay step
+	switch name {
+	case missileHeatSeeking:
+		fireDelay = 50
+	case missileRadarActive:
+		fireDelay = 50
+	case flare:
+		fireDelay = 50
+	case chaff:
+		fireDelay = 50
+	case bombGravity:
+	default:
+		panic(fmt.Sprintf("setFireDelay: cannot set fire delay for unknown consumable %s", name.string()))
+	}
+	c.fireDelay = fireDelay
+}
+
+func (c *consumable) setFiresAt(name name) {
+	firesAt := func(uc unitConfig) bool { return false }
+	switch name {
+	case missileHeatSeeking:
+		firesAt = func(uc unitConfig) bool { return uc.emitsHeat && uc.name != flare }
+	case missileRadarActive:
+		firesAt = func(uc unitConfig) bool { return uc.emitsRadar && uc.name != chaff }
+	case bombGravity, flare, chaff:
+	default:
+		panic(fmt.Sprintf("setFiresAt: cannot set fires at for unknown consumable %s", name.string()))
+	}
+	c.firesAt = firesAt
+}
+
+func (c *consumable) setFiresAtLayers() {
+	layers := []layer{}
+	for _, other := range unitConfigs {
+		if c.firesAt(other) {
+			layers = append(layers, other.produceLayer)
+		}
+	}
+	c.firesAtLayers = layers
+}
+
+func (c consumable) log() []slog.Attr {
+	var a = []slog.Attr{}
+	a = append(a, slog.Int("count", c.count))
+	a = append(a, slog.Int("countMax", c.countMax))
+	a = append(a, slog.Uint64("fireDelay", c.fireDelay))
+	a = append(a, slog.String("firesAt", c.firesAtLayers.string()))
+	return a
 }
 
 type unitConfig struct {
@@ -72,7 +150,8 @@ type unitConfig struct {
 	reach                int
 	produceLayer         layer
 	staticTarget         bool
-	targetLayers         layers
+	tracks               func(t unitConfig) bool
+	trackLayers          layers
 	collisionLayers      layers
 	explodeRadius        int
 	terminalWhenMoveDone bool
@@ -88,7 +167,8 @@ type unitConfig struct {
 	requests             []request
 	requester            bool
 	consumables          map[name]consumable
-	heated               bool
+	emitsHeat            bool
+	emitsRadar           bool
 	heatSeeking          bool
 	radarGuided          bool
 	ignore               func(u, t *unit) bool
@@ -102,8 +182,71 @@ type unitConfig struct {
 	skipSpawnRadiusCheck bool
 }
 
+func newUnitConfig(name name) unitConfig {
+	uc, ok := unitConfigs[name]
+	if !ok {
+		panic(fmt.Sprintf("newUnitConfig: unknown unit name %s", name.string()))
+	}
+	uc.setTracks()
+	uc.setTracksLayers()
+	uc.setConsumables()
+	return uc
+}
+
+func (uc *unitConfig) setTracks() {
+	tracks := func(uc unitConfig) bool { return false }
+	switch uc.name {
+	case infantry:
+		tracks = func(uc unitConfig) bool { return uc.name == infantry }
+	case missileHeatSeeking:
+		tracks = func(uc unitConfig) bool { return uc.emitsHeat }
+	case missileRadarActive:
+		tracks = func(uc unitConfig) bool { return uc.emitsRadar }
+	case missileAntiBallistic:
+		tracks = func(uc unitConfig) bool { return uc.name == missileBallistic }
+	case fighter, bomber, bombGravity, missileCruise, missileBallistic, flare, chaff:
+	default:
+		panic(fmt.Sprintf("setTracks : cannot set tracks for unknown consumable %s", uc.name.string()))
+	}
+	uc.tracks = tracks
+}
+
+func (uc *unitConfig) setTracksLayers() {
+	layers := []layer{}
+	if uc.tracks != nil {
+		for _, other := range unitConfigs {
+			if uc.tracks(other) {
+				layers = append(layers, other.produceLayer)
+			}
+		}
+	}
+	uc.trackLayers = layers
+}
+
+func (uc *unitConfig) setConsumables() {
+	switch uc.name {
+	case fighter:
+		uc.consumables = map[name]consumable{
+			bombGravity:        newConsumable(bombGravity, 1),
+			flare:              newConsumable(flare, 1000),
+			chaff:              newConsumable(chaff, 0),
+			missileHeatSeeking: newConsumable(missileHeatSeeking, 10),
+			missileRadarActive: newConsumable(missileRadarActive, 0),
+		}
+	case bomber:
+		uc.consumables = map[name]consumable{
+			bombGravity: newConsumable(bombGravity, 4),
+			flare:       newConsumable(flare, 1000),
+			chaff:       newConsumable(chaff, 1000),
+		}
+	case infantry, missileCruise, missileBallistic, missileAntiBallistic, missileHeatSeeking, missileRadarActive:
+	default:
+		panic(fmt.Sprintf("setConsumables: cannot set consumables for unknown unit %s", uc.name.string()))
+	}
+}
+
 // Note: unit radius set to an odd number is better for testing due to division bugs
-var infantryConfig = unitConfig{
+var infantryUnitConfig = unitConfig{
 	name:              infantry,
 	radius:            3,
 	maxHealth:         50,
@@ -111,7 +254,6 @@ var infantryConfig = unitConfig{
 	vision:            17, // This must be 20 - infantry.radius until partitioner.go supports higher order hexagon LUT
 	reach:             5,
 	produceLayer:      lLand,
-	targetLayers:      []layer{lLand},
 	collisionLayers:   []layer{lLand},
 	explodeRadius:     0,
 	maxAlivePerNode:   math.MaxInt,
@@ -119,61 +261,48 @@ var infantryConfig = unitConfig{
 	survivesCollision: true,
 }
 
-var fighterConfig = unitConfig{
+var fighterUnitConfig = unitConfig{
 	name:            fighter,
 	radius:          8,
 	maxHealth:       1,
 	vision:          800,
 	produceLayer:    lAircraft,
-	targetLayers:    []layer{lOrdnance, lAircraft},
 	collisionLayers: []layer{lAircraft},
 	explodeRadius:   100,
 	maxAlivePerNode: 1,
-	consumables: map[name]consumable{
-		bombGravity:        {countMax: 1, fireDelay: 50},
-		flare:              {countMax: 1000, fireDelay: 50},
-		chaff:              {countMax: 0, fireDelay: 50},
-		missileHeatSeeking: {countMax: 0, fireDelay: 50},
-		missileRadarActive: {countMax: 0, fireDelay: 50},
-	},
-	speedFactor: 1.0,
-	reactive:    true,
-	requester:   true,
-	heated:      true,
+	speedFactor:     1.0,
+	reactive:        true,
+	requester:       true,
+	emitsHeat:       true,
+	emitsRadar:      true,
 	ignoreTarget: func(t *unit) bool {
 		return t.name == flare
 	},
 }
 
-var bomberConfig = unitConfig{
+var bomberUnitConfig = unitConfig{
 	name:            bomber,
 	radius:          20,
 	maxHealth:       1,
 	vision:          200,
 	produceLayer:    lAircraft,
-	targetLayers:    []layer{lOrdnance},
 	collisionLayers: []layer{lAircraft},
 	explodeRadius:   100,
 	maxAlivePerNode: 1,
-	consumables: map[name]consumable{
-		bombGravity: {countMax: 4, fireDelay: 30},
-		flare:       {countMax: 1000, fireDelay: 30},
-		chaff:       {countMax: 1000, fireDelay: 30},
-	},
-	speedFactor: 1.0,
-	heated:      true,
-	reactive:    true,
-	requester:   true,
-	ignore:      func(u, t *unit) bool { return slices.Contains(u.skipTargets, t.id) },
+	speedFactor:     1.0,
+	emitsHeat:       true,
+	emitsRadar:      true,
+	reactive:        true,
+	requester:       true,
+	ignore:          func(u, t *unit) bool { return slices.Contains(u.skipTargets, t.id) },
 }
 
-var bombGravityConfig = unitConfig{
+var bombGravityUnitConfig = unitConfig{
 	name:                bombGravity,
 	radius:              4,
 	vision:              4,
 	maxHealth:           1,
 	produceLayer:        lBombGravity,
-	targetLayers:        []layer{lLand},
 	collisionLayers:     []layer{lBombGravity},
 	staticTarget:        true,
 	explodeRadius:       20,
@@ -182,59 +311,54 @@ var bombGravityConfig = unitConfig{
 	explodeWhenTerminal: true,
 }
 
-var missileRadarActiveConfig = unitConfig{
+var missileRadarActiveUnitConfig = unitConfig{
 	name:                 missileRadarActive,
 	radius:               3,
 	maxHealth:            1,
 	vision:               300,
 	produceLayer:         lOrdnance,
-	targetLayers:         []layer{lOrdnance, lAircraft},
 	collisionLayers:      []layer{lOrdnance, lAircraft, lChaff},
 	staticTarget:         true,
 	despawnWhenTerminal:  true,
 	speedFactor:          0.5,
-	heated:               true,
 	maxAlivePerNode:      math.MaxInt,
 	ignoreTarget:         func(t *unit) bool { return t.name == flare },
 	terminalWhenMoveDone: true,
 	radarGuided:          true,
 }
 
-var missileHeatSeekingConfig = unitConfig{
+var missileHeatSeekingUnitConfig = unitConfig{
 	name:                 missileHeatSeeking,
 	radius:               3,
 	maxHealth:            1,
 	vision:               300,
 	produceLayer:         lOrdnance,
-	targetLayers:         []layer{lOrdnance, lAircraft},
 	collisionLayers:      []layer{lOrdnance, lAircraft},
 	staticTarget:         true,
 	despawnWhenTerminal:  true,
 	heatSeeking:          true,
 	speedFactor:          0.5,
-	heated:               true,
 	maxAlivePerNode:      math.MaxInt,
-	ignoreTarget:         func(t *unit) bool { return !t.heated },
+	ignoreTarget:         func(t *unit) bool { return !t.emitsHeat },
 	terminalWhenMoveDone: true,
 }
 
-var missileCruiseConfig = unitConfig{
+var missileCruiseUnitConfig = unitConfig{
 	name:                 missileCruise,
 	radius:               3,
 	vision:               3,
 	maxHealth:            1,
 	produceLayer:         lOrdnance,
-	collisionLayers:      []layer{lOrdnance},
+	collisionLayers:      layers{lOrdnance},
 	staticTarget:         true,
 	explodeWhenTerminal:  true,
 	explodeRadius:        20,
 	speedFactor:          1,
 	maxAlivePerNode:      math.MaxInt,
-	heated:               true,
 	terminalWhenMoveDone: true,
 }
 
-var missileBallisticConfig = unitConfig{
+var missileBallisticUnitConfig = unitConfig{
 	name:                 missileBallistic,
 	radius:               3,
 	vision:               3,
@@ -249,13 +373,12 @@ var missileBallisticConfig = unitConfig{
 	terminalWhenMoveDone: true,
 }
 
-var missileAntiBallisticConfig = unitConfig{
+var missileAntiBallisticUnitConfig = unitConfig{
 	name:                 missileAntiBallistic,
 	radius:               3,
 	maxHealth:            1,
 	vision:               300,
 	produceLayer:         lBallistic,
-	targetLayers:         []layer{lBallistic},
 	collisionLayers:      []layer{lBallistic},
 	staticTarget:         true,
 	despawnWhenTerminal:  true,
@@ -265,7 +388,7 @@ var missileAntiBallisticConfig = unitConfig{
 	terminalWhenMoveDone: true,
 }
 
-var flareConfig = unitConfig{
+var flareUnitConfig = unitConfig{
 	name:                 flare,
 	radius:               3,
 	vision:               3,
@@ -275,11 +398,11 @@ var flareConfig = unitConfig{
 	staticTarget:         true,
 	despawnWhenTerminal:  true,
 	speedFactor:          0.5,
-	heated:               true,
+	emitsHeat:            true,
 	terminalWhenMoveDone: true,
 }
 
-var chaffConfig = unitConfig{
+var chaffUnitConfig = unitConfig{
 	name:                 chaff,
 	radius:               100,
 	vision:               100,
@@ -310,9 +433,11 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.Bool("despawnWhenTerminal", uc.despawnWhenTerminal))
 	a = append(a, slog.Uint64("terminalStepDelay", uc.terminalStepDelay))
 	a = append(a, slog.Uint64("terminalStep", uc.terminalStep))
-	a = append(a, slog.String("targetLayers", uc.targetLayers.String()))
-	a = append(a, slog.String("collisionLayers", uc.collisionLayers.String()))
+	a = append(a, slog.String("collisionLayers", uc.collisionLayers.string()))
 	a = append(a, uc.produceLayer.log())
-	a = append(a, slog.String("name", uc.name.String()))
+	for k, v := range uc.consumables {
+		a = append(a, nest(k.string(), v.log()))
+	}
+	a = append(a, slog.String("name", uc.name.string()))
 	return a
 }

@@ -467,7 +467,7 @@ Determine if I should clarify file names
 
 ### Future Checkpoints
 
- Add more units
+- Add more units
   - Determine if other units listed in unit brain storm should be considered?
   - Should any of these units not be implemented?
   - Design, scope and implement AC130

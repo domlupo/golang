@@ -21,7 +21,7 @@ const (
 	lChaff
 )
 
-func (l layer) String() string {
+func (l layer) string() string {
 	switch l {
 	case lNone:
 		return "noLayer"
@@ -38,20 +38,20 @@ func (l layer) String() string {
 	case lChaff:
 		return "chaff"
 	default:
-		panic(fmt.Sprintf("Cannot String layer: %d", l))
+		panic(fmt.Sprintf("Cannot string layer: %d", l))
 	}
 }
 
 func (l layer) log() slog.Attr {
-	return slog.String("layer", l.String())
+	return slog.String("layer", l.string())
 }
 
 type layers []layer
 
-func (layers layers) String() string {
+func (layers layers) string() string {
 	var s string
 	for i, l := range layers {
-		s += l.String()
+		s += l.string()
 		if i != len(layers)-1 {
 			s += ", "
 		}

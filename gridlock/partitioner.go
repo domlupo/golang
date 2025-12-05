@@ -59,8 +59,8 @@ func newPartitioner(g grid, h hexagons) partitioner {
 		grid:     g,
 		hexagons: h,
 	}
-	p.infantryCollisionLUT = p.setupPartitionLUT(infantryConfig, infantryConfig, paCollision)
-	p.infantryVisionLUT = p.setupPartitionLUT(infantryConfig, infantryConfig, paVision)
+	p.infantryCollisionLUT = p.setupPartitionLUT(infantryUnitConfig, infantryUnitConfig, paCollision)
+	p.infantryVisionLUT = p.setupPartitionLUT(infantryUnitConfig, infantryUnitConfig, paVision)
 	return p
 }
 
@@ -81,7 +81,7 @@ func (part partitioner) partitions(u unit, pa partitionAnalysis, buffer int) par
 	}
 
 	if pa == paSteer && u.name != infantry {
-		panic(fmt.Sprintf("partitions: cannot get partitions for unit %s, analysis %s and buffer %d", u.name, pa.string(), buffer))
+		panic(fmt.Sprintf("partitions: cannot get partitions for unit %s, analysis %s and buffer %d", u.name.string(), pa.string(), buffer))
 	}
 
 	positions = part.defaultPartitions(u.Pixel, radius)

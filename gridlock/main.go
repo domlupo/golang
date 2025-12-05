@@ -57,7 +57,7 @@ func newGame() Game {
 	g := Game{
 		developerMode:           true,
 		obstacleSetup:           multiObstacle,
-		nodeSetup:               leftVsRightVerticalOffsetFighters,
+		nodeSetup:               leftVsRightVerticalOffsetAircraftAndOrdnance,
 		slowTickInterval:        1 * time.Second,
 		slowTickTime:            time.Now(),
 		priorTime:               time.Now(),

@@ -91,7 +91,7 @@ func (n node) log() []slog.Attr {
 		}
 		a = append(a, nest("actions", actions))
 	}
-	a = append(a, slog.String("unitConfig", n.unitConfig.name.String()))
+	a = append(a, slog.String("unitConfig", n.unitConfig.name.string()))
 	a = append(a, slog.Int("blueUnitAliveCount", n.pOneUnitAliveCount))
 	a = append(a, slog.Int("redUnitAliveCount", n.pTwoUnitAliveCount))
 	return a

@@ -125,13 +125,10 @@ func (c *computer) updateNodeTargets(avgUnitPos Pixel) {
 			if !avgUnitPos.equals(Pixel{}) {
 				selfNode.targets = []position{{lLand, avgUnitPos}}
 			}
-		case fighter:
-			if fighterConfig.consumables[bombGravity].count <= validDiffsIndex+1 {
-				c.planBombs(selfNode, positions[:fighterConfig.consumables[bombGravity].count])
-			}
-		case bomber:
-			if bomberConfig.consumables[bombGravity].count <= validDiffsIndex+1 {
-				c.planBombs(selfNode, positions[:bomberConfig.consumables[bombGravity].count])
+		case fighter, bomber:
+			bombCount := n.unitConfig.consumables[bombGravity].count
+			if bombCount <= validDiffsIndex+1 {
+				c.planBombs(selfNode, positions[:bombCount])
 			}
 		}
 	}
@@ -219,8 +216,8 @@ func (c *computer) planBombs(n *node, targets []Pixel) {
 		n.targets = append(n.targets, p)
 		n.actions = append(n.actions, action{position: p, do: func() {
 			u := newUnit(
-				bombGravityConfig,
-				position{layer: bombGravityConfig.produceLayer, Pixel: p.Pixel},
+				bombGravityUnitConfig,
+				position{layer: bombGravityUnitConfig.produceLayer, Pixel: p.Pixel},
 				c.player,
 				[]position{{layer: lLand, Pixel: p.Pixel}},
 				[]action{},
@@ -234,5 +231,5 @@ func (c *computer) planBombs(n *node, targets []Pixel) {
 	if !ok {
 		panic(fmt.Sprintf("planBombs: cannot get node pixel position %s", nP.log()))
 	}
-	n.targets = append(n.targets, position{layer: bomberConfig.produceLayer, Pixel: nP})
+	n.targets = append(n.targets, position{layer: bomberUnitConfig.produceLayer, Pixel: nP})
 }

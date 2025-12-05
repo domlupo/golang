@@ -584,7 +584,7 @@ func (s state) nearestTargetWithinVision(u *unit) {
 			continue
 		}
 
-		for _, l := range u.targetLayers {
+		for _, l := range u.trackLayers {
 			linkedList := partition.get(l).linkedList
 			if target, distance := s.nearestTargetWithinLayer(*u, linkedList); distance < d {
 				t = target
