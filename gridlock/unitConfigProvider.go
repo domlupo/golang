@@ -71,6 +71,8 @@ type reaction struct {
 	delay uint64
 }
 
+type consumables map[name]consumable
+
 type consumable struct {
 	count         int
 	countMax      int
@@ -98,7 +100,7 @@ type unitConfig struct {
 	speedFactor            float64
 	reactions              []reaction
 	requests               []request
-	consumables            map[name]consumable
+	consumables            consumables
 	isReactive             bool
 	isEmitsHeat            bool
 	isEmitsRadar           bool
@@ -135,8 +137,6 @@ func newUnitConfigProvider() unitConfigProvider {
 }
 
 func (ucProvider unitConfigProvider) setUCFieldsDependentOnOtherUCs() {
-	// TODO: revist setConsumables once implementation is finished.
-	// It may end up not being a dependent field but placing it here to be conservative.
 	ucProvider.setConsumables()
 	ucProvider.setReactions()
 	ucProvider.setTracksLayers()
@@ -157,28 +157,30 @@ func (ucProvider unitConfigProvider) setTracksLayers() {
 	}
 }
 
-// TODO: Update consumables. It needs to handle independent and dependent fields similar to unitConfigProvider
 func (ucProvider unitConfigProvider) setConsumables() {
+	cProvider := newConsumableProvider(ucProvider.unitConfigs)
 	for _, uc := range ucProvider.unitConfigs {
+		counts := make(map[name]int)
 		switch uc.name {
 		case fighter:
-			uc.consumables = map[name]consumable{
-				bombGravity:        newConsumable(bombGravity, 1),
-				flare:              newConsumable(flare, 1000),
-				chaff:              newConsumable(chaff, 0),
-				missileHeatSeeking: newConsumable(missileHeatSeeking, 10),
-				missileRadarActive: newConsumable(missileRadarActive, 0),
-			}
+			counts[bombGravity] = 1
+			counts[flare] = 100
+			counts[chaff] = 100
+			counts[missileHeatSeeking] = 100
+			counts[missileRadarActive] = 100
 		case bomber:
-			uc.consumables = map[name]consumable{
-				bombGravity: newConsumable(bombGravity, 4),
-				flare:       newConsumable(flare, 1000),
-				chaff:       newConsumable(chaff, 1000),
-			}
+			counts[bombGravity] = 1
+			counts[flare] = 1
+			counts[chaff] = 1
 		case infantry, missileCruise, missileBallistic, missileAntiBallistic, missileHeatSeeking, missileRadarActive, flare, bombGravity, chaff:
 		default:
 			panic(fmt.Sprintf("setConsumables: cannot set consumables for unknown unit %s", uc.name.string()))
 		}
+		uc.consumables = make(consumables)
+		for n, c := range counts {
+			uc.consumables[n] = cProvider.provide(n, c)
+		}
+		ucProvider.unitConfigs[uc.name] = uc
 	}
 }
 
@@ -358,14 +360,32 @@ func (n name) string() string {
 	}
 }
 
-func newConsumable(name name, countMax int) consumable {
-	c := consumable{
-		countMax: countMax,
-		count:    countMax,
+func consumableNames() []name {
+	return []name{bombGravity, missileHeatSeeking, missileRadarActive, missileBallistic, missileCruise, missileAntiBallistic, flare, chaff}
+}
+
+type consumableProvider struct {
+	consumables
+}
+
+func newConsumableProvider(unitConfigs unitConfigs) consumableProvider {
+	consumables := make(consumables)
+	for _, name := range consumableNames() {
+		consumables[name] = consumable{}
 	}
-	c.setFireDelay(name)
-	c.setFiresAt(name)
-	c.setFiresAtLayers()
+	for name, uc := range consumables {
+		uc.setFireDelay(name)
+		uc.setFiresAt(name)
+		consumables[name] = uc
+	}
+	cProvider := consumableProvider{consumables}
+	cProvider.setFiresAtLayers(unitConfigs)
+	return cProvider
+}
+
+func (cProvider consumableProvider) provide(name name, countMax int) consumable {
+	c := cProvider.consumables[name]
+	c.countMax = countMax
 	return c
 }
 
@@ -380,7 +400,7 @@ func (c *consumable) setFireDelay(name name) {
 		fireDelay = 50
 	case chaff:
 		fireDelay = 50
-	case bombGravity:
+	case bombGravity, missileCruise, missileBallistic, missileAntiBallistic:
 	default:
 		panic(fmt.Sprintf("setFireDelay: cannot set fire delay for unknown consumable %s", name.string()))
 	}
@@ -394,24 +414,36 @@ func (c *consumable) setFiresAt(name name) {
 		firesAt = func(uc unitConfig) bool { return uc.isEmitsHeat && uc.name != flare }
 	case missileRadarActive:
 		firesAt = func(uc unitConfig) bool { return uc.isEmitsRadar && uc.name != chaff }
-	case bombGravity, flare, chaff:
+	case bombGravity, flare, chaff, missileBallistic, missileAntiBallistic, missileCruise:
 	default:
 		panic(fmt.Sprintf("setFiresAt: cannot set fires at for unknown consumable %s", name.string()))
 	}
 	c.firesAt = firesAt
 }
 
-func (c *consumable) setFiresAtLayers() {
+func (cProvider consumableProvider) setFiresAtLayers(unitConfigs unitConfigs) {
 	layers := []layer{}
-	// TODO: Fix in future commit. This commit is already large.
-	/*
-		for _, other := range unitConfigs {
-			if c.firesAt(other) {
-				layers = append(layers, other.produceLayer)
+	for name, c := range cProvider.consumables {
+		for _, uc := range unitConfigs {
+			if c.firesAt(uc) {
+				layers = append(layers, uc.produceLayer)
 			}
 		}
-	*/
-	c.firesAtLayers = layers
+		c.firesAtLayers = layers
+		cProvider.consumables[name] = c
+	}
+}
+
+func (c consumables) log() []slog.Attr {
+	a := []slog.Attr{}
+	if len(c) == 0 {
+		a = append(a, slog.String("consumables", "none"))
+	}
+	// TODO: make deterministic so logging this map isn't an eye sore
+	for k, v := range c {
+		a = append(a, nest(k.string(), v.log()))
+	}
+	return a
 }
 
 func (c consumable) log() []slog.Attr {
@@ -833,13 +865,7 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.String("collisionLayers", uc.collisionLayers.string()))
 	a = append(a, slog.String("trackLayers", uc.trackLayers.string()))
 	a = append(a, slog.String("produceLayer", uc.produceLayer.string()))
-	// TODO: refactor this lower e.g. into consumable log() method?
-	if len(uc.consumables) == 0 {
-		a = append(a, slog.String("consumables", "none"))
-	}
-	for k, v := range uc.consumables {
-		a = append(a, nest(k.string(), v.log()))
-	}
+	a = append(a, uc.consumables.log()...)
 	a = append(a, slog.String("name", uc.name.string()))
 	return a
 }
