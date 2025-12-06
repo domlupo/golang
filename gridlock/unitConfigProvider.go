@@ -439,9 +439,11 @@ func (c consumables) log() []slog.Attr {
 	if len(c) == 0 {
 		a = append(a, slog.String("consumables", "none"))
 	}
-	// TODO: make deterministic so logging this map isn't an eye sore
-	for k, v := range c {
-		a = append(a, nest(k.string(), v.log()))
+	// iterate through array in determinisirc order
+	for _, name := range consumableNames() {
+		if c, ok := c[name]; ok {
+			a = append(a, nest(name.string(), c.log()))
+		}
 	}
 	return a
 }
