@@ -1,4 +1,5 @@
-// A unit config provider simplifies the compelx process of creating unit configs. It has several benefits.
+// A unit config provider simplifies the complex process of creating unit configs. It has several benefits
+// but the core benefit is handling unit config fields dependent on other unit config fields.
 //
 // Benefits:
 // - Unit config fields can have respective verifications to ensure valid values (e.g. radius cannot be negative).
@@ -38,11 +39,85 @@ import (
 	"slices"
 )
 
-type unitConfigs map[name]unitConfig
-
 // Provides unit configs to various consumers
 type unitConfigProvider struct {
 	unitConfigs
+}
+
+type unitConfigs map[name]unitConfig
+
+type name int
+
+const (
+	noName name = iota
+	infantry
+	fighter
+	bomber
+	bombGravity
+	missileHeatSeeking
+	missileRadarActive
+	missileBallistic
+	missileCruise
+	missileAntiBallistic
+	flare
+	chaff
+)
+
+// A unit action which should occur when a condition is met.
+type reaction struct {
+	when  func(*unit) bool
+	do    func(*unit)
+	next  uint64
+	delay uint64
+}
+
+type consumable struct {
+	count         int
+	countMax      int
+	fireDelay     step
+	firesAt       func(uc unitConfig) bool
+	firesAtLayers layers
+}
+
+type unitConfig struct {
+	name                   name
+	radius                 int
+	vision                 int
+	maxHealth              int
+	attack                 int
+	reach                  int
+	produceLayer           layer
+	tracks                 func(t unitConfig) bool
+	trackLayers            layers
+	collisionLayers        layers
+	explodeRadius          int
+	terminalStepDelay      step
+	terminalStep           step
+	reloadPayloadDelay     uint64
+	maxAlivePerNode        int
+	speedFactor            float64
+	reactions              []reaction
+	requests               []request
+	consumables            map[name]consumable
+	isReactive             bool
+	isEmitsHeat            bool
+	isEmitsRadar           bool
+	isHeatSeeking          bool
+	isRadarGuided          bool
+	isRequester            bool
+	isSurvivesCollision    bool
+	isSkipSpawnRadiusCheck bool
+	isExplodeWhenTerminal  bool
+	isDespawnWhenTerminal  bool
+	isTerminalWhenMoveDone bool
+	isStaticTarget         bool
+	ignore                 func(u, t *unit) bool
+	ignoreTarget           func(t *unit) bool
+	ignoreCollision        func(other *unit) bool
+	// This flag should rarely be used. If it is used often then write a function to avoid bugs.
+	// This is safe to enable iff the unit only collides with units that have radiuses less
+	// than state.spawnUnitRadiusLimit. For example, chaff only collides with radarGuided units
+	// which are all less than the 20 pixels.
 }
 
 func newUnitConfigProvider() unitConfigProvider {
@@ -63,6 +138,7 @@ func (ucProvider unitConfigProvider) setUCFieldsDependentOnOtherUCs() {
 	// TODO: revist setConsumables once implementation is finished.
 	// It may end up not being a dependent field but placing it here to be conservative.
 	ucProvider.setConsumables()
+	ucProvider.setReactions()
 	ucProvider.setTracksLayers()
 }
 
@@ -110,22 +186,141 @@ func (ucProvider unitConfigProvider) provide(name name) unitConfig {
 	return ucProvider.unitConfigs[name]
 }
 
-type name int
+func (ucProvider unitConfigProvider) setReactions() {
+	for name := range ucProvider.unitConfigs {
+		var reactions []reaction
+		switch name {
+		case infantry, bombGravity, chaff, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare:
+		case bomber:
+			bomberUC := ucProvider.unitConfigs[bomber]
+			reactions = []reaction{
+				{
+					when: func(bomber *unit) bool {
+						// TODO: bresenham is not guaranteed to get to final position. I have not seen
+						// aircraft not reach their final destination but missiles have. Need to ensure
+						// this is not error prone or make it more conservative.
+						return bomber.Pixel.equals(bomber.sourcePosition) && bomber.isPayloadNotFull()
+					},
+					do: func(bomber *unit) {
+						bomber.refillPayload()
+					},
+					delay: bomberUC.reloadPayloadDelay,
+				},
+				ucProvider.reactFlare(bomberUC.consumables[flare].fireDelay),
+				ucProvider.reactChaff(bomberUC.consumables[chaff].fireDelay),
+			}
+		case fighter:
+			fighterUC := ucProvider.unitConfigs[bomber]
+			missileRadarActiveUC := ucProvider.unitConfigs[missileRadarActive]
+			missileHeatSeekingUC := ucProvider.unitConfigs[missileHeatSeeking]
+			reactions = []reaction{
+				{
+					when: func(fighter *unit) bool {
+						// TODO: bresenham is not guaranteed to get to final position. I have not seen
+						// aircraft not reach their final destination but missiles have. Need to ensure
+						// this is not error prone or make it more conservative.
+						return fighter.Pixel.equals(fighter.sourcePosition) && fighter.isPayloadNotFull()
+					},
+					do: func(fighter *unit) {
+						fighter.refillPayload()
+						// TODO: when a missile terminates, should it remove the target from skip targets
+						// rather than do this during restock. Not sure if this is a realistic upgrade.
+						// Also, multiple ordnance might make this complex. Just because a single ordnance skips
+						// a target does not mean others should or can this be avoided?
+						fighter.skipTargets = []id{}
+					},
+					delay: fighterUC.reloadPayloadDelay,
+				},
+				{
+					when: func(fighter *unit) bool { return fighter.nearest != nil },
+					do: func(fighter *unit) {
+						var uc unitConfig
+						// TODO: determine fighter missile preference? Configurable by player?
+						// Arbitrarily set radar to have higher priority than heat seeking.
+						switch {
+						case fighter.consumables[missileRadarActive].count > 0 && !missileRadarActiveUC.ignoreTarget(fighter.nearest):
+							uc = missileRadarActiveUC
+						case fighter.consumables[missileHeatSeeking].count > 0 && !missileHeatSeekingUC.ignoreTarget(fighter.nearest):
+							uc = missileHeatSeekingUC
+						default:
+							return
+						}
+						missiles := fighter.consumables[uc.name]
+						missiles.count -= 1
+						fighter.consumables[uc.name] = missiles
+						spawn := newUnit(
+							uc,
+							position{layer: uc.produceLayer, Pixel: fighter.Pixel},
+							fighter.player,
+							[]position{fighter.nearest.position},
+							[]action{},
+							GridPosition{},
+							fighter.selected)
+						spawn.sourceUnit = fighter.id
+						fighter.requests = append(fighter.requests, request{spawn: &spawn})
+					},
+					// TODO: fix this. delay needs to be conditional on some unit config.
+					delay: 50,
+				},
+				ucProvider.reactChaff(fighterUC.consumables[chaff].fireDelay),
+				ucProvider.reactFlare(fighterUC.consumables[flare].fireDelay),
+			}
+		default:
+			panic(fmt.Sprintf("setReactions: cannot set reactions for unknown unit %s", name.string()))
+		}
+		uc := ucProvider.unitConfigs[name]
+		uc.reactions = reactions
+		ucProvider.unitConfigs[name] = uc
+	}
+}
 
-const (
-	noName name = iota
-	infantry
-	fighter
-	bomber
-	bombGravity
-	missileHeatSeeking
-	missileRadarActive
-	missileBallistic
-	missileCruise
-	missileAntiBallistic
-	flare
-	chaff
-)
+func (ucProvider unitConfigProvider) reactChaff(fireOrdnanceDelay uint64) reaction {
+	chaffUC := ucProvider.unitConfigs[chaff]
+	return reaction{
+		when: func(u *unit) bool {
+			return u.nearest != nil && u.nearest.name == missileRadarActive && u.consumables[chaff].count > 0
+		},
+		do: func(u *unit) {
+			newChafff := newUnit(
+				chaffUC,
+				position{layer: chaffUC.produceLayer, Pixel: u.Pixel},
+				u.player,
+				[]position{u.position},
+				[]action{},
+				GridPosition{},
+				u.selected)
+			u.requests = append(u.requests, request{spawn: &newChafff})
+			consumeable := u.consumables[chaff]
+			consumeable.count -= 1
+			u.consumables[chaff] = consumeable
+		},
+		delay: fireOrdnanceDelay,
+	}
+}
+
+func (ucProvider unitConfigProvider) reactFlare(fireOrdnanceDelay uint64) reaction {
+	flareUC := ucProvider.unitConfigs[flare]
+	return reaction{
+		when: func(u *unit) bool {
+			return u.nearest != nil && u.nearest.name == missileHeatSeeking && u.consumables[flare].count > 0
+		},
+		do: func(u *unit) {
+			newFlare := newUnit(
+				flareUC,
+				position{layer: flareUC.produceLayer, Pixel: u.Pixel},
+				u.player,
+				[]position{u.nearest.position},
+				[]action{},
+				GridPosition{},
+				u.selected)
+			u.requests = append(u.requests, request{spawn: &newFlare})
+			consumeable := u.consumables[flare]
+			consumeable.count -= 1
+			u.consumables[flare] = consumeable
+		},
+		delay: fireOrdnanceDelay,
+	}
+}
 
 func names() []name {
 	return []name{infantry, fighter, bomber, bombGravity, missileHeatSeeking, missileRadarActive, missileBallistic,
@@ -161,14 +356,6 @@ func (n name) string() string {
 	default:
 		panic(fmt.Sprintf("String name is unknown %d", n))
 	}
-}
-
-type consumable struct {
-	count         int
-	countMax      int
-	fireDelay     step
-	firesAt       func(uc unitConfig) bool
-	firesAtLayers layers
 }
 
 func newConsumable(name name, countMax int) consumable {
@@ -234,47 +421,6 @@ func (c consumable) log() []slog.Attr {
 	a = append(a, slog.Uint64("fireDelay", c.fireDelay))
 	a = append(a, slog.String("firesAt", c.firesAtLayers.string()))
 	return a
-}
-
-type unitConfig struct {
-	name                   name
-	radius                 int
-	vision                 int
-	maxHealth              int
-	attack                 int
-	reach                  int
-	produceLayer           layer
-	tracks                 func(t unitConfig) bool
-	trackLayers            layers
-	collisionLayers        layers
-	explodeRadius          int
-	terminalStepDelay      step
-	terminalStep           step
-	reloadPayloadDelay     uint64
-	maxAlivePerNode        int
-	speedFactor            float64
-	reactions              []reaction
-	requests               []request
-	consumables            map[name]consumable
-	isReactive             bool
-	isEmitsHeat            bool
-	isEmitsRadar           bool
-	isHeatSeeking          bool
-	isRadarGuided          bool
-	isRequester            bool
-	isSurvivesCollision    bool
-	isSkipSpawnRadiusCheck bool
-	isExplodeWhenTerminal  bool
-	isDespawnWhenTerminal  bool
-	isTerminalWhenMoveDone bool
-	isStaticTarget         bool
-	ignore                 func(u, t *unit) bool
-	ignoreTarget           func(t *unit) bool
-	ignoreCollision        func(other *unit) bool
-	// This flag should rarely be used. If it is used often then write a function to avoid bugs.
-	// This is safe to enable iff the unit only collides with units that have radiuses less
-	// than state.spawnUnitRadiusLimit. For example, chaff only collides with radarGuided units
-	// which are all less than the 20 pixels.
 }
 
 func (uc *unitConfig) setUCFields() {
@@ -668,26 +814,6 @@ func (uc *unitConfig) setTracks() {
 	uc.tracks = tracks
 }
 
-// TODO: remove these by rewriting reactions.go
-var fighterUnitConfig = unitConfig{
-	name: fighter,
-}
-var bomberUnitConfig = unitConfig{
-	name: bomber,
-}
-var missileRadarActiveUnitConfig = unitConfig{
-	name: missileRadarActive,
-}
-var missileHeatSeekingUnitConfig = unitConfig{
-	name: missileHeatSeeking,
-}
-var flareUnitConfig = unitConfig{
-	name: flare,
-}
-var chaffUnitConfig = unitConfig{
-	name: chaff,
-}
-
 // This log method is frequently used for debugging. Also it is typically logged at the end of unit.log().
 // Log frequently used info at the end for quicker debugging. Less used info can be parsed via tooling e.g. grep
 func (uc unitConfig) log() []slog.Attr {
@@ -697,6 +823,7 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.Int("attack", uc.attack))
 	a = append(a, slog.Int("vision", uc.vision))
 	a = append(a, slog.Int("reach", uc.reach))
+	a = append(a, slog.Int("reactionsCount", len(uc.reactions)))
 	a = append(a, slog.Bool("staticTarget", uc.isStaticTarget))
 	a = append(a, slog.Bool("heatSeeking", uc.isHeatSeeking))
 	a = append(a, slog.Bool("explodeWhenTerminal", uc.isExplodeWhenTerminal))
@@ -706,6 +833,10 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.String("collisionLayers", uc.collisionLayers.string()))
 	a = append(a, slog.String("trackLayers", uc.trackLayers.string()))
 	a = append(a, slog.String("produceLayer", uc.produceLayer.string()))
+	// TODO: refactor this lower e.g. into consumable log() method?
+	if len(uc.consumables) == 0 {
+		a = append(a, slog.String("consumables", "none"))
+	}
 	for k, v := range uc.consumables {
 		a = append(a, nest(k.string(), v.log()))
 	}

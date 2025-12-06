@@ -144,7 +144,6 @@ func newUnit(
 		sourcePosition:      pos.Pixel,
 	}
 	u.subPixel = u.newSubPixel(u.position)
-	u.reactions = reactions(u.name)
 
 	if u.vision < u.radius {
 		panic(fmt.Sprintf("newUnit: vision should not be less than radius for %s", uc.name.string()))
@@ -488,6 +487,23 @@ func (u *unit) getPath(
 	}
 
 	return path
+}
+
+func (u unit) isPayloadNotFull() bool {
+	for _, v := range u.consumables {
+		if v.count != v.countMax {
+			return true
+		}
+	}
+	return false
+}
+
+func (u *unit) refillPayload() {
+	for k := range u.consumables {
+		c := u.consumables[k]
+		c.count = c.countMax
+		u.consumables[k] = c
+	}
 }
 
 // This log method is frequently used for debugging. Log frequently used info at start
