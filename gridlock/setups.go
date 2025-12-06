@@ -491,25 +491,25 @@ type nodeSetupInput struct {
 	unitConfig unitConfig
 }
 
-func setupNodes(s nodeSetup, g grid, initialNodeHealth int, h hexagons, oLUT obstacleLUT) (nodes, nodeLUT) {
+func setupNodes(s nodeSetup, g grid, initialNodeHealth int, h hexagons, oLUT obstacleLUT, ucProvider unitConfigProvider) (nodes, nodeLUT) {
 	nodes := make(nodes)
-	nodes.setupPositions(s, initialNodeHealth)
+	nodes.setupPositions(s, initialNodeHealth, ucProvider)
 	nodes.setupControl(g, h, oLUT)
 	fileHandler := newFileHandler()
 	nodeLookup := fileHandler.readNodeLUT(nodes, oLUT, g)
 	return nodes, nodeLookup
 }
 
-func (nodes nodes) setupPositions(s nodeSetup, initialNodeHealth int) {
+func (nodes nodes) setupPositions(s nodeSetup, initialNodeHealth int, ucProvider unitConfigProvider) {
 	var nodeSetupInputs []nodeSetupInput
 
-	infantryUC := newUnitConfig(infantry)
-	fighterUC := newUnitConfig(fighter)
-	missileCruiseUC := newUnitConfig(missileCruise)
-	missileHeatSeekingUC := newUnitConfig(missileHeatSeeking)
-	missileBallisticUC := newUnitConfig(missileBallistic)
-	missileAntiBallisticUC := newUnitConfig(missileAntiBallistic)
-	missileRadarActiveUC := newUnitConfig(missileRadarActive)
+	infantryUC := ucProvider.provide(infantry)
+	fighterUC := ucProvider.provide(fighter)
+	missileCruiseUC := ucProvider.provide(missileCruise)
+	missileHeatSeekingUC := ucProvider.provide(missileHeatSeeking)
+	missileBallisticUC := ucProvider.provide(missileBallistic)
+	missileAntiBallisticUC := ucProvider.provide(missileAntiBallistic)
+	missileRadarActiveUC := ucProvider.provide(missileRadarActive)
 	switch s {
 	case noNodes:
 	case nodeSurrounded:

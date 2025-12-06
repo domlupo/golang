@@ -1,4 +1,33 @@
-// Configurations for different unit types.
+// A unit config provider simplifies the compelx process of creating unit configs. It has several benefits.
+//
+// Benefits:
+// - Unit config fields can have respective verifications to ensure valid values (e.g. radius cannot be negative).
+// - Unit config fields which are dependent on other fields within the same unit are easy to set.
+//   - The order for every set field is controlled. The dependent field is easily set after its required field.
+//   - The dependent field can have respective verifications to ensure valid values (e.g. vision >= radius)
+// - Unit config fields which are dependent on other unit configs are easy to set.
+//   - All independent fields, for all units can be set before the fields dependent on other units are set.
+// - It simplfies file exports.
+//   - Consumers only interact with the single provider and the relatively simple provides method.
+//   - Does not export multiple global unit configs
+//   - In the future, I may make this a separate package, but for now using "set" methods clarifies exports.
+// - Default values are more flexible.
+//   - Implicit values can be set per field via a switch statement.
+//   - Required explicit values can be set per field via a switch statement.
+// - Better documentation and easier to tune configurations
+//   - it is easy to understand a field when it is set for every unit within a single method.
+// - It is easier to extend in the future since most likely upgrades will require dynamic unit configs.
+//   - Requests to change configs will all be processed by the config provider.
+//   - Multiple approachs are viable for consuming dynamic configs:
+//     - Consumers may use the unit config provider as the single source of truth
+//     - The provider may be the single source to provide updates to all consumers.
+//
+// Dependent fields have two anticipated sources:
+// - The first source is sometimes it is easier to understand a config when it is defined via field X. But the config
+//   must be processed via field Y. e.g. It is easier to understand unit A attacks unit B via an attack field. Then this
+//   attack field is used to determine what layers the unit should search for a unit to attack.
+// - The second source is when a field has high CPU usage to calculate at runtime. It is better for provider to
+//   calculate and cache the value at startup, and retreive it during steady state runtime.
 
 package main
 
@@ -8,6 +37,78 @@ import (
 	"math"
 	"slices"
 )
+
+type unitConfigs map[name]unitConfig
+
+// Provides unit configs to various consumers
+type unitConfigProvider struct {
+	unitConfigs
+}
+
+func newUnitConfigProvider() unitConfigProvider {
+	configs := make(unitConfigs)
+	for _, name := range names() {
+		configs[name] = unitConfig{name: name}
+	}
+	for k, uc := range configs {
+		uc.setUCFields()
+		configs[k] = uc
+	}
+	ucProvider := unitConfigProvider{configs}
+	ucProvider.setUCFieldsDependentOnOtherUCs()
+	return ucProvider
+}
+
+func (ucProvider unitConfigProvider) setUCFieldsDependentOnOtherUCs() {
+	// TODO: revist setConsumables once implementation is finished.
+	// It may end up not being a dependent field but placing it here to be conservative.
+	ucProvider.setConsumables()
+	ucProvider.setTracksLayers()
+}
+
+func (ucProvider unitConfigProvider) setTracksLayers() {
+	for name, uc := range ucProvider.unitConfigs {
+		layers := []layer{}
+		if uc.tracks != nil {
+			for _, other := range ucProvider.unitConfigs {
+				if uc.tracks(other) {
+					layers = append(layers, other.produceLayer)
+				}
+			}
+		}
+		uc.trackLayers = layers
+		ucProvider.unitConfigs[name] = uc
+	}
+}
+
+// TODO: Update consumables. It needs to handle independent and dependent fields similar to unitConfigProvider
+func (ucProvider unitConfigProvider) setConsumables() {
+	for _, uc := range ucProvider.unitConfigs {
+		switch uc.name {
+		case fighter:
+			uc.consumables = map[name]consumable{
+				bombGravity:        newConsumable(bombGravity, 1),
+				flare:              newConsumable(flare, 1000),
+				chaff:              newConsumable(chaff, 0),
+				missileHeatSeeking: newConsumable(missileHeatSeeking, 10),
+				missileRadarActive: newConsumable(missileRadarActive, 0),
+			}
+		case bomber:
+			uc.consumables = map[name]consumable{
+				bombGravity: newConsumable(bombGravity, 4),
+				flare:       newConsumable(flare, 1000),
+				chaff:       newConsumable(chaff, 1000),
+			}
+		case infantry, missileCruise, missileBallistic, missileAntiBallistic, missileHeatSeeking, missileRadarActive, flare, bombGravity, chaff:
+		default:
+			panic(fmt.Sprintf("setConsumables: cannot set consumables for unknown unit %s", uc.name.string()))
+		}
+	}
+}
+
+func (ucProvider unitConfigProvider) provide(name name) unitConfig {
+	return ucProvider.unitConfigs[name]
+}
 
 type name int
 
@@ -25,6 +126,11 @@ const (
 	flare
 	chaff
 )
+
+func names() []name {
+	return []name{infantry, fighter, bomber, bombGravity, missileHeatSeeking, missileRadarActive, missileBallistic,
+		missileCruise, missileAntiBallistic, flare, chaff}
+}
 
 func (n name) string() string {
 	switch n {
@@ -55,20 +161,6 @@ func (n name) string() string {
 	default:
 		panic(fmt.Sprintf("String name is unknown %d", n))
 	}
-}
-
-var unitConfigs map[name]unitConfig = map[name]unitConfig{
-	infantry:             infantryUnitConfig,
-	fighter:              fighterUnitConfig,
-	bomber:               bomberUnitConfig,
-	bombGravity:          bombGravityUnitConfig,
-	missileCruise:        missileCruiseUnitConfig,
-	missileHeatSeeking:   missileHeatSeekingUnitConfig,
-	missileRadarActive:   missileRadarActiveUnitConfig,
-	missileBallistic:     missileBallisticUnitConfig,
-	missileAntiBallistic: missileAntiBallisticUnitConfig,
-	flare:                flareUnitConfig,
-	chaff:                chaffUnitConfig,
 }
 
 type consumable struct {
@@ -124,11 +216,14 @@ func (c *consumable) setFiresAt(name name) {
 
 func (c *consumable) setFiresAtLayers() {
 	layers := []layer{}
-	for _, other := range unitConfigs {
-		if c.firesAt(other) {
-			layers = append(layers, other.produceLayer)
+	// TODO: Fix in future commit. This commit is already large.
+	/*
+		for _, other := range unitConfigs {
+			if c.firesAt(other) {
+				layers = append(layers, other.produceLayer)
+			}
 		}
-	}
+	*/
 	c.firesAtLayers = layers
 }
 
@@ -182,12 +277,7 @@ type unitConfig struct {
 	// which are all less than the 20 pixels.
 }
 
-func newUnitConfig(name name) unitConfig {
-	uc, ok := unitConfigs[name]
-	if !ok {
-		panic(fmt.Sprintf("newUnitConfig: unknown unit name %s", name.string()))
-	}
-
+func (uc *unitConfig) setUCFields() {
 	// TODO: Once unit is more finalized add set methods for these fields.
 	// I suspect these might change in the near future so I am punting them for a bit
 	switch uc.name {
@@ -202,7 +292,6 @@ func newUnitConfig(name name) unitConfig {
 	case chaff:
 		uc.ignoreCollision = func(other *unit) bool { return !other.isRadarGuided }
 	}
-
 	uc.setRadius()
 	uc.setMaxHealth()
 	uc.setAttack()
@@ -227,12 +316,6 @@ func newUnitConfig(name name) unitConfig {
 	uc.setTracks()
 	uc.setProduceLayer()
 	uc.setCollisionLayers()
-	// TODO: Refactor this. The order needed is all unit configs are initialized. Then they are analyzed. Then they are fetched.
-	// unit config initialization and unit fetch order cannot be coupled.
-	unitConfigs[uc.name] = uc
-	uc.setTracksLayers()
-	uc.setConsumables()
-	return uc
 }
 
 func (uc *unitConfig) setRadius() {
@@ -389,7 +472,7 @@ func (uc *unitConfig) setIsEmitsHeat() {
 	switch uc.name {
 	case fighter, bomber, flare:
 		isEmitsHeat = true
-	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, bombGravity:
+	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, bombGravity, chaff:
 	default:
 		panic(fmt.Sprintf("setIsEmitsHeat: cannot set isEmitsHeats for unknown unit %s", uc.name.string()))
 	}
@@ -401,7 +484,7 @@ func (uc *unitConfig) setIsEmitsRadar() {
 	switch uc.name {
 	case fighter, bomber:
 		isEmitsRadar = true
-	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity:
+	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity, chaff:
 	default:
 		panic(fmt.Sprintf("setIsEmitsRadar: cannot set isEmitsRadar for unknown unit %s", uc.name.string()))
 	}
@@ -413,7 +496,7 @@ func (uc *unitConfig) setIsRequester() {
 	switch uc.name {
 	case fighter, bomber:
 		isRequester = true
-	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity:
+	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity, chaff:
 	default:
 		panic(fmt.Sprintf("setIsRequester: cannot set isRequester for unknown unit %s", uc.name.string()))
 	}
@@ -425,7 +508,7 @@ func (uc *unitConfig) setIsReactive() {
 	switch uc.name {
 	case fighter, bomber:
 		isReactive = true
-	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity:
+	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity, chaff:
 	default:
 		panic(fmt.Sprintf("setIsReactive: cannot set isReactive for unknown unit %s", uc.name.string()))
 	}
@@ -456,7 +539,7 @@ func (uc *unitConfig) setProduceLayer() {
 func (uc *unitConfig) setTerminalStepDelay() {
 	var terminalStepDelay step
 	switch uc.name {
-	case bombGravity:
+	case bombGravity, chaff:
 		terminalStepDelay = 300
 	case infantry, fighter, bomber, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare:
 	default:
@@ -470,7 +553,7 @@ func (uc *unitConfig) setIsExplodeWhenTerminal() {
 	switch uc.name {
 	case bombGravity, missileCruise, missileBallistic:
 		isExplodeWhenTerminal = true
-	case infantry, fighter, bomber, missileRadarActive, missileHeatSeeking, missileAntiBallistic, flare:
+	case infantry, fighter, bomber, missileRadarActive, missileHeatSeeking, missileAntiBallistic, flare, chaff:
 	default:
 		panic(fmt.Sprintf("setIsExplodeWhenTerminal: cannot set is explode when terminal for unknown unit %s", uc.name.string()))
 	}
@@ -480,7 +563,7 @@ func (uc *unitConfig) setIsExplodeWhenTerminal() {
 func (uc *unitConfig) setIsStaticTarget() {
 	var isStatictarget bool
 	switch uc.name {
-	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity:
+	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity, chaff:
 		isStatictarget = true
 	case infantry, fighter, bomber:
 	default:
@@ -585,81 +668,22 @@ func (uc *unitConfig) setTracks() {
 	uc.tracks = tracks
 }
 
-func (uc *unitConfig) setTracksLayers() {
-	layers := []layer{}
-	if uc.tracks != nil {
-		for _, other := range unitConfigs {
-			if uc.tracks(other) {
-				layers = append(layers, other.produceLayer)
-			}
-		}
-	}
-	uc.trackLayers = layers
-}
-
-func (uc *unitConfig) setConsumables() {
-	switch uc.name {
-	case fighter:
-		uc.consumables = map[name]consumable{
-			bombGravity:        newConsumable(bombGravity, 1),
-			flare:              newConsumable(flare, 1000),
-			chaff:              newConsumable(chaff, 0),
-			missileHeatSeeking: newConsumable(missileHeatSeeking, 10),
-			missileRadarActive: newConsumable(missileRadarActive, 0),
-		}
-	case bomber:
-		uc.consumables = map[name]consumable{
-			bombGravity: newConsumable(bombGravity, 4),
-			flare:       newConsumable(flare, 1000),
-			chaff:       newConsumable(chaff, 1000),
-		}
-	case infantry, missileCruise, missileBallistic, missileAntiBallistic, missileHeatSeeking, missileRadarActive:
-	default:
-		panic(fmt.Sprintf("setConsumables: cannot set consumables for unknown unit %s", uc.name.string()))
-	}
-}
-
-// Note: unit radius set to an odd number is better for testing due to division bugs
-var infantryUnitConfig = unitConfig{
-	name: infantry,
-}
-
+// TODO: remove these by rewriting reactions.go
 var fighterUnitConfig = unitConfig{
 	name: fighter,
 }
-
 var bomberUnitConfig = unitConfig{
 	name: bomber,
 }
-
-var bombGravityUnitConfig = unitConfig{
-	name: bombGravity,
-}
-
 var missileRadarActiveUnitConfig = unitConfig{
 	name: missileRadarActive,
 }
-
 var missileHeatSeekingUnitConfig = unitConfig{
 	name: missileHeatSeeking,
 }
-
-var missileCruiseUnitConfig = unitConfig{
-	name: missileCruise,
-}
-
-var missileBallisticUnitConfig = unitConfig{
-	name: missileBallistic,
-}
-
-var missileAntiBallisticUnitConfig = unitConfig{
-	name: missileAntiBallistic,
-}
-
 var flareUnitConfig = unitConfig{
 	name: flare,
 }
-
 var chaffUnitConfig = unitConfig{
 	name: chaff,
 }

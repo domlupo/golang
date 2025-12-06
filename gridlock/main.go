@@ -82,7 +82,8 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 	grid := newGrid(newGridConfig())
 	hexagons := newHexagons(grid)
 	obstacles, oLUT := setupObstacles(obstacleSetup, grid)
-	nodes, nLUT := setupNodes(nodeSetup, grid, g.initialNodeHealth, hexagons, oLUT)
+	unitConfigProvider := newUnitConfigProvider()
+	nodes, nLUT := setupNodes(nodeSetup, grid, g.initialNodeHealth, hexagons, oLUT, unitConfigProvider)
 	logger.log(infoLevel, setupLogic, fmt.Sprintf("Setup required %0.2f seconds", float64(time.Since(start).Seconds())))
 
 	if verify {
@@ -95,9 +96,10 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 		}
 	}
 
-	g.state = newState(nodes, obstacles, hexagons, oLUT, nLUT, grid, g.developerMode)
+	partitioner := newPartitioner(grid, hexagons, unitConfigProvider)
+	g.state = newState(nodes, obstacles, hexagons, oLUT, nLUT, grid, partitioner, g.developerMode)
 	g.debugger = newDebugger(g.state, g.developerToggleCooldown)
-	g.computers = newComputers(g.state)
+	g.computers = newComputers(g.state, unitConfigProvider)
 	g.controller = newController(g.state, g.computers, g.debugger)
 	// TODO: I should only invoke newDrawConfig once per game not every restart
 	g.drawer = newDrawer(newDrawConfig(), g.state, g.controller, g.debugger)

@@ -50,14 +50,16 @@ func (pa partitionAnalysis) log() slog.Attr {
 type partitioner struct {
 	grid                 grid
 	hexagons             hexagons
+	unitConfigProvider   unitConfigProvider
 	infantryCollisionLUT partitionLUT
 	infantryVisionLUT    partitionLUT
 }
 
-func newPartitioner(g grid, h hexagons) partitioner {
+func newPartitioner(g grid, h hexagons, ucProvider unitConfigProvider) partitioner {
 	p := partitioner{
-		grid:     g,
-		hexagons: h,
+		grid:               g,
+		hexagons:           h,
+		unitConfigProvider: ucProvider,
 	}
 	p.infantryCollisionLUT = p.setupPartitionLUT(infantry, infantry, paCollision)
 	p.infantryVisionLUT = p.setupPartitionLUT(infantry, infantry, paVision)
@@ -181,8 +183,8 @@ func (part partitioner) defaultPartitions(p Pixel, d int) []GridPosition {
 func (part partitioner) setupPartitionLUT(internalUnitName name, externalUnitName name, pa partitionAnalysis) partitionLUT {
 	var internalRadius int
 	var externalRadius int
-	internalUC := newUnitConfig(internalUnitName)
-	externalUC := newUnitConfig(externalUnitName)
+	internalUC := part.unitConfigProvider.provide(internalUnitName)
+	externalUC := part.unitConfigProvider.provide(externalUnitName)
 	switch pa {
 	case paCollision:
 		internalRadius = internalUC.radius

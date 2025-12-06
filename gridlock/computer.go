@@ -18,7 +18,8 @@ type computers []computer
 type computer struct {
 	*state
 	computersConfig
-	player player
+	player             player
+	unitConfigProvider unitConfigProvider
 }
 
 func newComputersConfig() computersConfig {
@@ -29,17 +30,17 @@ func newComputersConfig() computersConfig {
 	return c
 }
 
-func newComputers(s *state) *computers {
+func newComputers(s *state, ucProvider unitConfigProvider) *computers {
 	var computers = make(computers, 0)
 	c := newComputersConfig()
 	for i := range c.count {
-		computers = append(computers, newComputer(s, i))
+		computers = append(computers, newComputer(s, ucProvider, i))
 	}
 	computers.updateNodetargets(true, Pixel{})
 	return &computers
 }
 
-func newComputer(s *state, i int) computer {
+func newComputer(s *state, ucProvider unitConfigProvider, i int) computer {
 	var p player
 	switch i {
 	case 0:
@@ -51,9 +52,10 @@ func newComputer(s *state, i int) computer {
 	}
 
 	c := computer{
-		state:           s,
-		player:          p,
-		computersConfig: newComputersConfig(),
+		state:              s,
+		unitConfigProvider: ucProvider,
+		player:             p,
+		computersConfig:    newComputersConfig(),
 	}
 	return c
 }
@@ -211,6 +213,8 @@ func (c *computer) planBombs(n *node, targets []Pixel) {
 	n.targets = []position{}
 	n.actions = []action{}
 
+	bombGravityUnitConfig := c.unitConfigProvider.provide(bombGravity)
+	bomberUnitConfig := c.unitConfigProvider.provide(bombGravity)
 	for _, t := range targets {
 		p := position{lAircraft, t}
 		n.targets = append(n.targets, p)

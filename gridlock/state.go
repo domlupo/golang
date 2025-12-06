@@ -59,11 +59,11 @@ type state struct {
 	unitDespawnTotal int
 }
 
-func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, g grid, developerMode bool) *state {
+func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, g grid, p partitioner, developerMode bool) *state {
 	s := state{
 		config:           newStateConfig(g),
 		grid:             g,
-		partitioner:      newPartitioner(g, h),
+		partitioner:      p,
 		obstacles:        o,
 		oLUT:             oLUT,
 		hexagons:         h,
