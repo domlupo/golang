@@ -139,40 +139,22 @@ func (g *Game) Update() error {
 	var xSum int
 	var ySum int
 	var totalCount int
-	var infantryCount int
-	var bombGravityCount int
-	var bomberCount int
-	var fighterCount int
-	var unknownCount int
+	unitCounts := make(map[name]int)
 	for u := range g.state.units() {
 		xSum += u.X
 		ySum += u.Y
 		totalCount++
-		switch u.name {
-		case infantry:
-			infantryCount++
-		case bombGravity:
-			bombGravityCount++
-		case bomber:
-			bomberCount++
-		case fighter:
-			fighterCount++
-		default:
-			unknownCount++
-		}
+		unitCounts[u.name]++
 	}
 	var avgUnitPos Pixel
 	if totalCount != 0 {
 		avgUnitPos = Pixel{X: xSum / totalCount, Y: ySum / totalCount}
 	}
-	logger.log(infoLevel, mainLogic, "unit counts",
-		slog.Int("total_units", totalCount),
-		slog.Int("infantryCount", infantryCount),
-		slog.Int("bombGravity", bombGravityCount),
-		slog.Int("bomber", bomberCount),
-		slog.Int("fighter", fighterCount),
-		slog.Int("unknownCount", unknownCount),
-	)
+	counts := []slog.Attr{slog.Int("total", totalCount)}
+	for name, count := range unitCounts {
+		counts = append(counts, slog.Int(name.string(), count))
+	}
+	logger.log(infoLevel, mainLogic, "unitCounts", counts...)
 
 	// play computer moves. Computers currently affect game state directly rather
 	// than the same game state being sent to each one before a final update occurs.
