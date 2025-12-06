@@ -585,7 +585,7 @@ func (u unit) logShort() []slog.Attr {
 	return a
 }
 
-func (u unit) angleDraw(dc drawConfig, pixelMultiplier float32) *ebiten.DrawImageOptions {
+func (u unit) angleDraw(pixelMultiplier float32) *ebiten.DrawImageOptions {
 	op := ebiten.DrawImageOptions{}
 	xMult := math.Sin(u.angle) - math.Cos(u.angle)
 	yMult := -math.Sqrt2 * math.Sin(u.angle+(math.Pi/4))
@@ -608,7 +608,7 @@ func (u unit) draw(dc drawConfig, selected bool, pixelMultiplier float32) {
 
 	switch u.name {
 	case fighter:
-		dc.screen.DrawImage(dc.pngFighter, u.angleDraw(dc, pixelMultiplier))
+		dc.screen.DrawImage(dc.pngFighter, u.angleDraw(pixelMultiplier))
 
 		if u.selected {
 			vector.StrokeCircle(
@@ -622,7 +622,7 @@ func (u unit) draw(dc drawConfig, selected bool, pixelMultiplier float32) {
 			)
 		}
 	case bomber:
-		dc.screen.DrawImage(dc.pngBomber, u.angleDraw(dc, pixelMultiplier))
+		dc.screen.DrawImage(dc.pngBomber, u.angleDraw(pixelMultiplier))
 
 		if u.selected {
 			vector.StrokeCircle(
@@ -651,7 +651,7 @@ func (u unit) draw(dc drawConfig, selected bool, pixelMultiplier float32) {
 			)
 		}
 	case missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, missileRadarActive:
-		dc.screen.DrawImage(dc.pngMissile, u.angleDraw(dc, pixelMultiplier))
+		dc.screen.DrawImage(dc.pngMissile, u.angleDraw(pixelMultiplier))
 
 		if u.selected && (u.name == missileHeatSeeking || u.name == missileAntiBallistic || u.name == missileRadarActive) {
 			vector.StrokeCircle(
@@ -665,7 +665,7 @@ func (u unit) draw(dc drawConfig, selected bool, pixelMultiplier float32) {
 			)
 		}
 	case flare:
-		dc.screen.DrawImage(dc.pngFlare, u.angleDraw(dc, pixelMultiplier))
+		dc.screen.DrawImage(dc.pngFlare, u.angleDraw(pixelMultiplier))
 	case chaff:
 		vector.StrokeCircle(
 			dc.screen,
