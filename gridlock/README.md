@@ -645,88 +645,9 @@ Determine if I should clarify file names
   - check phone controls
   - check resolution
 
----
-
-### Punted Checkpoints
-
-- Campaigns could be added. Non random maps with specific objectives and setups.
-
-- A map maker could be added where placers can create specific setups. And tweak game values.
-  - If tiles ever had different production values this would help add some variety.
-
-- I am using multiple grids instead of a single in grid in application memory. This is a potential optimization
-  in the future. Right now it is too low hanging fruit and but should be revisited. Right now I prefer the
-  more idiomatic code with better readability.
-
-- Before release determine if any variables should be renamed. Especially foundational structs
-  - PixelPostition
-  - position
-  - etc
-  - I don't want to have to deal with client cache clears due to remaing json fields.
-  - If the code is ever open sourced this is a great way to fix design issue of
-    not knowing end state and have having to make progress anyway with var names
-    that become terrible.
-
-- I like the solitaire end game screen. Make a cool pre game or end game animation:
-  - pregame menu screen can have animation in background
-  - boids behavior (multiple fighters flying around)
-  - hexagon explosion + collision
-  - hexagon liquify to bottom of screen (if it require shaders that would probably prevent it)
-
-- Determine if I should add player configurations
-  - player configure flare patterns or setups?
-  - player can configure gameplay visuals:
-    - hex grid outline on or off. 
-    - hex grid colors
-    - color intensities
-    - highlight colors
-
-- LUT tables are rather large for end game(100-300MB)
-  - I may need to use something smaller for final game (especially if mobile release)
-  - Also, players will not want long seed generations
-
-- Once game is released, need to either force user cache clears or use directories for cache versioning.
-
-- Obstacles are `type obstacles map[GridPosition]*obstacle` but this is a bit strange
-  - iterating through visbility grids is not ideal
-  - It seems relating a specific grid pos to an obstacle is never needed.
-  - Probably should be refactored to a higher level obstacle which groups grid pos together
-  - This is low priority now, but it may become more needed over time.
-  - Do other types like hexagons and nodes have a similar issue?
-
-- When all nodes are selected, newly captured nodes should become selected as well.
-
-- A performance gain might be possible from investing in hex lookup 
- - I am unsure if this is needed because this code is already performant, but it is in
-   a very hot loop so even minimal gains might be worth it.
-  - Right now, hex triangle LUT are created at startup which are used at runtime to get hex position
-  - Instead, I can do more calculation at startup and use a LUT to store pixel -> hex 
-    directly. This avoids doing pixel -> hex triangle -> hex calculations at runtime.
-
-- Currently heatmap creation stops game update ticks. This means when creating a heatmap via button click
-  multiple button clicks are processed. I fixed this by only allowing one heat map to ever be created. Ideally, 
-  a delay should be added but it is not prioritized.
-
-- Check if hexagon look up table can be optimized with static aka compile time setup rather 
-  than runtime setup at game start and accessed during game time via heap allocated pointer.
-
-- Set FPS or add setting for low performance platforms e.g. mobile?
-
-- Should I add a json config file that is loaded at runtime?
-  - Toggles are already allowing runtime updates, rather than manually updating a text file.
-
-- Logging affects game performance. Especially hot loop logs e.g. unit refresh
-  - Can I use build tags for a development vs release build?
-  - Can I conditionally compile?
-
-- Controls interface which work on computer, steam deck, phone, etc: 
-  - multiple platform means more sales
-  - customers can pick favorite device if multiple owned
-
 - Polish missile:
   - Damage rather than instant kill?
   - Fall off damage?
-  - Add unit that counters missile and expands game logic?
 
 - initial map generation:
   - Omitting certain counters or land features from maps might give ticket to ride vibes where
@@ -742,7 +663,11 @@ Determine if I should clarify file names
 - Different terrains: 
   - Careful, this may be hard to implement due to pathfinding algorithms assuming same cost movement
 
----
+- Controls interface which work on computer, steam deck, phone, etc: 
+  - multiple platform means more sales
+  - customers can pick favorite device if multiple owned
+
+- When all nodes are selected, newly captured nodes should become selected as well.
 
 ## Closed Decisions
 
