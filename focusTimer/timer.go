@@ -89,13 +89,13 @@ func (g *Game) Update() error {
 		if g.intProgressPercent != int(g.progressPercent) {
 			g.intProgressPercent = int(g.progressPercent)
 			loggedProgressPercent := int((float64(g.intProgressPercent) * (float64(maxPercentage) - g.progressPercentStart) / maxPercentage) + g.progressPercentStart)
-			_, g.err = g.file.WriteString(fmt.Sprintf(
+			_, g.err = fmt.Fprintf(g.file,
 				"%*d%% %s %*d minutes remaining\n",
 				g.logPercentPadding,
 				loggedProgressPercent,
 				g.currentTime.Format(time.RFC3339),
 				g.logMinutePadding,
-				g.intDurationCount))
+				g.intDurationCount)
 			if g.err != nil {
 				log.Fatal(g.err)
 			}
@@ -108,13 +108,13 @@ func (g *Game) Update() error {
 					g.intDurationCount = g.intDurationCount - 1
 					loggedProgressPercent := (g.progressPercent * (float64(maxPercentage) - g.progressPercentStart) / maxPercentage) + g.progressPercentStart
 					if g.intDurationStart > g.logMinsElapsedThresholdMins {
-						_, g.err = g.file.WriteString(fmt.Sprintf(
+						_, g.err = fmt.Fprintf(g.file,
 							"%*.1f%% %s %*d minutes remaining\n",
 							g.logPercentPadding,
 							loggedProgressPercent,
 							g.currentTime.Format(time.RFC3339),
 							g.logMinutePadding,
-							g.intDurationCount))
+							g.intDurationCount)
 					}
 				default:
 					time.Sleep(1 * time.Microsecond)
