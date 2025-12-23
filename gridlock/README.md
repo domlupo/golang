@@ -196,12 +196,6 @@ Is there a mobile equivalent for war/4x games?
   - A potential upgrade could be to allow multiple target acquisitions
   - The issue is multiple target acquisitions seems unrealistic.
 
-- Attempt to finalize how targetting works across for all type of targets and units
-  - It is fine if it is wrong, but the structure can get closer than what it is. 
-
-- Finalize other major programming structures
-  - hex iteration for all units?
-
 - Design and implement global path finding LUT
   - To start probably want to create like existing LUT (useful for debugging issues with pathfinding)
     - Fixes issue with debugger unit path find heat map (poor UI, requires several minutes)
@@ -220,32 +214,6 @@ Is there a mobile equivalent for war/4x games?
   - Should be optimal path
   - Is there a need to do a line of sight LUT? I don't think a Line of sight LUT is needed since
     most LOS checks that would benefit are the ones from global path find anway.
-
-- Determine if air obstacles should be in game or not?
-  - I am concerned about LUT performance (heap memory consumption and time to generate)
-  - May need to add a global path finding LUT
-  - I can also use a tricks here to avoid LUT need:
-     - Infantry LUT for global path finding but air obstacles only ever have 1 or 2 so calculate
-       at runtime with small cw and ccw depth.
-    - more dense obstacls should generate quicker
-
-- Merge steer branch
-  - I don't think I need to prototype boids in a separate setup. I would rather use the current game
-    setup that has collision, global target, etc .
-  - Don't do all factors at once, start small. 
-    - First get obstacle avoidance working 
-    - Then get unit avoidance working
-    - Then get seeking
-    - Then cohesion, etc
-  - There are multiple options to handle velocity:
-    - I can refactor code to use velocity and then trim it to magnitude 1.
-    - I can store velocity as state in unit from prior steers and steer updates this saved state.
-    - I can reduce "turn delay" or turns between steeers so more steering turns occur
-      together or apart.
-  - Probably want to use global pathing influence as well
-  - These seem a bit hacky and unneded but:
-    - Can add to obstacle LUT, for the given hexagon, what pixel is further from all obstacles
-   - Can add to obstacle LUT, for the given hexagon side, what pixel is furthest from all obstacles
 
 - Fix Bresenham's algorithm edge cases:
   - Bresenham error needs to reset itself for several reasons. I still need to handle:
@@ -273,14 +241,6 @@ Is there a mobile equivalent for war/4x games?
   - Are you designing features to improve player experience? 
   - Are you coding features to improve player experience?
   - Are you priotizing and cutting features as needed?
-
-- clean up bugs and hacks:
-  - There are enough to cause bugs while testing game design and game loop
-
-- Polish UI
-  - Currently it is very hard to fight computer due to clunky UI
-  - Easier way to select all nodes of same type with double click
-  - Better automated targetting from units. e.g. units don't auto target nodes when they should.
 
 - Revisit bomber tasks
   - Punted
@@ -311,16 +271,6 @@ Is there a mobile equivalent for war/4x games?
    - Need to add an iter to hexagon which iters through all layers
 
 - Don't global pathfind unless needed. (CPU usage is high due to this)
-
-- I believe long term state will be split into 3 parts (dynamic, static, player input)
-  - static:
-    look up tables,
-    obstacles (I don't think this is needed if global path find is always used?)
-  - dynamic:
-    units
-    hex
-  - player input is stuff like unit selection. I think dynamic will be automated / simulatiomn updates only
-  - nodes should maybe be split into static and non static parts... not sure
 
 ## Closed Decisions
 
