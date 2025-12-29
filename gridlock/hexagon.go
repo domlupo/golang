@@ -1,4 +1,5 @@
-// A low level grid componenet. Spatially partitions the map for efficient computation and local data analytics.
+// A low level grid component. Spatially partitions the map for efficient computation and local
+// data analytics.
 
 package main
 
@@ -95,8 +96,8 @@ type unitDifferential struct {
 	diff int
 }
 
-// Returns all hexagon GridPositions sorted by largest unit count differential for the passed player.
-// No guaranteed sort for multiple grid positions with equal differential.
+// Returns all hexagon GridPositions sorted by largest unit count differential for the passed
+// player. No guaranteed sort for multiple grid positions with equal differential.
 func (hs hexagons) maxUnitDifferential(opponent player, l layer) []unitDifferential {
 	var diffs = []unitDifferential{}
 	for p := range hs {
@@ -131,7 +132,8 @@ func (hs hexagons) maxUnitDifferential(opponent player, l layer) []unitDifferent
 func (h *hexagon) add(u *unit) {
 	hl := h.get(u.layer)
 	if hl.linkedList == nil && hl.unitCount != 0 {
-		panic(fmt.Sprintf("nil linked list unit count should be 0, not %d. \n hexagon: %s \n unit: %s", hl.unitCount, h.log(), u.log()))
+		s := "nil linked list unit count should be 0, not %d. \n hexagon: %s \n unit: %s"
+		panic(fmt.Sprintf(s, hl.unitCount, h.log(), u.log()))
 	}
 
 	if hl.linkedList == nil {
