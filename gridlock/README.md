@@ -1,10 +1,10 @@
 # Gridlock
 
-A prototype for a simple war/4x game. Simple like mini metro or mini motorways.
-War game like civ, hearts of iron, 9 kings etc. (also other popular war games on steamdb). Think
-about how this game relates to civilization revolution, catan, RISK, starcraft desert strike,
-totally accurate battle simulator, etc. Graphics may end up similar to the gnorp analogue. Is there
-a mobile equivalent for war/4x games?
+A prototype for a simple war/4x game. Simple like mini metro or mini motorways. War game like civ,
+hearts of iron, 9 kings etc. (also other popular war games on steamdb). Think about how this game
+relates to civilization revolution, catan, RISK, starcraft desert strike, totally accurate battle
+simulator, etc. Graphics may end up similar to the gnorp analogue. Is there a mobile equivalent for
+war/4x games?
 
 ## Top 3 Ranked Concerns : Risks
 
@@ -352,9 +352,9 @@ Careful of current issues:
     because this will probably be the most performance sensitive computation since players will want
     to most likely target areas with alot of units.
   - A unit with large vision e.g. anti air missile will probably need to check multiple hexagons.
-  - If I implement in the future units which capture a city attempt to capture the next closest
-    city to themself rather than to the city. It might be more on theme that they all attack the
-    same city which is an easier calculation?
+  - If I implement in the future units which capture a city attempt to capture the next closest city
+    to themself rather than to the city. It might be more on theme that they all attack the same
+    city which is an easier calculation?
 - For nearest unit I can either check optimially by iterating through more distance hexagons or
   brute force check all hexagons.
 - On unit kill need to handle its double linked list pointers
@@ -413,8 +413,8 @@ Overall Thoughts:
 
 Potential optimizations
 
-- p100 runtime calculation should be prioritized. What can i compute at startup and during other game
-  actions or turns to speed up computation?
+- p100 runtime calculation should be prioritized. What can i compute at startup and during other
+  game actions or turns to speed up computation?
 - When a change occurs, only recalculate nodes affected
 - What heuristics can I use for better performance e.g euclidean distance, octile distance, other
   distances, etc
@@ -441,8 +441,8 @@ Pathfinding algorithm types:
     https://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter16_Theta_Star_for_Any-Angle_Pathfinding.pdf
   - A* (grid based movement) without post processing
   - A* with post processing
-  - Visibility graphs (find shortest path, find collisions, find vertices of collision, use these for
-    paths)
+  - Visibility graphs (find shortest path, find collisions, find vertices of collision, use these
+    for paths)
 - Dynamic obstacles:
   - D*
     https://www.ri.cmu.edu/pub_files/pub3/stentz_anthony__tony__1994_2/stentz_anthony__tony__1994_2.pdf
