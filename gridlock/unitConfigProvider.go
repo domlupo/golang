@@ -1,34 +1,44 @@
-// A unit config provider simplifies the complex process of creating unit configs. It has several benefits
-// but the core benefit is handling unit config fields dependent on other unit config fields.
+// A unit config provider simplifies the complex process of creating unit configs. It has several
+// benefits but the core benefit is handling unit config fields dependent on other unit config
+// fields.
 //
 // Benefits:
-// - Unit config fields can have respective verifications to ensure valid values (e.g. radius cannot be negative).
+// - Unit config fields can have respective verifications to ensure valid values (e.g. radius
+//   cannot be negative).
 // - Unit config fields which are dependent on other fields within the same unit are easy to set.
-//   - The order for every set field is controlled. The dependent field is easily set after its required field.
-//   - The dependent field can have respective verifications to ensure valid values (e.g. vision >= radius)
+//   - The order for every set field is controlled. The dependent field is easily set after its
+//     required field.
+//   - The dependent field can have respective verifications to ensure valid values (e.g. vision >=
+//     radius)
 // - Unit config fields which are dependent on other unit configs are easy to set.
-//   - All independent fields, for all units can be set before the fields dependent on other units are set.
-// - It simplfies file exports.
+//   - All independent fields, for all units can be set before the fields dependent on other units
+//     are set.
+// - It simplifies file exports.
 //   - Consumers only interact with the single provider and the relatively simple provides method.
 //   - Does not export multiple global unit configs
-//   - In the future, I may make this a separate package, but for now using "set" methods clarifies exports.
+//   - In the future, I may make this a separate package, but for now using "set" methods clarifies
+//     exports.
 // - Default values are more flexible.
 //   - Implicit values can be set per field via a switch statement.
 //   - Required explicit values can be set per field via a switch statement.
 // - Better documentation and easier to tune configurations
 //   - it is easy to understand a field when it is set for every unit within a single method.
-// - It is easier to extend in the future since most likely upgrades will require dynamic unit configs.
+// - It is easier to extend in the future since most likely upgrades will require dynamic unit
+//   configs.
 //   - Requests to change configs will all be processed by the config provider.
-//   - Multiple approachs are viable for consuming dynamic configs:
+//   - Multiple approaches are viable for consuming dynamic configs:
 //     - Consumers may use the unit config provider as the single source of truth
 //     - The provider may be the single source to provide updates to all consumers.
 //
 // Dependent fields have two anticipated sources:
-// - The first source is sometimes it is easier to understand a config when it is defined via field X. But the config
-//   must be processed via field Y. e.g. It is easier to understand unit A attacks unit B via an attack field. Then this
+// - The first source is sometimes it is easier to understand a config when it is defined via field
+//   X. But the config
+//   must be processed via field Y. e.g. It is easier to understand unit A attacks unit B via an
+//   attack field. Then this
 //   attack field is used to determine what layers the unit should search for a unit to attack.
-// - The second source is when a field has high CPU usage to calculate at runtime. It is better for provider to
-//   calculate and cache the value at startup, and retreive it during steady state runtime.
+// - The second source is when a field has high CPU usage to calculate at runtime. It is better for
+//   provider to
+//   calculate and cache the value at startup, and retrieve it during steady state runtime.
 
 package main
 
@@ -105,9 +115,11 @@ func (ucProvider unitConfigProvider) setConsumables() {
 			counts[bombGravity] = 1
 			counts[flare] = 1
 			counts[chaff] = 1
-		case infantry, missileCruise, missileBallistic, missileAntiBallistic, missileHeatSeeking, missileRadarActive, flare, bombGravity, chaff:
+		case infantry, missileCruise, missileBallistic, missileAntiBallistic, missileHeatSeeking,
+			missileRadarActive, flare, bombGravity, chaff:
 		default:
-			panic(fmt.Sprintf("setConsumables: cannot set consumables for unknown unit %s", uc.name.string()))
+			panic(fmt.Sprintf("setConsumables: cannot set consumables for unknown unit %s",
+				uc.name.string()))
 		}
 		uc.consumables = make(consumables)
 		for n, c := range counts {
@@ -121,7 +133,8 @@ func (ucProvider unitConfigProvider) setReactions() {
 	for name := range ucProvider.unitConfigs {
 		var reactions []reaction
 		switch name {
-		case infantry, bombGravity, chaff, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare:
+		case infantry, bombGravity, chaff, missileRadarActive, missileHeatSeeking, missileCruise,
+			missileBallistic, missileAntiBallistic, flare:
 		case bomber:
 			bomberUC := ucProvider.unitConfigs[bomber]
 			reactions = []reaction{
@@ -169,9 +182,11 @@ func (ucProvider unitConfigProvider) setReactions() {
 						// TODO: determine fighter missile preference? Configurable by player?
 						// Arbitrarily set radar to have higher priority than heat seeking.
 						switch {
-						case fighter.consumables[missileRadarActive].count > 0 && !missileRadarActiveUC.ignoreTarget(fighter.nearest):
+						case fighter.consumables[missileRadarActive].count > 0 &&
+							!missileRadarActiveUC.ignoreTarget(fighter.nearest):
 							uc = missileRadarActiveUC
-						case fighter.consumables[missileHeatSeeking].count > 0 && !missileHeatSeekingUC.ignoreTarget(fighter.nearest):
+						case fighter.consumables[missileHeatSeeking].count > 0 &&
+							!missileHeatSeekingUC.ignoreTarget(fighter.nearest):
 							uc = missileHeatSeekingUC
 						default:
 							return
@@ -209,7 +224,8 @@ func (ucProvider unitConfigProvider) reactChaff(fireOrdnanceDelay uint64) reacti
 	chaffUC := ucProvider.unitConfigs[chaff]
 	return reaction{
 		when: func(u *unit) bool {
-			return u.nearest != nil && u.nearest.name == missileRadarActive && u.consumables[chaff].count > 0
+			return u.nearest != nil &&
+				u.nearest.name == missileRadarActive && u.consumables[chaff].count > 0
 		},
 		do: func(u *unit) {
 			newChafff := newUnit(
@@ -233,7 +249,8 @@ func (ucProvider unitConfigProvider) reactFlare(fireOrdnanceDelay uint64) reacti
 	flareUC := ucProvider.unitConfigs[flare]
 	return reaction{
 		when: func(u *unit) bool {
-			return u.nearest != nil && u.nearest.name == missileHeatSeeking && u.consumables[flare].count > 0
+			return u.nearest != nil &&
+				u.nearest.name == missileHeatSeeking && u.consumables[flare].count > 0
 		},
 		do: func(u *unit) {
 			newFlare := newUnit(
