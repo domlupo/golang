@@ -83,8 +83,10 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 	hexagons := newHexagons(grid)
 	obstacles, oLUT := setupObstacles(obstacleSetup, grid)
 	unitConfigProvider := newUnitConfigProvider()
-	nodes, nLUT := setupNodes(nodeSetup, grid, g.initialNodeHealth, hexagons, oLUT, unitConfigProvider)
-	logger.log(infoLevel, setupLogic, fmt.Sprintf("Setup required %0.2f seconds", float64(time.Since(start).Seconds())))
+	nodes, nLUT := setupNodes(
+		nodeSetup, grid, g.initialNodeHealth, hexagons, oLUT, unitConfigProvider)
+	logger.log(infoLevel, setupLogic,
+		fmt.Sprintf("Setup required %0.2f seconds", float64(time.Since(start).Seconds())))
 
 	if verify {
 		for nPos := range nodes {
@@ -103,7 +105,9 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 	g.controller = newController(g.state, g.computers, g.debugger)
 	// TODO: I should only invoke newDrawConfig once per game not every restart
 	g.drawer = newDrawer(newDrawConfig(), g.state, g.controller, g.debugger)
-	ebiten.SetWindowSize(int(float32(g.state.grid.width)*g.state.grid.pixelMultiplier), int(float32(g.state.grid.height)*g.state.grid.pixelMultiplier))
+	ebiten.SetWindowSize(
+		int(float32(g.state.grid.width)*g.state.grid.pixelMultiplier),
+		int(float32(g.state.grid.height)*g.state.grid.pixelMultiplier))
 }
 
 func (g *Game) Update() error {
@@ -195,7 +199,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return int(float32(g.state.grid.width) * g.state.grid.pixelMultiplier), int(float32(g.state.grid.height) * g.state.grid.pixelMultiplier)
+	return int(float32(g.state.grid.width) * g.state.grid.pixelMultiplier),
+		int(float32(g.state.grid.height) * g.state.grid.pixelMultiplier)
 }
 
 func main() {
@@ -297,19 +302,22 @@ func main() {
 			if i > len(obstacleSetups())-1 {
 				oI = 0
 			} else {
-				logger.log(infoLevel, setupLogic, fmt.Sprintf("cacheSetups: cache obstacle %s", o[oI].String()))
+				logger.log(infoLevel, setupLogic,
+					fmt.Sprintf("cacheSetups: cache obstacle %s", o[oI].String()))
 			}
 			if i > len(nodeSetups())-1 {
 				nI = 0
 			} else {
-				logger.log(infoLevel, setupLogic, fmt.Sprintf("cacheSetups: cache node %s", n[nI].String()))
+				logger.log(infoLevel, setupLogic,
+					fmt.Sprintf("cacheSetups: cache node %s", n[nI].String()))
 			}
 			g.restart(n[nI], o[oI], false)
 		}
 		logger.log(
 			infoLevel,
 			setupLogic,
-			fmt.Sprintf("cacheSetups: caching all missing setups required %d seconds", int(time.Since(start).Seconds())))
+			fmt.Sprintf("cacheSetups: caching all missing setups required %d seconds",
+				int(time.Since(start).Seconds())))
 		return
 	}
 
