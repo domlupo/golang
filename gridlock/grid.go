@@ -402,7 +402,8 @@ func (g grid) adjacent(p GridPosition, side hexSide) (GridPosition, bool) {
 		panic("Cannot find adjacent grid position. Unknown hex side.")
 	}
 
-	if x < 0 || y < 0 || y >= g.yIndexMax || (y%2 == 0 && x >= g.xIndexMax-1) || (y%2 == 1 && x >= g.xIndexMax) {
+	if x < 0 || y < 0 || y >= g.yIndexMax || (y%2 == 0 && x >= g.xIndexMax-1) ||
+		(y%2 == 1 && x >= g.xIndexMax) {
 		return GridPosition{}, false
 	} else {
 		return GridPosition{x, y}, true
@@ -552,7 +553,8 @@ func (g grid) getGridPosOutbounds(p Pixel) GridPosition {
 			yIndexOffset = 2
 		}
 	default:
-		panic(fmt.Sprintf("getHexGridPostion could not find a y section for the inner y: %d for pixel position %s", innerY, p.log()))
+		s := "getGridPosOutbounds could not find a y section for the inner y: %d for pixel position %s"
+		panic(fmt.Sprintf(s, innerY, p.log()))
 	}
 
 	return GridPosition{xIndex + xIndexOffset, yIndex + yIndexOffset}
@@ -584,7 +586,9 @@ func (g grid) demotif(p Pixel) (demotif, bool) {
 		panic("demotif: invalid modulo")
 	}
 	if p.X >= g.hexWidth || p.Y >= g.hexHeight {
-		panic(fmt.Sprintf("demotif: by motif definition, x must be less than hex width and y must be less than hex height %s", p.log()))
+		s := "demotif: by motif definition, x must be less than hex width and y must be less than " +
+			"hex height %s"
+		panic(fmt.Sprintf(s, p.log()))
 	}
 	return demotif{p}, true
 }
@@ -758,7 +762,8 @@ func (g grid) adjacentPixel(p Pixel, d direction) (Pixel, bool) {
 		x = -1
 		y = -1
 	default:
-		panic(fmt.Sprintf("cannot get adjacent pixel position for %s unknown direction: %d", p.log(), d))
+		s := "cannot get adjacent pixel position for %s unknown direction: %d"
+		panic(fmt.Sprintf(s, p.log(), d))
 	}
 
 	a := Pixel{X: p.X + x, Y: p.Y + y}
