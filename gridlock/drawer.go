@@ -219,8 +219,23 @@ func drawUnfilledBoxFloat32(
 	)
 }
 
-func drawUnfilledBoxInt(dc drawConfig, color color.Color, initialX int, initialY int, finalX int, finalY int, windowpixelMultiplier float32) {
-	drawUnfilledBoxFloat32(dc, color, float32(initialX), float32(initialY), float32(finalX), float32(finalY), windowpixelMultiplier)
+func drawUnfilledBoxInt(
+	dc drawConfig,
+	color color.Color,
+	initialX int,
+	initialY int,
+	finalX int,
+	finalY int,
+	windowpixelMultiplier float32) {
+
+	drawUnfilledBoxFloat32(
+		dc,
+		color,
+		float32(initialX),
+		float32(initialY),
+		float32(finalX),
+		float32(finalY),
+		windowpixelMultiplier)
 }
 
 func drawHex(dc drawConfig, g grid, p GridPosition, color drawTriangleColor, selected bool) {
@@ -232,28 +247,44 @@ func drawHex(dc drawConfig, g grid, p GridPosition, color drawTriangleColor, sel
 	south := g.getPixelOutbounds(p, hpSouth)
 	northwest := g.getPixelOutbounds(p, hpNorthwest)
 
-	// The one pixel offsets for inclusive or exclusive hex points are handled at the game logic layer.
-	// The window pixelMultiplier offsets are handled here since window pixelMultiplier is a draw concept.
-	xCenter, yCenter := float32(center.X)*g.pixelMultiplier, float32(center.Y)*g.pixelMultiplier
-	xNorth, yNorth := float32(north.X)*g.pixelMultiplier, float32(north.Y)*g.pixelMultiplier
-	xNortheast, yNortheast := float32(northeast.X+1)*g.pixelMultiplier, float32(northeast.Y)*g.pixelMultiplier
-	xSoutheast, ySoutheast := float32(southeast.X+1)*g.pixelMultiplier, float32(southeast.Y+1)*g.pixelMultiplier
-	xSouthwest, ySouthwest := float32(southwest.X)*g.pixelMultiplier, float32(southwest.Y+1)*g.pixelMultiplier
-	xSouth, ySouth := float32(south.X)*g.pixelMultiplier, float32(south.Y+1)*g.pixelMultiplier
-	xNorthwest, yNorthwest := float32(northwest.X)*g.pixelMultiplier, float32(northwest.Y)*g.pixelMultiplier
+	// The one pixel offsets for inclusive or exclusive hex points are handled at the game logic
+	// layer. The window pixelMultiplier offsets are handled here since window pixelMultiplier is a
+	// draw concept.
+	xCenter := float32(center.X) * g.pixelMultiplier
+	yCenter := float32(center.Y) * g.pixelMultiplier
+	xNorth := float32(north.X) * g.pixelMultiplier
+	yNorth := float32(north.Y) * g.pixelMultiplier
+	xNortheast := float32(northeast.X+1) * g.pixelMultiplier
+	yNortheast := float32(northeast.Y) * g.pixelMultiplier
+	xSoutheast := float32(southeast.X+1) * g.pixelMultiplier
+	ySoutheast := float32(southeast.Y+1) * g.pixelMultiplier
+	xSouthwest := float32(southwest.X) * g.pixelMultiplier
+	ySouthwest := float32(southwest.Y+1) * g.pixelMultiplier
+	xSouth := float32(south.X) * g.pixelMultiplier
+	ySouth := float32(south.Y+1) * g.pixelMultiplier
+	xNorthwest := float32(northwest.X) * g.pixelMultiplier
+	yNorthwest := float32(northwest.Y) * g.pixelMultiplier
 
 	indices := []uint16{0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 1}
 	vertices := []ebiten.Vertex{
-		{DstX: xCenter, DstY: yCenter, SrcX: 0, SrcY: 0, ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
-		{DstX: xNorth, DstY: yNorth, SrcX: 0, SrcY: 0, ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
-		{DstX: xNortheast, DstY: yNortheast, SrcX: 0, SrcY: 0, ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
-		{DstX: xSoutheast, DstY: ySoutheast, SrcX: 0, SrcY: 0, ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
-		{DstX: xSouth, DstY: ySouth, SrcX: 0, SrcY: 0, ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
-		{DstX: xSouthwest, DstY: ySouthwest, SrcX: 0, SrcY: 0, ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
-		{DstX: xNorthwest, DstY: yNorthwest, SrcX: 0, SrcY: 0, ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
+		{DstX: xCenter, DstY: yCenter, SrcX: 0, SrcY: 0,
+			ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
+		{DstX: xNorth, DstY: yNorth, SrcX: 0, SrcY: 0,
+			ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
+		{DstX: xNortheast, DstY: yNortheast, SrcX: 0, SrcY: 0,
+			ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
+		{DstX: xSoutheast, DstY: ySoutheast, SrcX: 0, SrcY: 0,
+			ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
+		{DstX: xSouth, DstY: ySouth, SrcX: 0, SrcY: 0,
+			ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
+		{DstX: xSouthwest, DstY: ySouthwest, SrcX: 0, SrcY: 0,
+			ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
+		{DstX: xNorthwest, DstY: yNorthwest, SrcX: 0, SrcY: 0,
+			ColorR: color.red, ColorG: color.green, ColorB: color.blue, ColorA: color.alpha},
 	}
 
-	dc.screen.DrawTriangles(vertices, indices, dc.drawTriangleDefaultImage, &ebiten.DrawTrianglesOptions{})
+	dc.screen.DrawTriangles(
+		vertices, indices, dc.drawTriangleDefaultImage, &ebiten.DrawTrianglesOptions{})
 
 	if selected {
 		drawHexHighlight(dc, g, p)
