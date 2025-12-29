@@ -67,16 +67,19 @@ func (f fileHandler) readObstacleLUT(obstacles obstacles, g grid) obstacleLUT {
 	file, err := os.Open(fmt.Sprintf("%s/%s", f.directoryName, fileName))
 
 	if errors.Is(err, os.ErrNotExist) {
-		logger.log(infoLevel, setupLogic, "readObstacleLUT: create look up table file since it does not exist")
+		logger.log(infoLevel, setupLogic,
+			"readObstacleLUT: create look up table file since it does not "+"exist")
 		return f.writeObstacleLUT(obstacles, g)
 	} else if err != nil {
-		logger.log(errorLevel, setupLogic, fmt.Sprintf("readObstacleLUT: file handler could not read json file: %v", err))
+		logger.log(errorLevel, setupLogic,
+			fmt.Sprintf("readObstacleLUT: file handler could not read json file: %v", err))
 	}
 	defer file.Close()
 
 	bytes, err := io.ReadAll(file)
 	if err != nil {
-		logger.log(errorLevel, setupLogic, fmt.Sprintf("readObstacleLUT: file handler could not read json file: %e", err))
+		logger.log(errorLevel, setupLogic,
+			fmt.Sprintf("readObstacleLUT: file handler could not read json file: %e", err))
 		return f.writeObstacleLUT(obstacles, g)
 	}
 
@@ -89,11 +92,13 @@ func (f fileHandler) readObstacleLUT(obstacles obstacles, g grid) obstacleLUT {
 	}
 
 	if len(oLUT) != g.basePixels {
-		logger.log(errorLevel, setupLogic, fmt.Sprintf("readObstacleLUT: cannot read obstacle look up table since loaded LUT is"+
-			"%d pixels rather than expected %d", len(oLUT), g.basePixels))
+		s := "readObstacleLUT: cannot read obstacle look up table since loaded LUT is %d pixels " +
+			"rather than expected %d"
+		logger.log(errorLevel, setupLogic, fmt.Sprintf(s, len(oLUT), g.basePixels))
 		oLUT = f.writeObstacleLUT(obstacles, g)
 	} else {
-		logger.log(infoLevel, setupLogic, "readObstacleLUT: loaded obstacle look up table, skipped creating it.")
+		logger.log(infoLevel, setupLogic,
+			"readObstacleLUT: loaded obstacle look up table, skipped creating it.")
 	}
 
 	return oLUT
@@ -122,16 +127,19 @@ func (f fileHandler) readNodeLUT(nodes nodes, obstacleLUT obstacleLUT, g grid) n
 	file, err := os.Open(fmt.Sprintf("%s/%s", f.directoryName, fileName))
 
 	if errors.Is(err, os.ErrNotExist) {
-		logger.log(infoLevel, setupLogic, "readNodeLUT: cannot create node lookup table file since it does not exist")
+		logger.log(infoLevel, setupLogic,
+			"readNodeLUT: cannot create node lookup table file since it does not exist")
 		return f.writeNodeLUT(nodes, obstacleLUT, g)
 	} else if err != nil {
-		logger.log(errorLevel, setupLogic, fmt.Sprintf("readNodeLUT: file handler could not read json file: %v", err))
+		logger.log(errorLevel, setupLogic,
+			fmt.Sprintf("readNodeLUT: file handler could not read json file: %v", err))
 	}
 	defer file.Close()
 
 	bytes, err := io.ReadAll(file)
 	if err != nil {
-		logger.log(errorLevel, setupLogic, fmt.Sprintf("readNodeLUT: file handler could not read json file: %e", err))
+		logger.log(errorLevel, setupLogic,
+			fmt.Sprintf("readNodeLUT: file handler could not read json file: %e", err))
 		return f.writeNodeLUT(nodes, obstacleLUT, g)
 	}
 
@@ -144,7 +152,8 @@ func (f fileHandler) readNodeLUT(nodes nodes, obstacleLUT obstacleLUT, g grid) n
 	}
 
 	if len(nLUT) != g.basePixels {
-		logger.log(errorLevel, setupLogic, "readNodeLUT: create node lookup table since loaded node lookup table was invalid size")
+		logger.log(errorLevel, setupLogic,
+			"readNodeLUT: create node lookup table since loaded node lookup table was invalid size")
 		return f.writeNodeLUT(nodes, obstacleLUT, g)
 	}
 
@@ -179,7 +188,7 @@ func (f fileHandler) fileName(file file, bytes []byte) string {
 	case fNode:
 		prefix = f.nodeLUTFileNamePrefix
 	default:
-		panic(fmt.Sprintf("Cannot get file name since unkonw file: %d", file))
+		panic(fmt.Sprintf("Cannot get file name since unknown file: %d", file))
 	}
 
 	return fmt.Sprintf("%s-%d.json", prefix, crc32.ChecksumIEEE(bytes))
