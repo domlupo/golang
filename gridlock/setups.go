@@ -491,7 +491,13 @@ type nodeSetupInput struct {
 	unitConfig unitConfig
 }
 
-func setupNodes(s nodeSetup, g grid, initialNodeHealth int, h hexagons, oLUT obstacleLUT, ucProvider unitConfigProvider) (nodes, nodeLUT) {
+func setupNodes(
+	s nodeSetup,
+	g grid,
+	initialNodeHealth int,
+	h hexagons,
+	oLUT obstacleLUT,
+	ucProvider unitConfigProvider) (nodes, nodeLUT) {
 	nodes := make(nodes)
 	nodes.setupPositions(s, initialNodeHealth, ucProvider)
 	nodes.setupControl(g, h, oLUT)
@@ -500,7 +506,8 @@ func setupNodes(s nodeSetup, g grid, initialNodeHealth int, h hexagons, oLUT obs
 	return nodes, nodeLookup
 }
 
-func (nodes nodes) setupPositions(s nodeSetup, initialNodeHealth int, ucProvider unitConfigProvider) {
+func (nodes nodes) setupPositions(
+	s nodeSetup, initialNodeHealth int, ucProvider unitConfigProvider) {
 	var nodeSetupInputs []nodeSetupInput
 
 	infantryUC := ucProvider.provide(infantry)
