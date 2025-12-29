@@ -1,4 +1,4 @@
-// A logger which adds dynmaic runtime log levels and log types for various game layers and concepts.
+// logger which adds dynamic runtime log levels and log types for various game layers and concepts.
 
 package main
 
@@ -122,7 +122,7 @@ func (l *l) setupToggles(cooldown time.Duration) {
 	l.toggles = toggles
 }
 
-// Overide the logger state and force log the data.
+// Override the logger state and force log the data.
 func (logger l) force(msg string, attrs ...slog.Attr) {
 	logger.log(errorLevel, alwaysLogType, msg, attrs...)
 }
@@ -139,7 +139,7 @@ func (logger l) onlyEnable(logType logType) {
 func (logger l) toggleLevel() {
 	if logger.LevelVar.Level() == slog.LevelError {
 		logger.Set(slog.LevelWarn)
-		logger.force("logger set to log WARN leve")
+		logger.force("logger set to log WARN level")
 	} else if logger.LevelVar.Level() == slog.LevelWarn {
 		logger.Set(slog.LevelInfo)
 		logger.force("logger set to log INFO level")
@@ -184,7 +184,9 @@ func (logger l) toggleType(lt logType) {
 	}
 }
 
-func (logger l) logSelected(selected bool, level level, logType logType, msg string, attrs ...slog.Attr) {
+func (logger l) logSelected(
+	selected bool, level level, logType logType, msg string, attrs ...slog.Attr) {
+
 	if selected {
 		logger.log(level, logType, msg, attrs...)
 	}
