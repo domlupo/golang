@@ -130,9 +130,9 @@ func (info nodeInfo) log() []slog.Attr {
 }
 
 // CPU intensive because it calculates the optimal distance from any pixel to the nearest node. It
-// probably can be optimized further but it is low priority since it it cached. The main optimization
-// is dynamic programming. The node pixels are processed first. Next, the pixels 1 pixel away are
-// processed. This continues until the all pixels are procesed.
+// probably can be optimized further but it is low priority since it it cached. The main
+// optimization is dynamic programming. The node pixels are processed first. Next, the pixels 1
+// pixel away are processed. This continues until the all pixels are processed.
 func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 	start := time.Now()
 	distanceLimit := g.chebyshevDistanceLimit
@@ -213,16 +213,20 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 		logger.log(
 			infoLevel,
 			setupLogic,
-			fmt.Sprintf("setupNodeLUT: %.1f%% total pixels calculated. %d pixels of distance %d", percent, count-priorCount, distance))
+			fmt.Sprintf("setupNodeLUT: %.1f%% total pixels calculated. %d pixels of distance %d",
+				percent, count-priorCount, distance))
 
 		distance++
 		if distance > max(g.height, g.width) {
-			panic("setupNodeLUT: invalid setup because distance is greater than max distance allowed by window.")
+			panic("setupNodeLUT: invalid setup, distance is greater than max allowed by window.")
 		}
 	}
 
 	percent := float64(count) / float64(g.basePixels) * maxPercent
-	logger.log(infoLevel, setupLogic, fmt.Sprintf("setupNodeLUT: %.0f%% total pixels not skipped with a distance limit of %d", percent, distanceLimit))
+	logger.log(infoLevel, setupLogic, fmt.Sprintf(
+		"setupNodeLUT: %.0f%% total pixels not skipped with a distance limit of %d",
+		percent,
+		distanceLimit))
 
 	for x := range g.width {
 		for y := range g.height {
@@ -236,10 +240,12 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 		}
 	}
 
-	logger.log(infoLevel, setupLogic, fmt.Sprintf("setupNodeLUT: required %d seconds", int(time.Since(start).Seconds())))
+	logger.log(infoLevel, setupLogic,
+		fmt.Sprintf("setupNodeLUT: required %d seconds", int(time.Since(start).Seconds())))
 
 	if len(nodeLUT) != g.basePixels {
-		logger.log(errorLevel, setupLogic, "setupNodeLUT: cannot setup node look up table since created LUT is an invalid size")
+		logger.log(errorLevel, setupLogic,
+			"setupNodeLUT: cannot setup node look up table since created LUT is an invalid size")
 		panic("setupNodeLUT: game requires a node LUT to start")
 	}
 
@@ -306,7 +312,7 @@ func (nodes nodes) setupControl(g grid, hexagons hexagons, oLUT obstacleLUT) {
 			case pOne, pTwo, pNeutral:
 				n.control = append(n.control, h)
 				// TODO: Need to determine behavior for same depth conflicts.
-				// Currently, code selects first enountered node which is not correct.
+				// Currently, code selects first encountered node which is not correct.
 				q = []GridPosition{}
 			case pNone:
 				continue
