@@ -1,4 +1,4 @@
-// Refer to unitConfigProvider.go file for documentation. This code is in a separate file for readability.
+// Refer to unitConfigProvider.go file for documentation. Code in separate file for readability.
 
 package main
 
@@ -43,11 +43,11 @@ type unitConfig struct {
 	isStaticTarget         bool
 	ignore                 func(u, t *unit) bool
 	ignoreTarget           func(t *unit) bool
-	ignoreCollision        func(other *unit) bool
 	// This flag should rarely be used. If it is used often then write a function to avoid bugs.
 	// This is safe to enable iff the unit only collides with units that have radiuses less
 	// than state.spawnUnitRadiusLimit. For example, chaff only collides with radarGuided units
 	// which are all less than the 20 pixels.
+	ignoreCollision func(other *unit) bool
 }
 
 func (uc *unitConfig) setUCFields() {
@@ -94,7 +94,8 @@ func (uc *unitConfig) setUCFields() {
 func (uc *unitConfig) setRadius() {
 	var radius int
 	switch uc.name {
-	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare:
+	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic,
+		missileAntiBallistic, flare:
 		radius = 3
 	case bombGravity:
 		radius = 4
@@ -115,7 +116,8 @@ func (uc *unitConfig) setMaxHealth() {
 	switch uc.name {
 	case infantry:
 		maxHealth = 50
-	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare,
+	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic,
+		missileAntiBallistic, flare,
 		bombGravity, fighter, bomber, chaff:
 		maxHealth = 1
 	default:
@@ -129,8 +131,8 @@ func (uc *unitConfig) setAttack() {
 	switch uc.name {
 	case infantry:
 		attack = 1
-	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare,
-		bombGravity, fighter, bomber, chaff:
+	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic,
+		missileAntiBallistic, flare, bombGravity, fighter, bomber, chaff:
 	default:
 		panic(fmt.Sprintf("setAttack: cannot set attack for unknown unit %s", uc.name.string()))
 	}
@@ -143,7 +145,8 @@ func (uc *unitConfig) setVision() {
 	case infantry:
 		vision = 20 - uc.radius
 		if vision >= 20 {
-			panic("setVision: temporary protection for partitioner.go infantry limitation. It needs to support higher order hexagon LUT")
+			panic("setVision: temporary protection for partitioner.go infantry limitation. It needs to " +
+				"support higher order hexagon LUT")
 		}
 	case fighter:
 		vision = 800
@@ -160,7 +163,8 @@ func (uc *unitConfig) setVision() {
 	}
 	uc.vision = vision
 	if uc.vision < uc.radius {
-		panic("setVision: unit radius and vision are both relative to center. vision < radius is invalid.")
+		panic(
+			"setVision: unit radius and vision are both relative to center. vision < radius is invalid.")
 	}
 }
 
@@ -169,8 +173,8 @@ func (uc *unitConfig) setReach() {
 	switch uc.name {
 	case infantry:
 		reach = 5
-	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare,
-		bombGravity, fighter, bomber, chaff:
+	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic,
+		missileAntiBallistic, flare, bombGravity, fighter, bomber, chaff:
 		reach = uc.radius
 	default:
 		panic(fmt.Sprintf("setReach: cannot set reach for unknown unit %s", uc.name.string()))
@@ -189,10 +193,12 @@ func (uc *unitConfig) setExplodeRadius() {
 		explodeRadius = 0
 	case fighter, bomber:
 		explodeRadius = 100
-	case bombGravity, missileCruise, missileBallistic, missileRadarActive, missileHeatSeeking, missileAntiBallistic:
+	case bombGravity, missileCruise, missileBallistic, missileRadarActive, missileHeatSeeking,
+		missileAntiBallistic:
 		explodeRadius = 20
 	default:
-		panic(fmt.Sprintf("setExplodeRadius: cannot set explode radius unknown unit %s", uc.name.string()))
+		panic(
+			fmt.Sprintf("setExplodeRadius: cannot set explode radius unknown unit %s", uc.name.string()))
 	}
 	uc.explodeRadius = explodeRadius
 }
@@ -200,12 +206,14 @@ func (uc *unitConfig) setExplodeRadius() {
 func (uc *unitConfig) setMaxAlivePerNode() {
 	var maxAlivePerNode int
 	switch uc.name {
-	case infantry, flare, chaff, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, bombGravity:
+	case infantry, flare, chaff, missileRadarActive, missileHeatSeeking, missileCruise,
+		missileBallistic, missileAntiBallistic, bombGravity:
 		maxAlivePerNode = math.MaxInt
 	case fighter, bomber:
 		maxAlivePerNode = 1
 	default:
-		panic(fmt.Sprintf("setMaxAlivePerNode: cannot set max alive per node for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf("setMaxAlivePerNode: cannot set max alive per node for unknown unit %s",
+			uc.name.string()))
 	}
 	uc.maxAlivePerNode = maxAlivePerNode
 }
@@ -222,7 +230,8 @@ func (uc *unitConfig) setSpeedFactor() {
 	case chaff, bombGravity:
 		speedFactor = 0
 	default:
-		panic(fmt.Sprintf("setSpeedFactor: cannot set speed factor for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf("setSpeedFactor: cannot set speed factor for unknown unit %s",
+			uc.name.string()))
 	}
 	uc.speedFactor = speedFactor
 }
@@ -232,10 +241,11 @@ func (uc *unitConfig) setIsSurvivesCollision() {
 	switch uc.name {
 	case infantry, chaff:
 		survivesCollision = true
-	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare,
-		bombGravity, fighter, bomber:
+	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic,
+		missileAntiBallistic, flare, bombGravity, fighter, bomber:
 	default:
-		panic(fmt.Sprintf("setIsSurvivesCollision: cannot set isSurvivesCollision for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf("setIsSurvivesCollision: cannot set isSurvivesCollision for unknown unit %s",
+			uc.name.string()))
 	}
 	uc.isSurvivesCollision = survivesCollision
 }
@@ -245,9 +255,11 @@ func (uc *unitConfig) setIsEmitsHeat() {
 	switch uc.name {
 	case fighter, bomber, flare:
 		isEmitsHeat = true
-	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, bombGravity, chaff:
+	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic,
+		missileAntiBallistic, bombGravity, chaff:
 	default:
-		panic(fmt.Sprintf("setIsEmitsHeat: cannot set isEmitsHeats for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf("setIsEmitsHeat: cannot set isEmitsHeats for unknown unit %s",
+			uc.name.string()))
 	}
 	uc.isEmitsHeat = isEmitsHeat
 }
@@ -257,9 +269,11 @@ func (uc *unitConfig) setIsEmitsRadar() {
 	switch uc.name {
 	case fighter, bomber:
 		isEmitsRadar = true
-	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity, chaff:
+	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic,
+		missileAntiBallistic, flare, bombGravity, chaff:
 	default:
-		panic(fmt.Sprintf("setIsEmitsRadar: cannot set isEmitsRadar for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf("setIsEmitsRadar: cannot set isEmitsRadar for unknown unit %s",
+			uc.name.string()))
 	}
 	uc.isEmitsRadar = isEmitsRadar
 }
@@ -269,9 +283,11 @@ func (uc *unitConfig) setIsRequester() {
 	switch uc.name {
 	case fighter, bomber:
 		isRequester = true
-	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity, chaff:
+	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic,
+		missileAntiBallistic, flare, bombGravity, chaff:
 	default:
-		panic(fmt.Sprintf("setIsRequester: cannot set isRequester for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf("setIsRequester: cannot set isRequester for unknown unit %s",
+			uc.name.string()))
 	}
 	uc.isRequester = isRequester
 }
@@ -281,9 +297,11 @@ func (uc *unitConfig) setIsReactive() {
 	switch uc.name {
 	case fighter, bomber:
 		isReactive = true
-	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity, chaff:
+	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic,
+		missileAntiBallistic, flare, bombGravity, chaff:
 	default:
-		panic(fmt.Sprintf("setIsReactive: cannot set isReactive for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf("setIsReactive: cannot set isReactive for unknown unit %s",
+			uc.name.string()))
 	}
 	uc.isReactive = isReactive
 }
@@ -304,7 +322,8 @@ func (uc *unitConfig) setProduceLayer() {
 	case bombGravity:
 		produceLayer = lBombGravity
 	default:
-		panic(fmt.Sprintf("setProduceLayer: cannot set produceLayer for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf("setProduceLayer: cannot set produceLayer for unknown unit %s",
+			uc.name.string()))
 	}
 	uc.produceLayer = produceLayer
 }
@@ -314,9 +333,11 @@ func (uc *unitConfig) setTerminalStepDelay() {
 	switch uc.name {
 	case bombGravity, chaff:
 		terminalStepDelay = 300
-	case infantry, fighter, bomber, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare:
+	case infantry, fighter, bomber, missileRadarActive, missileHeatSeeking, missileCruise,
+		missileBallistic, missileAntiBallistic, flare:
 	default:
-		panic(fmt.Sprintf("setTerminalStepDelay: cannot set terminal step delay for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf("setTerminalStepDelay: cannot set terminal step delay for unknown unit %s",
+			uc.name.string()))
 	}
 	uc.terminalStepDelay = terminalStepDelay
 }
@@ -326,9 +347,13 @@ func (uc *unitConfig) setIsExplodeWhenTerminal() {
 	switch uc.name {
 	case bombGravity, missileCruise, missileBallistic:
 		isExplodeWhenTerminal = true
-	case infantry, fighter, bomber, missileRadarActive, missileHeatSeeking, missileAntiBallistic, flare, chaff:
+	case infantry, fighter, bomber, missileRadarActive, missileHeatSeeking, missileAntiBallistic,
+		flare, chaff:
 	default:
-		panic(fmt.Sprintf("setIsExplodeWhenTerminal: cannot set is explode when terminal for unknown unit %s", uc.name.string()))
+		panic(
+			fmt.Sprintf(
+				"setIsExplodeWhenTerminal: cannot set is explode when terminal for unknown unit %s",
+				uc.name.string()))
 	}
 	uc.isExplodeWhenTerminal = isExplodeWhenTerminal
 }
@@ -336,11 +361,13 @@ func (uc *unitConfig) setIsExplodeWhenTerminal() {
 func (uc *unitConfig) setIsStaticTarget() {
 	var isStatictarget bool
 	switch uc.name {
-	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare, bombGravity, chaff:
+	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic,
+		missileAntiBallistic, flare, bombGravity, chaff:
 		isStatictarget = true
 	case infantry, fighter, bomber:
 	default:
-		panic(fmt.Sprintf("setIsStaticTarget: cannot set isStaticTarget for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf("setIsStaticTarget: cannot set isStaticTarget for unknown unit %s",
+			uc.name.string()))
 	}
 	uc.isStaticTarget = isStatictarget
 }
@@ -352,7 +379,9 @@ func (uc *unitConfig) setIsDespawnWhenTerminal() {
 		isDespawnWhenTerminal = true
 	case infantry, fighter, bomber, missileCruise, missileBallistic, bombGravity:
 	default:
-		panic(fmt.Sprintf("setIsDespawnWhenTermianl: cannot set isDespawnWhenTerminal for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf(
+			"setIsDespawnWhenTermianl: cannot set isDespawnWhenTerminal for unknown unit %s",
+			uc.name.string()))
 	}
 	uc.isDespawnWhenTerminal = isDespawnWhenTerminal
 }
@@ -360,11 +389,14 @@ func (uc *unitConfig) setIsDespawnWhenTerminal() {
 func (uc *unitConfig) setIsTerminalWhenMoveDone() {
 	var isTerminalWhenMoveDone bool
 	switch uc.name {
-	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare:
+	case missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic,
+		missileAntiBallistic, flare:
 		isTerminalWhenMoveDone = true
 	case infantry, fighter, bomber, bombGravity, chaff:
 	default:
-		panic(fmt.Sprintf("setIsTerminalWhenMoveDone: cannot set isTerminalWhenMoveDone for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf(
+			"setIsTerminalWhenMoveDone: cannot set isTerminalWhenMoveDone for unknown unit %s",
+			uc.name.string()))
 	}
 	uc.isTerminalWhenMoveDone = isTerminalWhenMoveDone
 }
@@ -374,9 +406,11 @@ func (uc *unitConfig) setIsRadarGuided() {
 	switch uc.name {
 	case missileRadarActive:
 		isRadarGuided = true
-	case infantry, fighter, bomber, bombGravity, chaff, missileHeatSeeking, missileCruise, missileBallistic, missileAntiBallistic, flare:
+	case infantry, fighter, bomber, bombGravity, chaff, missileHeatSeeking, missileCruise,
+		missileBallistic, missileAntiBallistic, flare:
 	default:
-		panic(fmt.Sprintf("setIsRadarGuided: cannot set isRadarGuided for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf("setIsRadarGuided: cannot set isRadarGuided for unknown unit %s",
+			uc.name.string()))
 	}
 	uc.isRadarGuided = isRadarGuided
 }
@@ -386,9 +420,11 @@ func (uc *unitConfig) setIsHeatSeeking() {
 	switch uc.name {
 	case missileHeatSeeking:
 		isHeatSeeking = true
-	case infantry, fighter, bomber, bombGravity, chaff, missileRadarActive, missileCruise, missileBallistic, missileAntiBallistic, flare:
+	case infantry, fighter, bomber, bombGravity, chaff, missileRadarActive, missileCruise,
+		missileBallistic, missileAntiBallistic, flare:
 	default:
-		panic(fmt.Sprintf("setIsHeatSeeking: cannot set isHeatSeeking for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf("setIsHeatSeeking: cannot set isHeatSeeking for unknown unit %s",
+			uc.name.string()))
 	}
 	uc.isHeatSeeking = isHeatSeeking
 }
@@ -398,10 +434,12 @@ func (uc *unitConfig) setIsSkipSpawnRadiusCheck() {
 	switch uc.name {
 	case chaff:
 		isSkipSpawnRadiusCheck = true
-	case missileHeatSeeking, infantry, fighter, bomber, bombGravity, missileRadarActive, missileCruise,
-		missileBallistic, missileAntiBallistic, flare:
+	case missileHeatSeeking, infantry, fighter, bomber, bombGravity, missileRadarActive,
+		missileCruise, missileBallistic, missileAntiBallistic, flare:
 	default:
-		panic(fmt.Sprintf("setIsSkipSpawnRadiusCheck: cannot set isSkipSpawnRadiusCheck for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf(
+			"setIsSkipSpawnRadiusCheck: cannot set isSkipSpawnRadiusCheck for unknown unit %s",
+			uc.name.string()))
 	}
 	uc.isSkipSpawnRadiusCheck = isSkipSpawnRadiusCheck
 }
@@ -409,7 +447,8 @@ func (uc *unitConfig) setIsSkipSpawnRadiusCheck() {
 func (uc *unitConfig) setCollisionLayers() {
 	var collisionLayers layers
 	switch uc.name {
-	case infantry, fighter, bomber, bombGravity, missileCruise, missileBallistic, missileAntiBallistic, flare:
+	case infantry, fighter, bomber, bombGravity, missileCruise, missileBallistic,
+		missileAntiBallistic, flare:
 		collisionLayers = []layer{uc.produceLayer}
 	case missileRadarActive:
 		collisionLayers = []layer{lOrdnance, lAircraft, lChaff}
@@ -418,7 +457,8 @@ func (uc *unitConfig) setCollisionLayers() {
 	case chaff:
 		collisionLayers = []layer{lOrdnance}
 	default:
-		panic(fmt.Sprintf("setCollisionLayers: cannot set collision layers for unknown unit %s", uc.name.string()))
+		panic(fmt.Sprintf("setCollisionLayers: cannot set collision layers for unknown unit %s",
+			uc.name.string()))
 	}
 	uc.collisionLayers = collisionLayers
 }
@@ -441,8 +481,9 @@ func (uc *unitConfig) setTracks() {
 	uc.tracks = tracks
 }
 
-// This log method is frequently used for debugging. Also it is typically logged at the end of unit.log().
-// Log frequently used info at the end for quicker debugging. Less used info can be parsed via tooling e.g. grep
+// This log method is frequently used for debugging. Also it is typically logged at the end of
+// unit.log(). Log frequently used info at the end for quicker debugging. Less used info can be
+// parsed via tooling e.g. grep
 func (uc unitConfig) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, slog.Int("radius", uc.radius))
