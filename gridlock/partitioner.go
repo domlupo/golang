@@ -13,12 +13,13 @@ type partitions []*hexagon
 // The type of analysis which will process the partitions.
 type partitionAnalysis int
 
-// A look up table (LUT) to find an optimized number of partitions. It avoids runtime collision in two ways.
-// First, collision checks for all 1380 Pixels in the demotif hexagon are done at startup for the
-// 132 adjacent Pixels. If a collision occurs the hexSide which caused it is stored. Second, optimized
-// number of partitions means no extra partitions are considered for unit <-> unit collisions since spatial
-// partioning checks all units within the partition. The LUT is utilized via: Unit Pixel -> demotif ->
-// hex sides from LUT -> check unit grid position for collision -> check hex sides from LUT for collision.
+// A look up table (LUT) to find an optimized number of partitions. It avoids runtime collision in
+// two ways. First, collision checks for all 1380 Pixels in the demotif hexagon are done at startup
+// for the 132 adjacent Pixels. If a collision occurs the hexSide which caused it is stored. Second,
+// optimized number of partitions means no extra partitions are considered for unit <-> unit
+// collisions since spatial partitioning checks all units within the partition. The LUT is utilized
+// via: Unit Pixel -> demotif -> hex sides from LUT -> check unit grid position for collision ->
+// check hex sides from LUT for collision.
 type partitionLUT map[demotif][]hexSide
 
 const (
@@ -83,7 +84,8 @@ func (part partitioner) partitions(u unit, pa partitionAnalysis, buffer int) par
 	}
 
 	if pa == paSteer && u.name != infantry {
-		panic(fmt.Sprintf("partitions: cannot get partitions for unit %s, analysis %s and buffer %d", u.name.string(), pa.string(), buffer))
+		panic(fmt.Sprintf("partitions: cannot get partitions for unit %s, analysis %s and buffer %d",
+			u.name.string(), pa.string(), buffer))
 	}
 
 	positions = part.defaultPartitions(u.Pixel, radius)
@@ -150,7 +152,7 @@ func (part partitioner) defaultPartitions(p Pixel, d int) []GridPosition {
 				visited[a] = struct{}{}
 				// TODO: Fix this. This isn't correct but will probably work fine for awhile.
 				// It doesn't handle border partition collisions 100% correct but this should be rare.
-				// Also, I suspect this partitions method will most likey be refactored before issue
+				// Also, I suspect this partitions method will most likely be refactored before issue
 				// blocks development.
 				pa, okA := part.grid.getCenterWithFallback(a)
 				if !okA {
@@ -180,7 +182,10 @@ func (part partitioner) defaultPartitions(p Pixel, d int) []GridPosition {
 	return partitions
 }
 
-func (part partitioner) setupPartitionLUT(internalUnitName name, externalUnitName name, pa partitionAnalysis) partitionLUT {
+func (part partitioner) setupPartitionLUT(
+	internalUnitName name,
+	externalUnitName name,
+	pa partitionAnalysis) partitionLUT {
 	var internalRadius int
 	var externalRadius int
 	internalUC := part.unitConfigProvider.provide(internalUnitName)
