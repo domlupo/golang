@@ -61,7 +61,7 @@ type grid struct {
 // pixel position to hexagon grid position. It avoids the the need of CPU intensive math.
 // It helps CPU performance by removing the need for floating point or sqrt math logic.
 //
-// Specific CPU profiling did not prove this optimizaton was needed but prior CPU profiling
+// Specific CPU profiling did not prove this optimization was needed but prior CPU profiling
 // for this game showed that integer math is much more efficient. Other pixel position to
 // hexagon algorithms appeared as complex or even more complex than this method so this
 // more optimized solution was implemented first.
@@ -94,7 +94,7 @@ type grid struct {
 //  /     \*
 //
 // The hexagon look up table is also used for another section of the hexagonal grid
-// that is repeated multiple times. It is usally referenced as "inverted"
+// that is repeated multiple times. It is usually referenced as "inverted"
 //
 //  \     /
 //   \   /
@@ -103,7 +103,7 @@ type grid struct {
 // This is possible because this section becomes the prior section by following these steps:
 //   - horizontally flip the entire section.
 //   - split entire section vertically in half.
-//   - swap the two vertical halfs.
+//   - swap the two vertical halves.
 //
 // An example highlighting the middle section is shown below:
 //
@@ -119,13 +119,13 @@ type grid struct {
 //   \***/
 //    \*/
 //
-// split the entir section vertically in half
+// split the entire section vertically in half
 //
 //  \** **/
 //   \* */
 //    \ /
 //
-// swap the two vertical halfs.
+// swap the two vertical halves.
 //
 //  **/ \**
 //  */   \*
@@ -151,7 +151,7 @@ const (
 // A value stored in a lookup table to help determine grid position.
 type hexagonTriangle int
 
-// A commmon interior or exterior point of a hexagon.
+// A common interior or exterior point of a hexagon.
 type hexPoint int
 
 // One of the six sides of a hexagon.
@@ -167,7 +167,7 @@ type demotif struct {
 type direction int
 
 const (
-	noDirecton direction = iota
+	noDirection direction = iota
 	north
 	northeast
 	east
@@ -184,7 +184,7 @@ func directions() []direction {
 
 func (d direction) string() string {
 	switch d {
-	case noDirecton:
+	case noDirection:
 		return "noDirection"
 	case north:
 		return "north"
@@ -671,11 +671,11 @@ func (g grid) demotifHexPixels() []Pixel {
 	demotifPixels := []Pixel{}
 
 	nwPixels := g.demotifLinePixels(hsNorthwest, sInclusive)
-	nePixles := g.demotifLinePixels(hsNortheast, sInclusive)
+	nePixels := g.demotifLinePixels(hsNortheast, sInclusive)
 	swPixels := g.demotifLinePixels(hsSouthwest, sInclusive)
 	sePixels := g.demotifLinePixels(hsSoutheast, sInclusive)
 
-	northPixels := append(nwPixels, nePixles...)
+	northPixels := append(nwPixels, nePixels...)
 	southPixels := append(swPixels, sePixels...)
 	for i, np := range northPixels {
 		sp := southPixels[i]
