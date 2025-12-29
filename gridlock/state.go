@@ -59,7 +59,8 @@ type state struct {
 	unitDespawnTotal int
 }
 
-func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, g grid, p partitioner, developerMode bool) *state {
+func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, g grid,
+	p partitioner, developerMode bool) *state {
 	s := state{
 		config:           newStateConfig(g),
 		grid:             g,
@@ -182,7 +183,8 @@ func (s state) unitsLayer(l layer) *units {
 func (s *state) spawn(u *unit) {
 	// TODO: Verify if this should be >= rather than more conservative >
 	if u.radius > s.config.spawnUnitRadiusLimit && !u.isSkipSpawnRadiusCheck {
-		panic(fmt.Sprintf("spawn: cannot spawn unit radius %d exceeds spawn radius limit %d", u.radius, s.config.spawnUnitRadiusLimit))
+		panic(fmt.Sprintf("spawn: cannot spawn unit radius %d exceeds spawn radius limit %d",
+			u.radius, s.config.spawnUnitRadiusLimit))
 	}
 	p, ok := s.grid.getGridPos(u.Pixel)
 	if !ok {
@@ -242,7 +244,8 @@ func (s *state) moveUnit(u *unit, m move) {
 	m.confirm()
 	units := *s.unitsLayer(m.layer)
 	if o, ok := units[u.Pixel]; ok {
-		panic(fmt.Sprintf("moveUnit: position for unit occupied by other unit. unit: %s other: %s", u.log(), o.log()))
+		panic(fmt.Sprintf("moveUnit: position for unit occupied by other unit. unit: %s other: %s",
+			u.log(), o.log()))
 	}
 	units[u.Pixel] = u
 }
@@ -275,7 +278,8 @@ func (s *state) refresh() {
 }
 
 func (s *state) processReactions() {
-	logger.log(infoLevel, stateLogic, "processReactions", slog.Int("reactiveUnitCount", len(s.reactiveUnits)))
+	logger.log(infoLevel,
+		stateLogic, "processReactions", slog.Int("reactiveUnitCount", len(s.reactiveUnits)))
 	for _, u := range s.reactiveUnits {
 		for i, r := range u.reactions {
 			if r.next > s.step {
@@ -292,7 +296,8 @@ func (s *state) processReactions() {
 }
 
 func (s *state) processRequests() {
-	logger.log(infoLevel, stateLogic, "processRequests", slog.Int("requesterUnitCounter", len(s.requesterUnits)))
+	logger.log(infoLevel,
+		stateLogic, "processRequests", slog.Int("requesterUnitCounter", len(s.requesterUnits)))
 	for _, u := range s.requesterUnits {
 		for i, r := range u.requests {
 			if s.spawnRequest(r) {
@@ -323,7 +328,8 @@ func (s *state) analyzeTargets() {
 			continue
 		}
 
-		if u.name == missileHeatSeeking || u.name == missileAntiBallistic || u.name == missileRadarActive {
+		if u.name == missileHeatSeeking ||
+			u.name == missileAntiBallistic || u.name == missileRadarActive {
 			s.nearestTargetWithinVision(u)
 			u.updateTargetUnit(enemyTarget, u.nearest)
 		}
@@ -381,7 +387,8 @@ func (s *state) analyzeTargets() {
 		u.canReachNode = node{}
 		if s.nLUT[u.Pixel].ChebyshevDistance < u.reach {
 			if len(s.nLUT[u.Pixel].NearestNodes) > 1 {
-				logger.log(errorLevel, undecidedBehavior, "Undecided behavior. Unit can reach multiple nodes. Arbitrarily picking one")
+				logger.log(errorLevel, undecidedBehavior,
+					"Undecided behavior. Unit can reach multiple nodes. Arbitrarily picking one")
 			}
 			p := s.nLUT[u.Pixel].NearestNodes[0]
 			n := s.nodes[p]
@@ -690,8 +697,9 @@ func (s state) collidesWithUnitLayer(u unit, p position, linkedList *unit) (posi
 		checkOccurred = true
 
 		if u.ignoreCollision != nil && u.ignoreCollision(current) && u.layer == current.layer {
-			panic(fmt.Sprintf("collidesWithUnitLayer: Cannot ignore collisions between units in same layer. unit: %s, current: %s",
-				u.log(), current.log()))
+			s := "collidesWithUnitLayer: Cannot ignore collisions between units in same layer. unit: " +
+				"%s, current: %s"
+			panic(fmt.Sprintf(s, u.log(), current.log()))
 		}
 
 		if u.ignoreCollision != nil && u.ignoreCollision(current) ||
@@ -726,9 +734,9 @@ func (s *state) attackUnits() {
 	var unitAttackedOtherUnitCount int
 
 	for _, u := range s.landUnits {
-		// TODO: This may be wrong behavior but I am not sure if the issue is occurring
-		// e.g. the target was killed by another unit this unit should probably find a potential new target.
-		// Then attack that rather than not attack for a turn
+		// TODO: This may be wrong behavior but I am not sure if the issue is occurring e.g. the target
+		// was killed by another unit this unit should probably find a potential new target. Then attack
+		// that rather than not attack for a turn
 		if u.enemyTarget.equals(position{}) {
 			continue
 		}
