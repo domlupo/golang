@@ -27,7 +27,8 @@ func (l line) isVertical() bool {
 }
 
 func onSegment(p1 Pixel, p2 Pixel, p3 Pixel) bool {
-	return p2.X <= max(p1.X, p3.X) && p2.X >= min(p1.X, p3.X) && p2.Y <= max(p1.Y, p3.Y) && p2.Y >= min(p1.Y, p3.Y)
+	return p2.X <= max(p1.X, p3.X) &&
+		p2.X >= min(p1.X, p3.X) && p2.Y <= max(p1.Y, p3.Y) && p2.Y >= min(p1.Y, p3.Y)
 }
 
 func (l1 line) intersects(l2 line) bool {
@@ -56,13 +57,14 @@ func (l1 line) intersects(l2 line) bool {
 // Assumes a square grid with typical compass directions. Assumes a square grid where east is
 // positive x and south is positive y. x is typical and y is opposite of typical for catesian graph.
 // Assumes the line should be drawn in the top left corner of the grid square. Sloped lines
-// determine point direction of split grid squares via which point has more area.
-// Trims any points passed as trim but panics if they are not an adjacent point.
+// determine point direction of split grid squares via which point has more area. Trims any points
+// passed as trim but panics if they are not an adjacent point.
 func (l line) adjacentPoints(d direction, trim ...Pixel) []Pixel {
 	switch d {
 	case north, south, west, east:
 	default:
-		panic(fmt.Sprintf("adjacentPoints: cannot get points in direction %s since it is unimplemented", d.string()))
+		panic(fmt.Sprintf(
+			"adjacentPoints: cannot get points in direction %s since it is unimplemented", d.string()))
 	}
 
 	var w Pixel
@@ -93,7 +95,9 @@ func (l line) adjacentPoints(d direction, trim ...Pixel) []Pixel {
 			y += 1
 		}
 	case !l.isVertical() && d == west, !l.isVertical() && d == east:
-		panic(fmt.Sprintf("adjacentPoints: cannot get points in direction %s for non vertical lines since it is unimplemented", d.string()))
+		s := "adjacentPoints: cannot get points in direction %s for non vertical lines since it is " +
+			"unimplemented"
+		panic(fmt.Sprintf(s, d.string()))
 	case l.isVertical() && d == north:
 		points = append(points, Pixel{w.X, sY - 1})
 	case l.isVertical() && d == south:
@@ -130,7 +134,8 @@ func (l line) adjacentPoints(d direction, trim ...Pixel) []Pixel {
 	for _, p := range trim {
 		i := slices.Index(points, p)
 		if i == -1 {
-			panic(fmt.Sprintf("adjacentPoints: cannot trim %s since it is not an adjacent point", p.log()))
+			panic(
+				fmt.Sprintf("adjacentPoints: cannot trim %s since it is not an adjacent point", p.log()))
 		}
 		points = slices.Delete(points, i, i+1)
 	}
