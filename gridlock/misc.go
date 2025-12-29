@@ -33,7 +33,8 @@ type id struct {
 func generateId() id {
 	uuid, err := uuid.NewV4()
 	if err != nil {
-		logger.log(errorLevel, noLogType, "generateId", slog.String("failed to generate UUID", err.Error()))
+		logger.log(
+			errorLevel, noLogType, "generateId", slog.String("failed to generate UUID", err.Error()))
 		panic("error when calling generateId. Game logic requires unique Ids")
 	}
 	return id{uuid}
