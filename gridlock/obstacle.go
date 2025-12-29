@@ -112,16 +112,17 @@ func (os obstacles) setup(g grid) obstacleLUT {
 	return oLUT
 }
 
-// CPU intensive for several reasons. One, it calculates the optimal distance from every walkable pixel
-// to the nearest unwalkable pixel (dynamic programming is needed since it easily takes >30 mins without).
-// Two, it calculates the nearestUnwalkablesAvg which is (o(n)^3) complexity. This has a worse case of
-// (1280 * 720 * ~1440) aka (window width pixel * window height pixels * a pixel where the nearest obstacles
-// are a the largest possible square around it. 1440 is (720 * 4 / 2). 4 sides but the hexagons sides would
-// alternate cutting the value in half.
+// CPU intensive for several reasons. One, it calculates the optimal distance from every walkable
+// pixel to the nearest unwalkable pixel (dynamic programming is needed since it easily takes >30
+// mins without). Two, it calculates the nearestUnwalkablesAvg which is (o(n)^3) complexity. This
+// has a worse case of (1280 * 720 * ~1440) aka (window width pixel * window height pixels * a pixel
+// where the nearest obstacles are a the largest possible square around it. 1440 is (720 * 4 / 2). 4
+// sides but the hexagons sides would alternate cutting the value in half.
 //
-// Can be optimized further but it is low priority since LUT is cached and optimizatons are error prone.
-// The main optimization currently used is dynamic programming. The unwalkable pixels are processed first. Next,
-// the pixels 1 pixel away are processed. This continues until all the pixels are processed.
+// Can be optimized further but it is low priority since LUT is cached and optimizations are error
+// prone. The main optimization currently used is dynamic programming. The unwalkable pixels are
+// processed first. Next, the pixels 1 pixel away are processed. This continues until all the pixels
+// are processed.
 func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 	start := time.Now()
 	distanceLimit := max(g.width, g.height)
@@ -208,14 +209,18 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 		logger.log(
 			infoLevel,
 			setupLogic,
-			fmt.Sprintf("setupObstacleLUT: %.1f%% total pixels calculated. %d pixels of distance %d", percent, count-priorCount, distance))
+			fmt.Sprintf(
+				"setupObstacleLUT: %.1f%% total pixels calculated. %d pixels of distance %d",
+				percent,
+				count-priorCount,
+				distance))
 
-		// Currently, this calculation takes the longest e.g. (30s of 45s total).
-		// I looked into removing floating point math. A few CPU profiles showed this is only
-		// slightly less performant (< 5 seconds) than integer math. I suspect using integer math
-		// may lead to very hard to deubg issues which I want to avoid. Another potential error prone
-		// optmization that I am avoiding is summing the pixel position as they are added to the array.
-		// Optimizing may be needed in the future to speed up setup, but LUT caching is sufficient for now.
+		// Currently, this calculation takes the longest e.g. (30s of 45s total). I looked into removing
+		// floating point math. A few CPU profiles showed this is only slightly less performant (< 5
+		// seconds) than integer math. I suspect using integer math may lead to very hard to deubg
+		// issues which I want to avoid. Another potential error prone optimization that I am avoiding is
+		// summing the pixel position as they are added to the array. Optimizing may be needed in the
+		// future to speed up setup, but LUT caching is sufficient for now.
 		for x := range g.width {
 			for y := range g.height {
 				p := Pixel{X: x, Y: y}
@@ -248,11 +253,13 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 			percent,
 			distanceLimit))
 
-	logger.log(infoLevel, setupLogic, fmt.Sprintf("setupObstacleLUT: required %d seconds", int(time.Since(start).Seconds())))
+	logger.log(infoLevel, setupLogic,
+		fmt.Sprintf("setupObstacleLUT: required %d seconds", int(time.Since(start).Seconds())))
 
 	if len(oLUT) != g.basePixels {
-		logger.log(errorLevel, setupLogic, fmt.Sprintf("setupObstacleLUT: cannot setup obstacle look up table since created LUT is "+
-			"%d pixels rather than expected %d", len(oLUT), g.basePixels))
+		s := "setupObstacleLUT: cannot setup obstacle look up table since created LUT is %d pixels " +
+			"rather than expected %d"
+		logger.log(errorLevel, setupLogic, fmt.Sprintf(s, len(oLUT), g.basePixels))
 		panic("setupObstacleLUT: game requires an obstacle LUT to start")
 	}
 
@@ -366,7 +373,11 @@ func (pos Pixel) lineOfSight(otherPos Pixel, oLUT obstacleLUT, radius int) (Pixe
 }
 
 // returns the obstacle point nearest to the line of sight block from start to end
-func (start Pixel) obstaclePoint(end Pixel, oLUT obstacleLUT, obstacles obstacles, g grid) (obstaclePoint, bool) {
+func (start Pixel) obstaclePoint(
+	end Pixel,
+	oLUT obstacleLUT,
+	obstacles obstacles,
+	g grid) (obstaclePoint, bool) {
 	obstaclePixelPos, los := start.lineOfSight(end, oLUT, 0)
 
 	if los {
@@ -515,7 +526,8 @@ func (points obstaclePoints) connectPoints(oLUT obstacleLUT, g grid) {
 
 			if !foundFirstCwConnection &&
 				current.source.equals(op.source) &&
-				orientation(current.Pixel, g.getPixelOutbounds(current.source, hpCenter), op.Pixel) == clockwise {
+				orientation(current.Pixel, g.getPixelOutbounds(current.source, hpCenter),
+					op.Pixel) == clockwise {
 				foundFirstCwConnection = true
 			}
 
