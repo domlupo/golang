@@ -1,4 +1,4 @@
-// Refer to unitConfigProvider.go file for documentation. This code is in a separate file for readability.
+// See unitConfigProvider.go file for documentation. This is a separate file for readability.
 
 package main
 
@@ -22,7 +22,8 @@ type consumable struct {
 }
 
 func consumableNames() []name {
-	return []name{bombGravity, missileHeatSeeking, missileRadarActive, missileBallistic, missileCruise, missileAntiBallistic, flare, chaff}
+	return []name{bombGravity, missileHeatSeeking, missileRadarActive, missileBallistic,
+		missileCruise, missileAntiBallistic, flare, chaff}
 }
 
 func newConsumableProvider(unitConfigs unitConfigs) consumableProvider {
@@ -59,7 +60,8 @@ func (c *consumable) setFireDelay(name name) {
 		fireDelay = 50
 	case bombGravity, missileCruise, missileBallistic, missileAntiBallistic:
 	default:
-		panic(fmt.Sprintf("setFireDelay: cannot set fire delay for unknown consumable %s", name.string()))
+		s := "setFireDelay: cannot set fire delay for unknown consumable %"
+		panic(fmt.Sprintf(s, name.string()))
 	}
 	c.fireDelay = fireDelay
 }
