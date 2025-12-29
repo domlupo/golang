@@ -46,11 +46,12 @@ func TestIntersects(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		testname := fmt.Sprintf("test intersects between line %s and line %s", tt.l1.log(), tt.l2.log())
+		testname := fmt.Sprintf(
+			"test intersects between line %s and line %s", tt.l1.log(), tt.l2.log())
 		t.Run(testname, func(t *testing.T) {
 			intersects := tt.l1.intersects(tt.l2)
 			if intersects != tt.wantIntersects {
-				t.Errorf("interects does not equal wantIntersects")
+				t.Errorf("intersects does not equal wantIntersects")
 			}
 		})
 	}
@@ -147,12 +148,12 @@ func TestAdjacentPoints(t *testing.T) {
 		{line{Pixel{2, 3}, Pixel{4, 3}}, south, []Pixel{{2, 3}, {3, 3}, {4, 3}}, false, []Pixel{}},
 		{line{Pixel{4, 3}, Pixel{2, 3}}, south, []Pixel{{2, 3}, {3, 3}, {4, 3}}, false, []Pixel{}},
 
-		// unimplemented postitive slop
+		// unimplemented positive slope
 		{line{Pixel{19, 20}, Pixel{42, 10}}, west, []Pixel{}, true, []Pixel{}},
 		{line{Pixel{42, 10}, Pixel{19, 20}}, east, []Pixel{}, true, []Pixel{}},
 		{line{Pixel{19, 20}, Pixel{42, 10}}, west, []Pixel{}, true, []Pixel{}},
 		{line{Pixel{42, 10}, Pixel{19, 20}}, east, []Pixel{}, true, []Pixel{}},
-		// unimplemented negative slop
+		// unimplemented negative slope
 		{line{Pixel{42, 10}, Pixel{65, 20}}, west, []Pixel{}, true, []Pixel{}},
 		{line{Pixel{65, 20}, Pixel{42, 10}}, east, []Pixel{}, true, []Pixel{}},
 		{line{Pixel{42, 10}, Pixel{65, 20}}, west, []Pixel{}, true, []Pixel{}},
@@ -292,7 +293,7 @@ func TestAdjacentPoints(t *testing.T) {
 				{39, 49}, {40, 49}, {41, 50}, {42, 50}},
 			false, []Pixel{}},
 
-		{line{Pixel{}, Pixel{}}, noDirecton, []Pixel{}, true, []Pixel{}},
+		{line{Pixel{}, Pixel{}}, noDirection, []Pixel{}, true, []Pixel{}},
 	}
 
 	for _, d := range directions() {
@@ -318,7 +319,8 @@ func TestAdjacentPoints(t *testing.T) {
 			}()
 			points := tt.l.adjacentPoints(tt.d, tt.trim...)
 			if !slices.Equal(points, tt.wantPoints) {
-				t.Errorf("points %s of line %s returned %#v. not equal to wanted points\n %#v", tt.d.string(), tt.l.log(), points, tt.wantPoints)
+				t.Errorf("points %s of line %s returned %#v. not equal to wanted points\n %#v",
+					tt.d.string(), tt.l.log(), points, tt.wantPoints)
 			}
 		})
 	}

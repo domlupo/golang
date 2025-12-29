@@ -1370,7 +1370,8 @@ func TestDemotifLinePixels(t *testing.T) {
 			}()
 			line := g.demotifLinePixels(tt.hs, tt.d)
 			if !slices.Equal(line, tt.wantLine) {
-				t.Errorf("demotifLinePixel has pixels %#v rather than expected pixels \n %#v", line, tt.wantLine)
+				t.Errorf("demotifLinePixel has pixels %#v rather than expected pixels \n %#v",
+					line, tt.wantLine)
 			}
 		})
 	}
@@ -1391,10 +1392,15 @@ func TestDemotifHexPixelsAdjacent(t *testing.T) {
 
 	length := len(demotifPixelsAdjacent)
 	ePixelCount, wPixelCount := g.hexHeight/2, g.hexHeight/2
-	nwPixelCount, nePixelCount, swPixelCount, sePixelCount := g.hexWidth/2, g.hexWidth/2, g.hexWidth/2, g.hexWidth/2
-	expectedLength := ePixelCount + wPixelCount + nwPixelCount + nePixelCount + swPixelCount + sePixelCount
+	nwPixelCount := g.hexWidth / 2
+	nePixelCount := g.hexWidth / 2
+	swPixelCount := g.hexWidth / 2
+	sePixelCount := g.hexWidth / 2
+	expectedLength := ePixelCount +
+		wPixelCount + nwPixelCount + nePixelCount + swPixelCount + sePixelCount
 	if length != expectedLength {
-		t.Errorf("demotifPixels sanity check failed because length is %d rather than expected %d", length, expectedLength)
+		t.Errorf("demotifPixels sanity check failed because length is %d rather than expected %d",
+			length, expectedLength)
 		fmt.Println(demotifPixelsAdjacent)
 	}
 
