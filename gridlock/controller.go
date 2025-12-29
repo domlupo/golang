@@ -92,7 +92,8 @@ func (c controller) updateSelected(clickPosition Pixel, releasePosition Pixel) {
 
 	clickedGridPos, _ := c.state.grid.getGridPos(clickPosition)
 	clickedNode, nodeClicked := c.state.nodes[clickedGridPos]
-	if nodeClicked && clickPosition.equals(releasePosition) && clickedGridPos.equals(priorSingleSelect) {
+	if nodeClicked && clickPosition.equals(releasePosition) &&
+		clickedGridPos.equals(priorSingleSelect) {
 		for _, n := range c.state.nodes {
 			if n.player == clickedNode.player && n.unitConfig.name == clickedNode.unitConfig.name {
 				n.multiSelect = true
