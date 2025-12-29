@@ -239,7 +239,8 @@ func (d *debugger) createUnitPathfindHeatmap() {
 	logger.onlyEnable(devTool)
 
 	if len(d.unitPathfind) != 0 {
-		logger.log(infoLevel, devTool, "createUnitPathfindHeatmap: cannot create heatmap since it was already attempted")
+		logger.log(infoLevel, devTool,
+			"createUnitPathfindHeatmap: cannot create heatmap since it was already attempted")
 		return
 	}
 
@@ -260,8 +261,9 @@ func (d *debugger) createUnitPathfindHeatmap() {
 		default:
 			pixelCount++
 			if pixelCount%(d.grid.basePixels/maxPercent) == 0 {
-				percentProgess := pixelCount / (d.grid.basePixels / maxPercent)
-				logger.log(infoLevel, devTool, "createUnitPathfindHeatmap", slog.Int("pixel positions percent progress", percentProgess))
+				percentProgress := pixelCount / (d.grid.basePixels / maxPercent)
+				logger.log(infoLevel, devTool, "createUnitPathfindHeatmap",
+					slog.Int("pixel positions percent progress", percentProgress))
 			}
 
 			if info.Walkable {
@@ -357,7 +359,13 @@ func (d debugger) draw(c drawConfig) {
 	}
 }
 
-func (p Pixel) draw(c drawConfig, dC debuggerConfig, color color.Color, spotlight bool, windowpixelMultiplier float32) {
+func (p Pixel) draw(
+	c drawConfig,
+	dC debuggerConfig,
+	color color.Color,
+	spotlight bool,
+	windowpixelMultiplier float32) {
+
 	vector.FillRect(
 		c.screen,
 		float32(p.X)*windowpixelMultiplier,
@@ -379,7 +387,8 @@ func (p Pixel) draw(c drawConfig, dC debuggerConfig, color color.Color, spotligh
 	}
 }
 
-func (heatmap heatmap) draw(c drawConfig, dC debuggerConfig, heatmapPercent int, windowpixelMultiplier float32) {
+func (heatmap heatmap) draw(
+	c drawConfig, dC debuggerConfig, heatmapPercent int, windowpixelMultiplier float32) {
 	var maxV int
 	for _, v := range heatmap {
 		maxV = max(maxV, v)
@@ -403,7 +412,8 @@ func (heatmap heatmap) draw(c drawConfig, dC debuggerConfig, heatmapPercent int,
 	}
 }
 
-func (o obstacle) drawVisibilityGrid(c drawConfig, dC debuggerConfig, windowpixelMultiplier float32) {
+func (o obstacle) drawVisibilityGrid(
+	c drawConfig, dC debuggerConfig, windowpixelMultiplier float32) {
 	for _, op := range *o.visibilityGrid {
 		vector.FillCircle(
 			c.screen,
