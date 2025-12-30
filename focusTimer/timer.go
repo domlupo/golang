@@ -84,11 +84,13 @@ func (g *Game) Update() error {
 	}
 
 	if g.timerStarted && g.intProgressPercent < maxPercentage {
-		g.progressPercent = float64(g.currentTime.Sub(g.startTime)/time.Millisecond) / float64(g.duration/time.Millisecond) * 100
+		g.progressPercent = float64(g.currentTime.Sub(g.startTime)/time.Millisecond) /
+			float64(g.duration/time.Millisecond) * 100
 
 		if g.intProgressPercent != int(g.progressPercent) {
 			g.intProgressPercent = int(g.progressPercent)
-			loggedProgressPercent := int((float64(g.intProgressPercent) * (float64(maxPercentage) - g.progressPercentStart) / maxPercentage) + g.progressPercentStart)
+			loggedProgressPercent := int((float64(g.intProgressPercent) * (float64(maxPercentage) -
+				g.progressPercentStart) / maxPercentage) + g.progressPercentStart)
 			_, g.err = fmt.Fprintf(g.file,
 				"%*d%% %s %*d minutes remaining\n",
 				g.logPercentPadding,
@@ -106,7 +108,8 @@ func (g *Game) Update() error {
 				select {
 				case <-g.minuteTicker.C:
 					g.intDurationCount = g.intDurationCount - 1
-					loggedProgressPercent := (g.progressPercent * (float64(maxPercentage) - g.progressPercentStart) / maxPercentage) + g.progressPercentStart
+					loggedProgressPercent := (g.progressPercent * (float64(maxPercentage) -
+						g.progressPercentStart) / maxPercentage) + g.progressPercentStart
 					if g.intDurationStart > g.logMinsElapsedThresholdMins {
 						_, g.err = fmt.Fprintf(g.file,
 							"%*.1f%% %s %*d minutes remaining\n",
@@ -144,8 +147,8 @@ func (g *Game) startTimer() {
 	g.duration = time.Duration(g.intDurationStart) * time.Minute
 	g.intDurationCount = g.intDurationStart
 	g.minuteTicker = *time.NewTicker(1 * time.Minute)
-	_, g.err = g.file.WriteString(
-		fmt.Sprintf("Timer set for %d minutes. \nstartTime: %s\n", g.intDurationStart, g.startTime.Format(time.RFC3339)))
+	_, g.err = fmt.Fprintf(g.file, "Timer set for %d minutes. \n startTime: %s\n",
+		g.intDurationStart, g.startTime.Format(time.RFC3339))
 	if g.err != nil {
 		log.Fatal(g.err)
 	}
@@ -156,9 +159,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		screen.Fill(g.doneColor)
 	} else {
 		screen.Fill(g.backgroundColor)
-		// Use int not percent read from log for prior timer progress since timer has 1 minute granularity.
+		// Use int not percent read from log for prior timer progress since timer has 1 min granularity.
 		priorTimerProgress := g.progressPercentStart / 100
-		currentTimerProgess := (g.progressPercent * (maxPercentage - g.progressPercentStart) / maxPercentage) / 100
+		currentTimerProgess := (g.progressPercent * (maxPercentage - g.progressPercentStart) /
+			maxPercentage) / 100
 		vector.DrawFilledRect(
 			screen,
 			0,
@@ -171,7 +175,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	if !g.timerStarted {
 		op := &text.DrawOptions{}
-		text.Draw(screen, fmt.Sprintf("%d minutes. Change minutes with mouse wheel. Press any mouse button to start timer", g.intDurationStart), &text.GoTextFace{
+		s := "%d minutes. Change minutes with mouse wheel. Press any mouse button to start timer"
+		text.Draw(screen, fmt.Sprintf(s, g.intDurationStart), &text.GoTextFace{
 			Source: g.mplusFaceSource,
 			Size:   float64(24 * g.windowMultiplier),
 		}, op)
@@ -179,7 +184,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return int(float32(g.windowWidth) * g.windowMultiplier), int(float32(g.windowHeight) * g.windowMultiplier)
+	return int(float32(g.windowWidth) * g.windowMultiplier),
+		int(float32(g.windowHeight) * g.windowMultiplier)
 }
 
 func main() {
@@ -196,7 +202,8 @@ func main() {
 		}
 	}
 
-	ebiten.SetWindowSize(int(float32(g.windowWidth)*g.windowMultiplier), int(float32(g.windowHeight)*g.windowMultiplier))
+	ebiten.SetWindowSize(int(float32(g.windowWidth)*g.windowMultiplier),
+		int(float32(g.windowHeight)*g.windowMultiplier))
 
 	file, progressPercentFromLog, intDurationStartFromLog := readProgressFromLog(g.logFileName)
 
