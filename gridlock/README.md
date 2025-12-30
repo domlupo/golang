@@ -1,9 +1,9 @@
-# Gridlock
+Gridlock
 
-A prototype for a simple war/4x game. Simple like mini metro or mini motorways. War game like civ,
-hearts of iron, 9 kings etc. (also other popular war games on steamdb). Think about how this game
-relates to civilization revolution, catan, RISK, starcraft desert strike, totally accurate battle
-simulator, etc. Graphics may end up similar to the gnorp analogue. Is there a mobile equivalent for
+A prototype for a simple war/4x game. Simple like mini metro or mini motorways. War game like Civ,
+hearts of iron, 9 kings etc. (also other popular war games on Steamdb). Think about how this game
+relates to civilization revolution, Catan, RISK, Starcraft desert strike, totally accurate battle
+simulator, etc. Graphics may end up similar to the Gnorp analogue. Is there a mobile equivalent for
 war/4x games?
 
 ## Top 3 Ranked Concerns : Risks
@@ -27,7 +27,7 @@ war/4x games?
       - research tech/upgrades
     - randomized tech tree
       - select 1 of 3 upgrades
-      - combeback mechanics (skip, salvage, etc)
+      - comeback mechanics (skip, salvage, etc)
     - human vs computer
     - deploy to web
     - UI
@@ -64,7 +64,7 @@ Stale: 15
    - Easier to design game/engine
    - Easier to test game/engine
    - Easier to debug game/engine
-4. Same cost Orgthogonal and Cardinal movement (Chebyshev distance):
+4. Same cost Orthogonal and Cardinal movement (Chebyshev distance):
    - Simplifies path finding
    - Lowers CPU cost
    - Lowers overall game time
@@ -77,7 +77,7 @@ Stale: 15
    - There is a large enough variety with only land and air units.
    - Medieval theme would not allow air units
 7. Hexagonal grid rather than square grid
-  - The aesthetics of a verticl layout hexagonal grid is much nice than a square grid
+  - The aesthetics of a vertical layout hexagonal grid is much nice than a square grid
     - The pattern is more pleasing.
     - The border is more pleasing.
     - More variety to connect grid nodes.
@@ -133,18 +133,18 @@ can have upgrades which can helps tech tree idea.
 16. No side to side camera movement
   - I still might add camera zoom out (think mini metro or mini motorways) during game start.
   - I don't think this is needed for the game experience I am trying to create.
-  - Add a lot of complexity (programming, UI, player , etc) with no proveable benefit.
+  - Add a lot of complexity (programming, UI, player , etc) with no provable benefit.
 17. Punt all land units besides infantry for initial release.
   - There is enough complexity, polish and work for only infantry and air units.
   - I don't think non infantry land units are required to create desired game loop.
-  - Would increase complexity of infantry behavior alot.
+  - Would increase complexity of infantry behavior a lot.
   - If the game is popular enough, it would be a good theme for an expansion.
   - It avoids distracted or overwhelmed players trying to closely follow 2 different altitudes.
 18. Punt multiplayer for initial release
   - There is enough complexity, polish and work for single player.
   - Single player games can be very popular and successful.
   - If I ever implement, initial research shows webRTC is probably better but more complex than
-    websockets
+    WebSocket.
 19. Ballistic missiles only collide with anti ballistic missiles. They do not collide with each
 other.
   - They need to different from cruise missiles to justify their game design investment and player
@@ -160,7 +160,7 @@ other.
   - bombs left marks
 - Should payload affect stealth? Stuff like this seems minor and hard to implement so probably not.
 - Spy upgrade should allow blocking tech, lowering satellite launch success, etc
-- Wind could be an interesting mechanic but unneeded. It could mess with aircrafts.
+- Wind could be an interesting mechanic but unneeded. It could mess with aircraft.
 - It might be interesting if the tech tree has a direct conflict via a race. e.g. your opponent can
   block you from researching something rather than them researching something for themselves. Or
   they can block 1 of the 3 options.
@@ -181,9 +181,9 @@ other.
   see what upgrade count your opponent is at.
 - I like the look of mosaics and mosaic the word sounds cool. The hexagon grid pattern reminds me of
   mosaics a lot. Should I incorporate this in this game or a future game? Should I use mosaics to
-  inspire art direction over other games like catan, risk and gnorp analogue? Maybe polish is mosaic
+  inspire art direction over other games like Catan, Risk and Gnorp analogue? Maybe polish is mosaic
   filter.
-- I like how balatro has a skip mechanic. If i make a tech tree which is randomized, a select 1 of 3
+- I like how Balatro has a skip mechanic. If i make a tech tree which is randomized, a select 1 of 3
   can be used. Then I can allow either cheap skips to progress further or a reroll option. Initial
   thought is skip would be more interesting than reroll and more skill based.
 - Risk vs reward for how many units to produce and what type vs how production to invest elsewhere
@@ -219,10 +219,10 @@ other.
   - Reminds me of the military diagrams that show battles over time
   - May be able to utilize the idea of target change units
   - Early fight for position, long term fight for ?
-- top down graphics or iso or 3d?
+- top down graphics or isometric or 3d?
 - Players get to pick starting positions?
 - Hidden or fully visible grid?
-- APM lock on nodes or units so you cannot spam actions? Think about sokpop game clickyland where
+- APM lock on nodes or units so you cannot spam actions? Think about Sokpop game clickyland where
   you are limited by clicks.
 - Campaign mode. Specific battles, war or countries? Similar to cities in mini metro and mini
   motorway.
@@ -232,7 +232,7 @@ other.
 - Node expansion overtime?
 - Grids expand over time to cities, cities can merge together, merged cities are more powerful?
 - Buildings?
-- Do I want to stand out from civ, or be a simpler civ e.g. factorio -> shapez. How does this affect
+- Do I want to stand out from Civ, or be a simpler Civ e.g. Factorio -> Shapez. How does this affect
   marketing?
 - Should players be able to target their own nodes?
 - Should a node be able to target itself?
@@ -240,7 +240,7 @@ other.
 - Traders or cargo can go to a node which you own to transfer production of city production
 - Nodes with defense system
 - How is node unit production handled?
-- Theme is the gnorp analogue?
+- Theme is the Gnorp analogue?
 - Game name?
   - choke point
   - choke points
@@ -253,45 +253,45 @@ other.
   - talon strike
   - hawk point
 - Replay feature where you can see a battle recap?
-- Should unit behavior be toggable on a global scale? E.g. bombers have different bomb plan options
-- Should nodes produce multiple units e.g. Nodes always create infatry, then get upgraded over time.
+- Should unit behavior be toggleable on a global scale? E.g. bombers have different bomb plan options
+- Should nodes produce multiple units e.g. Nodes always create infantry, then get upgraded over time.
   - Initially, this seems awesome but makes unit production harder
-  - Capturing nodes is more swingy? which is good?
+  - Capturing nodes has more severe swings? which is good?
   - Risk vs Reward?
   - Can add a sabotage mechanic.
 - Missile upgrade can guarantee different areas are targeted or not. Right now missile sends out
   multiple missile which hit the same area since it doesn't factor in it will kill units. Another
   upgrade could be missile coordination e.g. multiple noes coordinate.
-- Should obstacles be higher resolution than hexagonal? e.g. allow non node hexs to have partial
+- Should obstacles be higher resolution than hexagonal? e.g. allow non node hexagons to have partial
   obstacles.
 - It would be good polish to have end game stats/summary
   - infantry killed
   - infantry died
   - node control
   - units with the most kills
-    - a single bomer had X kills
-- It would be good polish to allow players to config certain aspects e.g. highlight widths
+    - a single bomber had X kills
+- It would be good polish to allow players to configure certain aspects e.g. highlight widths
 - Should nodes support multiple bombers? If yes should there also be options
   - fly in formation and bomb same targets
   - fly separate but bomb same targets
   - fly separate and bomb differently (complex due to path finding)
 - A "heat" seeking mechanic can be added to several different flying units to prioritize targets
   - counter missile
-  - bomber / fighter has heat seekking missiles
+  - bomber / fighter has heat seeking missiles
   - flares
 - There should probably be some type of comeback mechanic.
   - As players lose nodes how do you make nodes more valuable?
     - easier to control fewer nodes
-    - If nodes are upgradeable, most likely better node are in the back. This means it is likely a
+    - If nodes are able to be upgraded, most likely better node are in the back. This means it is likely a
       bomber would have more frequent trips for the losing player than the winning player if the
       battle field lines are close.
-    - What other combeack mechanics can be added?
+    - What other comeback mechanics can be added?
 - If I add a unit like paratrooper, Hex control probably needs to remain. I can make hex control be
-  less microable by making a "warzone area" between opposing nodes which are not controllable.
+  less micro able by making a "war zone area" between opposing nodes which are not controllable.
 - Fog of war? It may be needed or it might be very beneficial while also being simple to implement.
-  A compromise could be to keep only certain info hidden then something like uav or satlite can
+  A compromise could be to keep only certain info hidden then something like UAV or satellite can
   expose the info.
-- Tech tree could be a source of randomness. The choices and order can veary per game. Players can
+- Tech tree could be a source of randomness. The choices and order can vary per game. Players can
   have the same or different pick 1 of three that slowly goes through the tech tree. I like 1 of 3
   because its like rock paper scissors.
 - fuel mechanic for planes could be risk vs reward for building closer airports but this already
@@ -301,9 +301,9 @@ other.
 
 ## Misc Notes
 
-- Research civ concepts and features e.g. culture victory, trade, etc
-- Research polytopia game
-- Research other mobile platform "civ" games like unciv
+- Research Civ concepts and features e.g. culture victory, trade, etc
+- Research Polytopia game
+- Research other mobile platform "Civ" games like Unciv
 
 ## Brainstorms
 
@@ -350,12 +350,12 @@ Careful of current issues:
 - Will probably need to support checking a lot of hexagons for certain scenarios:
   - A large explosion will have collision > one hexagon. This is something I am concerned about
     because this will probably be the most performance sensitive computation since players will want
-    to most likely target areas with alot of units.
+    to most likely target areas with a lot of units.
   - A unit with large vision e.g. anti air missile will probably need to check multiple hexagons.
   - If I implement in the future units which capture a city attempt to capture the next closest city
-    to themself rather than to the city. It might be more on theme that they all attack the same
+    to them self rather than to the city. It might be more on theme that they all attack the same
     city which is an easier calculation?
-- For nearest unit I can either check optimially by iterating through more distance hexagons or
+- For nearest unit I can either check optimally iterating through more distance hexagons or
   brute force check all hexagons.
 - On unit kill need to handle its double linked list pointers
 - Need to sync or verify or handle units switching layers if layer optimization is needed
@@ -365,16 +365,16 @@ Careful of current issues:
 
 Potential future issues:
 
-- Units largers than one hexagon have work arounds e.g. add unit to more than one hexagon.
+- Units larger than one hexagon have work around e.g. add unit to more than one hexagon.
 - Same work around is possible for units moving fast.
-- Any work arounds needed will probably be a pain but this issue is far in future.
+- Any work around needed will probably be a pain but this issue is far in future.
 
 Post Work Reflection:
 
 - The implementation worked because CPU performance has improved multiple times:
   - collidesWithUnit became negligible and allowed ~1300 infantry units at 60 FPS.
   - analyzeTargets became negligible and allowed ~2500 infantry units with radius of 3 pixels at 60
-    FPS. Performance is understanted since it was tested with developer logging taking 50% of update
+    FPS. Performance is understated since it was tested with developer logging taking 50% of update
     game CPU usage.
 - The implementation is simpler than what was designed
   - I didn't split layers. This was a good decision since I needed to start simple and this is an
@@ -399,7 +399,7 @@ Overall Thoughts:
   efficiently.
 - Units moving the same speed mean that only static units will collide. So don't perform expensive
   path find unless static units are nearby.
-- Unfiorm cost grid greatly simplifies algorithms and helps reduce CPU usage. This is probably
+- Uniform cost grid greatly simplifies algorithms and helps reduce CPU usage. This is probably
   needed for optimal game experience since pathfinding is fundamental and dynamic movement cost is a
   minor idea.
 - Can use different path finding techniques based on how many local units are nearby. Probably don't
@@ -419,7 +419,7 @@ Potential optimizations
 - What heuristics can I use for better performance e.g euclidean distance, octile distance, other
   distances, etc
 - What optimizations does uniform grid cost allow?
-- What optimizatoin does 1 pixel movement cost allow?
+- What optimization  1 pixel movement cost allow?
 - JPS pruning gains (avoid duplicate paths via uniform movement, allow jumps)
 - JPS* precompute gains (save runtime calculations to determine JPS nodes)
 
