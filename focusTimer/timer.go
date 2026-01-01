@@ -50,7 +50,7 @@ type Game struct {
 
 func newGame() Game {
 	g := Game{
-		windowMultiplier:            1.5,
+		windowMultiplier:            1.0,
 		windowWidth:                 1280,
 		windowHeight:                720,
 		intDurationStart:            60,
@@ -199,6 +199,7 @@ func main() {
 	for _, m := range monitors {
 		if m.Name() == "DELL U2720Q" {
 			ebiten.SetMonitor(m)
+			g.windowMultiplier = 1.5
 		}
 	}
 
