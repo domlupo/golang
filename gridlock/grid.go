@@ -28,13 +28,13 @@ type gridConfig struct {
 	conservativeHexRadius int
 }
 
-func newGridConfig() gridConfig {
+func newGridConfig(pixelMultiplier float32) gridConfig {
 	gc := gridConfig{
 		// For 1280p * 720p resolution, a hexagon height of 40p is ideally 80/sqrt(3) wide.
 		// 80/sqrt(3) is 46.188 which is approximately 46p.
 		width:           1280,
 		height:          720,
-		pixelMultiplier: 2.5,
+		pixelMultiplier: pixelMultiplier,
 		hexWidth:        46,
 		hexHeight:       40,
 		hexXOffset:      19,

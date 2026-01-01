@@ -79,7 +79,12 @@ func newGame() Game {
 func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify bool) {
 	// TODO: Need to restart timers, etc
 	start := time.Now()
-	grid := newGrid(newGridConfig())
+
+	pixelMultiplier := float32(1.25)
+	if _, ok := g.isDeveloperMacStudio(); ok {
+		pixelMultiplier = 2.5
+	}
+	grid := newGrid(newGridConfig(pixelMultiplier))
 	hexagons := newHexagons(grid)
 	obstacles, oLUT := setupObstacles(obstacleSetup, grid)
 	unitConfigProvider := newUnitConfigProvider()
@@ -205,15 +210,8 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 
 func main() {
 	g := newGame()
-
-	var monitors []*ebiten.MonitorType
-	monitors = ebiten.AppendMonitors(monitors)
-	if g.developerMode {
-		for _, m := range monitors {
-			if m.Name() == "DELL U2720Q" {
-				ebiten.SetMonitor(m)
-			}
-		}
+	if m, ok := g.isDeveloperMacStudio(); ok {
+		ebiten.SetMonitor(m)
 	}
 
 	os.Mkdir(g.outputDirectoryName, 0755)
@@ -339,4 +337,17 @@ func (g Game) forceCleanup() {
 	}
 	g.memoryProfilerFile.Close()
 	logger.log(debugLevel, devTool, "force closed memory profiler file")
+}
+
+func (g Game) isDeveloperMacStudio() (*ebiten.MonitorType, bool) {
+	if g.developerMode {
+		var monitors []*ebiten.MonitorType
+		monitors = ebiten.AppendMonitors(monitors)
+		for _, m := range monitors {
+			if m.Name() == "DELL U2720Q" {
+				return m, true
+			}
+		}
+	}
+	return nil, false
 }
