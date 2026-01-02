@@ -133,7 +133,7 @@ func (part partitioner) lookUpPartitions(u unit, pa partitionAnalysis) partition
 // The caller is responsible for verifying the analysis performed with the partitions is valid.
 // For example, analyzing partitions for collision detection between two circles would be invalid
 // if the circle with the position and distance not passed has a radius which exceeds the
-// conservative hex radius. Unoptimized because the hexagon collision uses conservative circles.
+// conservative hex radius. Not optimized because the hexagon collision uses conservative circles.
 func (part partitioner) defaultPartitions(p Pixel, d int) []GridPosition {
 	gridPos, ok := part.grid.getGridPos(p)
 	if !ok {

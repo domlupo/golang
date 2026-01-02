@@ -556,7 +556,7 @@ func (s *state) moveUnits() {
 		slog.Int("units not moved", unitsNotMovedCount),
 		slog.Int("units at node", unitsAtNode),
 		slog.Int("units collided", unitsCollideCount),
-		slog.Int("untis already attacked", unitsAlreadyAttacked),
+		slog.Int("units already attacked", unitsAlreadyAttacked),
 		slog.Int("units at final position", unitsAtFinalPosition),
 	)
 }
@@ -894,7 +894,7 @@ func (s *state) updateTargets(target position, filter []player) {
 				}
 			}
 		} else if n.singleSelect {
-			// TODO: Fix this so air units are selected, need a multi layer iter
+			// TODO: Fix this so air units are selected, need a multi layer iterator
 			for _, h := range n.control {
 				end := h.get(lLand).linkedList
 				current := end
@@ -915,7 +915,7 @@ func (s *state) updateTargets(target position, filter []player) {
 				}
 			}
 		} else if n.multiSelect {
-			// TODO: Fix this so air units are selected, need a multi layer iter
+			// TODO: Fix this so air units are selected, need a multi layer iterator
 			end := s.hexagons[n.gridPos].get(lLand).linkedList
 			current := end
 			var checkOccurred bool

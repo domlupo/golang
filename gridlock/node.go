@@ -97,7 +97,7 @@ func (n node) log() []slog.Attr {
 	return a
 }
 
-// Returns a unique and determinite slice of bytes from the passed nodes.
+// Returns a unique and deterministic slice of bytes from the passed nodes.
 func (nodes nodes) key() []byte {
 	var keys keys
 	for k := range nodes {

@@ -85,7 +85,7 @@ func (os obstacles) insert(k GridPosition, v *obstacle) {
 	os[k] = v
 }
 
-// Returns a unique and determinite slice of bytes from the passed obstacles.
+// Returns a unique and deterministic slice of bytes from the passed obstacles.
 func (os obstacles) key() []byte {
 	var keys keys
 	for k := range os {
@@ -114,9 +114,9 @@ func (os obstacles) setup(g grid) obstacleLUT {
 
 // CPU intensive for several reasons. One, it calculates the optimal distance from every walkable
 // pixel to the nearest unwalkable pixel (dynamic programming is needed since it easily takes >30
-// mins without). Two, it calculates the nearestUnwalkablesAvg which is (o(n)^3) complexity. This
+// minutes without). Two, it calculates the nearestUnwalkablesAvg which is (o(n)^3) complexity. This
 // has a worse case of (1280 * 720 * ~1440) aka (window width pixel * window height pixels * a pixel
-// where the nearest obstacles are a the largest possible square around it. 1440 is (720 * 4 / 2). 4
+// where the nearest obstacles are the largest possible square around it. 1440 is (720 * 4 / 2). 4
 // sides but the hexagons sides would alternate cutting the value in half.
 //
 // Can be optimized further but it is low priority since LUT is cached and optimizations are error
@@ -217,7 +217,7 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 
 		// Currently, this calculation takes the longest e.g. (30s of 45s total). I looked into removing
 		// floating point math. A few CPU profiles showed this is only slightly less performant (< 5
-		// seconds) than integer math. I suspect using integer math may lead to very hard to deubg
+		// seconds) than integer math. I suspect using integer math may lead to very hard to debug
 		// issues which I want to avoid. Another potential error prone optimization that I am avoiding is
 		// summing the pixel position as they are added to the array. Optimizing may be needed in the
 		// future to speed up setup, but LUT caching is sufficient for now.
@@ -421,7 +421,7 @@ func (os obstacles) setupVisibilityGrid(oLUT obstacleLUT, g grid) {
 }
 
 func (points obstaclePoints) createAllPoints(os obstacles, g grid) {
-	// TODO: don't hardcode offset values for infantry unit with radius of 3
+	// TODO: don't hard code offset values for infantry unit with radius of 3
 	nOffset := Pixel{0, -4}
 	neOffset := Pixel{4, -2}
 	seOffset := Pixel{4, 2}

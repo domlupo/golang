@@ -98,7 +98,7 @@ func (c consumables) log() []slog.Attr {
 	if len(c) == 0 {
 		a = append(a, slog.String("consumables", "none"))
 	}
-	// iterate through array in determinisirc order
+	// iterate through array in deterministic order
 	for _, name := range consumableNames() {
 		if c, ok := c[name]; ok {
 			a = append(a, nest(name.string(), c.log()))

@@ -55,8 +55,8 @@ func (l1 line) intersects(l2 line) bool {
 
 // Returns the adjacent points in the passed direction. The function has multiple assumptions.
 // Assumes a square grid with typical compass directions. Assumes a square grid where east is
-// positive x and south is positive y. x is typical and y is opposite of typical for catesian graph.
-// Assumes the line should be drawn in the top left corner of the grid square. Sloped lines
+// positive x and south is positive y. x is typical and y is opposite of typical for Cartesian
+// graph. Assumes the line should be drawn in the top left corner of the grid square. Sloped lines
 // determine point direction of split grid squares via which point has more area. Trims any points
 // passed as trim but panics if they are not an adjacent point.
 func (l line) adjacentPoints(d direction, trim ...Pixel) []Pixel {
@@ -103,13 +103,13 @@ func (l line) adjacentPoints(d direction, trim ...Pixel) []Pixel {
 	case l.isVertical() && d == south:
 		points = append(points, Pixel{w.X, nY})
 	default:
-		// Ebitengine y is opposite of typical cartesian grid, slope equation is not typical.
+		// Ebitengine y is opposite of typical Cartesian grid, slope equation is not typical.
 		// e.Y - w.Y instead of typical w.Y - e.Y
 		slope := float64(e.Y-w.Y) / float64(w.X-e.X)
 		x := float64(w.X) + 0.5
 		for x <= float64(e.X+1) {
 			yIntercept := float64(w.Y) + (slope * float64(w.X))
-			// Ebitegine y is opposite of typical cartesian grid, y intercept equation is not typical.
+			// Ebitengine y is opposite of typical Cartesian grid, y intercept equation is not typical.
 			// y := yIntercept - slope*x instead of y := slope*x + yIntercept.
 			y := yIntercept - slope*x
 			xInteger, _ := math.Modf(x)

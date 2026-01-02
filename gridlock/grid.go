@@ -57,8 +57,8 @@ type grid struct {
 
 // The grid struct has a field called hexTriangleLUT which is a look up table (LUT)
 //
-// The hexagon triangle LUT is a hardcoded mapping to aid with converting
-// pixel position to hexagon grid position. It avoids the the need of CPU intensive math.
+// The hexagon triangle LUT is a hard coded mapping to aid with converting
+// pixel position to hexagon grid position. It avoids the need of CPU intensive math.
 // It helps CPU performance by removing the need for floating point or sqrt math logic.
 //
 // Specific CPU profiling did not prove this optimization was needed but prior CPU profiling

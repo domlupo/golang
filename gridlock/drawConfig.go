@@ -54,7 +54,7 @@ type drawConfig struct {
 // Invoke only once per game session. NewImage calls are expensive and are not
 // idempotent for specific edge cases. https://github.com/hajimehoshi/ebiten/issues/3335
 func newDrawConfig() drawConfig {
-	// TODO: check if this should use a subimage if final game uses draw triangle.
+	// TODO: check if this should use a sub image if final game uses draw triangle.
 	// Not investigating now since draw triangle may not be used in final game.
 	drawTriangleDefaultImage := ebiten.NewImage(1, 1)
 	drawTriangleDefaultImage.Fill(color.White)

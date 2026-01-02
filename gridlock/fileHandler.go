@@ -51,7 +51,7 @@ func (keys keys) sort() {
 	})
 }
 
-// Golang encoding/json does not support direct marshall/unmarshall for custom types
+// Golang encoding/json does not support direct marshalling/unmarshalling for custom types
 // Multiple intermediate entry types are defined.
 type obstacleLUTEntry struct {
 	Key   Pixel        `json:"key"`

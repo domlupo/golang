@@ -178,7 +178,7 @@ func (d *debugger) logPixel(p Pixel) {
 	} else {
 		attrs = append(attrs, slog.String("GridPosition", "notFound"))
 	}
-	attrs = append(attrs, nest("ObsacleLUT", d.oLUT[p].log()))
+	attrs = append(attrs, nest("ObstacleLUT", d.oLUT[p].log()))
 	attrs = append(attrs, nest("NodeLUT", d.nLUT[p].log()))
 	logger.log(infoLevel, devTool, "pixel", attrs...)
 }

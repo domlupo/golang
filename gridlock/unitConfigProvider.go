@@ -140,7 +140,7 @@ func (ucProvider unitConfigProvider) setReactions() {
 			reactions = []reaction{
 				{
 					when: func(bomber *unit) bool {
-						// TODO: bresenham is not guaranteed to get to final position. I have not seen
+						// TODO: Bresenham is not guaranteed to get to final position. I have not seen
 						// aircraft not reach their final destination but missiles have. Need to ensure
 						// this is not error prone or make it more conservative.
 						return bomber.Pixel.equals(bomber.sourcePosition) && bomber.isPayloadNotFull()
@@ -160,7 +160,7 @@ func (ucProvider unitConfigProvider) setReactions() {
 			reactions = []reaction{
 				{
 					when: func(fighter *unit) bool {
-						// TODO: bresenham is not guaranteed to get to final position. I have not seen
+						// TODO: Bresenham is not guaranteed to get to final position. I have not seen
 						// aircraft not reach their final destination but missiles have. Need to ensure
 						// this is not error prone or make it more conservative.
 						return fighter.Pixel.equals(fighter.sourcePosition) && fighter.isPayloadNotFull()

@@ -47,7 +47,7 @@ func (h hexagon) log() []slog.Attr {
 func (hl hexLayer) log() []slog.Attr {
 	var a = []slog.Attr{}
 	if hl.linkedList == nil {
-		a = append(a, slog.String("linkedlist", "none"))
+		a = append(a, slog.String("linkedList", "none"))
 	} else {
 		a = append(a, nest("linkedList", hl.linkedList.Pixel.log()))
 	}

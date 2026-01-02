@@ -122,8 +122,8 @@ func (g *Game) Update() error {
 		infoLevel,
 		mainLogic,
 		"game performance",
-		slog.String("fps", fmt.Sprintf("%0.2f", ebiten.ActualFPS())),
-		slog.String("tps", fmt.Sprintf("%0.2f", ebiten.ActualTPS())),
+		slog.String("FPS", fmt.Sprintf("%0.2f", ebiten.ActualFPS())),
+		slog.String("TPS", fmt.Sprintf("%0.2f", ebiten.ActualTPS())),
 	)
 
 	for _, t := range g.developerToggles {
