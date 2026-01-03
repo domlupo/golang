@@ -321,7 +321,7 @@ func main() {
 
 	g.restart(g.nodeSetup, g.obstacleSetup, true)
 
-	if err := ebiten.RunGame(&g); err != nil {
+	if err := ebiten.RunGameWithOptions(&g, &ebiten.RunGameOptions{InitUnfocused: true}); err != nil {
 		logger.log(errorLevel, mainLogic, err.Error())
 	}
 
