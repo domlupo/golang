@@ -49,6 +49,10 @@ func newGridConfig(pixelMultiplier float32) gridConfig {
 	return gc
 }
 
+func defaultGridConfig() gridConfig {
+	return newGridConfig(1.0)
+}
+
 // A hexagonal grid.
 type grid struct {
 	gridConfig
@@ -140,12 +144,12 @@ type GridPosition struct {
 	Y int `json:"y"`
 }
 
-type side int
+type clusivity int
 
 const (
-	sNone side = iota
-	sInclusive
-	sExclusive
+	cNone clusivity = iota
+	cInclusive
+	cExclusive
 )
 
 // A value stored in a lookup table to help determine grid position.
@@ -218,16 +222,16 @@ func newGrid(gc gridConfig) grid {
 // Setup a look up table to help determine grid position
 func (g grid) setupHexTriangleLUT() []hexagonTriangle {
 	switchTriangle := make(map[Pixel]hexagonTriangle)
-	for _, p := range g.demotifLinePixels(hsNorthwest, sExclusive) {
+	for _, p := range g.demotifLinePixels(hsNorthwest, cExclusive) {
 		switchTriangle[p] = leftHexTriangle
 	}
-	for _, p := range g.demotifLinePixels(hsNorthwest, sInclusive) {
+	for _, p := range g.demotifLinePixels(hsNorthwest, cInclusive) {
 		switchTriangle[p] = middleHexTriangle
 	}
-	for _, p := range g.demotifLinePixels(hsNortheast, sInclusive) {
+	for _, p := range g.demotifLinePixels(hsNortheast, cInclusive) {
 		switchTriangle[p] = middleHexTriangle
 	}
-	for _, p := range g.demotifLinePixels(hsNortheast, sExclusive) {
+	for _, p := range g.demotifLinePixels(hsNortheast, cExclusive) {
 		switchTriangle[p] = rightHexTriangle
 	}
 
@@ -593,7 +597,7 @@ func (g grid) demotif(p Pixel) (demotif, bool) {
 	return demotif{p}, true
 }
 
-func (g grid) demotifLinePixels(hs hexSide, side side) []Pixel {
+func (g grid) demotifLinePixels(hs hexSide, clusivity clusivity) []Pixel {
 	nw := Pixel{0, g.hexHeight / 4}
 	n := Pixel{g.hexWidth / 2, 0}
 	ne := Pixel{g.hexWidth, g.hexHeight / 4}
@@ -604,44 +608,44 @@ func (g grid) demotifLinePixels(hs hexSide, side side) []Pixel {
 	var d direction
 	trim := []Pixel{}
 	switch {
-	case hs == hsWest && side == sInclusive:
+	case hs == hsWest && clusivity == cInclusive:
 		d = east
 		trim = append(trim, sw)
-	case hs == hsNorthwest && side == sInclusive:
+	case hs == hsNorthwest && clusivity == cInclusive:
 		d = south
 		trim = append(trim, n)
-	case hs == hsNortheast && side == sInclusive:
+	case hs == hsNortheast && clusivity == cInclusive:
 		d = south
 		trim = append(trim, ne)
-	case hs == hsEast && side == sInclusive:
+	case hs == hsEast && clusivity == cInclusive:
 		d = west
 		trim = append(trim, Pixel{g.hexWidth - 1, g.hexHeight * 3 / 4})
-	case hs == hsSouthwest && side == sInclusive:
+	case hs == hsSouthwest && clusivity == cInclusive:
 		d = north
 		trim = append(trim, Pixel{g.hexWidth / 2, g.hexHeight - 1})
-	case hs == hsSoutheast && side == sInclusive:
+	case hs == hsSoutheast && clusivity == cInclusive:
 		d = north
 		trim = append(trim, Pixel{g.hexWidth, g.hexHeight*3/4 - 1})
-	case hs == hsWest && side == sExclusive:
+	case hs == hsWest && clusivity == cExclusive:
 		d = west
 		trim = append(trim, Pixel{sw.X - 1, sw.Y})
-	case hs == hsNorthwest && side == sExclusive:
+	case hs == hsNorthwest && clusivity == cExclusive:
 		d = north
 		trim = append(trim, Pixel{g.hexWidth / 2, -1})
-	case hs == hsNortheast && side == sExclusive:
+	case hs == hsNortheast && clusivity == cExclusive:
 		d = north
 		trim = append(trim, Pixel{g.hexWidth, g.hexHeight/4 - 1})
-	case hs == hsEast && side == sExclusive:
+	case hs == hsEast && clusivity == cExclusive:
 		d = east
 		trim = append(trim, Pixel{g.hexWidth, g.hexHeight * 3 / 4})
-	case hs == hsSouthwest && side == sExclusive:
+	case hs == hsSouthwest && clusivity == cExclusive:
 		d = south
 		trim = append(trim, Pixel{g.hexWidth / 2, g.hexHeight})
-	case hs == hsSoutheast && side == sExclusive:
+	case hs == hsSoutheast && clusivity == cExclusive:
 		d = south
 		trim = append(trim, Pixel{g.hexWidth, g.hexHeight * 3 / 4})
 	default:
-		panic("demotifLinePixels unknown hex side and side combination")
+		panic("demotifLinePixels unknown hex side and clusivity combination")
 	}
 
 	var l line
@@ -670,10 +674,10 @@ func (g grid) demotifLinePixels(hs hexSide, side side) []Pixel {
 func (g grid) demotifHexPixels() []Pixel {
 	demotifPixels := []Pixel{}
 
-	nwPixels := g.demotifLinePixels(hsNorthwest, sInclusive)
-	nePixels := g.demotifLinePixels(hsNortheast, sInclusive)
-	swPixels := g.demotifLinePixels(hsSouthwest, sInclusive)
-	sePixels := g.demotifLinePixels(hsSoutheast, sInclusive)
+	nwPixels := g.demotifLinePixels(hsNorthwest, cInclusive)
+	nePixels := g.demotifLinePixels(hsNortheast, cInclusive)
+	swPixels := g.demotifLinePixels(hsSouthwest, cInclusive)
+	sePixels := g.demotifLinePixels(hsSoutheast, cInclusive)
 
 	northPixels := append(nwPixels, nePixels...)
 	southPixels := append(swPixels, sePixels...)
@@ -692,7 +696,7 @@ func (g grid) demotifHexPixels() []Pixel {
 func (g grid) demotifHexPixelsAdjacent() map[Pixel]hexSide {
 	demotifPixels := make(map[Pixel]hexSide)
 	for _, hs := range hexSides() {
-		for _, p := range g.demotifLinePixels(hs, sExclusive) {
+		for _, p := range g.demotifLinePixels(hs, cExclusive) {
 			demotifPixels[p] = hs
 		}
 	}
