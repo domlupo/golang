@@ -163,7 +163,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		priorTimerProgress := g.progressPercentStart / 100
 		currentTimerProgess := (g.progressPercent * (maxPercentage - g.progressPercentStart) /
 			maxPercentage) / 100
-		vector.DrawFilledRect(
+		vector.FillRect(
 			screen,
 			0,
 			0,
