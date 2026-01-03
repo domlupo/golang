@@ -1,4 +1,4 @@
-// A line is two unordered connected pixels.
+// A line is two unordered connected Pixels.
 
 package main
 
@@ -9,7 +9,7 @@ import (
 	"slices"
 )
 
-// Two unordered connected points.
+// Two unordered connected Pixels.
 type line struct {
 	p1 Pixel
 	p2 Pixel
@@ -26,9 +26,9 @@ func (l line) isVertical() bool {
 	return l.p1.X == l.p2.X
 }
 
-func onSegment(p1 Pixel, p2 Pixel, p3 Pixel) bool {
-	return p2.X <= max(p1.X, p3.X) &&
-		p2.X >= min(p1.X, p3.X) && p2.Y <= max(p1.Y, p3.Y) && p2.Y >= min(p1.Y, p3.Y)
+func (l line) contains(p Pixel) bool {
+	return p.X <= max(l.p1.X, l.p2.X) &&
+		p.X >= min(l.p1.X, l.p2.X) && p.Y <= max(l.p1.Y, l.p2.Y) && p.Y >= min(l.p1.Y, l.p2.Y)
 }
 
 func (l1 line) intersects(l2 line) bool {
@@ -40,13 +40,13 @@ func (l1 line) intersects(l2 line) bool {
 	switch {
 	case o1 != o2 && o3 != o4:
 		return true
-	case o1 == collinear && onSegment(l1.p1, l2.p1, l1.p2):
+	case o1 == collinear && l1.contains(l2.p1):
 		return true
-	case o2 == collinear && onSegment(l1.p1, l2.p2, l1.p2):
+	case o2 == collinear && l1.contains(l2.p2):
 		return true
-	case o3 == collinear && onSegment(l2.p1, l1.p1, l2.p2):
+	case o3 == collinear && l2.contains(l1.p1):
 		return true
-	case o4 == collinear && onSegment(l2.p1, l1.p2, l2.p2):
+	case o4 == collinear && l2.contains(l1.p2):
 		return true
 	default:
 		return false
@@ -140,4 +140,45 @@ func (l line) adjacentPoints(d direction, trim ...Pixel) []Pixel {
 		points = slices.Delete(points, i, i+1)
 	}
 	return points
+}
+
+type polygon []line
+
+// Creates a new polygon with basic verifications. The verifications will not prevent creation for
+// all invalid polygons, but will catch typical invalid polygons. I suspect it is very hard to
+// verify all invalid polygon creation so it is not an efficient use of time. Specifically
+// collinear lines are probably tricky.
+func newPolygon(lines []line) polygon {
+	if len(lines) < 3 {
+		panic("newPolygon: a polygon must have 3 or more sides")
+	}
+
+	sortedLines := []line{lines[0]}
+	currentPixel := lines[0].p1
+	for {
+		priorSortCount := len(sortedLines)
+		for _, l := range lines {
+			if slices.Contains(sortedLines, l) {
+				continue
+			}
+			if l.p1 == currentPixel {
+				currentPixel = l.p2
+				sortedLines = append(sortedLines, l)
+				break
+			}
+			if l.p2 == currentPixel {
+				currentPixel = l.p1
+				sortedLines = append(sortedLines, l)
+				break
+			}
+		}
+
+		if len(sortedLines) == len(lines) {
+			break
+		} else if len(sortedLines) == priorSortCount {
+			panic("newPolygon: valid polygon connections cannot be created with provided lines")
+		}
+	}
+
+	return lines
 }

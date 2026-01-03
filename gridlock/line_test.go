@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// TODO: Sparse tests but not a high priority.
+// sparse tests but not high priority
 func TestIntersects(t *testing.T) {
 	t.Parallel()
 	var tests = []struct {
@@ -324,4 +324,68 @@ func TestAdjacentPoints(t *testing.T) {
 			}
 		})
 	}
+}
+
+// sparse tests but not high priority
+func TestNewPolygon(t *testing.T) {
+	t.Parallel()
+	var tests = []struct {
+		lines     []line
+		wantPanic bool
+	}{
+		// too few lines
+		{[]line{}, true},
+		{[]line{
+			{Pixel{0, 0}, Pixel{1, 0}},
+		}, true},
+		{[]line{
+			{Pixel{0, 0}, Pixel{1, 0}},
+			{Pixel{1, 0}, Pixel{1, 1}},
+		}, true},
+
+		// invalid connections
+		{[]line{
+			{Pixel{0, 0}, Pixel{1, 0}},
+			{Pixel{1, 0}, Pixel{1, 1}},
+			{Pixel{1, 1}, Pixel{1, 0}},
+		}, true},
+		{[]line{
+			{Pixel{0, 0}, Pixel{1, 0}},
+			{Pixel{1, 0}, Pixel{0, 0}},
+			{Pixel{1, 1}, Pixel{0, 1}},
+			{Pixel{0, 1}, Pixel{1, 1}},
+		}, true},
+
+		// valid polygons
+		{[]line{
+			{Pixel{0, 0}, Pixel{1, 0}},
+			{Pixel{1, 0}, Pixel{1, 1}},
+			{Pixel{1, 1}, Pixel{0, 0}},
+		}, false},
+		{[]line{
+			{Pixel{0, 0}, Pixel{1, 0}},
+			{Pixel{1, 0}, Pixel{1, 1}},
+			{Pixel{1, 1}, Pixel{0, 1}},
+			{Pixel{0, 1}, Pixel{0, 0}},
+		}, false},
+	}
+
+	for _, tt := range tests {
+		testname := fmt.Sprintf(
+			"test newPolygon for lines %#v", tt.lines)
+		t.Run(testname, func(t *testing.T) {
+			defer func() {
+				r := recover()
+				switch {
+				case r == nil && tt.wantPanic:
+					fmt.Println(r)
+					t.Errorf("want panic but did not panic: %s", r)
+				case r != nil && !tt.wantPanic:
+					t.Errorf("do not want panic but did panic: %s", r)
+				}
+			}()
+			newPolygon(tt.lines)
+		})
+	}
+
 }
