@@ -3,6 +3,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -38,6 +40,10 @@ func newController(s *state, c *computers, d *debugger) *controller {
 }
 
 func (c *controller) processInput() {
+	for _, t := range c.debugger.toggles {
+		t.checkToggle(time.Now())
+	}
+
 	c.leftMouseReleased = false
 	c.leftMouseHeld = false
 

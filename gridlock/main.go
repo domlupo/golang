@@ -36,7 +36,6 @@ type Game struct {
 	drawer                     *drawer
 	computers                  *computers
 	controller                 *controller
-	debugger                   *debugger
 	developerMode              bool
 	developerToggles           map[string]*toggle
 	developerToggleCooldown    time.Duration
@@ -105,11 +104,11 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 
 	partitioner := newPartitioner(grid, hexagons, unitConfigProvider)
 	g.state = newState(nodes, obstacles, hexagons, oLUT, nLUT, grid, partitioner, g.developerMode)
-	g.debugger = newDebugger(g.state, g.developerToggleCooldown)
+	debugger := newDebugger(g.state, g.developerToggleCooldown)
 	g.computers = newComputers(g.state, unitConfigProvider)
-	g.controller = newController(g.state, g.computers, g.debugger)
+	g.controller = newController(g.state, g.computers, debugger)
 	// TODO: I should only invoke newDrawConfig once per game not every restart
-	g.drawer = newDrawer(newDrawConfig(), g.state, g.controller, g.debugger)
+	g.drawer = newDrawer(newDrawConfig(), g.state, g.controller, debugger)
 	ebiten.SetWindowSize(
 		int(float32(g.state.grid.width)*g.state.grid.pixelMultiplier),
 		int(float32(g.state.grid.height)*g.state.grid.pixelMultiplier))
@@ -127,9 +126,6 @@ func (g *Game) Update() error {
 	)
 
 	for _, t := range g.developerToggles {
-		t.checkToggle(g.currentTime)
-	}
-	for _, t := range g.debugger.toggles {
 		t.checkToggle(g.currentTime)
 	}
 	for _, t := range logger.toggles {
