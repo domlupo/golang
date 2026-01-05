@@ -9,9 +9,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
-	"time"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -73,13 +71,12 @@ type debugger struct {
 	heatmapAlphaMax             int
 	unitPathfind                heatmap
 	unitPathfindHeatmapComplete bool
-	toggles                     map[string]*toggle
 }
 
 // A typical heatmap. Used for visual debugging.
 type heatmap map[Pixel]int
 
-func newDebugger(state *state, toggleCooldown time.Duration) *debugger {
+func newDebugger(state *state, tr *toggleRegister) *debugger {
 	c := newDebuggerConfig()
 	debugger := debugger{
 		state:           state,
@@ -88,7 +85,7 @@ func newDebugger(state *state, toggleCooldown time.Duration) *debugger {
 		unitPathfind:    make(heatmap),
 	}
 	debugger.setupHeatmaps()
-	debugger.setupToggles(toggleCooldown)
+	debugger.registerToggles(tr)
 	return &debugger
 }
 
@@ -115,12 +112,11 @@ func (d *debugger) setupHeatmaps() {
 	}
 }
 
-func (d *debugger) setupToggles(cooldown time.Duration) {
-	toggles := make(map[string]*toggle)
-	toggles["debugAll"] = newToggle(
-		ebiten.KeyA,
+func (d *debugger) registerToggles(tr *toggleRegister) {
+	tr.register(
+		keyA,
 		func() {
-			var toggle = !(d.debugNodeTargets &&
+			toggle := !(d.debugNodeTargets &&
 				d.debugUnitVision &&
 				d.debugVisibilityGrids &&
 				d.debugHexagons &&
@@ -131,36 +127,36 @@ func (d *debugger) setupToggles(cooldown time.Duration) {
 			d.debugHexagons = toggle
 			d.debugNodes = toggle
 		},
-		cooldown)
-	toggles["debugNodeTargets"] = newToggle(
-		ebiten.KeyN,
-		func() { d.debugNodeTargets = !d.debugNodeTargets },
-		cooldown)
-	toggles["debugUnitVision"] = newToggle(
-		ebiten.KeyB,
+	)
+	tr.register(
+		keyN,
+
+		func() {
+			toggle := !(d.debugNodeTargets && d.debugNodes)
+			d.debugNodeTargets = toggle
+			d.debugNodes = toggle
+		},
+	)
+	tr.register(
+		keyB,
 		func() { d.debugUnitVision = !d.debugUnitVision },
-		cooldown)
-	toggles["debugVisibilityGrids"] = newToggle(
-		ebiten.KeyV,
+	)
+	tr.register(
+		keyV,
 		func() { d.debugVisibilityGrids = !d.debugVisibilityGrids },
-		cooldown)
-	toggles["debugNodes"] = newToggle(
-		ebiten.KeyN,
-		func() { d.debugNodes = !d.debugNodes },
-		cooldown)
-	toggles["debugNodeLUT"] = newToggle(
-		ebiten.KeyW,
+	)
+	tr.register(
+		keyW,
 		func() { d.debugNodeLUT = !d.debugNodeLUT },
-		cooldown)
-	toggles["debugObstacleLUT"] = newToggle(
-		ebiten.KeyQ,
+	)
+	tr.register(
+		keyQ,
 		func() { d.debugObstacleLUT = !d.debugObstacleLUT },
-		cooldown)
-	toggles["debugHexagons"] = newToggle(
-		ebiten.KeyH,
+	)
+	tr.register(
+		keyH,
 		func() { d.debugHexagons = !d.debugHexagons },
-		cooldown)
-	d.toggles = toggles
+	)
 }
 
 func (d *debugger) debug(p Pixel) {

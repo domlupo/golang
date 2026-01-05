@@ -3,8 +3,6 @@
 package main
 
 import (
-	"time"
-
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -13,6 +11,7 @@ type controller struct {
 	state                    *state
 	computers                *computers
 	debugger                 *debugger
+	toggleRegister           *toggleRegister
 	initialSelectedX         float32
 	initialSelectedY         float32
 	currentSelectedX         float32
@@ -25,12 +24,13 @@ type controller struct {
 	rightMouseClicked        bool
 }
 
-func newController(s *state, c *computers, d *debugger) *controller {
+func newController(s *state, c *computers, d *debugger, tr *toggleRegister) *controller {
 	controller := controller{
 		developerMode:    true,
 		state:            s,
 		computers:        c,
 		debugger:         d,
+		toggleRegister:   tr,
 		initialSelectedX: float32(-1.0),
 		initialSelectedY: float32(-1.0),
 		currentSelectedX: float32(-1.0),
@@ -40,9 +40,7 @@ func newController(s *state, c *computers, d *debugger) *controller {
 }
 
 func (c *controller) processInput() {
-	for _, t := range c.debugger.toggles {
-		t.checkToggle(time.Now())
-	}
+	c.toggleRegister.checkAllTogglePresses()
 
 	c.leftMouseReleased = false
 	c.leftMouseHeld = false

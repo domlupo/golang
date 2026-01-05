@@ -7,9 +7,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"time"
-
-	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type level int
@@ -62,10 +59,9 @@ type l struct {
 	*slog.Logger
 	*slog.LevelVar
 	enabledLogTypes map[logType]bool
-	toggles         map[string]*toggle
 }
 
-func setupLogger(toggleCooldown time.Duration) l {
+func setupLogger(tr *toggleRegister) l {
 	lc := newLoggerConfig()
 
 	var levelVar = new(slog.LevelVar)
@@ -94,32 +90,27 @@ func setupLogger(toggleCooldown time.Duration) l {
 			devTool:           lc.logDevTool,
 		},
 	}
-	l.setupToggles(toggleCooldown)
+	l.registerToggles(tr)
 	return l
 }
 
-func (l *l) setupToggles(cooldown time.Duration) {
-	toggles := make(map[string]*toggle)
-	toggles["logLevel"] = newToggle(
-		ebiten.KeyL,
-		func() {
-			fmt.Println("L")
-			l.toggleLevel()
-		},
-		cooldown)
-	toggles["mainLogType"] = newToggle(
-		ebiten.KeyM,
+func (l *l) registerToggles(tr *toggleRegister) {
+	tr.register(
+		keyL,
+		func() { l.toggleLevel() },
+	)
+	tr.register(
+		keyM,
 		func() { l.toggleType(mainLogic) },
-		cooldown)
-	toggles["stateLogType"] = newToggle(
-		ebiten.KeyS,
+	)
+	tr.register(
+		keyS,
 		func() { l.toggleType(stateLogic) },
-		cooldown)
-	toggles["selectedUnitLogType"] = newToggle(
-		ebiten.KeyU,
+	)
+	tr.register(
+		keyU,
 		func() { l.toggleType(selectedUnit) },
-		cooldown)
-	l.toggles = toggles
+	)
 }
 
 // Override the logger state and force log the data.
