@@ -142,43 +142,67 @@ func (l line) adjacentPoints(d direction, trim ...Pixel) []Pixel {
 	return points
 }
 
-type polygon []line
+type originPolygon []line
 
-// Creates a new polygon with basic verifications. The verifications will not prevent creation for
-// all invalid polygons, but will catch typical invalid polygons. I suspect it is very hard to
-// verify all invalid polygon creation so it is not an efficient use of time. Specifically
-// collinear lines are probably tricky.
-func newPolygon(lines []line) polygon {
-	if len(lines) < 3 {
-		panic("newPolygon: a polygon must have 3 or more sides")
+// Creates a new origin centered polygon with basic polygon verifications. If possible, the passed
+// lines will be shifted to create an origin centered polygon. Polygon verifications will not
+// prevent creation for all invalid polygons, but will catch typical invalid polygons. I suspect it
+// is very hard to verify all invalid polygon creation so it is not an efficient use of time.
+// Specifically collinear lines are probably tricky. func newOriginPolygon(lines []line)
+func newOriginPolygon(lines []line) originPolygon {
+	if len(lines) != 4 {
+		panic("newOriginPolygon: only 4 sided polygons are implemented")
 	}
 
-	sortedLines := []line{lines[0]}
-	currentPixel := lines[0].p1
+	var p Pixel
+	for _, l := range lines {
+		p.X += l.p1.X
+		p.Y += l.p1.Y
+	}
+
+	if !p.equals(Pixel{}) && !(p.X%len(lines) == 0 && p.Y%len(lines) == 0) {
+		panic(fmt.Sprintf(
+			"newOriginPolygon: polygon is not origin centered and cannot be shifted: %s", p.log()))
+	}
+
+	xShift := p.X / len(lines) / 2
+	yShift := p.Y / len(lines) / 2
+	var shifted []line
+	for _, l := range lines {
+		s := l
+		s.p1.X += xShift
+		s.p1.Y += yShift
+		s.p2.X += xShift
+		s.p2.Y += yShift
+		shifted = append(shifted, s)
+	}
+
+	sorted := []line{shifted[0]}
+	current := shifted[0].p1
 	for {
-		priorSortCount := len(sortedLines)
-		for _, l := range lines {
-			if slices.Contains(sortedLines, l) {
+		priorSortCount := len(sorted)
+		for _, l := range shifted {
+			if slices.Contains(sorted, l) {
 				continue
 			}
-			if l.p1 == currentPixel {
-				currentPixel = l.p2
-				sortedLines = append(sortedLines, l)
+			if l.p1 == current {
+				current = l.p2
+				sorted = append(sorted, l)
 				break
 			}
-			if l.p2 == currentPixel {
-				currentPixel = l.p1
-				sortedLines = append(sortedLines, l)
+			if l.p2 == current {
+				current = l.p1
+				sorted = append(sorted, l)
 				break
 			}
 		}
 
-		if len(sortedLines) == len(lines) {
+		if len(sorted) == len(shifted) {
 			break
-		} else if len(sortedLines) == priorSortCount {
-			panic("newPolygon: valid polygon connections cannot be created with provided lines")
+		} else if len(sorted) == priorSortCount {
+			panic("newOriginPolygon: valid polygon connections cannot be created with provided lines")
 		}
 	}
 
-	return lines
+	return shifted
 }

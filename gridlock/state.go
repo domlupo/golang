@@ -13,7 +13,7 @@ type stateConfig struct {
 	moveUnits                bool
 	produceUnits             bool
 	produceUnitsStepInterval uint64
-	spawnUnitRadiusLimit     int
+	spawnUnitRadiusLimit     int // TODO: move this into partitioner. Not sure why I added here.
 }
 
 func newStateConfig(g grid) stateConfig {

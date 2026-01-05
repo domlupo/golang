@@ -12,6 +12,11 @@ import (
 const maxPercent = 100
 const minPercent = 0
 
+// one liner to create int pointer. Avoids needing two lines: 1. set int 2. ref int.
+func intPtr(i int) *int {
+	return &i
+}
+
 // Stores a callback to invoke when a position is reached.
 type action struct {
 	position

@@ -167,14 +167,12 @@ func (u *unit) refresh() {
 	u.attackedThisTurn = false
 	u.collidedThisturn = false
 
-	// TODO: Fix once target contract / structure is better understood
-	var p Pixel
-	if !u.enemyTarget.equals(position{}) {
-		p = u.enemyTarget.Pixel
+	// TODO: Fix once target contract / structure is better understood. Needed for human players.
+	if len(u.globalTargets) == 0 {
+		u.angle = 0
 	} else {
-		p = u.globalTargets[0].Pixel
+		u.angle = u.Pixel.angle(u.globalTargets[0].Pixel)
 	}
-	u.angle = u.Pixel.angle(p)
 }
 
 func (u *unit) prioritizeTargets() {
@@ -625,17 +623,8 @@ func (u unit) draw(dc drawConfig, selected bool, pixelMultiplier float32) {
 	switch u.name {
 	case fighter:
 		dc.screen.DrawImage(dc.pngFighter, u.angleDraw(pixelMultiplier))
-
-		if u.selected {
-			vector.StrokeCircle(
-				dc.screen,
-				float32(u.X)*pixelMultiplier,
-				float32(u.Y)*pixelMultiplier,
-				float32(u.vision)*pixelMultiplier,
-				float32(dc.defaultLineWidth)*pixelMultiplier,
-				dc.highlightColor,
-				false,
-			)
+		for _, e := range u.equipments {
+			e.draw(dc, pixelMultiplier, &u)
 		}
 	case bomber:
 		dc.screen.DrawImage(dc.pngBomber, u.angleDraw(pixelMultiplier))
@@ -718,18 +707,6 @@ func (u unit) draw(dc drawConfig, selected bool, pixelMultiplier float32) {
 			float32(u.radius)*pixelMultiplier,
 			unitColor,
 			false,
-		)
-	}
-
-	if selected {
-		drawUnfilledBoxInt(
-			dc,
-			dc.highlightColor,
-			u.X-u.radius,
-			u.Y-u.radius,
-			u.X+u.radius,
-			u.Y+u.radius,
-			pixelMultiplier,
 		)
 	}
 

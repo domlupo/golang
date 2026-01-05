@@ -28,6 +28,7 @@ type unitConfig struct {
 	speedFactor            float64
 	reactions              []reaction
 	requests               []request
+	equipments             []equipment
 	consumables            consumables
 	isReactive             bool
 	isEmitsHeat            bool
@@ -36,18 +37,18 @@ type unitConfig struct {
 	isRadarGuided          bool
 	isRequester            bool
 	isSurvivesCollision    bool
-	isSkipSpawnRadiusCheck bool
 	isExplodeWhenTerminal  bool
 	isDespawnWhenTerminal  bool
 	isTerminalWhenMoveDone bool
 	isStaticTarget         bool
 	ignore                 func(u, t *unit) bool
 	ignoreTarget           func(t *unit) bool
-	// This flag should rarely be used. If it is used often then write a function to avoid bugs.
-	// This is safe to enable iff the unit only collides with units that have radiuses less
-	// than state.spawnUnitRadiusLimit. For example, chaff only collides with radarGuided units
+	ignoreCollision        func(other *unit) bool
+	isSkipSpawnRadiusCheck bool
+	// isSkipSpawnRadiusCheck should rarely be used. If it is used often then write a function to
+	// avoid bugs. This is safe to enable iff the unit only collides with units that have radiuses
+	// less than state.spawnUnitRadiusLimit. For example, chaff only collides with radarGuided units
 	// which are all less than the 20 pixels.
-	ignoreCollision func(other *unit) bool
 }
 
 func (uc *unitConfig) setUCFields() {
@@ -89,6 +90,7 @@ func (uc *unitConfig) setUCFields() {
 	uc.setTracks()
 	uc.setProduceLayer()
 	uc.setCollisionLayers()
+	uc.setEquipments()
 }
 
 func (uc *unitConfig) setRadius() {
@@ -380,7 +382,7 @@ func (uc *unitConfig) setIsDespawnWhenTerminal() {
 	case infantry, fighter, bomber, missileCruise, missileBallistic, bombGravity:
 	default:
 		panic(fmt.Sprintf(
-			"setIsDespawnWhenTermianl: cannot set isDespawnWhenTerminal for unknown unit %s",
+			"setIsDespawnWhenTerminal: cannot set isDespawnWhenTerminal for unknown unit %s",
 			uc.name.string()))
 	}
 	uc.isDespawnWhenTerminal = isDespawnWhenTerminal
@@ -479,6 +481,45 @@ func (uc *unitConfig) setTracks() {
 		panic(fmt.Sprintf("setTracks : cannot set tracks for unknown unit %s", uc.name.string()))
 	}
 	uc.tracks = tracks
+}
+
+func (uc *unitConfig) setEquipments() {
+	switch uc.name {
+
+	// TODO: config these hard coded values. It will be easier to figure how best way to configure
+	// once more unit equipments and equipment types are supported.
+	case fighter:
+		x := 2
+		y := 20
+		rotaryCannon := newOriginPolygon([]line{
+			{Pixel{0, 0}, Pixel{0, y}},
+			{Pixel{0, y}, Pixel{x, y}},
+			{Pixel{x, y}, Pixel{x, 0}},
+			{Pixel{x, 0}, Pixel{0, 0}},
+		})
+		uc.equipments = []equipment{
+			{effectiveArea: effectiveArea{
+				originPolygon: &rotaryCannon,
+				xOffset:       -8,
+				yOffset:       -30,
+			}},
+			{effectiveArea: effectiveArea{
+				originPolygon: &rotaryCannon,
+				xOffset:       3,
+				yOffset:       -30,
+			}},
+			// arbitrary equipment to prove radius (not only polygon) equipment behaves correctly.
+			{effectiveArea: effectiveArea{
+				radius:  intPtr(10),
+				xOffset: 10,
+				yOffset: 40,
+			}},
+		}
+	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic,
+		missileAntiBallistic, flare, bombGravity, bomber, chaff:
+	default:
+		panic(fmt.Sprintf("setEquipments: cannot set equipments for unknown unit %s", uc.name.string()))
+	}
 }
 
 // This log method is frequently used for debugging. Also it is typically logged at the end of

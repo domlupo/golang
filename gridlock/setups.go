@@ -748,7 +748,7 @@ func (nodes nodes) setupPositions(
 		}
 	case leftVsRightVerticalOffsetFighters:
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{2, 2}, pOne, infantryUC},
+			{GridPosition{2, 2}, pOne, fighterUC},
 			{GridPosition{6, 1}, pOne, infantryUC},
 			{GridPosition{11, 2}, pNeutral, infantryUC},
 			{GridPosition{16, 4}, pNeutral, infantryUC},
@@ -762,12 +762,12 @@ func (nodes nodes) setupPositions(
 			{GridPosition{21, 8}, pTwo, infantryUC},
 			{GridPosition{26, 8}, pTwo, infantryUC},
 
-			{GridPosition{1, 11}, pOne, fighterUC},
+			{GridPosition{1, 11}, pOne, infantryUC},
 			{GridPosition{6, 11}, pOne, infantryUC},
 			{GridPosition{11, 12}, pNeutral, infantryUC},
 			{GridPosition{16, 14}, pNeutral, infantryUC},
 			{GridPosition{21, 13}, pTwo, infantryUC},
-			{GridPosition{26, 13}, pTwo, fighterUC},
+			{GridPosition{26, 13}, pTwo, infantryUC},
 
 			{GridPosition{1, 16}, pOne, infantryUC},
 			{GridPosition{6, 16}, pOne, infantryUC},
