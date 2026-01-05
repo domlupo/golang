@@ -18,7 +18,7 @@ type debuggerConfig struct {
 	debugNodes                    bool
 	debugNodeLUT                  bool
 	debugObstacleLUT              bool
-	debugUnitVision               bool
+	debugUnit                     bool
 	debugVisibilityGrids          bool
 	debugNodeTargets              bool
 	debugHexagons                 bool
@@ -31,6 +31,7 @@ type debuggerConfig struct {
 	heatmapB                      uint8
 	heatmapAlphaMaxLimit          int
 	heatmapPercent                int
+	debugUnitRotationIncrement    float64
 	partitionAnalysis             partitionAnalysis
 	roygbivColors                 []color.RGBA
 }
@@ -45,6 +46,7 @@ func newDebuggerConfig() *debuggerConfig {
 		heatmapG:                      0,
 		heatmapB:                      0,
 		heatmapAlphaMaxLimit:          200,
+		debugUnitRotationIncrement:    0.01,
 		partitionAnalysis:             paVision,
 		heatmapPercent:                maxPercent,
 		roygbivColors: []color.RGBA{
@@ -117,12 +119,12 @@ func (d *debugger) registerToggles(tr *toggleRegister) {
 		keyA,
 		func() {
 			toggle := !(d.debugNodeTargets &&
-				d.debugUnitVision &&
+				d.debugUnit &&
 				d.debugVisibilityGrids &&
 				d.debugHexagons &&
 				d.debugNodes)
 			d.debugNodeTargets = toggle
-			d.debugUnitVision = toggle
+			d.debugUnit = toggle
 			d.debugVisibilityGrids = toggle
 			d.debugHexagons = toggle
 			d.debugNodes = toggle
@@ -138,8 +140,8 @@ func (d *debugger) registerToggles(tr *toggleRegister) {
 		},
 	)
 	tr.register(
-		keyB,
-		func() { d.debugUnitVision = !d.debugUnitVision },
+		keyD,
+		func() { d.debugUnit = !d.debugUnit },
 	)
 	tr.register(
 		keyV,
@@ -159,12 +161,26 @@ func (d *debugger) registerToggles(tr *toggleRegister) {
 	)
 }
 
-func (d *debugger) debug(p Pixel) {
-	d.logPixel(p)
-	d.logVisibilityGridObstaclePoints()
-	d.logHexagons()
-	d.logNodes()
-	d.createUnitPathfindHeatmap()
+func (d *debugger) debug(enableDebugger bool, debugSelection bool, p Pixel) {
+	if !enableDebugger {
+		return
+	}
+
+	for u := range d.units() {
+		if d.debugUnit {
+			logger.logSelected(u.selected, infoLevel, selectedUnit, "beforeRefresh", u.log()...)
+			u.angle += d.debugUnitRotationIncrement
+			u.showVision = true
+		}
+	}
+
+	if debugSelection {
+		d.logPixel(p)
+		d.logVisibilityGridObstaclePoints()
+		d.logHexagons()
+		d.logNodes()
+		d.createUnitPathfindHeatmap()
+	}
 }
 
 func (d *debugger) logPixel(p Pixel) {
@@ -334,13 +350,6 @@ func (d debugger) draw(c drawConfig) {
 		}
 	}
 
-	if d.debugUnitVision {
-		u := d.selectedUnit()
-		if u != nil {
-			u.drawVision(c, d.grid.pixelMultiplier)
-		}
-	}
-
 	if d.debugVisibilityGrids {
 		visited := make(map[id]struct{})
 		for _, o := range d.obstacles {
@@ -444,6 +453,10 @@ func (o obstacle) drawVisibilityGrid(
 }
 
 func (u *unit) drawDebug(c drawConfig, dC debuggerConfig, windowpixelMultiplier float32) {
+	if u.showVision {
+		u.drawVision(c, windowpixelMultiplier)
+	}
+
 	if u.selected && !u.activeTarget.equals(position{}) {
 		vector.StrokeLine(
 			c.screen,

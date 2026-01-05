@@ -92,6 +92,7 @@ type unit struct {
 	sourceNode          GridPosition
 	sourcePosition      Pixel
 	sourceUnit          id
+	showVision          bool
 }
 
 // High resolution two dimensional point.
@@ -162,7 +163,7 @@ func (u unit) terminal(step uint64) bool {
 }
 
 func (u *unit) refresh() {
-	logger.logSelected(u.selected, infoLevel, selectedUnit, "beforeRefresh", u.log()...)
+	u.showVision = false
 	u.movedThisTurn = false
 	u.attackedThisTurn = false
 	u.collidedThisturn = false

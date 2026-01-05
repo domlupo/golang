@@ -69,9 +69,7 @@ func (c *controller) processInput() {
 	} else if c.leftMouseClicked {
 		c.leftMouseHeld = true
 	}
-	if c.developerMode && c.middleMouseScrollClicked {
-		c.debugger.debug(pixel)
-	}
+	c.debugger.debug(c.developerMode, c.middleMouseScrollClicked, pixel)
 	if c.rightMouseClicked {
 		filter := []player{pNeutral}
 		filter = append(filter, c.computers.active()...)
