@@ -11,9 +11,9 @@ type gridConfig struct {
 	width      int
 	height     int
 	basePixels int
-	// windowMultiplier must only be used for drawing output like images and windows
-	// or processing input. Never use for game logic. float32 rather than idiomatic float64
-	// because the Ebiten draw APIs I use are often float32 over float64.
+	// pixelMultiplier must only be used for drawing output like image or processing screen input.
+	// Never use for game logic. float32 rather than idiomatic float64 because the Ebiten draw APIs I
+	// use are often float32 over float64.
 	pixelMultiplier                           float32
 	hexWidth                                  int
 	hexHeight                                 int

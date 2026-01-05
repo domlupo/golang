@@ -369,14 +369,14 @@ func (p Pixel) draw(
 	dC debuggerConfig,
 	color color.Color,
 	spotlight bool,
-	windowpixelMultiplier float32) {
+	pixelMultiplier float32) {
 
 	vector.FillRect(
 		c.screen,
-		float32(p.X)*windowpixelMultiplier,
-		float32(p.Y)*windowpixelMultiplier,
-		float32(c.pixelSize)*windowpixelMultiplier,
-		float32(c.pixelSize)*windowpixelMultiplier,
+		float32(p.X)*pixelMultiplier,
+		float32(p.Y)*pixelMultiplier,
+		float32(c.pixelSize)*pixelMultiplier,
+		float32(c.pixelSize)*pixelMultiplier,
 		color,
 		false)
 
@@ -388,7 +388,7 @@ func (p Pixel) draw(
 			p.Y-dC.pixelSpotlightOffset,
 			p.X+dC.pixelSpotlightOffset,
 			p.Y+dC.pixelSpotlightOffset,
-			windowpixelMultiplier)
+			pixelMultiplier)
 	}
 }
 
