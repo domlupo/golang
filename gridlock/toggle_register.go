@@ -48,12 +48,16 @@ func (tr toggleRegister) register(key key, callback func()) {
 		k = ebiten.KeyD
 	case keyH:
 		k = ebiten.KeyH
+	case keyI:
+		k = ebiten.KeyI
 	case keyL:
 		k = ebiten.KeyL
 	case keyM:
 		k = ebiten.KeyM
 	case keyN:
 		k = ebiten.KeyN
+	case keyO:
+		k = ebiten.KeyO
 	case keyP:
 		k = ebiten.KeyP
 	case keyQ:
@@ -113,9 +117,11 @@ const (
 	keyC
 	keyD
 	keyH
+	keyI
 	keyL
 	keyM
 	keyN
+	keyO
 	keyP
 	keyQ
 	keyS

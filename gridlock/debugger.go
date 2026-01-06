@@ -25,6 +25,7 @@ type debuggerConfig struct {
 	visibilityGridLineWidth       int
 	visibilityGridPointRadius     int
 	visibilityGridHighlightOffset int
+	pixel                         Pixel
 	pixelSpotlightOffset          int
 	heatmapR                      uint8
 	heatmapG                      uint8
@@ -32,6 +33,7 @@ type debuggerConfig struct {
 	heatmapAlphaMaxLimit          int
 	heatmapPercent                int
 	debugUnitRotationIncrement    float64
+	connectedPixels               []Pixel
 	partitionAnalysis             partitionAnalysis
 	roygbivColors                 []color.RGBA
 }
@@ -159,12 +161,27 @@ func (d *debugger) registerToggles(tr *toggleRegister) {
 		keyH,
 		func() { d.debugHexagons = !d.debugHexagons },
 	)
+	tr.register(
+		keyI,
+		func() {
+			d.connectedPixels = append(d.connectedPixels, d.pixel)
+		},
+	)
+	tr.register(
+		keyO,
+		func() {
+			d.connectedPixels = d.connectedPixels[:0]
+		},
+	)
+
 }
 
 func (d *debugger) debug(enableDebugger bool, debugSelection bool, p Pixel) {
 	if !enableDebugger {
 		return
 	}
+
+	d.pixel = p
 
 	for u := range d.units() {
 		if d.debugUnit {
@@ -175,7 +192,7 @@ func (d *debugger) debug(enableDebugger bool, debugSelection bool, p Pixel) {
 	}
 
 	if debugSelection {
-		d.logPixel(p)
+		d.logPixel()
 		d.logVisibilityGridObstaclePoints()
 		d.logHexagons()
 		d.logNodes()
@@ -183,15 +200,15 @@ func (d *debugger) debug(enableDebugger bool, debugSelection bool, p Pixel) {
 	}
 }
 
-func (d *debugger) logPixel(p Pixel) {
-	attrs := []slog.Attr{nest("Pixel", p.log())}
-	if gridPos, ok := d.grid.getGridPos(p); ok {
+func (d *debugger) logPixel() {
+	attrs := []slog.Attr{nest("Pixel", d.pixel.log())}
+	if gridPos, ok := d.grid.getGridPos(d.pixel); ok {
 		attrs = append(attrs, nest("GridPosition", gridPos.log()))
 	} else {
 		attrs = append(attrs, slog.String("GridPosition", "notFound"))
 	}
-	attrs = append(attrs, nest("ObstacleLUT", d.oLUT[p].log()))
-	attrs = append(attrs, nest("NodeLUT", d.nLUT[p].log()))
+	attrs = append(attrs, nest("ObstacleLUT", d.oLUT[d.pixel].log()))
+	attrs = append(attrs, nest("NodeLUT", d.nLUT[d.pixel].log()))
 	logger.log(infoLevel, devTool, "pixel", attrs...)
 }
 
@@ -362,6 +379,32 @@ func (d debugger) draw(c drawConfig) {
 			o.drawVisibilityGrid(c, *d.debuggerConfig, d.grid.pixelMultiplier)
 		}
 	}
+
+	if len(d.connectedPixels) == 1 {
+		p := d.connectedPixels[0]
+		o := d.debuggerConfig.pixelSpotlightOffset
+		drawUnfilledBoxInt(
+			c,
+			c.highlightColor,
+			p.X-o,
+			p.Y-o,
+			p.X+o,
+			p.Y+o,
+			d.grid.pixelMultiplier)
+	}
+	for i := 1; i < len(d.connectedPixels); i++ {
+		p1 := d.connectedPixels[i-1]
+		p2 := d.connectedPixels[i]
+		vector.StrokeLine(
+			c.screen,
+			float32(p1.X)*d.grid.pixelMultiplier,
+			float32(p1.Y)*d.grid.pixelMultiplier,
+			float32(p2.X)*d.grid.pixelMultiplier,
+			float32(p2.Y)*d.grid.pixelMultiplier,
+			float32(c.defaultLineWidth)*d.grid.pixelMultiplier,
+			c.highlightColor,
+			false)
+	}
 }
 
 func (p Pixel) draw(
@@ -393,7 +436,7 @@ func (p Pixel) draw(
 }
 
 func (heatmap heatmap) draw(
-	c drawConfig, dC debuggerConfig, heatmapPercent int, windowpixelMultiplier float32) {
+	c drawConfig, dC debuggerConfig, heatmapPercent int, pixelMultiplier float32) {
 	var maxV int
 	for _, v := range heatmap {
 		maxV = max(maxV, v)
@@ -408,32 +451,33 @@ func (heatmap heatmap) draw(
 			uint8(float64(v) / float64(trimmedV) * float64(dC.heatmapAlphaMaxLimit))}
 		vector.FillRect(
 			c.screen,
-			float32(pixel.X)*windowpixelMultiplier,
-			float32(pixel.Y)*windowpixelMultiplier,
-			1*windowpixelMultiplier,
-			1*windowpixelMultiplier,
+			float32(pixel.X)*pixelMultiplier,
+			float32(pixel.Y)*pixelMultiplier,
+			1*pixelMultiplier,
+			1*pixelMultiplier,
 			color,
 			false)
 	}
 }
 
 func (o obstacle) drawVisibilityGrid(
-	c drawConfig, dC debuggerConfig, windowpixelMultiplier float32) {
+	c drawConfig, dC debuggerConfig, pixelMultiplier float32) {
 	for _, op := range *o.visibilityGrid {
 		vector.FillCircle(
 			c.screen,
-			float32(op.X)*windowpixelMultiplier,
-			float32(op.Y)*windowpixelMultiplier,
-			float32(dC.visibilityGridPointRadius)*windowpixelMultiplier,
+			float32(op.X)*pixelMultiplier,
+			float32(op.Y)*pixelMultiplier,
+			float32(dC.visibilityGridPointRadius)*pixelMultiplier,
 			c.highlightColor,
 			false)
+
 		vector.StrokeLine(
 			c.screen,
-			float32(op.X)*windowpixelMultiplier,
-			float32(op.Y)*windowpixelMultiplier,
-			float32(op.cw.X)*windowpixelMultiplier,
-			float32(op.cw.Y)*windowpixelMultiplier,
-			float32(dC.visibilityGridLineWidth)*windowpixelMultiplier,
+			float32(op.X)*pixelMultiplier,
+			float32(op.Y)*pixelMultiplier,
+			float32(op.cw.X)*pixelMultiplier,
+			float32(op.cw.Y)*pixelMultiplier,
+			float32(dC.visibilityGridLineWidth)*pixelMultiplier,
 			c.highlightColor,
 			false)
 
@@ -446,36 +490,36 @@ func (o obstacle) drawVisibilityGrid(
 				op.Y-offset,
 				op.X+offset,
 				op.Y+offset,
-				windowpixelMultiplier,
+				pixelMultiplier,
 			)
 		}
 	}
 }
 
-func (u *unit) drawDebug(c drawConfig, dC debuggerConfig, windowpixelMultiplier float32) {
+func (u *unit) drawDebug(c drawConfig, dC debuggerConfig, pixelMultiplier float32) {
 	if u.showVision {
-		u.drawVision(c, windowpixelMultiplier)
+		u.drawVision(c, pixelMultiplier)
 	}
 
 	if u.selected && !u.activeTarget.equals(position{}) {
 		vector.StrokeLine(
 			c.screen,
-			float32(u.X)*windowpixelMultiplier,
-			float32(u.Y)*windowpixelMultiplier,
-			float32(u.activeTarget.X)*windowpixelMultiplier,
-			float32(u.activeTarget.Y)*windowpixelMultiplier,
-			float32(c.targetNodeLineWidth)*windowpixelMultiplier,
+			float32(u.X)*pixelMultiplier,
+			float32(u.Y)*pixelMultiplier,
+			float32(u.activeTarget.X)*pixelMultiplier,
+			float32(u.activeTarget.Y)*pixelMultiplier,
+			float32(c.targetNodeLineWidth)*pixelMultiplier,
 			color.Black,
 			false,
 		)
 
 		vector.StrokeLine(
 			c.screen,
-			float32(u.X)*windowpixelMultiplier,
-			float32(u.Y)*windowpixelMultiplier,
-			float32(u.activeTarget.X)*windowpixelMultiplier,
-			float32(u.activeTarget.Y)*windowpixelMultiplier,
-			float32(c.targetNodeLineWidth)*windowpixelMultiplier,
+			float32(u.X)*pixelMultiplier,
+			float32(u.Y)*pixelMultiplier,
+			float32(u.activeTarget.X)*pixelMultiplier,
+			float32(u.activeTarget.Y)*pixelMultiplier,
+			float32(c.targetNodeLineWidth)*pixelMultiplier,
 			color.Black,
 			false,
 		)
@@ -487,11 +531,11 @@ func (u *unit) drawDebug(c drawConfig, dC debuggerConfig, windowpixelMultiplier 
 
 			vector.StrokeLine(
 				c.screen,
-				float32(u.X)*windowpixelMultiplier,
-				float32(u.Y)*windowpixelMultiplier,
-				float32(lt.X)*windowpixelMultiplier,
-				float32(lt.Y)*windowpixelMultiplier,
-				float32(c.targetNodeLineWidth)*windowpixelMultiplier,
+				float32(u.X)*pixelMultiplier,
+				float32(u.Y)*pixelMultiplier,
+				float32(lt.X)*pixelMultiplier,
+				float32(lt.Y)*pixelMultiplier,
+				float32(c.targetNodeLineWidth)*pixelMultiplier,
 				color,
 				false,
 			)
@@ -509,11 +553,11 @@ func (u *unit) drawDebug(c drawConfig, dC debuggerConfig, windowpixelMultiplier 
 
 			vector.StrokeLine(
 				c.screen,
-				float32(u.X)*windowpixelMultiplier,
-				float32(u.Y)*windowpixelMultiplier,
-				float32(gt.X)*windowpixelMultiplier,
-				float32(gt.Y)*windowpixelMultiplier,
-				float32(c.targetNodeLineWidth)*windowpixelMultiplier,
+				float32(u.X)*pixelMultiplier,
+				float32(u.Y)*pixelMultiplier,
+				float32(gt.X)*pixelMultiplier,
+				float32(gt.Y)*pixelMultiplier,
+				float32(c.targetNodeLineWidth)*pixelMultiplier,
 				color,
 				false,
 			)

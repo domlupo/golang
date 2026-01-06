@@ -165,13 +165,13 @@ func drawUnfilledBoxFloat32(
 	initialY float32,
 	finalX float32,
 	finalY float32,
-	windowpixelMultiplier float32) {
+	pixelMultiplier float32) {
 
-	initialXGraphical := float32(initialX) * windowpixelMultiplier
-	initialYGraphical := float32(initialY) * windowpixelMultiplier
-	finalXGraphical := float32(finalX) * windowpixelMultiplier
-	finalYGraphical := float32(finalY) * windowpixelMultiplier
-	selectectionBoxLineWidth := float32(dc.selectectionBoxLineWidth) * windowpixelMultiplier
+	initialXGraphical := float32(initialX) * pixelMultiplier
+	initialYGraphical := float32(initialY) * pixelMultiplier
+	finalXGraphical := float32(finalX) * pixelMultiplier
+	finalYGraphical := float32(finalY) * pixelMultiplier
+	selectectionBoxLineWidth := float32(dc.selectectionBoxLineWidth) * pixelMultiplier
 
 	// draw top line
 	vector.StrokeLine(
@@ -226,7 +226,7 @@ func drawUnfilledBoxInt(
 	initialY int,
 	finalX int,
 	finalY int,
-	windowpixelMultiplier float32) {
+	pixelMultiplier float32) {
 
 	drawUnfilledBoxFloat32(
 		dc,
@@ -235,7 +235,7 @@ func drawUnfilledBoxInt(
 		float32(initialY),
 		float32(finalX),
 		float32(finalY),
-		windowpixelMultiplier)
+		pixelMultiplier)
 }
 
 func drawHex(dc drawConfig, g grid, p GridPosition, color drawTriangleColor, selected bool) {
@@ -248,7 +248,7 @@ func drawHex(dc drawConfig, g grid, p GridPosition, color drawTriangleColor, sel
 	northwest := g.getPixelOutbounds(p, hpNorthwest)
 
 	// The one pixel offsets for inclusive or exclusive hex points are handled at the game logic
-	// layer. The window pixelMultiplier offsets are handled here since window pixelMultiplier is a
+	// layer. The pixelMultiplier offsets are handled here since pixelMultiplier is a
 	// draw concept.
 	xCenter := float32(center.X) * g.pixelMultiplier
 	yCenter := float32(center.Y) * g.pixelMultiplier
