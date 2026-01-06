@@ -33,7 +33,8 @@ type debuggerConfig struct {
 	heatmapAlphaMaxLimit          int
 	heatmapPercent                int
 	debugUnitRotationIncrement    float64
-	connectedPixels               []Pixel
+	sketchedPixelConnections      []Pixel
+	sketchedHexagons              map[GridPosition]struct{}
 	partitionAnalysis             partitionAnalysis
 	roygbivColors                 []color.RGBA
 }
@@ -51,6 +52,7 @@ func newDebuggerConfig() *debuggerConfig {
 		debugUnitRotationIncrement:    0.01,
 		partitionAnalysis:             paVision,
 		heatmapPercent:                maxPercent,
+		sketchedHexagons:              make(map[GridPosition]struct{}),
 		roygbivColors: []color.RGBA{
 			{200, 0, 0, 255},
 			{250, 150, 0, 255},
@@ -164,13 +166,28 @@ func (d *debugger) registerToggles(tr *toggleRegister) {
 	tr.register(
 		keyI,
 		func() {
-			d.connectedPixels = append(d.connectedPixels, d.pixel)
+			d.sketchedPixelConnections = append(d.sketchedPixelConnections, d.pixel)
+		},
+	)
+	tr.register(
+		keyK,
+		func() {
+			gridPos, ok := d.grid.getGridPos(d.pixel)
+			if !ok {
+				panic(fmt.Sprintf("cannot sketch hexagon because no grid position for %s", d.pixel.log()))
+			}
+			if _, ok := d.sketchedHexagons[gridPos]; ok {
+				delete(d.sketchedHexagons, gridPos)
+			} else {
+				d.sketchedHexagons[gridPos] = struct{}{}
+			}
 		},
 	)
 	tr.register(
 		keyO,
 		func() {
-			d.connectedPixels = d.connectedPixels[:0]
+			d.sketchedPixelConnections = d.sketchedPixelConnections[:0]
+			d.sketchedHexagons = make(map[GridPosition]struct{})
 		},
 	)
 
@@ -380,8 +397,8 @@ func (d debugger) draw(c drawConfig) {
 		}
 	}
 
-	if len(d.connectedPixels) == 1 {
-		p := d.connectedPixels[0]
+	if len(d.sketchedPixelConnections) > 0 {
+		p := d.sketchedPixelConnections[len(d.sketchedPixelConnections)-1]
 		o := d.debuggerConfig.pixelSpotlightOffset
 		drawUnfilledBoxInt(
 			c,
@@ -392,9 +409,9 @@ func (d debugger) draw(c drawConfig) {
 			p.Y+o,
 			d.grid.pixelMultiplier)
 	}
-	for i := 1; i < len(d.connectedPixels); i++ {
-		p1 := d.connectedPixels[i-1]
-		p2 := d.connectedPixels[i]
+	for i := 1; i < len(d.sketchedPixelConnections); i++ {
+		p1 := d.sketchedPixelConnections[i-1]
+		p2 := d.sketchedPixelConnections[i]
 		vector.StrokeLine(
 			c.screen,
 			float32(p1.X)*d.grid.pixelMultiplier,
@@ -404,6 +421,10 @@ func (d debugger) draw(c drawConfig) {
 			float32(c.defaultLineWidth)*d.grid.pixelMultiplier,
 			c.highlightColor,
 			false)
+	}
+
+	for h := range d.sketchedHexagons {
+		drawHexHighlight(c, d.grid, h)
 	}
 }
 
