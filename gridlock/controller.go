@@ -7,21 +7,20 @@ import (
 )
 
 type controller struct {
-	developerMode            bool
-	state                    *state
-	computers                *computers
-	debugger                 *debugger
-	toggleRegister           *toggleRegister
-	initialSelectedX         float32
-	initialSelectedY         float32
-	currentSelectedX         float32
-	currentSelectedY         float32
-	leftMouseHeld            bool
-	leftMouseClicked         bool
-	priorLeftMouseClicked    bool
-	leftMouseReleased        bool
-	middleMouseScrollClicked bool
-	rightMouseClicked        bool
+	developerMode         bool
+	state                 *state
+	computers             *computers
+	debugger              *debugger
+	toggleRegister        *toggleRegister
+	initialSelectedX      float32
+	initialSelectedY      float32
+	currentSelectedX      float32
+	currentSelectedY      float32
+	leftMouseHeld         bool
+	leftMouseClicked      bool
+	priorLeftMouseClicked bool
+	leftMouseReleased     bool
+	rightMouseClicked     bool
 }
 
 func newController(s *state, c *computers, d *debugger, tr *toggleRegister) *controller {
@@ -55,7 +54,6 @@ func (c *controller) processInput() {
 
 	c.priorLeftMouseClicked = c.leftMouseClicked
 	c.leftMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
-	c.middleMouseScrollClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonMiddle)
 	c.rightMouseClicked = ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight)
 
 	c.currentSelectedX = x
@@ -69,7 +67,7 @@ func (c *controller) processInput() {
 	} else if c.leftMouseClicked {
 		c.leftMouseHeld = true
 	}
-	c.debugger.debug(c.developerMode, c.middleMouseScrollClicked, pixel)
+	c.debugger.debug(c.developerMode, ebiten.IsKeyPressed(ebiten.KeySpace), pixel)
 	if c.rightMouseClicked {
 		filter := []player{pNeutral}
 		filter = append(filter, c.computers.active()...)
