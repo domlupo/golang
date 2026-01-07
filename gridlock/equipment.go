@@ -25,17 +25,17 @@ type effectiveArea struct {
 }
 
 // TODO: don't pass unit. in the future when I start setting attached field, unit does not needed passed.
-func (e equipment) draw(dc drawConfig, pixelMultiplier float32, u *unit) {
+func (equip equipment) draw(dc drawConfig, pixelMultiplier float32, u *unit) {
 	a := u.angle
-	xOffset := float64(e.xOffset)*math.Cos(a) - float64(e.yOffset)*math.Sin(a)
-	yOffset := float64(e.xOffset)*math.Sin(a) + float64(e.yOffset)*math.Cos(a)
+	xOffset := float64(equip.xOffset)*math.Cos(a) - float64(equip.yOffset)*math.Sin(a)
+	yOffset := float64(equip.xOffset)*math.Sin(a) + float64(equip.yOffset)*math.Cos(a)
 
-	if e.originPolygon != nil {
-		for _, l := range *e.originPolygon {
-			r1X := float64(l.p1.X)*math.Cos(a) - float64(l.p1.Y)*math.Sin(a)
-			r1Y := float64(l.p1.X)*math.Sin(a) + float64(l.p1.Y)*math.Cos(a)
-			r2X := float64(l.p2.X)*math.Cos(a) - float64(l.p2.Y)*math.Sin(a)
-			r2Y := float64(l.p2.X)*math.Sin(a) + float64(l.p2.Y)*math.Cos(a)
+	if equip.originPolygon != nil {
+		for _, e := range equip.originPolygon.edges {
+			r1X := float64(e.p1.X)*math.Cos(a) - float64(e.p1.Y)*math.Sin(a)
+			r1Y := float64(e.p1.X)*math.Sin(a) + float64(e.p1.Y)*math.Cos(a)
+			r2X := float64(e.p2.X)*math.Cos(a) - float64(e.p2.Y)*math.Sin(a)
+			r2Y := float64(e.p2.X)*math.Sin(a) + float64(e.p2.Y)*math.Cos(a)
 
 			vector.StrokeLine(
 				dc.screen,
@@ -49,12 +49,12 @@ func (e equipment) draw(dc drawConfig, pixelMultiplier float32, u *unit) {
 		}
 	}
 
-	if e.radius != nil {
+	if equip.radius != nil {
 		vector.StrokeCircle(
 			dc.screen,
 			(float32(u.X)+float32(xOffset))*pixelMultiplier,
 			(float32(u.Y)+float32(yOffset))*pixelMultiplier,
-			float32(*e.radius)*pixelMultiplier,
+			float32(*equip.radius)*pixelMultiplier,
 			float32(dc.defaultLineWidth)*pixelMultiplier,
 			color.Black,
 			false,
