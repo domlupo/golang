@@ -22,6 +22,11 @@ func (l line) log() []slog.Attr {
 	return a
 }
 
+func (l1 line) equals(l2 line) bool {
+	return (l1.p1.equals(l2.p1) && l1.p2.equals(l2.p2)) ||
+		(l1.p2.equals(l2.p1) && l1.p1.equals(l2.p2))
+}
+
 func (l line) isVertical() bool {
 	return l.p1.X == l.p2.X
 }
@@ -29,6 +34,25 @@ func (l line) isVertical() bool {
 func (l line) contains(p Pixel) bool {
 	return p.X <= max(l.p1.X, l.p2.X) &&
 		p.X >= min(l.p1.X, l.p2.X) && p.Y <= max(l.p1.Y, l.p2.Y) && p.Y >= min(l.p1.Y, l.p2.Y)
+}
+
+func (l line) perpendicular() line {
+	return line{l.p1, Pixel{-l.p2.Y, l.p2.X}}
+}
+
+func (l1 line) parallel(l2 line) bool {
+	switch {
+	case l1.isVertical() && l2.isVertical():
+		return true
+	case l1.isVertical() && !l2.isVertical():
+		return false
+	case !l1.isVertical() && l2.isVertical():
+		return false
+	default:
+		slope1 := (l1.p2.Y - l1.p1.Y) / (l1.p2.X - l1.p1.X)
+		slope2 := (l2.p2.Y - l2.p1.Y) / (l2.p2.X - l2.p1.X)
+		return slope1 == slope2
+	}
 }
 
 func (l1 line) intersects(l2 line) bool {

@@ -152,3 +152,125 @@ func TestNewOriginPolygon(t *testing.T) {
 		})
 	}
 }
+
+func TestCollides(t *testing.T) {
+	t.Parallel()
+	var tests = []struct {
+		name         string
+		p1           polygon
+		p2           polygon
+		wantCollides bool
+	}{
+
+		{
+			"two squares do not collide",
+			newPolygon([]line{
+				{Pixel{0, 0}, Pixel{1, 0}},
+				{Pixel{1, 0}, Pixel{1, 1}},
+				{Pixel{1, 1}, Pixel{0, 1}},
+				{Pixel{0, 1}, Pixel{0, 0}}}),
+			newPolygon([]line{
+				{Pixel{2, 2}, Pixel{3, 2}},
+				{Pixel{3, 2}, Pixel{3, 3}},
+				{Pixel{3, 3}, Pixel{2, 3}},
+				{Pixel{2, 3}, Pixel{2, 2}}}),
+			false,
+		},
+		{
+			"two squares collide top right and bottom left",
+			newPolygon([]line{
+				{Pixel{1, 1}, Pixel{2, 1}},
+				{Pixel{2, 1}, Pixel{2, 2}},
+				{Pixel{2, 2}, Pixel{1, 2}},
+				{Pixel{1, 2}, Pixel{1, 1}}}),
+			newPolygon([]line{
+				{Pixel{2, 2}, Pixel{3, 2}},
+				{Pixel{3, 2}, Pixel{3, 3}},
+				{Pixel{3, 3}, Pixel{2, 3}},
+				{Pixel{2, 3}, Pixel{2, 2}}}),
+			true,
+		},
+		{
+			"two squares collide top left and bottom right",
+			newPolygon([]line{
+				{Pixel{1, 1}, Pixel{2, 1}},
+				{Pixel{2, 1}, Pixel{2, 2}},
+				{Pixel{2, 2}, Pixel{1, 2}},
+				{Pixel{1, 2}, Pixel{1, 1}}}),
+			newPolygon([]line{
+				{Pixel{1, 2}, Pixel{1, 3}},
+				{Pixel{1, 3}, Pixel{0, 3}},
+				{Pixel{0, 3}, Pixel{0, 2}},
+				{Pixel{0, 2}, Pixel{1, 2}}}),
+			true,
+		},
+		{
+			"two squares collide bottom right and top left",
+			newPolygon([]line{
+				{Pixel{1, 1}, Pixel{2, 1}},
+				{Pixel{2, 1}, Pixel{2, 2}},
+				{Pixel{2, 2}, Pixel{1, 2}},
+				{Pixel{1, 2}, Pixel{1, 1}}}),
+			newPolygon([]line{
+				{Pixel{2, 1}, Pixel{3, 1}},
+				{Pixel{3, 1}, Pixel{3, 0}},
+				{Pixel{3, 0}, Pixel{2, 0}},
+				{Pixel{2, 0}, Pixel{2, 1}}}),
+			true,
+		},
+		{
+			"two squares collide bottom left and top right",
+			newPolygon([]line{
+				{Pixel{1, 1}, Pixel{2, 1}},
+				{Pixel{2, 1}, Pixel{2, 2}},
+				{Pixel{2, 2}, Pixel{1, 2}},
+				{Pixel{1, 2}, Pixel{1, 1}}}),
+			newPolygon([]line{
+				{Pixel{0, 0}, Pixel{1, 0}},
+				{Pixel{1, 0}, Pixel{1, 1}},
+				{Pixel{1, 1}, Pixel{0, 1}},
+				{Pixel{0, 1}, Pixel{0, 0}}}),
+			true,
+		},
+		{
+			"two equal squares collide ",
+			newPolygon([]line{
+				{Pixel{1, 1}, Pixel{2, 1}},
+				{Pixel{2, 1}, Pixel{2, 2}},
+				{Pixel{2, 2}, Pixel{1, 2}},
+				{Pixel{1, 2}, Pixel{1, 1}}}),
+			newPolygon([]line{
+				{Pixel{1, 1}, Pixel{2, 1}},
+				{Pixel{2, 1}, Pixel{2, 2}},
+				{Pixel{2, 2}, Pixel{1, 2}},
+				{Pixel{1, 2}, Pixel{1, 1}}}),
+			true,
+		},
+		{
+			"two squares collide by subset",
+			newPolygon([]line{
+				{Pixel{1, 1}, Pixel{2, 1}},
+				{Pixel{2, 1}, Pixel{2, 2}},
+				{Pixel{2, 2}, Pixel{1, 2}},
+				{Pixel{1, 2}, Pixel{1, 1}}}),
+			newPolygon([]line{
+				{Pixel{0, 0}, Pixel{0, 3}},
+				{Pixel{0, 3}, Pixel{3, 3}},
+				{Pixel{3, 3}, Pixel{3, 0}},
+				{Pixel{3, 0}, Pixel{0, 0}}}),
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			collides := tt.p1.collides(tt.p2)
+			if tt.wantCollides && !collides {
+				t.Errorf("want collides but did not collide")
+			}
+			if !tt.wantCollides && collides {
+				t.Errorf("do not want collides but did collide")
+			}
+		})
+	}
+}

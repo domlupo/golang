@@ -1,16 +1,19 @@
-// Defines different types of polygons (a convex shape).
+// Different types of polygons (a convex shape).
 
 package main
 
 import (
 	"fmt"
+	"math"
 	"slices"
 )
 
 // A convex shape.
 type polygon struct {
-	edges    []line
-	vertices []Pixel
+	edges []line
+	// not every edge normal is a separating axis. Parallel edges only require testing one axis.
+	separatingAxes []line
+	vertices       []Pixel
 }
 
 // An origin centered convex shape.
@@ -98,8 +101,56 @@ func newPolygon(lines []line) polygon {
 		}
 	}
 
-	return polygon{
-		edges:    lines,
-		vertices: vertices,
+	axes := []line{}
+	for _, e := range lines {
+		axis := e.perpendicular()
+		noParallel := !slices.ContainsFunc(axes, func(a line) bool {
+			return axis.parallel(a)
+		})
+		if noParallel {
+			axes = append(axes, axis)
+		}
 	}
+
+	return polygon{
+		edges:          lines,
+		separatingAxes: axes,
+		vertices:       vertices,
+	}
+}
+
+// check if two polygons collide via separating axis theorem.
+func (p1 polygon) collides(p2 polygon) bool {
+	axes := []line{}
+	axes = append(axes, p1.separatingAxes...)
+	axes = append(axes, p2.separatingAxes...)
+
+	for _, a := range axes {
+		x := a.p2.X - a.p1.X
+		y := a.p2.Y - a.p1.Y
+
+		p1Min := math.MaxInt
+		p1Max := math.MinInt
+		for _, v := range p1.vertices {
+			dot := x*v.X + y*v.Y
+			p1Min = min(p1Min, dot)
+			p1Max = max(p1Max, dot)
+		}
+
+		p2Min := math.MaxInt
+		p2Max := math.MinInt
+		for _, v := range p2.vertices {
+			dot := x*v.X + y*v.Y
+			p2Min = min(p2Min, dot)
+			p2Max = max(p2Max, dot)
+		}
+
+		overlaps := max(p1Min, p2Min) <= min(p1Max, p2Max)
+		if !overlaps {
+			// early exit since a separating line can be drawn between the two polygons
+			return false
+		}
+	}
+
+	return true
 }
