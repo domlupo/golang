@@ -109,13 +109,13 @@ func (part partitioner) lookUpPartitions(u unit, pa partitionAnalysis) partition
 
 	demotif, demotifOk := part.grid.demotif(u.Pixel)
 	if !demotifOk {
-		panic(fmt.Sprintf("partitions: could not demotif pixel %s", u.Pixel.log()))
+		panic(fmt.Sprintf("lookUpPartitions: could not demotif pixel %s", u.Pixel.log()))
 	}
 	hexSides := lut[demotif]
 	gp, gpOk := part.grid.getGridPos(u.Pixel)
 	positions := []GridPosition{gp}
 	if !gpOk {
-		panic(fmt.Sprintf("partitions: could not find grid position for pixel %s", u.Pixel.log()))
+		panic(fmt.Sprintf("lookUpPartitions: could not find grid position for pixel %s", u.Pixel.log()))
 	}
 	for _, hs := range hexSides {
 		if gp, ok := part.grid.adjacent(gp, hs); ok {
