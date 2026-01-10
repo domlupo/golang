@@ -89,11 +89,11 @@ func (part partitioner) partitions(u unit, pa partitionAnalysis, buffer int) par
 	}
 
 	positions = part.defaultPartitions(u.Pixel, radius)
-	var ps partitions
+	var parts partitions
 	for _, p := range positions {
-		ps = append(ps, part.hexagons[p])
+		parts = append(parts, part.hexagons[p])
 	}
-	return ps
+	return parts
 }
 
 func (part partitioner) lookUpPartitions(u unit, pa partitionAnalysis) partitions {
@@ -122,11 +122,11 @@ func (part partitioner) lookUpPartitions(u unit, pa partitionAnalysis) partition
 			positions = append(positions, gp)
 		}
 	}
-	var ps partitions
+	var parts partitions
 	for _, p := range positions {
-		ps = append(ps, part.hexagons[p])
+		parts = append(parts, part.hexagons[p])
 	}
-	return ps
+	return parts
 }
 
 // Returns conservative partitions which collide with the passed position and distance.
