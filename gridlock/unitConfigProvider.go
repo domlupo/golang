@@ -143,7 +143,7 @@ func (ucProvider unitConfigProvider) setReactions() {
 						// TODO: Bresenham is not guaranteed to get to final position. I have not seen
 						// aircraft not reach their final destination but missiles have. Need to ensure
 						// this is not error prone or make it more conservative.
-						return bomber.Pixel.equals(bomber.sourcePosition) && bomber.isPayloadNotFull()
+						return bomber.Pos.equals(bomber.sourcePosition) && bomber.isPayloadNotFull()
 					},
 					do: func(bomber *unit) {
 						bomber.refillPayload()
@@ -163,7 +163,7 @@ func (ucProvider unitConfigProvider) setReactions() {
 						// TODO: Bresenham is not guaranteed to get to final position. I have not seen
 						// aircraft not reach their final destination but missiles have. Need to ensure
 						// this is not error prone or make it more conservative.
-						return fighter.Pixel.equals(fighter.sourcePosition) && fighter.isPayloadNotFull()
+						return fighter.Pos.equals(fighter.sourcePosition) && fighter.isPayloadNotFull()
 					},
 					do: func(fighter *unit) {
 						fighter.refillPayload()
@@ -196,14 +196,14 @@ func (ucProvider unitConfigProvider) setReactions() {
 						fighter.consumables[uc.name] = missiles
 						spawn := newUnit(
 							uc,
-							position{layer: uc.produceLayer, Pixel: fighter.Pixel},
+							fighter.layer(uc.produceLayer),
 							fighter.player,
-							[]position{fighter.nearest.position},
+							[]Pixel{fighter.nearest.pixel()},
 							[]action{},
 							GridPosition{},
 							fighter.selected)
 						spawn.sourceUnit = fighter.id
-						fighter.requests = append(fighter.requests, request{spawn: &spawn})
+						fighter.requests = append(fighter.requests, request{spawn: spawn})
 					},
 					// TODO: fix this. delay needs to be conditional on some unit config.
 					delay: 50,
@@ -230,13 +230,13 @@ func (ucProvider unitConfigProvider) reactChaff(fireOrdnanceDelay uint64) reacti
 		do: func(u *unit) {
 			newChafff := newUnit(
 				chaffUC,
-				position{layer: chaffUC.produceLayer, Pixel: u.Pixel},
+				u.Pos.layer(chaffUC.produceLayer),
 				u.player,
-				[]position{u.position},
+				[]Pixel{u.pixel()},
 				[]action{},
 				GridPosition{},
 				u.selected)
-			u.requests = append(u.requests, request{spawn: &newChafff})
+			u.requests = append(u.requests, request{spawn: newChafff})
 			consumeable := u.consumables[chaff]
 			consumeable.count -= 1
 			u.consumables[chaff] = consumeable
@@ -255,13 +255,13 @@ func (ucProvider unitConfigProvider) reactFlare(fireOrdnanceDelay uint64) reacti
 		do: func(u *unit) {
 			newFlare := newUnit(
 				flareUC,
-				position{layer: flareUC.produceLayer, Pixel: u.Pixel},
+				u.layer(flareUC.produceLayer),
 				u.player,
-				[]position{u.nearest.position},
+				[]Pixel{u.nearest.pixel()},
 				[]action{},
 				GridPosition{},
 				u.selected)
-			u.requests = append(u.requests, request{spawn: &newFlare})
+			u.requests = append(u.requests, request{spawn: newFlare})
 			consumeable := u.consumables[flare]
 			consumeable.count -= 1
 			u.consumables[flare] = consumeable

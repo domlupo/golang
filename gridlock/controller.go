@@ -71,7 +71,7 @@ func (c *controller) processInput() {
 	if c.rightMouseClicked {
 		filter := []player{pNeutral}
 		filter = append(filter, c.computers.active()...)
-		c.state.updateTargets(position{lLand, pixel}, filter)
+		c.state.updateTargets(pixel, filter)
 	}
 	if c.leftMouseReleased {
 		c.updateSelected(
@@ -154,10 +154,10 @@ func (c controller) updateSelected(clickPosition Pixel, releasePosition Pixel) {
 
 	if c.developerMode {
 		for u := range c.state.units() {
-			if (topLeftPixel.X < u.X) &&
-				(u.X < bottomRightPixel.X) &&
-				(topLeftPixel.Y < u.Y) &&
-				(u.Y < bottomRightPixel.Y) {
+			if (topLeftPixel.pos().X < u.X) &&
+				(u.X < bottomRightPixel.pos().X) &&
+				(topLeftPixel.pos().Y < u.Y) &&
+				(u.Y < bottomRightPixel.pos().Y) {
 				u.selected = true
 			} else {
 				u.selected = false

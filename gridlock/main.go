@@ -79,35 +79,46 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 	if _, ok := g.isDeveloperMacStudio(); ok {
 		pixelMultiplier = 2.5
 	}
+	logger.log(infoLevel, setupLogic, "restart: newGrid")
 	grid := newGrid(newGridConfig(pixelMultiplier))
+	logger.log(infoLevel, setupLogic, "restart: newHexagons")
 	hexagons := newHexagons(grid)
+	logger.log(infoLevel, setupLogic, "restart: setupObstacles")
 	obstacles, oLUT := setupObstacles(obstacleSetup, grid)
+	logger.log(infoLevel, setupLogic, "restart: newUnitConfigProvider")
 	unitConfigProvider := newUnitConfigProvider()
+	logger.log(infoLevel, setupLogic, "restart: setupNodes")
 	nodes, nLUT := setupNodes(
 		nodeSetup, grid, g.initialNodeHealth, hexagons, oLUT, unitConfigProvider)
 	logger.log(infoLevel, setupLogic,
-		fmt.Sprintf("Setup required %0.2f seconds", float64(time.Since(start).Seconds())))
+		fmt.Sprintf("restart: Setup required %0.2f seconds", float64(time.Since(start).Seconds())))
 
 	if verify {
 		for nPos := range nodes {
 			for oPos := range obstacles {
 				if nPos.equals(oPos) {
-					panic("grid position conflict between node and obstacle")
+					panic("restart: grid position conflict between node and obstacle")
 				}
 			}
 		}
 	}
 
+	logger.log(infoLevel, setupLogic, "restart: newPartitioner")
 	partitioner := newPartitioner(grid, hexagons, unitConfigProvider)
+	logger.log(infoLevel, setupLogic, "restart: newState")
 	g.state = newState(nodes, obstacles, hexagons, oLUT, nLUT, grid, partitioner, g.developerMode)
+	logger.log(infoLevel, setupLogic, "restart: newDebugger")
 	debugger := newDebugger(g.state, g.toggleRegister)
+	logger.log(infoLevel, setupLogic, "restart: newComputers")
 	g.computers = newComputers(g.state, unitConfigProvider)
+	logger.log(infoLevel, setupLogic, "restart: newControllers")
 	g.controller = newController(g.state, g.computers, debugger, g.toggleRegister)
 	// TODO: I should only invoke newDrawConfig once per game not every restart
+	logger.log(infoLevel, setupLogic, "restart: newDrawer")
 	g.drawer = newDrawer(newDrawConfig(), g.state, g.controller, debugger)
 	ebiten.SetWindowSize(
-		int(float32(g.state.grid.width)*g.state.grid.pixelMultiplier),
-		int(float32(g.state.grid.height)*g.state.grid.pixelMultiplier))
+		int(float32(g.state.grid.pixelWidth)*g.state.grid.pixelMultiplier),
+		int(float32(g.state.grid.pixelHeight)*g.state.grid.pixelMultiplier))
 }
 
 func (g *Game) Update() error {
@@ -130,9 +141,9 @@ func (g *Game) Update() error {
 	}
 	g.controller.processInput()
 
-	var xSum int
-	var ySum int
-	var totalCount int
+	var xSum float64
+	var ySum float64
+	var totalCount float64
 	unitCounts := make(map[name]int)
 	for u := range g.state.units() {
 		xSum += u.X
@@ -140,11 +151,11 @@ func (g *Game) Update() error {
 		totalCount++
 		unitCounts[u.name]++
 	}
-	var avgUnitPos Pixel
+	var avgUnitPos Pos
 	if totalCount != 0 {
-		avgUnitPos = Pixel{X: xSum / totalCount, Y: ySum / totalCount}
+		avgUnitPos = Pos{X: xSum / totalCount, Y: ySum / totalCount}
 	}
-	counts := []slog.Attr{slog.Int("total", totalCount)}
+	counts := []slog.Attr{slog.Float64("total", totalCount)}
 	for name, count := range unitCounts {
 		counts = append(counts, slog.Int(name.string(), count))
 	}
@@ -189,8 +200,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return int(float32(g.state.grid.width) * g.state.grid.pixelMultiplier),
-		int(float32(g.state.grid.height) * g.state.grid.pixelMultiplier)
+	return int(float32(g.state.grid.pixelWidth) * g.state.grid.pixelMultiplier),
+		int(float32(g.state.grid.pixelHeight) * g.state.grid.pixelMultiplier)
 }
 
 func main() {

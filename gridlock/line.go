@@ -1,18 +1,15 @@
-// A line is two unordered connected Pixels.
+// A line is two unordered connected Positions.
 
 package main
 
 import (
-	"fmt"
 	"log/slog"
-	"math"
-	"slices"
 )
 
-// Two unordered connected Pixels.
+// Two unordered connected Positions.
 type line struct {
-	p1 Pixel
-	p2 Pixel
+	p1 Pos
+	p2 Pos
 }
 
 func (l line) log() []slog.Attr {
@@ -31,13 +28,13 @@ func (l line) isVertical() bool {
 	return l.p1.X == l.p2.X
 }
 
-func (l line) contains(p Pixel) bool {
+func (l line) contains(p Pos) bool {
 	return p.X <= max(l.p1.X, l.p2.X) &&
 		p.X >= min(l.p1.X, l.p2.X) && p.Y <= max(l.p1.Y, l.p2.Y) && p.Y >= min(l.p1.Y, l.p2.Y)
 }
 
 func (l line) perpendicular() line {
-	return line{l.p1, Pixel{-l.p2.Y, l.p2.X}}
+	return line{l.p1, Pos{X: -l.p2.Y, Y: l.p2.X}}
 }
 
 func (l1 line) parallel(l2 line) bool {
@@ -75,93 +72,4 @@ func (l1 line) intersects(l2 line) bool {
 	default:
 		return false
 	}
-}
-
-// Returns the adjacent points in the passed direction. The function has multiple assumptions.
-// Assumes a square grid with typical compass directions. Assumes a square grid where east is
-// positive x and south is positive y. x is typical and y is opposite of typical for Cartesian
-// graph. Assumes the line should be drawn in the top left corner of the grid square. Sloped lines
-// determine point direction of split grid squares via which point has more area. Trims any points
-// passed as trim but panics if they are not an adjacent point.
-func (l line) adjacentPoints(d direction, trim ...Pixel) []Pixel {
-	switch d {
-	case north, south, west, east:
-	default:
-		panic(fmt.Sprintf(
-			"adjacentPoints: cannot get points in direction %s since it is unimplemented", d.string()))
-	}
-
-	var w Pixel
-	var e Pixel
-	switch {
-	case l.p1.X < l.p2.X:
-		w = l.p1
-		e = l.p2
-	default:
-		w = l.p2
-		e = l.p1
-	}
-	nY := max(l.p1.Y, l.p2.Y)
-	sY := min(l.p1.Y, l.p2.Y)
-
-	var points []Pixel
-	switch {
-	case l.isVertical() && d == west:
-		y := sY
-		for y <= nY {
-			points = append(points, Pixel{w.X - 1, y})
-			y += 1
-		}
-	case l.isVertical() && d == east:
-		y := sY
-		for y <= nY {
-			points = append(points, Pixel{w.X, y})
-			y += 1
-		}
-	case !l.isVertical() && d == west, !l.isVertical() && d == east:
-		s := "adjacentPoints: cannot get points in direction %s for non vertical lines since it is " +
-			"unimplemented"
-		panic(fmt.Sprintf(s, d.string()))
-	case l.isVertical() && d == north:
-		points = append(points, Pixel{w.X, sY - 1})
-	case l.isVertical() && d == south:
-		points = append(points, Pixel{w.X, nY})
-	default:
-		// Ebitengine y is opposite of typical Cartesian grid, slope equation is not typical.
-		// e.Y - w.Y instead of typical w.Y - e.Y
-		slope := float64(e.Y-w.Y) / float64(w.X-e.X)
-		x := float64(w.X) + 0.5
-		for x <= float64(e.X+1) {
-			yIntercept := float64(w.Y) + (slope * float64(w.X))
-			// Ebitengine y is opposite of typical Cartesian grid, y intercept equation is not typical.
-			// y := yIntercept - slope*x instead of y := slope*x + yIntercept.
-			y := yIntercept - slope*x
-			xInteger, _ := math.Modf(x)
-			yInteger, yDecimal := math.Modf(y)
-			xInt := int(xInteger)
-			yInt := int(yInteger)
-			switch {
-			case yDecimal == 0.5:
-				panic("adjacentPoints: undefined behavior when y midpoint occurs")
-			case yDecimal < 0.5:
-				yInt -= 1
-			}
-			var yOffset int
-			if d == south {
-				yOffset++
-			}
-			points = append(points, Pixel{xInt, yInt + yOffset})
-			x += 1
-		}
-	}
-
-	for _, p := range trim {
-		i := slices.Index(points, p)
-		if i == -1 {
-			panic(
-				fmt.Sprintf("adjacentPoints: cannot trim %s since it is not an adjacent point", p.log()))
-		}
-		points = slices.Delete(points, i, i+1)
-	}
-	return points
 }

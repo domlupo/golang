@@ -5,47 +5,50 @@ package main
 import (
 	"fmt"
 	"log/slog"
+	"math"
+	"slices"
 )
 
 type gridConfig struct {
-	width      int
-	height     int
-	basePixels int
+	pixelWidth  int
+	pixelHeight int
+	basePixels  int
+	// TODO: move pixel multiplier to a better location
 	// pixelMultiplier must only be used for drawing output like image or processing screen input.
 	// Never use for game logic. float32 rather than idiomatic float64 because the Ebiten draw APIs I
 	// use are often float32 over float64.
-	pixelMultiplier                           float32
-	hexWidth                                  int
-	hexHeight                                 int
-	hexXOffset                                int
-	hexYOffset                                int
-	xIndexMax                                 int
-	yIndexMax                                 int
-	chebyshevDistanceLimit                    int
-	minimumDistanceBetweenNonAdjacentHexagons int
+	pixelMultiplier                         float32
+	hexPixelWidth                           int
+	hexPixelHeight                          int
+	hexXPixelOffset                         int
+	hexYPixelOffset                         int
+	xIndexMax                               int
+	yIndexMax                               int
+	chebyshevPixelLimit                     int
+	minimumPixelsBetweenNonAdjacentHexagons int
 	// Returns the radius of a circle which fully surrounds a hexagon. Useful for simple
 	// // and conservative hexagon collision detection by treating the hexagon as a circle.
-	conservativeHexRadius int
+	conservativeHexPixelRadius int
 }
 
 func newGridConfig(pixelMultiplier float32) gridConfig {
 	gc := gridConfig{
 		// For 1280p * 720p resolution, a hexagon height of 40p is ideally 80/sqrt(3) wide.
 		// 80/sqrt(3) is 46.188 which is approximately 46p.
-		width:           1280,
-		height:          720,
+		pixelWidth:      1280,
+		pixelHeight:     720,
 		pixelMultiplier: pixelMultiplier,
-		hexWidth:        46,
-		hexHeight:       40,
-		hexXOffset:      19,
-		hexYOffset:      10,
+		hexPixelWidth:   46,
+		hexPixelHeight:  40,
+		hexXPixelOffset: 19,
+		hexYPixelOffset: 10,
 	}
-	gc.basePixels = gc.width * gc.height
-	gc.xIndexMax = gc.width/gc.hexWidth + 2
-	gc.yIndexMax = gc.height/(gc.hexHeight*3/4) + 1
-	gc.chebyshevDistanceLimit = max(gc.width, gc.height)
-	gc.minimumDistanceBetweenNonAdjacentHexagons = min(gc.hexWidth, gc.hexHeight) / 2
-	gc.conservativeHexRadius = max(gc.hexWidth, gc.hexHeight) / 2
+	gc.basePixels = gc.pixelWidth * gc.pixelHeight
+	gc.xIndexMax = gc.pixelWidth/gc.hexPixelWidth + 2
+	gc.yIndexMax = gc.pixelHeight/(gc.hexPixelHeight*3/4) + 1
+	gc.chebyshevPixelLimit = max(gc.pixelWidth, gc.pixelHeight)
+	gc.minimumPixelsBetweenNonAdjacentHexagons = min(gc.hexPixelWidth, gc.hexPixelHeight) / 2
+	gc.conservativeHexPixelRadius = max(gc.hexPixelWidth, gc.hexPixelHeight) / 2
 	return gc
 }
 
@@ -62,16 +65,16 @@ type grid struct {
 // The grid struct has a field called hexTriangleLUT which is a look up table (LUT)
 //
 // The hexagon triangle LUT is a hard coded mapping to aid with converting
-// pixel position to hexagon grid position. It avoids the need of CPU intensive math.
+// Pixel to hexagon grid position. It avoids the need of CPU intensive math.
 // It helps CPU performance by removing the need for floating point or sqrt math logic.
 //
 // Specific CPU profiling did not prove this optimization was needed but prior CPU profiling
-// for this game showed that integer math is much more efficient. Other pixel position to
+// for this game showed that integer math is much more efficient. Other Pixel to
 // hexagon algorithms appeared as complex or even more complex than this method so this
 // more optimized solution was implemented first.
 //
 // It is small portion of the hexagonal grid that is repeated multiple times.
-// It covers 460 (46 cols, 10 rows) of pixels. The top left point in the most
+// It covers 460 (46 cols, 10 rows) of Pixels. The top left point in the most
 // top left pattern is located at {xOffset, yOffset}.
 //
 // It has a:
@@ -138,7 +141,7 @@ type grid struct {
 // As shown above, the prior section's middle triangle is now converted into
 // this section's left and right triangle.
 
-// Position for multi pixel game components such as nodes, obstacles, hexagons, etc
+// Position for low resolution game components such as nodes, obstacles, hexagons, etc
 type GridPosition struct {
 	X int `json:"x"`
 	Y int `json:"y"`
@@ -161,7 +164,7 @@ type hexPoint int
 // One of the six sides of a hexagon.
 type hexSide int
 
-// Represents a hexagon pixel position shared amongst all hexagons. The left side of
+// Represents a hexagon Pixel shared amongst all hexagons. The left side of
 // the hexagon is aligned with x=0. The top point of the hexagon is aligned with y=0.
 // By motif definition, x must be less than hex width and y must be less than hex height.
 type demotif struct {
@@ -207,8 +210,24 @@ func (d direction) string() string {
 	case northwest:
 		return "northwest"
 	default:
-		panic(fmt.Sprintf("Cannot convert direction to string: %d", d))
+		panic(fmt.Sprintf("direction.string: cannot convert direction %d", d))
 	}
+}
+
+type pixelLine struct {
+	p1 Pixel
+	p2 Pixel
+}
+
+func (l pixelLine) isVertical() bool {
+	return l.p1.X == l.p2.X
+}
+
+func (l pixelLine) log() []slog.Attr {
+	var a = []slog.Attr{}
+	a = append(a, nest("p1", l.p1.log()))
+	a = append(a, nest("p2", l.p2.log()))
+	return a
 }
 
 func newGrid(gc gridConfig) grid {
@@ -236,9 +255,9 @@ func (g grid) setupHexTriangleLUT() []hexagonTriangle {
 	}
 
 	var lut []hexagonTriangle
-	for y := 0; y < (g.hexHeight / 4); y++ {
+	for y := 0; y < (g.hexPixelHeight / 4); y++ {
 		triangle := leftHexTriangle
-		for x := 0; x < g.hexWidth; x++ {
+		for x := 0; x < g.hexPixelWidth; x++ {
 			p := Pixel{x, y}
 			if t, ok := switchTriangle[p]; ok {
 				triangle = t
@@ -253,7 +272,7 @@ func (g grid) setupHexTriangleLUT() []hexagonTriangle {
 	for _, t := range lut {
 		switch t {
 		case unknownHexTriangle:
-			panic("setupHexTriangleLUT: The look up table should not have any unknown hex triangles")
+			panic("grid.setupHexTriangleLUT: The look up table should not have any unknown hex triangles")
 		case leftHexTriangle:
 			leftTriangleCount++
 		case middleHexTriangle:
@@ -262,13 +281,13 @@ func (g grid) setupHexTriangleLUT() []hexagonTriangle {
 			rightTriangleCount++
 		}
 	}
-	logger.log(infoLevel, setupLogic, "setupHexTriangleLUT",
+	logger.log(infoLevel, setupLogic, "grid.setupHexTriangleLUT",
 		slog.Int("leftHexTriangleCount", leftTriangleCount),
 		slog.Int("MiddleHexTriangleCount", middleTriangleCount),
 		slog.Int("RightHexTriangleCount", rightTriangleCount),
 	)
 	if leftTriangleCount+rightTriangleCount != middleTriangleCount {
-		panic("setupHexTriangleLUT: invalid hex triangle counts. " +
+		panic("grid.setupHexTriangleLUT: invalid hex triangle counts. " +
 			"This panic might be a false positive if hex width isn't 46 and hex height isn't 40")
 	}
 	return lut
@@ -318,7 +337,7 @@ func (hp hexPoint) string() string {
 	case hpNorthwest:
 		return "hpNorthwest"
 	default:
-		panic(fmt.Sprintf("Cannot convert hexPoint to string: %d", hp))
+		panic(fmt.Sprintf("hexPoint.string: cannot convert hexPoint %d", hp))
 	}
 }
 
@@ -339,7 +358,7 @@ func (hs hexSide) string() string {
 	case hsNorthwest:
 		return "hsNorthwest"
 	default:
-		panic(fmt.Sprintf("Cannot convert hexSide to string: %d", hs))
+		panic(fmt.Sprintf("hexSide.string: cannot convert hexSide %d", hs))
 	}
 }
 
@@ -353,8 +372,8 @@ func hexSides() []hexSide {
 
 func (gp GridPosition) log() []slog.Attr {
 	var a = []slog.Attr{}
-	a = append(a, slog.Int("x", gp.X))
-	a = append(a, slog.Int("y", gp.Y))
+	a = append(a, slog.Int("X", gp.X))
+	a = append(a, slog.Int("Y", gp.Y))
 	return a
 }
 
@@ -377,7 +396,7 @@ func (g grid) adjacent(p GridPosition, side hexSide) (GridPosition, bool) {
 	y := p.Y
 	switch side {
 	case hsNone:
-		panic("need a direction to find adjacent grid position")
+		panic("grid.adjacent: need a direction to find adjacent grid position")
 	case hsNortheast:
 		y--
 		if p.Y%2 == 0 {
@@ -403,7 +422,7 @@ func (g grid) adjacent(p GridPosition, side hexSide) (GridPosition, bool) {
 			x--
 		}
 	default:
-		panic("Cannot find adjacent grid position. Unknown hex side.")
+		panic("grid.adjacent: cannot find adjacent grid position due to unknown hex side")
 	}
 
 	if x < 0 || y < 0 || y >= g.yIndexMax || (y%2 == 0 && x >= g.xIndexMax-1) ||
@@ -453,10 +472,10 @@ func (g grid) getCenterWithFallback(gp GridPosition) (Pixel, bool) {
 }
 
 func (g grid) getPixelOutbounds(gp GridPosition, hexPoint hexPoint) Pixel {
-	x := gp.X * g.hexWidth
-	y := gp.Y * (g.hexHeight / 4 * 3)
+	x := gp.X * g.hexPixelWidth
+	y := gp.Y * (g.hexPixelHeight / 4 * 3)
 	if gp.Y%2 == 1 {
-		x -= (g.hexWidth) / 2
+		x -= (g.hexPixelWidth) / 2
 	}
 
 	// The values are found from the 1. hex look up table defined in hexConfig.go
@@ -465,26 +484,26 @@ func (g grid) getPixelOutbounds(gp GridPosition, hexPoint hexPoint) Pixel {
 	// located at (xOffset, yOffset).
 	switch hexPoint {
 	case hpCenter:
-		y -= g.hexHeight / 4
+		y -= g.hexPixelHeight / 4
 	case hpNorth:
-		y -= g.hexHeight / 4 * 3
+		y -= g.hexPixelHeight / 4 * 3
 	case hpNorthwest:
-		x -= g.hexWidth / 2
-		y -= g.hexHeight / 2
+		x -= g.hexPixelWidth / 2
+		y -= g.hexPixelHeight / 2
 	case hpNortheast:
-		x += g.hexWidth/2 - 1
-		y -= g.hexHeight / 2
+		x += g.hexPixelWidth/2 - 1
+		y -= g.hexPixelHeight / 2
 	case hpSouth:
-		y += g.hexHeight/4 - 1
+		y += g.hexPixelHeight/4 - 1
 	case hpSouthwest:
-		x -= g.hexWidth / 2
+		x -= g.hexPixelWidth / 2
 		y -= 1
 	case hpSoutheast:
-		x += g.hexWidth/2 - 1
+		x += g.hexPixelWidth/2 - 1
 		y -= 1
 	}
 
-	return Pixel{x + g.hexXOffset, y + g.hexYOffset}
+	return Pixel{x + g.hexXPixelOffset, y + g.hexYPixelOffset}
 }
 
 func (g grid) getGridPos(p Pixel) (GridPosition, bool) {
@@ -495,21 +514,21 @@ func (g grid) getGridPos(p Pixel) (GridPosition, bool) {
 }
 
 func (g grid) getGridPosOutbounds(p Pixel) GridPosition {
-	xIndex := (p.X+g.hexWidth-g.hexXOffset)/g.hexWidth - 1
-	yIndex := (p.Y+(g.hexHeight/4*3)-g.hexYOffset)/(g.hexHeight/4*3) - 2
-	innerX := (p.X + g.hexWidth - g.hexXOffset) % g.hexWidth
-	innerY := (p.Y + (g.hexHeight * 3 / 2) - g.hexYOffset) % (g.hexHeight * 3 / 2)
+	xIndex := (p.X+g.hexPixelWidth-g.hexXPixelOffset)/g.hexPixelWidth - 1
+	yIndex := (p.Y+(g.hexPixelHeight/4*3)-g.hexYPixelOffset)/(g.hexPixelHeight/4*3) - 2
+	innerX := (p.X + g.hexPixelWidth - g.hexXPixelOffset) % g.hexPixelWidth
+	innerY := (p.Y + (g.hexPixelHeight * 3 / 2) - g.hexYPixelOffset) % (g.hexPixelHeight * 3 / 2)
 
 	firstYSectionStart := 0
-	secondYSectionStart := firstYSectionStart + g.hexHeight/4
-	thirdYSectionStart := secondYSectionStart + g.hexHeight/2
-	fourthYSectionStart := thirdYSectionStart + g.hexHeight/4
+	secondYSectionStart := firstYSectionStart + g.hexPixelHeight/4
+	thirdYSectionStart := secondYSectionStart + g.hexPixelHeight/2
+	fourthYSectionStart := thirdYSectionStart + g.hexPixelHeight/4
 
 	var xIndexOffset int
 	var yIndexOffset int
 	switch {
 	case innerY >= firstYSectionStart && innerY < secondYSectionStart:
-		triangle := g.hexTriangleLUT[innerX+innerY*g.hexWidth]
+		triangle := g.hexTriangleLUT[innerX+innerY*g.hexPixelWidth]
 		switch triangle {
 		case leftHexTriangle:
 			xIndexOffset = 0
@@ -525,31 +544,31 @@ func (g grid) getGridPosOutbounds(p Pixel) GridPosition {
 		xIndexOffset = 1
 		yIndexOffset = 2
 	case innerY >= thirdYSectionStart && innerY < fourthYSectionStart:
-		hexLookUpYOffset := (g.hexWidth * g.hexHeight / 4) * 3
+		hexLookUpYOffset := (g.hexPixelWidth * g.hexPixelHeight / 4) * 3
 		var hexLookUpXOffset int
-		if innerX >= 0 && innerX < (g.hexWidth/2) {
-			hexLookUpXOffset = (g.hexWidth / 2)
+		if innerX >= 0 && innerX < (g.hexPixelWidth/2) {
+			hexLookUpXOffset = (g.hexPixelWidth / 2)
 		} else {
-			hexLookUpXOffset = -(g.hexWidth / 2)
+			hexLookUpXOffset = -(g.hexPixelWidth / 2)
 		}
 
-		triangle := g.hexTriangleLUT[innerX+(innerY*g.hexWidth)+hexLookUpXOffset-hexLookUpYOffset]
+		triangle := g.hexTriangleLUT[innerX+(innerY*g.hexPixelWidth)+hexLookUpXOffset-hexLookUpYOffset]
 		switch {
 		case triangle == leftHexTriangle:
 			xIndexOffset = 1
 			yIndexOffset = 1
-		case triangle == middleHexTriangle && innerX < (g.hexWidth/2):
+		case triangle == middleHexTriangle && innerX < (g.hexPixelWidth/2):
 			xIndexOffset = 0
 			yIndexOffset = 2
-		case triangle == middleHexTriangle && innerX >= (g.hexWidth/2):
+		case triangle == middleHexTriangle && innerX >= (g.hexPixelWidth/2):
 			xIndexOffset = 1
 			yIndexOffset = 2
 		case triangle == rightHexTriangle:
 			xIndexOffset = 1
 			yIndexOffset = 1
 		}
-	case innerY >= fourthYSectionStart && innerY < (g.hexHeight*3/2):
-		if innerX >= 0 && innerX < (g.hexWidth/2) {
+	case innerY >= fourthYSectionStart && innerY < (g.hexPixelHeight*3/2):
+		if innerX >= 0 && innerX < (g.hexPixelWidth/2) {
 			xIndexOffset = 0
 			yIndexOffset = 2
 		} else {
@@ -557,14 +576,14 @@ func (g grid) getGridPosOutbounds(p Pixel) GridPosition {
 			yIndexOffset = 2
 		}
 	default:
-		s := "getGridPosOutbounds could not find a y section for the inner y: %d for pixel position %s"
+		s := "grid.getGridPosOutbounds: could not find a y section for the inner y: %d and Pixel %s"
 		panic(fmt.Sprintf(s, innerY, p.log()))
 	}
 
 	return GridPosition{xIndex + xIndexOffset, yIndex + yIndexOffset}
 }
 
-// Remove the repeated hexagon grid pattern from the pixel position to find the base
+// Remove the repeated hexagon grid pattern from the Pixel to find the base
 // hexagon structure shared amongst all hexagons. The left side of the hexagon is
 // aligned with x=0. The top point of the hexagon is aligned with y=0. By motif
 // definition, x must be less than hex width and y must be less than hex height.
@@ -576,34 +595,34 @@ func (g grid) demotif(p Pixel) (demotif, bool) {
 	// Offset hexagon to {0, 0}.
 	// The left side of the hexagon is aligned with x=0.
 	// The top point of the hexagon is aligned with y=0.
-	p.X += (g.hexWidth / 2) - g.hexXOffset
-	p.Y += (g.hexHeight / 2)
+	p.X += (g.hexPixelWidth / 2) - g.hexXPixelOffset
+	p.Y += (g.hexPixelHeight / 2)
 	// Remove the repeated hexagon grid pattern.
-	p.Y -= gp.Y * (g.hexHeight * 3 / 4)
+	p.Y -= gp.Y * (g.hexPixelHeight * 3 / 4)
 	switch gp.Y % 2 {
 	case 0:
-		p.X -= gp.X * g.hexWidth
+		p.X -= gp.X * g.hexPixelWidth
 	case 1:
-		p.X -= gp.X * g.hexWidth
-		p.X += g.hexWidth / 2
+		p.X -= gp.X * g.hexPixelWidth
+		p.X += g.hexPixelWidth / 2
 	default:
-		panic("demotif: invalid modulo")
+		panic("grid.demotif: invalid modulo")
 	}
-	if p.X >= g.hexWidth || p.Y >= g.hexHeight {
-		s := "demotif: by motif definition, x must be less than hex width and y must be less than " +
-			"hex height %s"
+	if p.X >= g.hexPixelWidth || p.Y >= g.hexPixelHeight {
+		s := "grid.demotif: by motif definition, x must be less than hex width and y must be less " +
+			"than hex height %s"
 		panic(fmt.Sprintf(s, p.log()))
 	}
 	return demotif{p}, true
 }
 
 func (g grid) demotifLinePixels(hs hexSide, clusivity clusivity) []Pixel {
-	nw := Pixel{0, g.hexHeight / 4}
-	n := Pixel{g.hexWidth / 2, 0}
-	ne := Pixel{g.hexWidth, g.hexHeight / 4}
-	sw := Pixel{0, g.hexHeight * 3 / 4}
-	s := Pixel{g.hexWidth / 2, g.hexHeight}
-	se := Pixel{g.hexWidth, g.hexHeight * 3 / 4}
+	nw := Pixel{0, g.hexPixelHeight / 4}
+	n := Pixel{g.hexPixelWidth / 2, 0}
+	ne := Pixel{g.hexPixelWidth, g.hexPixelHeight / 4}
+	sw := Pixel{0, g.hexPixelHeight * 3 / 4}
+	s := Pixel{g.hexPixelWidth / 2, g.hexPixelHeight}
+	se := Pixel{g.hexPixelWidth, g.hexPixelHeight * 3 / 4}
 
 	var d direction
 	trim := []Pixel{}
@@ -619,55 +638,55 @@ func (g grid) demotifLinePixels(hs hexSide, clusivity clusivity) []Pixel {
 		trim = append(trim, ne)
 	case hs == hsEast && clusivity == cInclusive:
 		d = west
-		trim = append(trim, Pixel{g.hexWidth - 1, g.hexHeight * 3 / 4})
+		trim = append(trim, Pixel{g.hexPixelWidth - 1, g.hexPixelHeight * 3 / 4})
 	case hs == hsSouthwest && clusivity == cInclusive:
 		d = north
-		trim = append(trim, Pixel{g.hexWidth / 2, g.hexHeight - 1})
+		trim = append(trim, Pixel{g.hexPixelWidth / 2, g.hexPixelHeight - 1})
 	case hs == hsSoutheast && clusivity == cInclusive:
 		d = north
-		trim = append(trim, Pixel{g.hexWidth, g.hexHeight*3/4 - 1})
+		trim = append(trim, Pixel{g.hexPixelWidth, g.hexPixelHeight*3/4 - 1})
 	case hs == hsWest && clusivity == cExclusive:
 		d = west
 		trim = append(trim, Pixel{sw.X - 1, sw.Y})
 	case hs == hsNorthwest && clusivity == cExclusive:
 		d = north
-		trim = append(trim, Pixel{g.hexWidth / 2, -1})
+		trim = append(trim, Pixel{g.hexPixelWidth / 2, -1})
 	case hs == hsNortheast && clusivity == cExclusive:
 		d = north
-		trim = append(trim, Pixel{g.hexWidth, g.hexHeight/4 - 1})
+		trim = append(trim, Pixel{g.hexPixelWidth, g.hexPixelHeight/4 - 1})
 	case hs == hsEast && clusivity == cExclusive:
 		d = east
-		trim = append(trim, Pixel{g.hexWidth, g.hexHeight * 3 / 4})
+		trim = append(trim, Pixel{g.hexPixelWidth, g.hexPixelHeight * 3 / 4})
 	case hs == hsSouthwest && clusivity == cExclusive:
 		d = south
-		trim = append(trim, Pixel{g.hexWidth / 2, g.hexHeight})
+		trim = append(trim, Pixel{g.hexPixelWidth / 2, g.hexPixelHeight})
 	case hs == hsSoutheast && clusivity == cExclusive:
 		d = south
-		trim = append(trim, Pixel{g.hexWidth, g.hexHeight * 3 / 4})
+		trim = append(trim, Pixel{g.hexPixelWidth, g.hexPixelHeight * 3 / 4})
 	default:
 		panic("demotifLinePixels unknown hex side and clusivity combination")
 	}
 
-	var l line
+	var l pixelLine
 	switch hs {
 	case hsNone:
 		panic("demotifLinePixels: hex side none does not have pixels")
 	case hsWest:
-		l = line{nw, sw}
+		l = pixelLine{nw, sw}
 	case hsNorthwest:
-		l = line{nw, n}
+		l = pixelLine{nw, n}
 	case hsNortheast:
-		l = line{n, ne}
+		l = pixelLine{n, ne}
 	case hsEast:
-		l = line{ne, se}
+		l = pixelLine{ne, se}
 	case hsSouthwest:
-		l = line{s, sw}
+		l = pixelLine{s, sw}
 	case hsSoutheast:
-		l = line{s, se}
+		l = pixelLine{s, se}
 	default:
 		panic(fmt.Sprintf("demotifLinePixels: unknown hex side %s", hs.string()))
 	}
-	return l.adjacentPoints(d, trim...)
+	return l.adjacentPixels(d, trim...)
 }
 
 // Returns all pixels within the demotif hexagon.
@@ -683,11 +702,11 @@ func (g grid) demotifHexPixels() []Pixel {
 	southPixels := append(swPixels, sePixels...)
 	for i, np := range northPixels {
 		sp := southPixels[i]
-		l := line{np, sp}
+		l := pixelLine{np, sp}
 		if !l.isVertical() {
 			panic("demotifHexPixels: expect line to be vertical")
 		}
-		demotifPixels = append(demotifPixels, l.adjacentPoints(east)...)
+		demotifPixels = append(demotifPixels, l.adjacentPixels(east)...)
 	}
 	return demotifPixels
 }
@@ -704,15 +723,15 @@ func (g grid) demotifHexPixelsAdjacent() map[Pixel]hexSide {
 }
 
 func (g grid) contains(p Pixel) bool {
-	xContained := p.X >= 0 && p.X < g.width
-	yContained := p.Y >= 0 && p.Y < g.height
+	xContained := p.X >= 0 && p.X < g.pixelWidth
+	yContained := p.Y >= 0 && p.Y < g.pixelHeight
 	return xContained && yContained
 }
 
-func (g grid) collidesWithBorder(p position, offset int) bool {
-	if p.X+offset > g.width ||
+func (g grid) collidesWithBorder(p Pixel, offset int) bool {
+	if p.X+offset > g.pixelWidth ||
 		p.X-offset < 0 ||
-		p.Y+offset > g.height ||
+		p.Y+offset > g.pixelHeight ||
 		p.Y-offset < 0 {
 		return true
 	} else {
@@ -720,7 +739,7 @@ func (g grid) collidesWithBorder(p position, offset int) bool {
 	}
 }
 
-func (g grid) add(p1 Pixel, p2 Pixel) (Pixel, bool) {
+func (g grid) sum(p1 Pixel, p2 Pixel) (Pixel, bool) {
 	p := Pixel{X: p1.X + p2.X, Y: p1.Y + p2.Y}
 	if !g.contains(p) {
 		return Pixel{}, false
@@ -729,11 +748,11 @@ func (g grid) add(p1 Pixel, p2 Pixel) (Pixel, bool) {
 	}
 }
 
-func (g grid) allAdjacentPixels(p Pixel) []Pixel {
+func (g grid) allAdjacentPixels(pixel Pixel) []Pixel {
 	a := []Pixel{}
 	for _, d := range directions() {
-		if pos, ok := g.adjacentPixel(p, d); ok {
-			a = append(a, pos)
+		if p, ok := g.adjacentPixel(pixel, d); ok {
+			a = append(a, p)
 		}
 	}
 	return a
@@ -766,7 +785,7 @@ func (g grid) adjacentPixel(p Pixel, d direction) (Pixel, bool) {
 		x = -1
 		y = -1
 	default:
-		s := "cannot get adjacent pixel position for %s unknown direction: %d"
+		s := "grid.adjacentPixel cannot get adjacent pixel for %s unknown direction: %d"
 		panic(fmt.Sprintf(s, p.log(), d))
 	}
 
@@ -775,4 +794,93 @@ func (g grid) adjacentPixel(p Pixel, d direction) (Pixel, bool) {
 		return Pixel{}, false
 	}
 	return a, true
+}
+
+// Returns the adjacent Pixels in the passed direction. The function has multiple assumptions.
+// Assumes a square grid with typical compass directions. Assumes a square grid where east is
+// positive X and south is positive Y. X is typical and Y is opposite of typical for Cartesian
+// graph. Assumes the line should be drawn in the top left corner of the grid square. Sloped lines
+// determine Pixel direction of split grid squares via which Pixel has more area. Trims any Pixels
+// passed as trim but panics if they are not an adjacent Pixel.
+func (l pixelLine) adjacentPixels(d direction, trim ...Pixel) []Pixel {
+	switch d {
+	case north, south, west, east:
+	default:
+		s := "grid.adjacentPixels: cannot get Pixels in direction %s since it is unimplemented"
+		panic(fmt.Sprintf(s, d.string()))
+	}
+
+	var w Pixel
+	var e Pixel
+	switch {
+	case l.p1.X < l.p2.X:
+		w = l.p1
+		e = l.p2
+	default:
+		w = l.p2
+		e = l.p1
+	}
+	nY := max(l.p1.Y, l.p2.Y)
+	sY := min(l.p1.Y, l.p2.Y)
+
+	var pixels []Pixel
+	switch {
+	case l.isVertical() && d == west:
+		y := sY
+		for y <= nY {
+			pixels = append(pixels, Pixel{w.X - 1, y})
+			y += 1
+		}
+	case l.isVertical() && d == east:
+		y := sY
+		for y <= nY {
+			pixels = append(pixels, Pixel{w.X, y})
+			y += 1
+		}
+	case !l.isVertical() && d == west, !l.isVertical() && d == east:
+		s := "grid.adjacentPixels: cannot get pixels in direction %s for non vertical lines since " +
+			"it is unimplemented"
+		panic(fmt.Sprintf(s, d.string()))
+	case l.isVertical() && d == north:
+		pixels = append(pixels, Pixel{w.X, sY - 1})
+	case l.isVertical() && d == south:
+		pixels = append(pixels, Pixel{w.X, nY})
+	default:
+		// Ebitengine y is opposite of typical Cartesian grid, slope equation is not typical.
+		// e.Y - w.Y instead of typical w.Y - e.Y
+		slope := float64(e.Y-w.Y) / float64(w.X-e.X)
+		x := float64(w.X) + 0.5
+		for x <= float64(e.X+1) {
+			yIntercept := float64(w.Y) + (slope * float64(w.X))
+			// Ebitengine y is opposite of typical Cartesian grid, y intercept equation is not typical.
+			// y := yIntercept - slope*x instead of y := slope*x + yIntercept.
+			y := yIntercept - slope*x
+			xInteger, _ := math.Modf(x)
+			yInteger, yDecimal := math.Modf(y)
+			xInt := int(xInteger)
+			yInt := int(yInteger)
+			switch {
+			case yDecimal == 0.5:
+				panic("grid.adjacentPixels: undefined behavior when y midpoint occurs")
+			case yDecimal < 0.5:
+				yInt -= 1
+			}
+			var yOffset int
+			if d == south {
+				yOffset++
+			}
+			pixels = append(pixels, Pixel{xInt, yInt + yOffset})
+			x += 1
+		}
+	}
+
+	for _, p := range trim {
+		i := slices.Index(pixels, p)
+		if i == -1 {
+			s := "grid.adjacentPixels: cannot trim %s since it is not an adjacent pixel"
+			panic(fmt.Sprintf(s, p.log()))
+		}
+		pixels = slices.Delete(pixels, i, i+1)
+	}
+	return pixels
 }

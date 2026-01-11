@@ -52,27 +52,28 @@ func (ut unitTarget) String() string {
 	}
 }
 
-// All units within a 2 dimensional layer
+// All units within a 2 dimensional layer. It may be wrong to use Pixel as key when unit positions
+// are the higher resolution Pos but I think this is simpler and can switch if needed.
 type units map[Pixel]*unit
 
 type unit struct {
 	unitConfig
-	position
-	subPixel            subPixel
+	Pos
+	subPos              subPos
 	id                  id
 	player              player
-	activeTarget        position
+	activeTarget        Pixel
 	activeTargetType    unitTarget
-	steerTarget         position
-	enemyTarget         position
-	localTarget         position
-	localTargets        []position
-	globalTargets       []position
+	steerTarget         Pixel
+	enemyTarget         Pixel
+	localTarget         Pixel
+	localTargets        []Pixel
+	globalTargets       []Pixel
 	nearest             *unit
 	skipTargets         []id
 	actions             []action
 	pathGlobalTarget    bool
-	terminalPosition    position
+	terminalPosition    Pos
 	moveDone            bool
 	bresenhamError      int
 	bresenhamErrorDy    int
@@ -90,49 +91,50 @@ type unit struct {
 	spawnOrder          int
 	angle               float64
 	sourceNode          GridPosition
-	sourcePosition      Pixel
+	sourcePosition      Pos
 	sourceUnit          id
 	showVision          bool
 }
 
-// High resolution two dimensional point.
-type subPixel struct {
+// High resolution 2D point.
+type subPos struct {
 	x int
 	y int
 }
 
-func (s subPixel) log() []slog.Attr {
+func (s subPos) log() []slog.Attr {
 	a := []slog.Attr{}
 	a = append(a, slog.Int("x", s.x))
 	a = append(a, slog.Int("y", s.y))
 	return a
 }
 
-func (u unit) newSubPixel(p position) subPixel {
-	return subPixel{
+func (u unit) newSubPos(p Pos) subPos {
+	return subPos{
 		x: int(math.Round(float64(p.X) * u.speedFactor)),
 		y: int(math.Round(float64(p.Y) * u.speedFactor)),
 	}
 }
 
-func (u unit) downscale(s subPixel) Pixel {
-	return Pixel{
-		X: int(math.Round(float64(s.x) / float64(u.speedFactor))),
-		Y: int(math.Round(float64(s.y) / float64(u.speedFactor))),
+func (u unit) downscale(s subPos) Pos {
+	return Pos{
+		X: math.Round(float64(s.x) / float64(u.speedFactor)),
+		Y: math.Round(float64(s.y) / float64(u.speedFactor)),
 	}
 }
 
 func newUnit(
 	uc unitConfig,
-	pos position,
+	pos Pos,
 	p player,
-	globalTargets []position,
+	globalTargets []Pixel,
 	actions []action,
 	sourceNode GridPosition,
-	selected bool) unit {
+	selected bool) *unit {
+
 	u := unit{
 		id:                  generateId(),
-		position:            pos,
+		Pos:                 pos,
 		player:              p,
 		globalTargets:       globalTargets,
 		pathGlobalTarget:    true,
@@ -142,14 +144,19 @@ func newUnit(
 		selected:            selected,
 		steerTurnCountLimit: 20,
 		sourceNode:          sourceNode,
-		sourcePosition:      pos.Pixel,
+		sourcePosition:      pos,
 	}
-	u.subPixel = u.newSubPixel(u.position)
+
+	u.subPos = u.newSubPos(u.Pos)
+	for i, e := range u.equipments {
+		e.attached = &u
+		u.equipments[i] = e
+	}
 
 	if u.vision < u.radius {
 		panic(fmt.Sprintf("newUnit: vision should not be less than radius for %s", uc.name.string()))
 	}
-	return u
+	return &u
 }
 
 func (u unit) terminal(step uint64) bool {
@@ -172,29 +179,34 @@ func (u *unit) refresh() {
 	if len(u.globalTargets) == 0 {
 		u.angle = 0
 	} else {
-		u.angle = u.Pixel.angle(u.globalTargets[0].Pixel)
+		u.angle = u.Pos.noLayer().angle(u.globalTargets[0].pos())
+	}
+
+	for i, e := range u.equipments {
+		e.rotate()
+		u.equipments[i] = e
 	}
 }
 
 func (u *unit) prioritizeTargets() {
 	u.steerTurnCount++
-	if !u.steerTarget.equals(position{}) && u.steerTurnCount < u.steerTurnCountLimit {
+	if !u.steerTarget.equals(Pixel{}) && u.steerTurnCount < u.steerTurnCountLimit {
 		u.updateTarget(activeTarget, u.steerTarget)
 		u.activeTargetType = steerTarget
-	} else if !u.enemyTarget.equals(position{}) {
+	} else if !u.enemyTarget.equals(Pixel{}) {
 		u.steerTurnCount = 0
-		u.steerTarget = position{}
-		u.localTargets = []position{}
+		u.steerTarget = Pixel{}
+		u.localTargets = []Pixel{}
 		u.updateTarget(activeTarget, u.enemyTarget)
 		u.activeTargetType = enemyTarget
 	} else if len(u.localTargets) > 0 {
 		u.steerTurnCount = 0
-		u.steerTarget = position{}
+		u.steerTarget = Pixel{}
 		u.updateTarget(activeTarget, u.localTargets[len(u.localTargets)-1])
 		u.activeTargetType = localTarget
 	} else {
 		u.steerTurnCount = 0
-		u.steerTarget = position{}
+		u.steerTarget = Pixel{}
 		// TODO: determine behavior. Right now this path may occur for multiple reasons or only one.
 		// The reason I am sure of is it occurs after a targeted unit dies off since there is no path
 		// for the unit to continue. The issue is that that this might cause units to pause for an entire
@@ -207,18 +219,18 @@ func (u *unit) prioritizeTargets() {
 // Specifically, the integer incremental error form where error is stored over multiple moves
 // This algorithm prioritizes straight line movement. It is not guaranteed the final position is reached.
 func (u *unit) getMoves() []move {
-	logger.logSelected(u.selected, infoLevel, selectedUnit, "getMoves: ", u.position.log()...)
+	logger.logSelected(u.selected, infoLevel, selectedUnit, "getMoves: ", u.Pos.log()...)
 
 	moves := make([]move, 0)
 	u.moveDone = true
 	u.bresenhamErrorDx = 0
 	u.bresenhamErrorDy = 0
 
-	s := u.newSubPixel(u.activeTarget)
+	s := u.newSubPos(u.activeTarget.pos())
 	x1 := s.x
 	y1 := s.y
-	x0 := u.subPixel.x
-	y0 := u.subPixel.y
+	x0 := u.subPos.x
+	y0 := u.subPos.y
 
 	var sx int
 	var sy int
@@ -259,33 +271,33 @@ func (u *unit) getMoves() []move {
 		return moves
 	}
 
-	s = subPixel{x0, y0}
+	s = subPos{x0, y0}
 	moves = append(moves, u.newMove(s))
 
 	// TODO: instead of arbitrarily picking second and third option, prioritize to minimize error
-	x0 = u.subPixel.x
-	y0 = u.subPixel.y
+	x0 = u.subPos.x
+	y0 = u.subPos.y
 	if u.bresenhamErrorDy != 0 && u.bresenhamErrorDx != 0 {
 		x0 += sx
-		s := subPixel{x0, y0}
+		s := subPos{x0, y0}
 		moves = append(moves, u.newMove(s))
 		x0 -= sx
 		y0 += sy
-		s = subPixel{x0, y0}
+		s = subPos{x0, y0}
 		moves = append(moves, u.newMove(s))
 	} else if u.bresenhamErrorDy != 0 {
 		y0 += sy
-		s := subPixel{x0, y0}
+		s := subPos{x0, y0}
 		moves = append(moves, u.newMove(s))
 		x0 += sx
-		s = subPixel{x0, y0}
+		s = subPos{x0, y0}
 		moves = append(moves, u.newMove(s))
 	} else if u.bresenhamErrorDx != 0 {
 		x0 += sx
-		s := subPixel{x0, y0}
+		s := subPos{x0, y0}
 		moves = append(moves, u.newMove(s))
 		y0 += sy
-		s = subPixel{x0, y0}
+		s = subPos{x0, y0}
 		moves = append(moves, u.newMove(s))
 	}
 
@@ -294,33 +306,33 @@ func (u *unit) getMoves() []move {
 	return moves
 }
 
-func (u *unit) newMove(s subPixel) move {
+func (u *unit) newMove(s subPos) move {
 	return move{
-		position: position{u.layer, u.downscale(s)},
-		confirm:  func() { u.confirmMove(s) }}
+		Pos:     u.downscale(s).layer(u.L),
+		confirm: func() { u.confirmMove(s) }}
 }
 
-func (u *unit) confirmMove(s subPixel) {
-	u.position = position{u.layer, u.downscale(s)}
+func (u *unit) confirmMove(s subPos) {
+	u.Pos = u.downscale(s).layer(u.L)
 	u.movedThisTurn = true
-	if u.subPixel.x != s.x {
+	if u.subPos.x != s.x {
 		u.bresenhamError += u.bresenhamErrorDy
 	}
-	if u.subPixel.y != s.y {
+	if u.subPos.y != s.y {
 		u.bresenhamError += u.bresenhamErrorDx
 	}
-	u.subPixel = s
+	u.subPos = s
 }
 
 func (u *unit) updateTargetUnit(ut unitTarget, unit *unit) {
 	if unit == nil {
-		u.updateTarget(ut, position{})
+		u.updateTarget(ut, Pixel{})
 	} else {
-		u.updateTarget(ut, unit.position)
+		u.updateTarget(ut, unit.pixel())
 	}
 }
 
-func (u *unit) updateTarget(ut unitTarget, target position) {
+func (u *unit) updateTarget(ut unitTarget, target Pixel) {
 	// TODO: Determine if this should be refactored to protect itself from zero value updates.
 	// I think it should, but it breaks other code.
 
@@ -342,7 +354,7 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 		u.localTarget = target
 		unitTarget = "localTarget"
 	case globalTarget:
-		u.globalTargets = []position{target}
+		u.globalTargets = []Pixel{target}
 		u.pathGlobalTarget = true
 		unitTarget = "globalTargets"
 	default:
@@ -350,7 +362,7 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 	}
 
 	var targetLog = []slog.Attr{slog.String("unit target", unitTarget)}
-	if !target.equals(position{}) {
+	if !target.equals(Pixel{}) {
 		targetLog = append(targetLog, target.log()...)
 	}
 	logger.logSelected(u.selected, infoLevel, selectedUnit, "updateTarget", targetLog...)
@@ -363,20 +375,20 @@ func (u *unit) updateTarget(ut unitTarget, target position) {
 // path only considers jumping to obstacles which directly block the los but certain paths are more efficient
 // when jumping to obstacles which are not in the los.
 //
-// A smaller issue is when the desired final position is within a visbility grid, but the los check from
+// A smaller issue is when the desired final position is within a visibility grid, but the los check from
 // the position to unit immediately jumps to a different obstacle visibility grid when the first
 // visibility grid should have been traveled.
 func (u *unit) pathfindGlobalTarget(obstacles obstacles, oLUT obstacleLUT, g grid) int {
 	logger.logSelected(u.selected, infoLevel, selectedUnit, "pathfindGlobalTarget")
 
 	var foundPath bool
-	tries := [][]position{{u.globalTargets[0]}}
-	nextTries := [][]position{}
+	tries := [][]Pixel{{u.globalTargets[0]}}
+	nextTries := [][]Pixel{}
 
 	for !foundPath {
 		for _, path := range tries {
 			start := path[len(path)-1]
-			obstaclePoint, los := start.obstaclePoint(u.Pixel, oLUT, obstacles, g)
+			obstaclePoint, los := start.obstaclePoint(u.pixel(), oLUT, obstacles, g)
 
 			if los {
 				foundPath = true
@@ -396,24 +408,24 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, oLUT obstacleLUT, g gri
 			nextTries = append(nextTries, slices.Concat(path, ccwPath))
 		}
 		tries = nextTries
-		nextTries = [][]position{}
+		nextTries = [][]Pixel{}
 	}
 
-	paths := [][]position{}
+	paths := [][]Pixel{}
 	for _, try := range tries {
 		end := try[len(try)-1]
-		if _, los := u.lineOfSight(end.Pixel, oLUT, u.radius); los {
+		if _, los := u.pixel().lineOfSight(end, oLUT, u.radius); los {
 			paths = append(paths, try)
 		}
 	}
 
 	for i, path := range paths {
-		trimPath := []position{path[0]}
+		trimPath := []Pixel{path[0]}
 		for j := 0; j < len(path); j++ {
 			pos := path[j]
 			for k := len(path) - 1; k > j; k-- {
-				otherPos := path[k]
-				if _, los := pos.lineOfSight(otherPos.Pixel, oLUT, u.radius); los {
+				otherPixel := path[k]
+				if _, los := pos.lineOfSight(otherPixel, oLUT, u.radius); los {
 					j = k
 					trimPath = append(trimPath, path[k])
 					j--
@@ -427,9 +439,9 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, oLUT obstacleLUT, g gri
 	shortestDistance := math.MaxInt64
 	shortestPath := 0
 	for i, path := range paths {
-		distance := u.chebyshevDistance(path[len(path)-1].Pixel)
+		distance := u.pixel().chebyshevDistance(path[len(path)-1])
 		for i := 0; i < len(path)-1; i++ {
-			distance += path[i].chebyshevDistance(path[i+1].Pixel)
+			distance += path[i].chebyshevDistance(path[i+1])
 		}
 		if distance < shortestDistance {
 			shortestDistance = distance
@@ -453,9 +465,9 @@ func (u *unit) getPath(
 	direction pathDirection,
 	oLUT obstacleLUT,
 	obstacles obstacles,
-	g grid) []position {
+	g grid) []Pixel {
 
-	path := []position{}
+	path := []Pixel{}
 
 	var end obstaclePoint
 	switch direction {
@@ -468,8 +480,8 @@ func (u *unit) getPath(
 	}
 
 	for current != end {
-		path = append(path, position{layer: u.layer, Pixel: current.Pixel})
-		obstaclePoint, los := current.obstaclePoint(u.Pixel, oLUT, obstacles, g)
+		path = append(path, current.Pixel)
+		obstaclePoint, los := current.obstaclePoint(u.pixel(), oLUT, obstacles, g)
 
 		if los || current.visibilityGridId != obstaclePoint.visibilityGridId {
 			break
@@ -510,7 +522,7 @@ func (u *unit) refillPayload() {
 func (u unit) log() []slog.Attr {
 	var a = u.logShort()
 	a = append(a, slog.String("player", u.player.String()))
-	a = append(a, nest("subPixel", u.subPixel.log()))
+	a = append(a, nest("subPos", u.subPos.log()))
 	if u.next == nil {
 		a = append(a, slog.String("next", "none"))
 	} else {
@@ -524,22 +536,22 @@ func (u unit) log() []slog.Attr {
 	a = append(a, slog.Int("spawnOrder", u.spawnOrder))
 	a = append(a, nest("sourceNode", u.sourceNode.log()))
 	a = append(a, nest("sourcePosition", u.sourcePosition.log()))
-	if !u.activeTarget.equals(position{}) {
+	if !u.activeTarget.equals(Pixel{}) {
 		a = append(a, slog.Any("activeTarget", u.activeTarget.log()))
 	} else {
 		a = append(a, slog.String("activeTarget", "nil"))
 	}
-	if !u.steerTarget.equals(position{}) {
+	if !u.steerTarget.equals(Pixel{}) {
 		a = append(a, slog.Any("steerTarget", u.steerTarget.log()))
 	} else {
 		a = append(a, slog.String("steerTarget", "nil"))
 	}
-	if !u.enemyTarget.equals(position{}) {
+	if !u.enemyTarget.equals(Pixel{}) {
 		a = append(a, slog.Any("enemyTarget", u.enemyTarget.log()))
 	} else {
 		a = append(a, slog.String("enemyTarget", "nil"))
 	}
-	if !u.localTarget.equals(position{}) {
+	if !u.localTarget.equals(Pixel{}) {
 		a = append(a, slog.Any("localTarget", u.localTarget.log()))
 	} else {
 		a = append(a, slog.String("localTarget", "nil"))
@@ -596,7 +608,7 @@ func (u unit) log() []slog.Attr {
 func (u unit) logShort() []slog.Attr {
 	a := []slog.Attr{}
 	a = append(a, slog.Any("id", u.id))
-	a = append(a, nest("position", u.position.log()))
+	a = append(a, nest("Pos", u.Pos.log()))
 	return a
 }
 
@@ -605,7 +617,7 @@ func (u unit) angleDraw(pixelMultiplier float32) *ebiten.DrawImageOptions {
 	xMult := math.Sin(u.angle) - math.Cos(u.angle)
 	yMult := -math.Sqrt2 * math.Sin(u.angle+(math.Pi/4))
 	op.GeoM.Rotate(u.angle)
-	op.GeoM.Translate(float64(u.X)+float64(u.radius)*xMult, float64(u.Y)+float64(u.radius)*yMult)
+	op.GeoM.Translate(float64(u.pixel().X)+float64(u.radius)*xMult, float64(u.pixel().Y)+float64(u.radius)*yMult)
 	op.GeoM.Scale(float64(pixelMultiplier), float64(pixelMultiplier))
 	return &op
 }
@@ -625,7 +637,7 @@ func (u unit) draw(dc drawConfig, selected bool, pixelMultiplier float32) {
 	case fighter:
 		dc.screen.DrawImage(dc.pngFighter, u.angleDraw(pixelMultiplier))
 		for _, e := range u.equipments {
-			e.draw(dc, pixelMultiplier, &u)
+			e.draw(dc, pixelMultiplier)
 		}
 	case bomber:
 		dc.screen.DrawImage(dc.pngBomber, u.angleDraw(pixelMultiplier))
@@ -694,8 +706,8 @@ func (u unit) draw(dc drawConfig, selected bool, pixelMultiplier float32) {
 		}
 		vector.FillCircle(
 			dc.screen,
-			float32(u.X)*pixelMultiplier,
-			float32(u.Y)*pixelMultiplier,
+			float32(u.pixel().X)*pixelMultiplier,
+			float32(u.pixel().Y)*pixelMultiplier,
 			float32(u.radius)*pixelMultiplier,
 			color,
 			false,
@@ -703,15 +715,15 @@ func (u unit) draw(dc drawConfig, selected bool, pixelMultiplier float32) {
 	default:
 		vector.FillCircle(
 			dc.screen,
-			float32(u.X)*pixelMultiplier,
-			float32(u.Y)*pixelMultiplier,
+			float32(u.pixel().X)*pixelMultiplier,
+			float32(u.pixel().Y)*pixelMultiplier,
 			float32(u.radius)*pixelMultiplier,
 			unitColor,
 			false,
 		)
 	}
 
-	if selected && !u.activeTarget.equals(position{}) {
+	if selected && !u.activeTarget.equals(Pixel{}) {
 		if u.name == missileCruise {
 			vector.StrokeCircle(
 				dc.screen,
@@ -730,8 +742,8 @@ func (u unit) draw(dc drawConfig, selected bool, pixelMultiplier float32) {
 
 		vector.FillRect(
 			dc.screen,
-			float32(u.X-u.radius)*pixelMultiplier,
-			float32(u.Y-u.radius)*pixelMultiplier,
+			float32(u.pixel().X-u.radius)*pixelMultiplier,
+			float32(u.pixel().Y-u.radius)*pixelMultiplier,
 			healthLineLength*pixelMultiplier,
 			float32(u.radius)*pixelMultiplier,
 			dc.unitHealthColor,
@@ -743,8 +755,8 @@ func (u unit) draw(dc drawConfig, selected bool, pixelMultiplier float32) {
 func (u unit) drawVision(dc drawConfig, pixelMultiplier float32) {
 	vector.StrokeCircle(
 		dc.screen,
-		float32(u.X)*pixelMultiplier,
-		float32(u.Y)*pixelMultiplier,
+		float32(u.pixel().X)*pixelMultiplier,
+		float32(u.pixel().Y)*pixelMultiplier,
 		float32(u.vision)*pixelMultiplier,
 		float32(dc.defaultLineWidth)*pixelMultiplier,
 		dc.highlightColor,

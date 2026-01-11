@@ -13,15 +13,19 @@ type stateConfig struct {
 	moveUnits                bool
 	produceUnits             bool
 	produceUnitsStepInterval uint64
-	spawnUnitRadiusLimit     int // TODO: move this into partitioner. Not sure why I added here.
+	// helps isolate issues during debugging. For example, if toggling spatial partitioning off
+	// prevents bug from occurring, the bug is most likely within partitioner.go logic.
+	optimizeSpatialPartitions bool
+	spawnUnitRadiusLimit      int // TODO: move this into partitioner. Not sure why I added here.
 }
 
 func newStateConfig(g grid) stateConfig {
 	c := stateConfig{
-		moveUnits:                true,
-		produceUnits:             true,
-		produceUnitsStepInterval: 180,
-		spawnUnitRadiusLimit:     g.minimumDistanceBetweenNonAdjacentHexagons,
+		moveUnits:                 true,
+		produceUnits:              true,
+		produceUnitsStepInterval:  180,
+		optimizeSpatialPartitions: false,
+		spawnUnitRadiusLimit:      g.minimumPixelsBetweenNonAdjacentHexagons,
 	}
 	return c
 }
@@ -159,9 +163,9 @@ func (s state) unitsAir() func(yield func(u *unit) bool) {
 	}
 }
 
-func (s state) unitsLayer(l layer) *units {
+func (s state) unitsLayer(p Pos) *units {
 	var units units
-	switch l {
+	switch p.L {
 	case lLand:
 		units = s.landUnits
 	case lOrdnance:
@@ -175,7 +179,7 @@ func (s state) unitsLayer(l layer) *units {
 	case lChaff:
 		units = s.chaffUnits
 	default:
-		panic(fmt.Sprintf("layerUnits: unknown layer %d", l))
+		panic(fmt.Sprintf("state.unitsLayer: unknown layer %s", p.L.log()))
 	}
 	return &units
 }
@@ -183,12 +187,12 @@ func (s state) unitsLayer(l layer) *units {
 func (s *state) spawn(u *unit) {
 	// TODO: Verify if this should be >= rather than more conservative >
 	if u.radius > s.config.spawnUnitRadiusLimit && !u.isSkipSpawnRadiusCheck {
-		panic(fmt.Sprintf("spawn: cannot spawn unit radius %d exceeds spawn radius limit %d",
+		panic(fmt.Sprintf("state.spawn: cannot spawn unit radius %d exceeds spawn radius limit %d",
 			u.radius, s.config.spawnUnitRadiusLimit))
 	}
-	p, ok := s.grid.getGridPos(u.Pixel)
+	p, ok := s.grid.getGridPos(u.pixel())
 	if !ok {
-		panic(fmt.Sprintf("spawnUnit: cannot get get grid position %s", u.Pixel.log()))
+		panic(fmt.Sprintf("state.spawn: cannot get grid position for pixel %s", u.pixel().log()))
 	}
 	hex := s.hexagons[p]
 	hex.add(u)
@@ -200,11 +204,12 @@ func (s *state) spawn(u *unit) {
 		s.requesterUnits[u.id] = u
 	}
 
-	units := *s.unitsLayer(u.layer)
-	if _, ok := units[u.Pixel]; !ok {
-		units[u.Pixel] = u
+	units := *s.unitsLayer(u.Pos)
+	if _, ok := units[u.pixel()]; !ok {
+		units[u.pixel()] = u
 	} else {
-		panic(fmt.Sprintf("Cannot spawn unit at %s since it is already occupied.", u.Pixel.log()))
+		panic(fmt.Sprintf("state.spawn cannot spawn unit at %s since it is already occupied.",
+			u.pixel().log()))
 	}
 
 	if u.terminalStepDelay != 0 {
@@ -220,8 +225,8 @@ func (s *state) spawnRequest(r request) bool {
 	if r.spawn.terminalStepDelay != 0 {
 		r.spawn.terminalStep = s.step + r.spawn.terminalStepDelay
 	}
-	units := *s.unitsLayer(r.spawn.layer)
-	if _, ok := units[r.spawn.Pixel]; ok {
+	units := *s.unitsLayer(r.spawn.Pos)
+	if _, ok := units[r.spawn.pixel()]; ok {
 		return false
 	}
 	s.spawn(r.spawn)
@@ -229,10 +234,10 @@ func (s *state) spawnRequest(r request) bool {
 }
 
 func (s *state) moveUnit(u *unit, m move) {
-	old, oOk := s.grid.getGridPos(u.Pixel)
-	new, nOk := s.grid.getGridPos(m.Pixel)
+	old, oOk := s.grid.getGridPos(u.pixel())
+	new, nOk := s.grid.getGridPos(m.pixel())
 	if !oOk || !nOk {
-		panic(fmt.Sprintf("moveUnit: cannot move unit %s %s", u.Pixel.log(), m.Pixel.log()))
+		panic(fmt.Sprintf("moveUnit: cannot move unit %s with move %s", u.pixel().log(), m.pixel().log()))
 	}
 	if !old.equals(new) {
 		oldHex := s.hexagons[old]
@@ -240,19 +245,19 @@ func (s *state) moveUnit(u *unit, m move) {
 		newHex := s.hexagons[new]
 		newHex.add(u)
 	}
-	s.deleteUnit(u.position)
+	s.deleteUnit(u.Pos)
 	m.confirm()
-	units := *s.unitsLayer(m.layer)
-	if o, ok := units[u.Pixel]; ok {
-		panic(fmt.Sprintf("moveUnit: position for unit occupied by other unit. unit: %s other: %s",
+	units := *s.unitsLayer(m.Pos)
+	if o, ok := units[u.pixel()]; ok {
+		panic(fmt.Sprintf("moveUnit: position for unit occupied by other unit.\n unit: %s\nother: %s\n",
 			u.log(), o.log()))
 	}
-	units[u.Pixel] = u
+	units[u.pixel()] = u
 }
 
-func (s *state) deleteUnit(p position) {
+func (s *state) deleteUnit(p Pos) {
 	var units units
-	switch p.layer {
+	switch p.L {
 	case lLand:
 		units = s.landUnits
 	case lOrdnance:
@@ -266,9 +271,9 @@ func (s *state) deleteUnit(p position) {
 	case lChaff:
 		units = s.chaffUnits
 	default:
-		panic(fmt.Sprintf("deleteUnit: unknown layer %d", p.layer))
+		panic(fmt.Sprintf("deleteUnit: unknown layer %s", p.L.log()))
 	}
-	delete(units, p.Pixel)
+	delete(units, p.pixel())
 }
 
 func (s *state) refresh() {
@@ -319,6 +324,14 @@ func (s *state) processRequests() {
 }
 
 func (s *state) partitions(u unit, pa partitionAnalysis) []*hexagon {
+	if !s.config.optimizeSpatialPartitions {
+		parts := []*hexagon{}
+		for _, part := range s.hexagons {
+			parts = append(parts, part)
+		}
+		return parts
+	}
+	// TODO: fix, panics at start up
 	return s.partitioner.partitions(u, pa, s.config.spawnUnitRadiusLimit)
 }
 
@@ -340,7 +353,7 @@ func (s *state) analyzeTargets() {
 			u.name == missileBallistic ||
 			u.name == missileAntiBallistic ||
 			u.name == missileRadarActive {
-			u.localTargets = []position{u.globalTargets[0]}
+			u.localTargets = []Pixel{u.globalTargets[0]}
 			u.prioritizeTargets()
 			continue
 		}
@@ -357,7 +370,7 @@ func (s *state) analyzeTargets() {
 				u.globalTargets = s.nodes[u.sourceNode].targets
 				u.actions = s.nodes[u.sourceNode].actions
 			}
-			u.localTargets = []position{u.globalTargets[0]}
+			u.localTargets = []Pixel{u.globalTargets[0]}
 			u.prioritizeTargets()
 			continue
 		}
@@ -374,23 +387,23 @@ func (s *state) analyzeTargets() {
 				u.globalTargets = s.nodes[u.sourceNode].targets
 				u.actions = s.nodes[u.sourceNode].actions
 			}
-			u.localTargets = []position{u.globalTargets[0]}
+			u.localTargets = []Pixel{u.globalTargets[0]}
 			u.prioritizeTargets()
 			continue
 		}
 
 		steer := s.steer(u)
-		if !u.position.equals(steer) {
+		if !u.pixel().equals(steer) {
 			u.updateTarget(steerTarget, steer)
 		}
 
 		u.canReachNode = node{}
-		if s.nLUT[u.Pixel].ChebyshevDistance < u.reach {
-			if len(s.nLUT[u.Pixel].NearestNodes) > 1 {
+		if s.nLUT[u.pixel()].ChebyshevDistance < u.reach {
+			if len(s.nLUT[u.pixel()].NearestNodes) > 1 {
 				logger.log(errorLevel, undecidedBehavior,
 					"Undecided behavior. Unit can reach multiple nodes. Arbitrarily picking one")
 			}
-			p := s.nLUT[u.Pixel].NearestNodes[0]
+			p := s.nLUT[u.pixel()].NearestNodes[0]
 			n := s.nodes[p]
 			if u.player != n.player {
 				u.canReachNode = *n
@@ -399,7 +412,6 @@ func (s *state) analyzeTargets() {
 
 		s.nearestTargetWithinVision(u)
 		u.updateTargetUnit(enemyTarget, u.nearest)
-
 		if len(u.globalTargets) > 0 && u.pathGlobalTarget {
 			u.pathfindGlobalTarget(s.obstacles, s.oLUT, s.grid)
 		} else if len(u.localTargets) > 0 && u.moveDone {
@@ -410,7 +422,7 @@ func (s *state) analyzeTargets() {
 	}
 }
 
-func (s *state) steer(u *unit) position {
+func (s *state) steer(u *unit) Pixel {
 	partitions := s.partitions(*u, paSteer)
 
 	var xSteer int
@@ -420,7 +432,7 @@ func (s *state) steer(u *unit) position {
 			continue
 		}
 
-		linkedList := partition.get(u.layer).linkedList
+		linkedList := partition.get(u.Pos.L).linkedList
 
 		if linkedList == nil || (linkedList.id == u.id && linkedList == linkedList.next) {
 			continue
@@ -457,7 +469,7 @@ func (s *state) steer(u *unit) position {
 			// logic can maybe be moved there to save CPU.
 			// TODO: I think technically there should be a check on collides so the second radius
 			// is never greater than state.spawnUnitRadiusLimit. This should be a minor issue until later.
-			if _, ok := collides(u.Pixel, current.Pixel, u.radius+1, current.radius+1); ok {
+			if _, ok := collides(u.Pos, current.Pos, u.radius+1, current.radius+1); ok {
 				magnitude := 1
 
 				switch {
@@ -479,7 +491,7 @@ func (s *state) steer(u *unit) position {
 		}
 	}
 
-	return position{layer: u.layer, Pixel: Pixel{X: u.X + xSteer, Y: u.Y + ySteer}}
+	return Pixel{X: u.pixel().X + xSteer, Y: u.pixel().Y + ySteer}
 }
 
 func (s *state) moveUnits() {
@@ -504,27 +516,27 @@ func (s *state) moveUnits() {
 		var move move
 		moves := u.getMoves()
 		for _, m := range moves {
-			if u.layer != lLand {
+			if u.Pos.L != lLand {
 				move = m
 				break
 			}
-			if s.oLUT[m.Pixel].UnwalkableChebyshevDistance > u.radius {
+			if s.oLUT[m.pixel()].UnwalkableChebyshevDistance > u.radius {
 				move = m
 				break
 			}
 		}
 
 		var collidedBorder bool
-		var collidedUnitPos position
+		var collidedUnitPos Pos
 		var collidesWithUnit bool
-		if move.equals(position{}) {
+		if move.equals(Pos{}) {
 			// TODO: Should this be optimized to only perform this check when the unit
 			// does not typically move e.g. chaff
-			collidedBorder = s.grid.collidesWithBorder(u.position, u.radius)
-			collidedUnitPos, collidesWithUnit = s.collidesWithUnit(u.position, *u)
+			collidedBorder = s.grid.collidesWithBorder(u.pixel(), u.radius)
+			collidedUnitPos, collidesWithUnit = s.collidesWithUnit(u.Pos, *u)
 		} else {
-			collidedBorder = s.grid.collidesWithBorder(move.position, u.radius)
-			collidedUnitPos, collidesWithUnit = s.collidesWithUnit(move.position, *u)
+			collidedBorder = s.grid.collidesWithBorder(move.pixel(), u.radius)
+			collidedUnitPos, collidesWithUnit = s.collidesWithUnit(move.Pos, *u)
 		}
 
 		if collidedBorder && collidesWithUnit {
@@ -534,13 +546,13 @@ func (s *state) moveUnits() {
 			unitsBorderCollideCount++
 		} else if collidesWithUnit {
 			unitsCollideCount++
-			otherUnits := *s.unitsLayer(collidedUnitPos.layer)
-			otherUnit := otherUnits[collidedUnitPos.Pixel]
+			otherUnits := *s.unitsLayer(collidedUnitPos)
+			otherUnit := otherUnits[collidedUnitPos.pixel()]
 			otherUnit.collidedThisturn = true
 			u.collidedThisturn = true
 		} else if !u.canReachNode.isZero() {
 			unitsAtNode++
-		} else if move.equals(position{}) {
+		} else if move.equals(Pos{}) {
 			unitsNotMovedCount++
 		} else {
 			unitsMovedCount++
@@ -568,23 +580,23 @@ func (s *state) explode(u *unit) {
 	r1 := u.explodeRadius
 
 	for _, u := range s.landUnits {
-		x2 := u.X + u.radius
-		y2 := u.Y + u.radius
+		x2 := u.X + float64(u.radius)
+		y2 := u.Y + float64(u.radius)
 		r2 := u.radius
 
 		xDelta := x2 - x1
 		yDelta := y2 - y1
-		rSum := r1 + r2
+		rSum := float64(r1 + r2)
 		if xDelta*xDelta+yDelta*yDelta <= rSum*rSum {
 			u.health = 0
-			s.landUnits[u.Pixel] = u
+			s.landUnits[u.pixel()] = u
 		}
 	}
 }
 
 func (s state) nearestTargetWithinVision(u *unit) {
 	partitions := s.partitions(*u, paVision)
-	d := math.MaxInt64
+	d := math.MaxFloat64
 	var t *unit
 	for _, partition := range partitions {
 		if partition == nil {
@@ -602,8 +614,8 @@ func (s state) nearestTargetWithinVision(u *unit) {
 	u.nearest = t
 }
 
-func (s state) nearestTargetWithinLayer(u unit, linkedList *unit) (*unit, int) {
-	d := math.MaxInt64
+func (s state) nearestTargetWithinLayer(u unit, linkedList *unit) (*unit, float64) {
+	d := math.MaxFloat64
 	var t *unit
 	if linkedList == nil || (linkedList.id == u.id && linkedList == linkedList.next) {
 		return t, d
@@ -636,13 +648,13 @@ func (s state) nearestTargetWithinLayer(u unit, linkedList *unit) (*unit, int) {
 			continue
 		}
 
-		squaredDistance, collides := collides(u.Pixel, current.Pixel, u.vision, current.radius)
+		squaredDistance, collides := collides(u.Pos, current.Pos, u.vision, current.vision)
 		if squaredDistance < d && collides {
-			if _, los := u.lineOfSight(current.Pixel, s.oLUT, u.radius); los {
+			if _, los := u.pixel().lineOfSight(current.pixel(), s.oLUT, u.radius); los {
 				d = squaredDistance
 				t = current
 			}
-			if current.layer != lLand {
+			if current.L != lLand {
 				d = squaredDistance
 				t = current
 			}
@@ -650,11 +662,10 @@ func (s state) nearestTargetWithinLayer(u unit, linkedList *unit) (*unit, int) {
 
 		current = current.next
 	}
-
 	return t, d
 }
 
-func (s *state) collidesWithUnit(p position, u unit) (position, bool) {
+func (s *state) collidesWithUnit(p Pos, u unit) (Pos, bool) {
 	partitions := s.partitions(u, paCollision)
 	for _, partition := range partitions {
 		if partition == nil {
@@ -669,12 +680,12 @@ func (s *state) collidesWithUnit(p position, u unit) (position, bool) {
 		}
 	}
 
-	return position{}, false
+	return Pos{}, false
 }
 
-func (s state) collidesWithUnitLayer(u unit, p position, linkedList *unit) (position, bool) {
+func (s state) collidesWithUnitLayer(u unit, p Pos, linkedList *unit) (Pos, bool) {
 	if linkedList == nil || (linkedList.id == u.id && linkedList == linkedList.next) {
-		return position{}, false
+		return Pos{}, false
 	}
 
 	end := linkedList
@@ -696,9 +707,9 @@ func (s state) collidesWithUnitLayer(u unit, p position, linkedList *unit) (posi
 
 		checkOccurred = true
 
-		if u.ignoreCollision != nil && u.ignoreCollision(current) && u.layer == current.layer {
-			s := "collidesWithUnitLayer: Cannot ignore collisions between units in same layer. unit: " +
-				"%s, current: %s"
+		if u.ignoreCollision != nil && u.ignoreCollision(current) && u.L == current.L {
+			s := "state.collidesWithUnitLayer: Cannot ignore collisions between units in same layer " +
+				" unit: %s, current: %s"
 			panic(fmt.Sprintf(s, u.log(), current.log()))
 		}
 
@@ -709,12 +720,12 @@ func (s state) collidesWithUnitLayer(u unit, p position, linkedList *unit) (posi
 			continue
 		}
 
-		if _, ok := collides(p.Pixel, current.Pixel, u.radius, current.radius); ok {
-			return current.position, true
+		if _, ok := collides(p, current.Pos, u.radius, current.radius); ok {
+			return current.Pos, true
 		}
 		current = current.next
 	}
-	return position{}, false
+	return Pos{}, false
 }
 func (s *state) processTerminalUnits() {
 	for u := range s.unitsAir() {
@@ -737,7 +748,7 @@ func (s *state) attackUnits() {
 		// TODO: This may be wrong behavior but I am not sure if the issue is occurring e.g. the target
 		// was killed by another unit this unit should probably find a potential new target. Then attack
 		// that rather than not attack for a turn
-		if u.enemyTarget.equals(position{}) {
+		if u.enemyTarget.equals(Pixel{}) {
 			continue
 		}
 
@@ -746,25 +757,25 @@ func (s *state) attackUnits() {
 
 		var xDelta int
 		var yDelta int
-		if u.X < (xTargetPixel) {
-			xDelta = xTargetPixel - u.X
-		} else if u.X > (xTargetPixel) {
-			xDelta = u.X - xTargetPixel
+		if u.pixel().X < (xTargetPixel) {
+			xDelta = xTargetPixel - u.pixel().X
+		} else if u.pixel().X > (xTargetPixel) {
+			xDelta = u.pixel().X - xTargetPixel
 		}
-		if u.Y < (yTargetPixel) {
-			yDelta = yTargetPixel - u.Y
-		} else if u.Y > (yTargetPixel) {
-			yDelta = u.Y - yTargetPixel
+		if u.pixel().Y < (yTargetPixel) {
+			yDelta = yTargetPixel - u.pixel().Y
+		} else if u.pixel().Y > (yTargetPixel) {
+			yDelta = u.pixel().Y - yTargetPixel
 		}
 
-		var nearestVisibleUnit = s.landUnits[u.enemyTarget.Pixel]
-		var rSum = u.reach + nearestVisibleUnit.radius
+		var nearestVisibleUnit = s.landUnits[u.enemyTarget]
+		var rSum = u.reach + nearestVisibleUnit.reach
 		if rSum*rSum >= xDelta*xDelta+yDelta*yDelta {
 			nearestVisibleUnit.health = nearestVisibleUnit.health - u.attack
 			u.attackedThisTurn = true
 			unitAttackedOtherUnitCount++
-			s.landUnits[u.enemyTarget.Pixel] = nearestVisibleUnit
-			s.landUnits[u.position.Pixel] = u
+			s.landUnits[u.enemyTarget] = nearestVisibleUnit
+			s.landUnits[u.pixel()] = u
 		}
 	}
 
@@ -781,13 +792,14 @@ func (s *state) despawnUnits() {
 
 	for u := range s.units() {
 		if u.health <= 0 || (u.collidedThisturn && !u.isSurvivesCollision) {
-			gridPos, ok := s.grid.getGridPos(u.Pixel)
+			gridPos, ok := s.grid.getGridPos(u.pixel())
 			if !ok {
-				panic(fmt.Sprintf("despawnUnits: expected grid pos to exist for %s", u.Pixel.log()))
+				panic(fmt.Sprintf("state.despawnUnits: expected grid pos to exist for %s",
+					u.pixel().log()))
 			}
 			hex := s.hexagons[gridPos]
 			hex.subtract(*u)
-			s.deleteUnit(u.position)
+			s.deleteUnit(u.Pos)
 			delete(s.reactiveUnits, u.id)
 			delete(s.requesterUnits, u.id)
 			s.unitDespawnTotal++
@@ -877,7 +889,7 @@ func (s *state) updateForNodeCapture() bool {
 	return nodeOwnershipChanged
 }
 
-func (s *state) updateTargets(target position, filter []player) {
+func (s *state) updateTargets(target Pixel, filter []player) {
 	for _, n := range s.nodes {
 		if slices.Contains(filter, n.player) {
 			continue
@@ -968,7 +980,7 @@ func (s *state) produceUnits() {
 		if !ok {
 			panic("could not get pixel pos for produce units")
 		}
-		p := position{n.unitConfig.produceLayer, pixel}
+		p := pixel.posLayer(n.unitConfig.produceLayer)
 		u := newUnit(
 			n.unitConfig,
 			p,
@@ -980,8 +992,8 @@ func (s *state) produceUnits() {
 		if !ok {
 			panic("Could not get node center")
 		}
-		if _, collides := s.collidesWithUnit(p, u); !collides {
-			s.spawn(&u)
+		if _, collides := s.collidesWithUnit(p, *u); !collides {
+			s.spawn(u)
 			incrementAliveCount()
 		}
 	}

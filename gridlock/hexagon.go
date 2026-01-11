@@ -49,7 +49,7 @@ func (hl hexLayer) log() []slog.Attr {
 	if hl.linkedList == nil {
 		a = append(a, slog.String("linkedList", "none"))
 	} else {
-		a = append(a, nest("linkedList", hl.linkedList.Pixel.log()))
+		a = append(a, nest("linkedList", hl.linkedList.Pos.log()))
 	}
 	a = append(a, slog.Int("unitCount", hl.unitCount))
 	a = append(a, slog.Int("unitCountPOne", hl.unitCountPOne))
@@ -72,7 +72,7 @@ func (h *hexagon) get(l layer) *hexLayer {
 	case lChaff:
 		return &h.chaff
 	default:
-		panic(fmt.Sprintf("get: unknown layer %d", l))
+		panic(fmt.Sprintf("get: unknown layer %s", l.log()))
 	}
 }
 
@@ -130,7 +130,7 @@ func (hs hexagons) maxUnitDifferential(opponent player, l layer) []unitDifferent
 
 // Add the passed unit into the hexagon partition.
 func (h *hexagon) add(u *unit) {
-	hl := h.get(u.layer)
+	hl := h.get(u.L)
 	if hl.linkedList == nil && hl.unitCount != 0 {
 		s := "nil linked list unit count should be 0, not %d. \n hexagon: %s \n unit: %s"
 		panic(fmt.Sprintf(s, hl.unitCount, h.log(), u.log()))
@@ -160,7 +160,7 @@ func (h *hexagon) add(u *unit) {
 
 // Remove the passed unit from the hexagon partition.
 func (h *hexagon) subtract(u unit) {
-	hl := h.get(u.layer)
+	hl := h.get(u.L)
 	if u.next.id == u.id && u.prior.id == u.id {
 		hl.linkedList = nil
 	} else if u.next.id == u.id || u.prior.id == u.id {

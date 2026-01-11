@@ -88,7 +88,7 @@ func (part partitioner) partitions(u unit, pa partitionAnalysis, buffer int) par
 			u.name.string(), pa.string(), buffer))
 	}
 
-	positions = part.defaultPartitions(u.Pixel, radius)
+	positions = part.defaultPartitions(u.Pos, radius)
 	var parts partitions
 	for _, p := range positions {
 		parts = append(parts, part.hexagons[p])
@@ -107,15 +107,15 @@ func (part partitioner) lookUpPartitions(u unit, pa partitionAnalysis) partition
 		panic(fmt.Sprintf("lookUpPartitions: unknown partition analysis %s", pa.string()))
 	}
 
-	demotif, demotifOk := part.grid.demotif(u.Pixel)
+	demotif, demotifOk := part.grid.demotif(u.pixel())
 	if !demotifOk {
-		panic(fmt.Sprintf("lookUpPartitions: could not demotif pixel %s", u.Pixel.log()))
+		panic(fmt.Sprintf("lookUpPartitions: could not demotif pixel %s", u.pixel().log()))
 	}
 	hexSides := lut[demotif]
-	gp, gpOk := part.grid.getGridPos(u.Pixel)
+	gp, gpOk := part.grid.getGridPos(u.pixel())
 	positions := []GridPosition{gp}
 	if !gpOk {
-		panic(fmt.Sprintf("lookUpPartitions: could not find grid position for pixel %s", u.Pixel.log()))
+		panic(fmt.Sprintf("lookUpPartitions: could not find grid position for pixel %s", u.pixel().log()))
 	}
 	for _, hs := range hexSides {
 		if gp, ok := part.grid.adjacent(gp, hs); ok {
@@ -134,8 +134,8 @@ func (part partitioner) lookUpPartitions(u unit, pa partitionAnalysis) partition
 // For example, analyzing partitions for collision detection between two circles would be invalid
 // if the circle with the position and distance not passed has a radius which exceeds the
 // conservative hex radius. Not optimized because the hexagon collision uses conservative circles.
-func (part partitioner) defaultPartitions(p Pixel, d int) []GridPosition {
-	gridPos, ok := part.grid.getGridPos(p)
+func (part partitioner) defaultPartitions(p Pos, d int) []GridPosition {
+	gridPos, ok := part.grid.getGridPos(p.pixel())
 	if !ok {
 		panic(fmt.Sprintf("defaultPartitions: cannot find grid pos for %s", p.log()))
 	}
@@ -158,7 +158,7 @@ func (part partitioner) defaultPartitions(p Pixel, d int) []GridPosition {
 				if !okA {
 					panic(fmt.Sprintf("defaultPartitions: cannot find center for pos %s", a.log()))
 				}
-				_, collides := collides(p, pa, d, part.grid.conservativeHexRadius)
+				_, collides := collides(p, pa.pos(), d, part.grid.conservativeHexPixelRadius)
 				if collides {
 					nextQ = append(nextQ, a)
 				}
@@ -206,7 +206,7 @@ func (part partitioner) setupPartitionLUT(
 	pixels := part.grid.demotifHexPixels()
 	for externalP, hs := range collisionSources {
 		for _, internalP := range pixels {
-			if _, ok := collides(internalP, externalP, internalRadius, externalRadius); ok {
+			if _, ok := collides(internalP.pos(), externalP.pos(), internalRadius, externalRadius); ok {
 				hexSides := lut[demotif{internalP}]
 				if !slices.Contains(hexSides, hs) {
 					hexSides = append(hexSides, hs)

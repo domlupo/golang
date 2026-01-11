@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"log/slog"
+	"math"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -17,15 +18,26 @@ func intPtr(i int) *int {
 	return &i
 }
 
-// Stores a callback to invoke when a position is reached.
+func equalFloats(f1, f2 float64) bool {
+	// arbitrarily chose an epsilon value. I suspect issues caused by too small of an epsilon are
+	// quicker to debug than too large of an epsilon. So I went with 1e-9 instead of 1e-6.
+	epsilon := 1e-9
+	return math.Abs(f1-f2) < epsilon
+}
+
+// Stores a callback to invoke when a Pixel is reached.
 type action struct {
-	position
+	// TODO: I am not sure if this should be a Pixel or a Pos. I think this will be more clear in the
+	// future once target is more structured so I will punt it. If i had to decide now, I think Pixel
+	// is better because 1. Pixel uses ints which are simpler than float64s and 2. actions will
+	// probably be user input which is at the Pixel level not the Pos level.
+	Pixel
 	do func()
 }
 
 // Stores a callback to invoke when a move is confirmed.
 type move struct {
-	position
+	Pos
 	confirm func()
 }
 
@@ -47,7 +59,7 @@ func generateId() id {
 
 func (action action) log() []slog.Attr {
 	var a = []slog.Attr{}
-	a = append(a, nest("pos", action.position.log()))
+	a = append(a, nest("Pixel", action.Pixel.log()))
 	return a
 }
 

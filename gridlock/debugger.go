@@ -50,7 +50,7 @@ func newDebuggerConfig() *debuggerConfig {
 		heatmapB:                      0,
 		heatmapAlphaMaxLimit:          200,
 		debugUnitRotationIncrement:    0.01,
-		partitionAnalysis:             paVision,
+		partitionAnalysis:             paCollision,
 		heatmapPercent:                maxPercent,
 		sketchedHexagons:              make(map[GridPosition]struct{}),
 		roygbivColors: []color.RGBA{
@@ -313,7 +313,7 @@ func (d *debugger) createUnitPathfindHeatmap() {
 			}
 
 			if info.Walkable {
-				unit.updateTarget(globalTarget, position{layer: unit.layer, Pixel: pixel})
+				unit.updateTarget(globalTarget, pixel)
 				distance := unit.pathfindGlobalTarget(d.obstacles, d.oLUT, d.grid)
 				d.unitPathfind[pixel] = distance
 			}
@@ -522,11 +522,11 @@ func (u *unit) drawDebug(c drawConfig, dC debuggerConfig, pixelMultiplier float3
 		u.drawVision(c, pixelMultiplier)
 	}
 
-	if u.selected && !u.activeTarget.equals(position{}) {
+	if u.selected && !u.activeTarget.equals(Pixel{}) {
 		vector.StrokeLine(
 			c.screen,
-			float32(u.X)*pixelMultiplier,
-			float32(u.Y)*pixelMultiplier,
+			float32(u.pixel().X)*pixelMultiplier,
+			float32(u.pixel().Y)*pixelMultiplier,
 			float32(u.activeTarget.X)*pixelMultiplier,
 			float32(u.activeTarget.Y)*pixelMultiplier,
 			float32(c.targetNodeLineWidth)*pixelMultiplier,
@@ -536,8 +536,8 @@ func (u *unit) drawDebug(c drawConfig, dC debuggerConfig, pixelMultiplier float3
 
 		vector.StrokeLine(
 			c.screen,
-			float32(u.X)*pixelMultiplier,
-			float32(u.Y)*pixelMultiplier,
+			float32(u.pixel().X)*pixelMultiplier,
+			float32(u.pixel().Y)*pixelMultiplier,
 			float32(u.activeTarget.X)*pixelMultiplier,
 			float32(u.activeTarget.Y)*pixelMultiplier,
 			float32(c.targetNodeLineWidth)*pixelMultiplier,
@@ -552,8 +552,8 @@ func (u *unit) drawDebug(c drawConfig, dC debuggerConfig, pixelMultiplier float3
 
 			vector.StrokeLine(
 				c.screen,
-				float32(u.X)*pixelMultiplier,
-				float32(u.Y)*pixelMultiplier,
+				float32(u.pixel().X)*pixelMultiplier,
+				float32(u.pixel().Y)*pixelMultiplier,
 				float32(lt.X)*pixelMultiplier,
 				float32(lt.Y)*pixelMultiplier,
 				float32(c.targetNodeLineWidth)*pixelMultiplier,
@@ -574,8 +574,8 @@ func (u *unit) drawDebug(c drawConfig, dC debuggerConfig, pixelMultiplier float3
 
 			vector.StrokeLine(
 				c.screen,
-				float32(u.X)*pixelMultiplier,
-				float32(u.Y)*pixelMultiplier,
+				float32(u.pixel().X)*pixelMultiplier,
+				float32(u.pixel().Y)*pixelMultiplier,
 				float32(gt.X)*pixelMultiplier,
 				float32(gt.Y)*pixelMultiplier,
 				float32(c.targetNodeLineWidth)*pixelMultiplier,

@@ -18,31 +18,61 @@ type equipment struct {
 // Denotes the zone affected by equipment. Different types of equipment have different zone shapes
 // which is indicated via set or unset pointer. Every equipment has a single zone shape.
 type effectiveArea struct {
-	xOffset       int
-	yOffset       int
-	radius        *int
-	originPolygon *originPolygon
+	static
+	dynamic
 }
 
-// TODO: don't pass unit. in the future when I start setting attached field, unit does not needed passed.
-func (equip equipment) draw(dc drawConfig, pixelMultiplier float32, u *unit) {
-	a := u.angle
-	xOffset := float64(equip.xOffset)*math.Cos(a) - float64(equip.yOffset)*math.Sin(a)
-	yOffset := float64(equip.xOffset)*math.Sin(a) + float64(equip.yOffset)*math.Cos(a)
+// The equipment configuration which must not be mutated.
+type static struct {
+	offset  Pos
+	polygon *originPolygon
+	radius  *int
+}
 
-	if equip.originPolygon != nil {
-		for _, e := range equip.originPolygon.edges {
-			r1X := float64(e.p1.X)*math.Cos(a) - float64(e.p1.Y)*math.Sin(a)
-			r1Y := float64(e.p1.X)*math.Sin(a) + float64(e.p1.Y)*math.Cos(a)
-			r2X := float64(e.p2.X)*math.Cos(a) - float64(e.p2.Y)*math.Sin(a)
-			r2Y := float64(e.p2.X)*math.Sin(a) + float64(e.p2.Y)*math.Cos(a)
+// The equipment physics which may be mutated.
+type dynamic struct {
+	offset  Pos
+	polygon polygon
+}
+
+// Rotate the equipment around its attached unit.
+func (equip *equipment) rotate() {
+	a := equip.attached.angle
+	equip.dynamic.offset = Pos{
+		X: equip.static.offset.X*math.Cos(a) - equip.static.offset.Y*math.Sin(a),
+		Y: equip.static.offset.X*math.Sin(a) + equip.static.offset.Y*math.Cos(a),
+	}
+	if equip.static.polygon != nil {
+		edges := []line{}
+		for _, e := range equip.static.polygon.edges {
+			p1 := Pos{
+				X: e.p1.X*math.Cos(a) - e.p1.Y*math.Sin(a),
+				Y: e.p1.X*math.Sin(a) + e.p1.Y*math.Cos(a),
+			}
+			p2 := Pos{
+				X: e.p2.X*math.Cos(a) - e.p2.Y*math.Sin(a),
+				Y: e.p2.X*math.Sin(a) + e.p2.Y*math.Cos(a),
+			}
+			edges = append(edges, line{p1, p2})
+		}
+		equip.dynamic.polygon.edges = edges
+	}
+}
+
+func (equip equipment) draw(dc drawConfig, pixelMultiplier float32) {
+	if equip.static.polygon != nil {
+		for _, e := range equip.dynamic.polygon.edges {
+			p1X := equip.attached.X + equip.dynamic.offset.X + e.p1.X
+			p1Y := equip.attached.Y + equip.dynamic.offset.Y + e.p1.Y
+			p2X := equip.attached.X + equip.dynamic.offset.X + e.p2.X
+			p2Y := equip.attached.Y + equip.dynamic.offset.Y + e.p2.Y
 
 			vector.StrokeLine(
 				dc.screen,
-				(float32(u.X)+float32(r1X+xOffset))*pixelMultiplier,
-				(float32(u.Y)+float32(r1Y+yOffset))*pixelMultiplier,
-				(float32(u.X)+float32(r2X+xOffset))*pixelMultiplier,
-				(float32(u.Y)+float32(r2Y+yOffset))*pixelMultiplier,
+				float32(p1X)*pixelMultiplier,
+				float32(p1Y)*pixelMultiplier,
+				float32(p2X)*pixelMultiplier,
+				float32(p2Y)*pixelMultiplier,
 				float32(dc.defaultLineWidth)*pixelMultiplier,
 				color.Black,
 				true)
@@ -50,10 +80,12 @@ func (equip equipment) draw(dc drawConfig, pixelMultiplier float32, u *unit) {
 	}
 
 	if equip.radius != nil {
+		x := equip.attached.X + equip.dynamic.offset.X
+		y := equip.attached.Y + equip.dynamic.offset.Y
 		vector.StrokeCircle(
 			dc.screen,
-			(float32(u.X)+float32(xOffset))*pixelMultiplier,
-			(float32(u.Y)+float32(yOffset))*pixelMultiplier,
+			float32(x)*pixelMultiplier,
+			float32(y)*pixelMultiplier,
 			float32(*equip.radius)*pixelMultiplier,
 			float32(dc.defaultLineWidth)*pixelMultiplier,
 			color.Black,

@@ -34,7 +34,7 @@ type node struct {
 	maxHealth          int
 	currentHealth      int
 	capturedBy         player
-	targets            []position
+	targets            []Pixel
 	actions            []action
 	unitConfig         unitConfig
 	pOneUnitAliveCount int
@@ -135,11 +135,11 @@ func (info nodeInfo) log() []slog.Attr {
 // pixel away are processed. This continues until the all pixels are processed.
 func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 	start := time.Now()
-	distanceLimit := g.chebyshevDistanceLimit
+	distanceLimit := g.chebyshevPixelLimit
 	nodeLUT := make(map[Pixel]nodeInfo, g.basePixels)
 
-	for x := range g.width {
-		for y := range g.height {
+	for x := range g.pixelWidth {
+		for y := range g.pixelHeight {
 			p := Pixel{X: x, Y: y}
 			gridPos, ok := g.getGridPos(p)
 			if !ok {
@@ -163,8 +163,8 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 		priorCount = count
 		count = 0
 
-		for x := range g.width {
-			for y := range g.height {
+		for x := range g.pixelWidth {
+			for y := range g.pixelHeight {
 				p := Pixel{X: x, Y: y}
 				oInfo := oLUT[p]
 				nInfo := nodeLUT[p]
@@ -217,7 +217,7 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 				percent, count-priorCount, distance))
 
 		distance++
-		if distance > max(g.height, g.width) {
+		if distance > max(g.pixelHeight, g.pixelWidth) {
 			panic("setupNodeLUT: invalid setup, distance is greater than max allowed by window.")
 		}
 	}
@@ -228,8 +228,8 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 		percent,
 		distanceLimit))
 
-	for x := range g.width {
-		for y := range g.height {
+	for x := range g.pixelWidth {
+		for y := range g.pixelHeight {
 			p := Pixel{X: x, Y: y}
 			oInfo := oLUT[p]
 			if !oInfo.Walkable {
@@ -279,7 +279,7 @@ func (nodes nodes) setupControl(g grid, hexagons hexagons, oLUT obstacleLUT) {
 
 			p, ok := g.getCenterWithFallback(current)
 			if !ok {
-				panic("setup control, could not find any pixel position")
+				panic(fmt.Sprintf("setup control, could not find any pixel for grid pos %s", current.log()))
 			} else if !oLUT[p].Walkable {
 				continue
 			}
@@ -379,15 +379,15 @@ func (n *node) drawTargets(dc drawConfig, g grid, debugNodeTargets bool) {
 	}
 
 	if !n.isZero() && debugNodeTargets {
-		var center, ok = g.getPixel(n.gridPos, hpCenter)
+		var centerPixel, ok = g.getPixel(n.gridPos, hpCenter)
 		if !ok {
 			panic("could not get pixel pos for node draw targets")
 		}
 		for _, t := range n.targets {
 			vector.StrokeLine(
 				dc.screen,
-				float32(center.X)*g.pixelMultiplier,
-				float32(center.Y)*g.pixelMultiplier,
+				float32(centerPixel.X)*g.pixelMultiplier,
+				float32(centerPixel.Y)*g.pixelMultiplier,
 				float32(t.X)*g.pixelMultiplier,
 				float32(t.Y)*g.pixelMultiplier,
 				float32(dc.targetNodeLineWidth)*g.pixelMultiplier,

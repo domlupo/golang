@@ -3,7 +3,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"slices"
 )
@@ -13,35 +12,28 @@ type polygon struct {
 	edges []line
 	// not every edge normal is a separating axis. Parallel edges only require testing one axis.
 	separatingAxes []line
-	vertices       []Pixel
+	vertices       []Pos
 }
 
 // An origin centered convex shape.
 type originPolygon polygon
 
-// Creates a new origin centered polygon. If possible, the passed lines will be shifted to create an
-// origin centered polygon. Refer to newPolygon() for further details.
+// Creates an origin centered polygon by shifting passed lines. Refer to newPolygon() for details.
 func newOriginPolygon(lines []line) originPolygon {
 	poly := newPolygon(lines)
 
-	var midPoint Pixel
+	var midPoint Pos
 	for _, p := range poly.vertices {
 		midPoint.X += p.X
 		midPoint.Y += p.Y
 	}
 
-	if !midPoint.equals(Pixel{}) && !(midPoint.X%len(poly.vertices) == 0 &&
-		midPoint.Y%len(poly.vertices) == 0) {
-		panic(fmt.Sprintf(
-			"newOriginPolygon: polygon is not origin centered and cannot be shifted: %s", midPoint.log()))
-	}
+	xShift := midPoint.X / float64(len(poly.vertices)) / 2.0
+	yShift := midPoint.Y / float64(len(poly.vertices)) / 2.0
 
-	xShift := midPoint.X / len(poly.vertices) / 2
-	yShift := midPoint.Y / len(poly.vertices) / 2
-
-	var shiftedVertices []Pixel
+	var shiftedVertices []Pos
 	for _, p := range poly.vertices {
-		s := Pixel{p.X + xShift, p.Y + yShift}
+		s := Pos{X: p.X + xShift, Y: p.Y + yShift}
 		shiftedVertices = append(shiftedVertices, s)
 	}
 
@@ -73,7 +65,7 @@ func newPolygon(lines []line) polygon {
 	sorted := []line{lines[0]}
 	current := lines[0].p1
 	end := lines[0].p2
-	vertices := []Pixel{}
+	vertices := []Pos{}
 	for {
 		vertices = append(vertices, current)
 		priorSortCount := len(sorted)
@@ -129,16 +121,16 @@ func (p1 polygon) collides(p2 polygon) bool {
 		x := a.p2.X - a.p1.X
 		y := a.p2.Y - a.p1.Y
 
-		p1Min := math.MaxInt
-		p1Max := math.MinInt
+		p1Min := math.MaxFloat64
+		p1Max := -math.MaxFloat64
 		for _, v := range p1.vertices {
 			dot := x*v.X + y*v.Y
 			p1Min = min(p1Min, dot)
 			p1Max = max(p1Max, dot)
 		}
 
-		p2Min := math.MaxInt
-		p2Max := math.MinInt
+		p2Min := math.MaxFloat64
+		p2Max := -math.MaxFloat64
 		for _, v := range p2.vertices {
 			dot := x*v.X + y*v.Y
 			p2Min = min(p2Min, dot)

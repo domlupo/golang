@@ -489,30 +489,33 @@ func (uc *unitConfig) setEquipments() {
 	// TODO: config these hard coded values. It will be easier to figure how best way to configure
 	// once more unit equipments and equipment types are supported.
 	case fighter:
-		x := 2
-		y := 20
+		x := 2.0
+		y := 20.0
 		rotaryCannon := newOriginPolygon([]line{
-			{Pixel{0, 0}, Pixel{0, y}},
-			{Pixel{0, y}, Pixel{x, y}},
-			{Pixel{x, y}, Pixel{x, 0}},
-			{Pixel{x, 0}, Pixel{0, 0}},
+			{Pos{X: 0, Y: 0}, Pos{X: 0, Y: y}},
+			{Pos{X: 0, Y: y}, Pos{X: x, Y: y}},
+			{Pos{X: x, Y: y}, Pos{X: x, Y: 0}},
+			{Pos{X: x, Y: 0}, Pos{X: 0, Y: 0}},
 		})
 		uc.equipments = []equipment{
 			{effectiveArea: effectiveArea{
-				originPolygon: &rotaryCannon,
-				xOffset:       -8,
-				yOffset:       -30,
+				static: static{
+					polygon: &rotaryCannon,
+					offset:  Pos{X: -8, Y: -30},
+				},
 			}},
 			{effectiveArea: effectiveArea{
-				originPolygon: &rotaryCannon,
-				xOffset:       3,
-				yOffset:       -30,
+				static: static{
+					polygon: &rotaryCannon,
+					offset:  Pos{X: 3, Y: -30},
+				},
 			}},
 			// arbitrary equipment to prove radius (not only polygon) equipment behaves correctly.
 			{effectiveArea: effectiveArea{
-				radius:  intPtr(10),
-				xOffset: 10,
-				yOffset: 40,
+				static: static{
+					radius: intPtr(10),
+					offset: Pos{X: 10, Y: 40},
+				},
 			}},
 		}
 	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic,
