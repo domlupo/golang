@@ -22,6 +22,7 @@ const (
 	lChaff
 )
 
+// Typical enum to string conversion method.
 func (l layer) string() string {
 	switch l {
 	case lNone:
@@ -39,16 +40,18 @@ func (l layer) string() string {
 	case lChaff:
 		return "chaff"
 	default:
-		panic(fmt.Sprintf("Cannot string layer: %d", l))
+		panic(fmt.Sprintf("layer.string: unknown case: %d", l))
 	}
 }
 
+// Typical log method.
 func (l layer) log() slog.Attr {
 	return slog.String("layer", l.string())
 }
 
 type layers []layer
 
+// Atypical string method which unique formatting.
 func (layers layers) string() string {
 	var s []string
 	for i, l := range layers {

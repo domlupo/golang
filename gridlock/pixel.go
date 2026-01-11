@@ -14,7 +14,7 @@ type Pixel struct {
 	Y int `json:"y"`
 }
 
-// typical log method
+// typical log method.
 func (p Pixel) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, slog.Int("X", p.X))
@@ -35,7 +35,7 @@ func (p Pixel) posLayer(l layer) Pos {
 	return Pos{X: float64(p.X), Y: float64(p.Y), L: l}
 }
 
-// typical equals method
+// Typical equals method.
 func (p1 Pixel) equals(p2 Pixel) bool {
 	return p1.X == p2.X && p1.Y == p2.Y
 }

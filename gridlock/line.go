@@ -12,6 +12,7 @@ type line struct {
 	p2 Pos
 }
 
+// Typical log method.
 func (l line) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, nest("p1", l.p1.log()))
@@ -19,6 +20,7 @@ func (l line) log() []slog.Attr {
 	return a
 }
 
+// Typical equals method.
 func (l1 line) equals(l2 line) bool {
 	return (l1.p1.equals(l2.p1) && l1.p2.equals(l2.p2)) ||
 		(l1.p2.equals(l2.p1) && l1.p1.equals(l2.p2))

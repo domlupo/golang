@@ -60,7 +60,7 @@ func (c *consumable) setFireDelay(name name) {
 		fireDelay = 50
 	case bombGravity, missileCruise, missileBallistic, missileAntiBallistic:
 	default:
-		s := "setFireDelay: cannot set fire delay for unknown consumable %"
+		s := "consumable.setFireDelay: unknown consumable %"
 		panic(fmt.Sprintf(s, name.string()))
 	}
 	c.fireDelay = fireDelay
@@ -75,7 +75,7 @@ func (c *consumable) setFiresAt(name name) {
 		firesAt = func(uc unitConfig) bool { return uc.isEmitsRadar && uc.name != chaff }
 	case bombGravity, flare, chaff, missileBallistic, missileAntiBallistic, missileCruise:
 	default:
-		panic(fmt.Sprintf("setFiresAt: cannot set fires at for unknown consumable %s", name.string()))
+		panic(fmt.Sprintf("consumable.setFiresAt: unknown consumable %s", name.string()))
 	}
 	c.firesAt = firesAt
 }
@@ -93,12 +93,12 @@ func (cProvider consumableProvider) setFiresAtLayers(unitConfigs unitConfigs) {
 	}
 }
 
+// Logs consumables in a deterministic order.
 func (c consumables) log() []slog.Attr {
 	a := []slog.Attr{}
 	if len(c) == 0 {
 		a = append(a, slog.String("consumables", "none"))
 	}
-	// iterate through array in deterministic order
 	for _, name := range consumableNames() {
 		if c, ok := c[name]; ok {
 			a = append(a, nest(name.string(), c.log()))
@@ -107,6 +107,7 @@ func (c consumables) log() []slog.Attr {
 	return a
 }
 
+// Typical log method.
 func (c consumable) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, slog.Int("count", c.count))

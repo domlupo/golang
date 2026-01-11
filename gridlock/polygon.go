@@ -15,7 +15,7 @@ type polygon struct {
 	vertices       []Pos
 }
 
-// An origin centered convex shape.
+// An origin centered convex shape. Useful for rotations.
 type originPolygon polygon
 
 // Creates an origin centered polygon by shifting passed lines. Refer to newPolygon() for details.
@@ -111,7 +111,7 @@ func newPolygon(lines []line) polygon {
 	}
 }
 
-// check if two polygons collide via separating axis theorem.
+// Check if two polygons collide via separating axis theorem.
 func (p1 polygon) collides(p2 polygon) bool {
 	axes := []line{}
 	axes = append(axes, p1.separatingAxes...)
@@ -139,7 +139,7 @@ func (p1 polygon) collides(p2 polygon) bool {
 
 		overlaps := max(p1Min, p2Min) <= min(p1Max, p2Max)
 		if !overlaps {
-			// early exit since a separating line can be drawn between the two polygons
+			// Early exit since a separating line can be drawn between the two polygons.
 			return false
 		}
 	}

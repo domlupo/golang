@@ -31,7 +31,7 @@ func newToggleRegister(enableToggles bool) *toggleRegister {
 // toggle even if the same callback is registered.
 func (tr toggleRegister) register(key key, callback func()) {
 	if _, ok := tr.toggles[key]; ok {
-		panic(fmt.Sprintf("register: cannot register toggle because key: %d is taken", key))
+		panic(fmt.Sprintf("toggleRegister.register: key: %d is taken", key))
 	}
 
 	var k ebiten.Key
@@ -77,7 +77,7 @@ func (tr toggleRegister) register(key key, callback func()) {
 	case keyX:
 		k = ebiten.KeyX
 	default:
-		panic("register: unknown key")
+		panic("toggleRegister.register: unknown key")
 	}
 
 	tr.toggles[key] = &toggle{
@@ -103,7 +103,7 @@ func (tr toggleRegister) checkAllTogglePresses() {
 	}
 }
 
-// Represents a single toggle
+// Represents a single toggle.
 type toggle struct {
 	key      ebiten.Key
 	callback func()

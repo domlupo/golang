@@ -13,11 +13,12 @@ import (
 const maxPercent = 100
 const minPercent = 0
 
-// one liner to create int pointer. Avoids needing two lines: 1. set int 2. ref int.
+// One liner to create int pointer. Avoids needing two lines: 1. set int 2. ref int.
 func intPtr(i int) *int {
 	return &i
 }
 
+// Returns true if floats are approximately equal.
 func equalFloats(f1, f2 float64) bool {
 	// arbitrarily chose an epsilon value. I suspect issues caused by too small of an epsilon are
 	// quicker to debug than too large of an epsilon. So I went with 1e-9 instead of 1e-6.
@@ -57,6 +58,7 @@ func generateId() id {
 	return id{uuid}
 }
 
+// Typical log method.
 func (action action) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, nest("Pixel", action.Pixel.log()))
@@ -72,7 +74,8 @@ const (
 	pTwo
 )
 
-func (p player) String() string {
+// Typical string method.
+func (p player) string() string {
 	switch p {
 	case pNone:
 		return "pNone"
@@ -83,7 +86,7 @@ func (p player) String() string {
 	case pTwo:
 		return "pTwo"
 	default:
-		panic(fmt.Sprintf("Cannot convert player to string: %d", p))
+		panic(fmt.Sprintf("player.string unknown player: %d", p))
 	}
 }
 
@@ -119,6 +122,7 @@ func names() []name {
 		chaff}
 }
 
+// Typical string method.
 func (n name) string() string {
 	switch n {
 	case noName:
@@ -146,6 +150,6 @@ func (n name) string() string {
 	case chaff:
 		return "chaff"
 	default:
-		panic(fmt.Sprintf("String name is unknown %d", n))
+		panic(fmt.Sprintf("name.string unknown name %d", n))
 	}
 }

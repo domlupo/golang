@@ -16,7 +16,7 @@ type drawTriangleColor struct {
 	alpha float32
 }
 
-// Drawing Configurations for game components which are shown to player
+// Drawing Configurations for game components which are shown to player.
 type drawConfig struct {
 	screen                        *ebiten.Image
 	defaultLineWidth              int

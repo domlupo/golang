@@ -46,7 +46,7 @@ const (
 	collinear
 )
 
-// typical log method
+// Typical log method.
 func (p Pos) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, slog.Float64("X", float64(p.X)))
@@ -66,6 +66,7 @@ func (p1 Pos) angle(p2 Pos) float64 {
 	return math.Atan2(float64(p2.Y-p1.Y), float64(p2.X-p1.X)) + math.Pi/2
 }
 
+// Atypical equals method. Pos internally uses floats which causes approximate equals.
 func (p1 Pos) equals(p2 Pos) bool {
 	return p1.L == p2.L && equalFloats(p1.X, p2.X) && equalFloats(p1.Y, p2.Y)
 }
