@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"log/slog"
+	"strings"
 )
 
 // A layer is a 2 dimensional plane which units occupy. Units occupy a unique position
@@ -49,12 +50,12 @@ func (l layer) log() slog.Attr {
 type layers []layer
 
 func (layers layers) string() string {
-	var s string
+	var s []string
 	for i, l := range layers {
-		s += l.string()
+		s = append(s, l.string())
 		if i != len(layers)-1 {
-			s += ", "
+			s = append(s, ",")
 		}
 	}
-	return s
+	return strings.Join(s, "")
 }
