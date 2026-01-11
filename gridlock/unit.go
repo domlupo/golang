@@ -521,7 +521,7 @@ func (u *unit) refillPayload() {
 // or end for quicker debugging. Less used info can be parsed via tooling e.g. grep
 func (u unit) log() []slog.Attr {
 	var a = u.logShort()
-	a = append(a, slog.String("player", u.player.String()))
+	a = append(a, slog.String("player", u.player.string()))
 	a = append(a, nest("subPos", u.subPos.log()))
 	if u.next == nil {
 		a = append(a, slog.String("next", "none"))

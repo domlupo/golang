@@ -40,10 +40,11 @@ func (pa partitionAnalysis) string() string {
 	case paSteer:
 		return "paSteer"
 	default:
-		panic(fmt.Sprintf("Cannot convert partition analysis to string: %d", pa))
+		panic(fmt.Sprintf("partitionAnalysis.string unknown partitionAnalysis: %d", pa))
 	}
 }
 
+// Typical log method.
 func (pa partitionAnalysis) log() slog.Attr {
 	return slog.String("partitionAnalysis", pa.string())
 }
@@ -80,12 +81,12 @@ func (part partitioner) partitions(u unit, pa partitionAnalysis, buffer int) par
 	case pa == paSteer:
 		radius += 0
 	default:
-		panic(fmt.Sprintf("partitions: unknown partitions analysis %s", pa.string()))
+		panic(fmt.Sprintf("partitioner.partitions: unknown partition analysis %s", pa.string()))
 	}
 
 	if pa == paSteer && u.name != infantry {
-		panic(fmt.Sprintf("partitions: cannot get partitions for unit %s, analysis %s and buffer %d",
-			u.name.string(), pa.string(), buffer))
+		s := "partitioner.partitions: cannot get partitions for unit %s, analysis %s and buffer %d"
+		panic(fmt.Sprintf(s, u.name.string(), pa.string(), buffer))
 	}
 
 	positions = part.defaultPartitions(u.Pos, radius)
@@ -104,18 +105,19 @@ func (part partitioner) lookUpPartitions(u unit, pa partitionAnalysis) partition
 	case paVision:
 		lut = part.infantryVisionLUT
 	default:
-		panic(fmt.Sprintf("lookUpPartitions: unknown partition analysis %s", pa.string()))
+		panic(fmt.Sprintf("partitioner.lookUpPartitions: unknown partition analysis %s", pa.string()))
 	}
 
 	demotif, demotifOk := part.grid.demotif(u.pixel())
 	if !demotifOk {
-		panic(fmt.Sprintf("lookUpPartitions: could not demotif pixel %s", u.pixel().log()))
+		panic(fmt.Sprintf("partitioner.lookUpPartitions: could not demotif pixel %s", u.pixel().log()))
 	}
 	hexSides := lut[demotif]
 	gp, gpOk := part.grid.getGridPos(u.pixel())
 	positions := []GridPosition{gp}
 	if !gpOk {
-		panic(fmt.Sprintf("lookUpPartitions: could not find grid position for pixel %s", u.pixel().log()))
+		s := "partitioner.lookUpPartitions: could not find grid position for pixel %s"
+		panic(fmt.Sprintf(s, u.pixel().log()))
 	}
 	for _, hs := range hexSides {
 		if gp, ok := part.grid.adjacent(gp, hs); ok {
@@ -137,7 +139,7 @@ func (part partitioner) lookUpPartitions(u unit, pa partitionAnalysis) partition
 func (part partitioner) defaultPartitions(p Pos, d int) []GridPosition {
 	gridPos, ok := part.grid.getGridPos(p.pixel())
 	if !ok {
-		panic(fmt.Sprintf("defaultPartitions: cannot find grid pos for %s", p.log()))
+		panic(fmt.Sprintf("partitioner.defaultPartitions: cannot find grid pos for %s", p.log()))
 	}
 	visited := make(map[GridPosition]struct{})
 	visited[gridPos] = struct{}{}
@@ -156,7 +158,8 @@ func (part partitioner) defaultPartitions(p Pos, d int) []GridPosition {
 				// blocks development.
 				pa, okA := part.grid.getCenterWithFallback(a)
 				if !okA {
-					panic(fmt.Sprintf("defaultPartitions: cannot find center for pos %s", a.log()))
+					s := "partitioner.defaultPartitions: cannot find center for pos %s"
+					panic(fmt.Sprintf(s, a.log()))
 				}
 				_, collides := collides(p, pa.pos(), d, part.grid.conservativeHexPixelRadius)
 				if collides {
@@ -198,7 +201,8 @@ func (part partitioner) setupPartitionLUT(
 		internalRadius = internalUC.vision
 		externalRadius = externalUC.radius
 	default:
-		panic(fmt.Sprintf("setupPartitionsLUT: unsupported partition analysis %s", pa.string()))
+		s := "partitioner.setupPartitionsLUT: unsupported partition analysis %s"
+		panic(fmt.Sprintf(s, pa.string()))
 	}
 
 	lut := make(partitionLUT)

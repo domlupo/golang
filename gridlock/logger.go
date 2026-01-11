@@ -1,4 +1,4 @@
-// logger which adds dynamic runtime log levels and log types for various game layers and concepts.
+// Logger which adds dynamic runtime log levels and log types for various game layers and concepts.
 
 package main
 
@@ -130,16 +130,16 @@ func (logger l) onlyEnable(logType logType) {
 func (logger l) toggleLevel() {
 	if logger.LevelVar.Level() == slog.LevelError {
 		logger.Set(slog.LevelWarn)
-		logger.force("logger set to log WARN level")
+		logger.force("logger.toggleLevel: set to log WARN level")
 	} else if logger.LevelVar.Level() == slog.LevelWarn {
 		logger.Set(slog.LevelInfo)
-		logger.force("logger set to log INFO level")
+		logger.force("logger.toggleLevel: set to log INFO level")
 	} else if logger.LevelVar.Level() == slog.LevelInfo {
 		logger.Set(slog.LevelDebug)
-		logger.force("logger set to log DEBUG level")
+		logger.force("logger.toggleLevel: set to log DEBUG level")
 	} else if logger.LevelVar.Level() == slog.LevelDebug {
 		logger.Set(slog.LevelError)
-		logger.force("logger set to log ERROR level")
+		logger.force("logger.toggleLevel: set to log ERROR level")
 	}
 }
 
@@ -149,7 +149,7 @@ func (logger l) toggleType(lt logType) {
 	case noLogType:
 		ltName = "noLogType"
 	case alwaysLogType:
-		logger.force("Cannot toggle always log type")
+		logger.force("logger.toggleType: cannot toggle always log type")
 		return
 	case undecidedBehavior:
 		ltName = "undecidedBehavior"
@@ -162,16 +162,16 @@ func (logger l) toggleType(lt logType) {
 	case selectedUnit:
 		ltName = "selectedUnit"
 	default:
-		logger.force("Did not find a matching log type name")
+		logger.force("logger.toggleType: unknown log type")
 	}
 
 	enabled := logger.enabledLogTypes[lt]
 	logger.enabledLogTypes[lt] = !enabled
 
 	if ltName != "" && enabled {
-		logger.force(fmt.Sprintf("toggled log type off: %s", ltName))
+		logger.force(fmt.Sprintf("logger.toggleType: toggled %s log type off", ltName))
 	} else if ltName != "" && !enabled {
-		logger.force(fmt.Sprintf("toggled log type on: %s", ltName))
+		logger.force(fmt.Sprintf("logger.toggleType: toggled %s log type on", ltName))
 	}
 }
 

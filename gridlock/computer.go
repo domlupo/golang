@@ -85,7 +85,7 @@ func (c *computer) updateNodeTargets(avgUnitPos Pos) {
 	case pTwo:
 		opponent = pOne
 	default:
-		panic(fmt.Sprintf("updateNodeTargets: unknown player: %d", c.player))
+		panic(fmt.Sprintf("computer.updateNodeTargets: unknown player: %d", c.player))
 	}
 
 	diffs := c.state.hexagons.maxUnitDifferential(opponent, lLand)
@@ -98,7 +98,8 @@ func (c *computer) updateNodeTargets(avgUnitPos Pos) {
 
 		p, ok := c.state.grid.getCenterWithFallback(d.GridPosition)
 		if !ok {
-			panic("updateNodeTargets: cannot get center with fallback")
+			s := "computer.updateNodeTargets: cannot get center with fallback for grid pos %s"
+			panic(fmt.Sprintf(s, d.GridPosition.log()))
 		}
 		pixels = append(pixels, p)
 	}
@@ -114,7 +115,8 @@ func (c *computer) updateNodeTargets(avgUnitPos Pos) {
 
 		nP, ok := c.grid.getCenterWithFallback(n.gridPos)
 		if !ok {
-			panic(fmt.Sprintf("updateNodeTargets: cannot get pixel for grid pos %s", n.gridPos.log()))
+			s := "computer.updateNodeTargets: cannot get pixel for grid pos %s"
+			panic(fmt.Sprintf(s, n.gridPos.log()))
 		}
 		selfNode := n
 		selfNode.targets = []Pixel{nP}
@@ -166,8 +168,8 @@ func (c *computer) updateForNodeCapture() {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
 				var targetPixel, ok = c.grid.getPixel(otherNodePos, hpCenter)
 				if !ok {
-					panic(fmt.Sprintf("updateForNodeCapture: could not get pixel for grid pos %s",
-						otherNodePos.log()))
+					s := "computer.updateForNodeCapture: could not get pixel for grid pos %s"
+					panic(fmt.Sprintf(s, otherNodePos.log()))
 				}
 
 				selfNode.targets = []Pixel{targetPixel}
@@ -196,8 +198,8 @@ func (c *computer) updateForNodeCapture() {
 
 			nPixel, ok := c.grid.getPixel(n.gridPos, hpCenter)
 			if !ok {
-				panic(fmt.Sprintf("updateForNodeCapture: could not get pixel for grid pos %s",
-					n.gridPos.log()))
+				s := "computer.updateForNodeCapture: could not get pixel for grid pos %s"
+				panic(fmt.Sprintf(s, n.gridPos.log()))
 			}
 			n := nPixel.pos()
 			xDelta := (u.X - n.X)
@@ -233,7 +235,7 @@ func (c *computer) planBombs(n *node, targets []Pixel) {
 
 	nP, ok := c.grid.getCenterWithFallback(n.gridPos)
 	if !ok {
-		panic(fmt.Sprintf("planBombs: cannot get pixel for grid pos %s", n.gridPos.log()))
+		panic(fmt.Sprintf("computer.planBombs: cannot get pixel for grid pos %s", n.gridPos.log()))
 	}
 	n.targets = append(n.targets, nP)
 }

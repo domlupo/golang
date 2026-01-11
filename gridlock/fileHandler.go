@@ -37,7 +37,7 @@ const (
 
 type keys []GridPosition
 
-// Deterministically sort the keys
+// Deterministically sort the keys.
 func (keys keys) sort() {
 	slices.SortFunc(keys, func(i, j GridPosition) int {
 		switch {
@@ -68,18 +68,18 @@ func (f fileHandler) readObstacleLUT(obstacles obstacles, g grid) obstacleLUT {
 
 	if errors.Is(err, os.ErrNotExist) {
 		logger.log(infoLevel, setupLogic,
-			"readObstacleLUT: create look up table file since it does not "+"exist")
+			"fileHandler.readObstacleLUT: create look up table file since it does not "+"exist")
 		return f.writeObstacleLUT(obstacles, g)
 	} else if err != nil {
 		logger.log(errorLevel, setupLogic,
-			fmt.Sprintf("readObstacleLUT: file handler could not read json file: %v", err))
+			fmt.Sprintf("fileHandler.readObstacleLUT: file handler could not read json file: %v", err))
 	}
 	defer file.Close()
 
 	bytes, err := io.ReadAll(file)
 	if err != nil {
 		logger.log(errorLevel, setupLogic,
-			fmt.Sprintf("readObstacleLUT: file handler could not read json file: %e", err))
+			fmt.Sprintf("fileHandler.readObstacleLUT: file handler could not read json file: %e", err))
 		return f.writeObstacleLUT(obstacles, g)
 	}
 
@@ -92,13 +92,13 @@ func (f fileHandler) readObstacleLUT(obstacles obstacles, g grid) obstacleLUT {
 	}
 
 	if len(oLUT) != g.basePixels {
-		s := "readObstacleLUT: cannot read obstacle look up table since loaded LUT is %d pixels " +
-			"rather than expected %d"
+		s := "filerHandler.readObstacleLUT: cannot read obstacle look up table since loaded LUT is " +
+			" %d pixels rather than expected %d"
 		logger.log(errorLevel, setupLogic, fmt.Sprintf(s, len(oLUT), g.basePixels))
 		oLUT = f.writeObstacleLUT(obstacles, g)
 	} else {
 		logger.log(infoLevel, setupLogic,
-			"readObstacleLUT: loaded obstacle look up table, skipped creating it.")
+			"fileHandler.readObstacleLUT: loaded obstacle look up table, skipped creating it.")
 	}
 
 	return oLUT
@@ -128,18 +128,18 @@ func (f fileHandler) readNodeLUT(nodes nodes, obstacleLUT obstacleLUT, g grid) n
 
 	if errors.Is(err, os.ErrNotExist) {
 		logger.log(infoLevel, setupLogic,
-			"readNodeLUT: cannot create node lookup table file since it does not exist")
+			"fileHandler.readNodeLUT: cannot create node lookup table file since it does not exist")
 		return f.writeNodeLUT(nodes, obstacleLUT, g)
 	} else if err != nil {
 		logger.log(errorLevel, setupLogic,
-			fmt.Sprintf("readNodeLUT: file handler could not read json file: %v", err))
+			fmt.Sprintf("fileHandler.readNodeLUT: file handler could not read json file: %v", err))
 	}
 	defer file.Close()
 
 	bytes, err := io.ReadAll(file)
 	if err != nil {
 		logger.log(errorLevel, setupLogic,
-			fmt.Sprintf("readNodeLUT: file handler could not read json file: %e", err))
+			fmt.Sprintf("fileHandler.readNodeLUT: file handler could not read json file: %e", err))
 		return f.writeNodeLUT(nodes, obstacleLUT, g)
 	}
 
@@ -152,12 +152,14 @@ func (f fileHandler) readNodeLUT(nodes nodes, obstacleLUT obstacleLUT, g grid) n
 	}
 
 	if len(nLUT) != g.basePixels {
-		logger.log(errorLevel, setupLogic,
-			"readNodeLUT: create node lookup table since loaded node lookup table was invalid size")
+		s := "fileHandler.readNodeLUT: create node lookup table since loaded node lookup table was " +
+			"invalid size"
+		logger.log(errorLevel, setupLogic, s)
 		return f.writeNodeLUT(nodes, obstacleLUT, g)
 	}
 
-	logger.log(infoLevel, setupLogic, "readNodeLUT: loaded node lookup table, skipped creating it.")
+	s := "fileHandler.readNodeLUT: loaded node lookup table, skipped creating it."
+	logger.log(infoLevel, setupLogic, s)
 
 	return nLUT
 }
@@ -188,7 +190,7 @@ func (f fileHandler) fileName(file file, bytes []byte) string {
 	case fNode:
 		prefix = f.nodeLUTFileNamePrefix
 	default:
-		panic(fmt.Sprintf("Cannot get file name since unknown file: %d", file))
+		panic(fmt.Sprintf("fileHandler.fileName: unknown file: %d", file))
 	}
 
 	return fmt.Sprintf("%s-%d.json", prefix, crc32.ChecksumIEEE(bytes))
@@ -196,7 +198,8 @@ func (f fileHandler) fileName(file file, bytes []byte) string {
 
 func truncate(i int) byte {
 	if i > math.MaxUint8 || i < 0 {
-		panic(fmt.Sprintf("Cannot key obstacles due to byte truncation: %d", i))
+		s := "truncate: cannot key due to byte truncation: %d"
+		panic(fmt.Sprintf(s, i))
 	}
 	return byte(i)
 }

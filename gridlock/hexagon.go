@@ -9,7 +9,7 @@ import (
 	"slices"
 )
 
-// All hexagons on map
+// All hexagons on grid.
 type hexagons map[GridPosition]*hexagon
 
 // A hexagon which spatially partitions the map. Stores dynamic data bucketed by layer.
@@ -32,6 +32,7 @@ type hexLayer struct {
 	unitCountPTwo int
 }
 
+// Typical log method.
 func (h hexagon) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, nest("GridPosition", h.gridPos.log()))
@@ -44,6 +45,7 @@ func (h hexagon) log() []slog.Attr {
 	return a
 }
 
+// Typical log method.
 func (hl hexLayer) log() []slog.Attr {
 	var a = []slog.Attr{}
 	if hl.linkedList == nil {
@@ -72,7 +74,7 @@ func (h *hexagon) get(l layer) *hexLayer {
 	case lChaff:
 		return &h.chaff
 	default:
-		panic(fmt.Sprintf("get: unknown layer %s", l.log()))
+		panic(fmt.Sprintf("hexagon.get: unknown layer %s", l.log()))
 	}
 }
 
@@ -109,7 +111,7 @@ func (hs hexagons) maxUnitDifferential(opponent player, l layer) []unitDifferent
 		case pTwo:
 			d = hl.unitCountPTwo - hl.unitCountPOne
 		default:
-			panic(fmt.Sprintf("maxUnitDifferential: unknown player %d", opponent))
+			panic(fmt.Sprintf("hexagons.maxUnitDifferential: unknown player %d", opponent))
 		}
 		diffs = append(diffs, unitDifferential{p, d})
 	}
@@ -132,7 +134,8 @@ func (hs hexagons) maxUnitDifferential(opponent player, l layer) []unitDifferent
 func (h *hexagon) add(u *unit) {
 	hl := h.get(u.L)
 	if hl.linkedList == nil && hl.unitCount != 0 {
-		s := "nil linked list unit count should be 0, not %d. \n hexagon: %s \n unit: %s"
+		s := "hexagon.add: nil linked list unit count should be 0, not " +
+			" %d. \n hexagon: %s \n unit: %s"
 		panic(fmt.Sprintf(s, hl.unitCount, h.log(), u.log()))
 	}
 
@@ -153,7 +156,8 @@ func (h *hexagon) add(u *unit) {
 	case pTwo:
 		hl.unitCountPTwo++
 	default:
-		panic(fmt.Sprintf("cannot add player %d to hexagon", u.player))
+		panic(fmt.Sprintf("hexagon.add: cannot add player %d to hexagon",
+			u.player))
 	}
 
 }
@@ -164,7 +168,7 @@ func (h *hexagon) subtract(u unit) {
 	if u.next.id == u.id && u.prior.id == u.id {
 		hl.linkedList = nil
 	} else if u.next.id == u.id || u.prior.id == u.id {
-		panic("unit is in an invalid state")
+		panic("hexagon.subtract: unit is in an invalid state")
 	} else {
 		hl.linkedList = u.next
 	}
@@ -178,6 +182,7 @@ func (h *hexagon) subtract(u unit) {
 	case pTwo:
 		hl.unitCountPTwo--
 	default:
-		panic(fmt.Sprintf("cannot subtract player %d to hexagon", u.player))
+		s := "hexagon.subtract: cannot subtract player %d from hexagon"
+		panic(fmt.Sprintf(s, u.player))
 	}
 }

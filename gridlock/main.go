@@ -79,42 +79,44 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 	if _, ok := g.isDeveloperMacStudio(); ok {
 		pixelMultiplier = 2.5
 	}
-	logger.log(infoLevel, setupLogic, "restart: newGrid")
+
+	logger.log(infoLevel, setupLogic, "Game.restart: newGrid")
 	grid := newGrid(newGridConfig(pixelMultiplier))
-	logger.log(infoLevel, setupLogic, "restart: newHexagons")
+	logger.log(infoLevel, setupLogic, "Game.restart: newHexagons")
 	hexagons := newHexagons(grid)
-	logger.log(infoLevel, setupLogic, "restart: setupObstacles")
+	logger.log(infoLevel, setupLogic, "Game.restart: setupObstacles")
 	obstacles, oLUT := setupObstacles(obstacleSetup, grid)
-	logger.log(infoLevel, setupLogic, "restart: newUnitConfigProvider")
+	logger.log(infoLevel, setupLogic, "Game.restart: newUnitConfigProvider")
 	unitConfigProvider := newUnitConfigProvider()
-	logger.log(infoLevel, setupLogic, "restart: setupNodes")
+	logger.log(infoLevel, setupLogic, "Game.restart: setupNodes")
 	nodes, nLUT := setupNodes(
 		nodeSetup, grid, g.initialNodeHealth, hexagons, oLUT, unitConfigProvider)
-	logger.log(infoLevel, setupLogic,
-		fmt.Sprintf("restart: Setup required %0.2f seconds", float64(time.Since(start).Seconds())))
 
+	s := "Game.restart: Setup required %0.2f seconds"
+	m := fmt.Sprintf(s, float64(time.Since(start).Seconds()))
+	logger.log(infoLevel, setupLogic, m)
 	if verify {
 		for nPos := range nodes {
 			for oPos := range obstacles {
 				if nPos.equals(oPos) {
-					panic("restart: grid position conflict between node and obstacle")
+					panic("Game.restart: grid position conflict between node and obstacle")
 				}
 			}
 		}
 	}
 
-	logger.log(infoLevel, setupLogic, "restart: newPartitioner")
+	logger.log(infoLevel, setupLogic, "Game.restart: newPartitioner")
 	partitioner := newPartitioner(grid, hexagons, unitConfigProvider)
-	logger.log(infoLevel, setupLogic, "restart: newState")
+	logger.log(infoLevel, setupLogic, "Game.restart: newState")
 	g.state = newState(nodes, obstacles, hexagons, oLUT, nLUT, grid, partitioner, g.developerMode)
-	logger.log(infoLevel, setupLogic, "restart: newDebugger")
+	logger.log(infoLevel, setupLogic, "Game.restart: newDebugger")
 	debugger := newDebugger(g.state, g.toggleRegister)
-	logger.log(infoLevel, setupLogic, "restart: newComputers")
+	logger.log(infoLevel, setupLogic, "Game.restart: newComputers")
 	g.computers = newComputers(g.state, unitConfigProvider)
-	logger.log(infoLevel, setupLogic, "restart: newControllers")
+	logger.log(infoLevel, setupLogic, "Game.restart: newControllers")
 	g.controller = newController(g.state, g.computers, debugger, g.toggleRegister)
 	// TODO: I should only invoke newDrawConfig once per game not every restart
-	logger.log(infoLevel, setupLogic, "restart: newDrawer")
+	logger.log(infoLevel, setupLogic, "Game.restart: newDrawer")
 	g.drawer = newDrawer(newDrawConfig(), g.state, g.controller, debugger)
 	ebiten.SetWindowSize(
 		int(float32(g.state.grid.pixelWidth)*g.state.grid.pixelMultiplier),
@@ -127,7 +129,7 @@ func (g *Game) Update() error {
 	logger.log(
 		infoLevel,
 		mainLogic,
-		"game performance",
+		"Game,Update: game performance",
 		slog.String("FPS", fmt.Sprintf("%0.2f", ebiten.ActualFPS())),
 		slog.String("TPS", fmt.Sprintf("%0.2f", ebiten.ActualTPS())),
 	)
@@ -135,7 +137,7 @@ func (g *Game) Update() error {
 	// update game state prior to player actions
 	if !g.paused && !(g.slowTick && (g.currentTime.Sub(g.slowTickTime) < g.slowTickInterval)) {
 		if g.slowTick {
-			logger.log(infoLevel, devTool, "slowTick")
+			logger.log(infoLevel, devTool, "Game.Update: slowTick")
 		}
 		g.state.tick()
 	}
@@ -159,7 +161,7 @@ func (g *Game) Update() error {
 	for name, count := range unitCounts {
 		counts = append(counts, slog.Int(name.string(), count))
 	}
-	logger.log(infoLevel, mainLogic, "unitCounts", counts...)
+	logger.log(infoLevel, mainLogic, "Game.Update: unitCounts", counts...)
 
 	// play computer moves. Computers currently affect game state directly rather
 	// than the same game state being sent to each one before a final update occurs.
@@ -184,8 +186,6 @@ func (g *Game) Update() error {
 
 	if pOneNodeCount == 0 || pTwoNodeCount == 0 {
 		if g.hotRestart {
-			logger.log(infoLevel, mainLogic, "restartGame")
-
 			g.restart(g.nodeSetup, g.obstacleSetup, true)
 		} else {
 			return errors.New("regular termination")

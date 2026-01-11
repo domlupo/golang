@@ -58,7 +58,7 @@ func newNode(p player, gridPos GridPosition, initialNodeHealth int, uc unitConfi
 func (n node) log() []slog.Attr {
 	var a []slog.Attr
 	a = append(a, nest("gridPos", n.gridPos.log()))
-	a = append(a, slog.String("player", n.capturedBy.String()))
+	a = append(a, slog.String("player", n.capturedBy.string()))
 	if len(n.control) == 0 {
 		a = append(a, slog.String("control", "none"))
 	} else {
@@ -72,7 +72,7 @@ func (n node) log() []slog.Attr {
 	a = append(a, slog.Bool("multiSelect", n.multiSelect))
 	a = append(a, slog.Int("maxHealth", n.maxHealth))
 	a = append(a, slog.Int("currentHealth", n.currentHealth))
-	a = append(a, slog.String("capturedBy", n.capturedBy.String()))
+	a = append(a, slog.String("capturedBy", n.capturedBy.string()))
 	if len(n.targets) == 0 {
 		a = append(a, slog.String("targets", "none"))
 	} else {
