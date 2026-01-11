@@ -237,9 +237,9 @@ func (ucProvider unitConfigProvider) reactChaff(fireOrdnanceDelay uint64) reacti
 				GridPosition{},
 				u.selected)
 			u.requests = append(u.requests, request{spawn: newChafff})
-			consumeable := u.consumables[chaff]
-			consumeable.count -= 1
-			u.consumables[chaff] = consumeable
+			consumable := u.consumables[chaff]
+			consumable.count -= 1
+			u.consumables[chaff] = consumable
 		},
 		delay: fireOrdnanceDelay,
 	}
@@ -262,9 +262,9 @@ func (ucProvider unitConfigProvider) reactFlare(fireOrdnanceDelay uint64) reacti
 				GridPosition{},
 				u.selected)
 			u.requests = append(u.requests, request{spawn: newFlare})
-			consumeable := u.consumables[flare]
-			consumeable.count -= 1
-			u.consumables[flare] = consumeable
+			consumable := u.consumables[flare]
+			consumable.count -= 1
+			u.consumables[flare] = consumable
 		},
 		delay: fireOrdnanceDelay,
 	}
