@@ -33,7 +33,7 @@ const (
 	globalTarget
 )
 
-func (ut unitTarget) String() string {
+func (ut unitTarget) string() string {
 	switch ut {
 	case noTarget:
 		return "noTarget"
@@ -48,7 +48,7 @@ func (ut unitTarget) String() string {
 	case globalTarget:
 		return "globalTarget"
 	default:
-		panic(fmt.Sprintf("Cannot convert unit target to string: %d", ut))
+		panic(fmt.Sprintf("unitTarget.string: unknown unit target %d", ut))
 	}
 }
 
@@ -219,7 +219,7 @@ func (u *unit) prioritizeTargets() {
 // Specifically, the integer incremental error form where error is stored over multiple moves
 // This algorithm prioritizes straight line movement. It is not guaranteed the final position is reached.
 func (u *unit) getMoves() []move {
-	logger.logSelected(u.selected, infoLevel, selectedUnit, "getMoves: ", u.Pos.log()...)
+	logger.logSelected(u.selected, infoLevel, selectedUnit, "unit.getMoves: ", u.Pos.log()...)
 
 	moves := make([]move, 0)
 	u.moveDone = true
@@ -358,14 +358,14 @@ func (u *unit) updateTarget(ut unitTarget, target Pixel) {
 		u.pathGlobalTarget = true
 		unitTarget = "globalTargets"
 	default:
-		panic("Need to set a unit target")
+		panic("unit.updateTarget unknown unit target")
 	}
 
 	var targetLog = []slog.Attr{slog.String("unit target", unitTarget)}
 	if !target.equals(Pixel{}) {
 		targetLog = append(targetLog, target.log()...)
 	}
-	logger.logSelected(u.selected, infoLevel, selectedUnit, "updateTarget", targetLog...)
+	logger.logSelected(u.selected, infoLevel, selectedUnit, "unit.updateTarget", targetLog...)
 }
 
 // Not optimal but close enough to unblock future development. A hack is used which is not guaranteed
@@ -379,7 +379,7 @@ func (u *unit) updateTarget(ut unitTarget, target Pixel) {
 // the position to unit immediately jumps to a different obstacle visibility grid when the first
 // visibility grid should have been traveled.
 func (u *unit) pathfindGlobalTarget(obstacles obstacles, oLUT obstacleLUT, g grid) int {
-	logger.logSelected(u.selected, infoLevel, selectedUnit, "pathfindGlobalTarget")
+	logger.logSelected(u.selected, infoLevel, selectedUnit, "unit.pathfindGlobalTarget")
 
 	var foundPath bool
 	tries := [][]Pixel{{u.globalTargets[0]}}
@@ -476,7 +476,7 @@ func (u *unit) getPath(
 	case ccw:
 		end = *current.cw
 	default:
-		panic("To set end, path direction must be clockwise or counter clockwise")
+		panic("unit.getPath: unknown direction")
 	}
 
 	for current != end {
@@ -493,7 +493,7 @@ func (u *unit) getPath(
 		case ccw:
 			current = *current.ccw
 		default:
-			panic("To travel, path direction must be clockwise or counter clockwise")
+			panic("unit.getPath: unknown direction")
 		}
 	}
 
@@ -594,7 +594,7 @@ func (u unit) log() []slog.Attr {
 	a = append(a, slog.Bool("attackedThisTurn", u.attackedThisTurn))
 	a = append(a, slog.Any("canReachNode", u.canReachNode))
 	a = append(a, slog.Bool("selected", u.selected))
-	a = append(a, slog.String("activeTargetType", u.activeTargetType.String()))
+	a = append(a, slog.String("activeTargetType", u.activeTargetType.string()))
 	if u.nearest == nil {
 		a = append(a, slog.String("nearest", "none"))
 	} else {
@@ -630,7 +630,7 @@ func (u unit) draw(dc drawConfig, selected bool, pixelMultiplier float32) {
 	case pTwo:
 		unitColor = dc.pTwoUnitColor
 	default:
-		panic("unit needs a color")
+		panic("unit.draw: unknown color")
 	}
 
 	switch u.name {
@@ -702,7 +702,7 @@ func (u unit) draw(dc drawConfig, selected bool, pixelMultiplier float32) {
 		case pTwo:
 			color = dc.pTwoInfantryColor
 		default:
-			panic("infantry needs a color")
+			panic("unit.draw: unknown color")
 		}
 		vector.FillCircle(
 			dc.screen,

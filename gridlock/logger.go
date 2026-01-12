@@ -32,7 +32,6 @@ const (
 	devTool
 )
 
-// Logger configuration
 type loggerConfig struct {
 	initialLogLevel            slog.Level
 	filterTimeAndLevelFromLogs bool

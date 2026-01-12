@@ -118,8 +118,7 @@ func (ucProvider unitConfigProvider) setConsumables() {
 		case infantry, missileCruise, missileBallistic, missileAntiBallistic, missileHeatSeeking,
 			missileRadarActive, flare, bombGravity, chaff:
 		default:
-			s := "unitConfigProvider.setConsumables: unknown unit %s"
-			panic(fmt.Sprintf(s, uc.name.string()))
+			panic(fmt.Sprintf("unitConfigProvider.setConsumables: unknown unit %s", uc.name.string()))
 		}
 		uc.consumables = make(consumables)
 		for n, c := range counts {
@@ -212,8 +211,7 @@ func (ucProvider unitConfigProvider) setReactions() {
 				ucProvider.reactFlare(fighterUC.consumables[flare].fireDelay),
 			}
 		default:
-			s := "unitConfigProvider.setReactions: unknown unit %s"
-			panic(fmt.Sprintf(s, name.string()))
+			panic(fmt.Sprintf("unitConfigProvider.setReactions: unknown unit %s", name.string()))
 		}
 		uc := ucProvider.unitConfigs[name]
 		uc.reactions = reactions

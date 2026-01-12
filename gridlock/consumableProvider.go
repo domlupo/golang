@@ -60,8 +60,7 @@ func (c *consumable) setFireDelay(name name) {
 		fireDelay = 50
 	case bombGravity, missileCruise, missileBallistic, missileAntiBallistic:
 	default:
-		s := "consumable.setFireDelay: unknown consumable %"
-		panic(fmt.Sprintf(s, name.string()))
+		panic(fmt.Sprintf("consumable.setFireDelay: unknown consumable %s", name.string()))
 	}
 	c.fireDelay = fireDelay
 }

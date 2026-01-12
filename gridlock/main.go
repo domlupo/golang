@@ -92,9 +92,13 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 	nodes, nLUT := setupNodes(
 		nodeSetup, grid, g.initialNodeHealth, hexagons, oLUT, unitConfigProvider)
 
-	s := "Game.restart: Setup required %0.2f seconds"
-	m := fmt.Sprintf(s, float64(time.Since(start).Seconds()))
-	logger.log(infoLevel, setupLogic, m)
+	logger.log(
+		infoLevel,
+		setupLogic,
+		fmt.Sprintf(
+			"Game.restart: Setup required %0.2f seconds",
+			float64(time.Since(start).Seconds())))
+
 	if verify {
 		for nPos := range nodes {
 			for oPos := range obstacles {
@@ -298,13 +302,13 @@ func main() {
 				oI = 0
 			} else {
 				logger.log(infoLevel, setupLogic,
-					fmt.Sprintf("cacheSetups: cache obstacle %s", o[oI].String()))
+					fmt.Sprintf("cacheSetups: cache obstacle %s", o[oI].string()))
 			}
 			if i > len(nodeSetups())-1 {
 				nI = 0
 			} else {
 				logger.log(infoLevel, setupLogic,
-					fmt.Sprintf("cacheSetups: cache node %s", n[nI].String()))
+					fmt.Sprintf("cacheSetups: cache node %s", n[nI].string()))
 			}
 			g.restart(n[nI], o[oI], false)
 		}

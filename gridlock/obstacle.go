@@ -10,20 +10,20 @@ import (
 	"time"
 )
 
-// All obstacles on map
+// All obstacles on map.
 type obstacles map[GridPosition]*obstacle
 
-// All points on map from every obstacle visibility grid
+// All points on map from every obstacle visibility grid.
 type obstaclePoints map[Pixel]*obstaclePoint
 
-// A grid level component which blocks unit movement
+// A grid level component which blocks unit movement.
 type obstacle struct {
 	gridPos        GridPosition
 	kind           obstacleKind
 	visibilityGrid *[]obstaclePoint
 }
 
-// A point on an obstacle visibility grid
+// A point on an obstacle visibility grid.
 type obstaclePoint struct {
 	Pixel
 	source           GridPosition
@@ -53,6 +53,7 @@ const (
 	highMountain
 )
 
+// Typical log method.
 func (op obstaclePoint) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, nest("Pixel", op.Pixel.log()))
@@ -65,6 +66,7 @@ func (op obstaclePoint) log() []slog.Attr {
 	return a
 }
 
+// Typical log method.
 func (info obstacleInfo) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, slog.Bool("Walkable", info.Walkable))
@@ -80,7 +82,7 @@ func (op obstaclePoint) isZero() bool {
 func (os obstacles) insert(k GridPosition, v *obstacle) {
 	_, ok := os[k]
 	if ok {
-		panic(fmt.Sprintf("grid position {%d, %d} already contains obstacle: ", k.X, k.Y))
+		panic(fmt.Sprintf("obstacles.insert: grid pos {%d, %d} already contains obstacle: ", k.X, k.Y))
 	}
 	os[k] = v
 }
@@ -134,7 +136,9 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 			p := Pixel{X: x, Y: y}
 			gridPos, ok := g.getGridPos(p)
 			if !ok {
-				panic("setupObstacleLUT: Could not setup obstacle lookup table")
+				panic(fmt.Sprintf(
+					"obstacles.setupObstacleLUT: could not get grid pos for Pixel %s",
+					p.log()))
 			}
 			o := os[gridPos]
 			if o != nil && (o.kind == lowMountain || o.kind == highMountain) {
@@ -159,7 +163,11 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 		}
 	}
 
-	logger.log(infoLevel, setupLogic, "setupObstacleLUT", slog.Int("distance limit", distanceLimit))
+	logger.log(
+		infoLevel,
+		setupLogic,
+		"obstacles.setupObstacleLUT",
+		slog.Int("distanceLimit", distanceLimit))
 
 	distance := 0
 	var priorCount int
@@ -210,7 +218,7 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 			infoLevel,
 			setupLogic,
 			fmt.Sprintf(
-				"setupObstacleLUT: %.1f%% total pixels calculated. %d pixels of distance %d",
+				"obstacles.setupObstacleLUT: %.1f%% total pixels calculated. %d pixels of distance %d",
 				percent,
 				count-priorCount,
 				distance))
@@ -249,18 +257,27 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 		infoLevel,
 		setupLogic,
 		fmt.Sprintf(
-			"setupObstacleLUT: %.0f%% total pixels not skipped with a distance limit of %d",
+			"obstacles.setupObstacleLUT: %.0f%% total pixels not skipped with a distance limit of %d",
 			percent,
 			distanceLimit))
 
-	logger.log(infoLevel, setupLogic,
-		fmt.Sprintf("setupObstacleLUT: required %d seconds", int(time.Since(start).Seconds())))
+	logger.log(
+		infoLevel,
+		setupLogic,
+		fmt.Sprintf(
+			"obstacles.setupObstacleLUT: required %d seconds",
+			int(time.Since(start).Seconds())))
 
 	if len(oLUT) != g.basePixels {
-		s := "setupObstacleLUT: cannot setup obstacle look up table since created LUT is %d pixels " +
-			"rather than expected %d"
-		logger.log(errorLevel, setupLogic, fmt.Sprintf(s, len(oLUT), g.basePixels))
-		panic("setupObstacleLUT: game requires an obstacle LUT to start")
+		logger.log(
+			errorLevel,
+			setupLogic,
+			fmt.Sprintf(
+				"obstacles.setupObstacleLUT: LUT is %d pixels rather than expected %d",
+				len(oLUT),
+				g.basePixels))
+
+		panic("obstacles.setupObstacleLUT: game requires an obstacle LUT to start")
 	}
 
 	return oLUT

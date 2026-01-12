@@ -143,7 +143,7 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 			p := Pixel{X: x, Y: y}
 			gridPos, ok := g.getGridPos(p)
 			if !ok {
-				panic("setupNodeLUT: expected grid position to exist")
+				panic("nodes.setupNodeLUT: expected grid position to exist")
 			}
 			n := nodes[gridPos]
 			if n != nil && n.player != pNone {
@@ -154,7 +154,11 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 		}
 	}
 
-	logger.log(infoLevel, setupLogic, "setupNodeLUT", slog.Int("distance limit", distanceLimit))
+	logger.log(
+		infoLevel,
+		setupLogic,
+		"nodes.setupNodeLUT",
+		slog.Int("distance limit", distanceLimit))
 
 	distance := 0
 	var priorCount int
@@ -213,20 +217,26 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 		logger.log(
 			infoLevel,
 			setupLogic,
-			fmt.Sprintf("setupNodeLUT: %.1f%% total pixels calculated. %d pixels of distance %d",
-				percent, count-priorCount, distance))
+			fmt.Sprintf(
+				"nodes.setupNodeLUT: %.1f%% total pixels calculated. %d pixels of distance %d",
+				percent,
+				count-priorCount,
+				distance))
 
 		distance++
 		if distance > max(g.pixelHeight, g.pixelWidth) {
-			panic("setupNodeLUT: invalid setup, distance is greater than max allowed by window.")
+			panic("nodes.setupNodeLUT: distance is greater than max allowed by window.")
 		}
 	}
 
 	percent := float64(count) / float64(g.basePixels) * maxPercent
-	logger.log(infoLevel, setupLogic, fmt.Sprintf(
-		"setupNodeLUT: %.0f%% total pixels not skipped with a distance limit of %d",
-		percent,
-		distanceLimit))
+	logger.log(
+		infoLevel,
+		setupLogic,
+		fmt.Sprintf(
+			"nodes.setupNodeLUT: %.0f%% total pixels not skipped with a distance limit of %d",
+			percent,
+			distanceLimit))
 
 	for x := range g.pixelWidth {
 		for y := range g.pixelHeight {
@@ -240,13 +250,19 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 		}
 	}
 
-	logger.log(infoLevel, setupLogic,
-		fmt.Sprintf("setupNodeLUT: required %d seconds", int(time.Since(start).Seconds())))
+	logger.log(
+		infoLevel,
+		setupLogic,
+		fmt.Sprintf(
+			"nodes.setupNodeLUT: required %d seconds",
+			int(time.Since(start).Seconds())))
 
 	if len(nodeLUT) != g.basePixels {
-		logger.log(errorLevel, setupLogic,
-			"setupNodeLUT: cannot setup node look up table since created LUT is an invalid size")
-		panic("setupNodeLUT: game requires a node LUT to start")
+		logger.log(
+			errorLevel,
+			setupLogic,
+			"nodes.setupNodeLUT: cannot setup node look up table since created LUT is an invalid size")
+		panic("nodes.setupNodeLUT: game requires a full sized node LUT to start")
 	}
 
 	return nodeLUT
@@ -279,7 +295,9 @@ func (nodes nodes) setupControl(g grid, hexagons hexagons, oLUT obstacleLUT) {
 
 			p, ok := g.getCenterWithFallback(current)
 			if !ok {
-				panic(fmt.Sprintf("setup control, could not find any pixel for grid pos %s", current.log()))
+				panic(fmt.Sprintf(
+					"nodes.setupControl, could not find any pixel for grid pos %s",
+					current.log()))
 			} else if !oLUT[p].Walkable {
 				continue
 			}
@@ -317,7 +335,7 @@ func (nodes nodes) setupControl(g grid, hexagons hexagons, oLUT obstacleLUT) {
 			case pNone:
 				continue
 			default:
-				panic("cannot setup hex control. Unknown player")
+				panic("nodes.setupControl: unknown player")
 			}
 		}
 	}
@@ -333,7 +351,7 @@ func (n *node) drawNode(dc drawConfig, g grid) {
 	case pNeutral:
 		drawTriangleColor = dc.pNeutralNodeColor
 	default:
-		panic("unknown player cannot drawNode")
+		panic("node.drawNode: unknown player")
 	}
 	drawHex(dc, g, n.gridPos, drawTriangleColor, n.multiSelect)
 
@@ -375,13 +393,13 @@ func (n *node) drawTargets(dc drawConfig, g grid, debugNodeTargets bool) {
 	case pNeutral:
 		color = dc.pNeutralNodeTargetColor
 	default:
-		panic("unknown player for drawTargets")
+		panic("node.drawTargets: unknown player")
 	}
 
 	if !n.isZero() && debugNodeTargets {
 		var centerPixel, ok = g.getPixel(n.gridPos, hpCenter)
 		if !ok {
-			panic("could not get pixel pos for node draw targets")
+			panic(fmt.Sprintf("node.drawTargets: could not get Pixel for grid pos: %s", n.gridPos.log()))
 		}
 		for _, t := range n.targets {
 			vector.StrokeLine(

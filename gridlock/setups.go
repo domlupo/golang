@@ -25,7 +25,7 @@ func obstacleSetups() []obstacleSetup {
 		horizontalObstacle}
 }
 
-func (os obstacleSetup) String() string {
+func (os obstacleSetup) string() string {
 	switch os {
 	case noObstacle:
 		return "noObstacle"
@@ -42,7 +42,7 @@ func (os obstacleSetup) String() string {
 	case horizontalObstacle:
 		return "horizontalObstacle"
 	default:
-		panic("Unknown obstacle setup, cannot get string")
+		panic("obstacleSetup.string: unknown obstacle setup")
 	}
 }
 
@@ -389,7 +389,7 @@ func (os obstacles) setupInterior(setup obstacleSetup) {
 			{10, 4},
 		}
 	default:
-		panic("obstacle setup does not exist")
+		panic("obstacles.setupInterior: unknown obstacle setup")
 	}
 
 	for _, pos := range GridPositions {
@@ -442,7 +442,7 @@ func nodeSetups() []nodeSetup {
 		zoomHorizontal}
 }
 
-func (ns nodeSetup) String() string {
+func (ns nodeSetup) string() string {
 	switch ns {
 	case noNodes:
 		return "noNodes"
@@ -481,7 +481,7 @@ func (ns nodeSetup) String() string {
 	case zoomHorizontal:
 		return "zoomHorizontal"
 	default:
-		panic("Unknown node setup, cannot get string")
+		panic("nodeSetup.string: unknown node setup")
 	}
 }
 
@@ -908,7 +908,7 @@ func (nodes nodes) setupPositions(
 			{GridPosition{6, 2}, pTwo, infantryUC},
 		}
 	default:
-		panic("node setup does not exist")
+		panic("nodes.setupPositions: unknown setup")
 	}
 
 	for _, ni := range nodeSetupInputs {

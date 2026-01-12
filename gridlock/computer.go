@@ -98,8 +98,9 @@ func (c *computer) updateNodeTargets(avgUnitPos Pos) {
 
 		p, ok := c.state.grid.getCenterWithFallback(d.GridPosition)
 		if !ok {
-			s := "computer.updateNodeTargets: cannot get center with fallback for grid pos %s"
-			panic(fmt.Sprintf(s, d.GridPosition.log()))
+			panic(fmt.Sprintf(
+				"computer.updateNodeTargets: cannot get center with fallback for grid pos %s",
+				d.GridPosition.log()))
 		}
 		pixels = append(pixels, p)
 	}
@@ -115,8 +116,9 @@ func (c *computer) updateNodeTargets(avgUnitPos Pos) {
 
 		nP, ok := c.grid.getCenterWithFallback(n.gridPos)
 		if !ok {
-			s := "computer.updateNodeTargets: cannot get pixel for grid pos %s"
-			panic(fmt.Sprintf(s, n.gridPos.log()))
+			panic(fmt.Sprintf(
+				"computer.updateNodeTargets: cannot get pixel for grid pos %s",
+				n.gridPos.log()))
 		}
 		selfNode := n
 		selfNode.targets = []Pixel{nP}
@@ -168,8 +170,9 @@ func (c *computer) updateForNodeCapture() {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
 				var targetPixel, ok = c.grid.getPixel(otherNodePos, hpCenter)
 				if !ok {
-					s := "computer.updateForNodeCapture: could not get pixel for grid pos %s"
-					panic(fmt.Sprintf(s, otherNodePos.log()))
+					panic(fmt.Sprintf(
+						"computer.updateForNodeCapture: could not get pixel for grid pos %s",
+						otherNodePos.log()))
 				}
 
 				selfNode.targets = []Pixel{targetPixel}
@@ -198,8 +201,9 @@ func (c *computer) updateForNodeCapture() {
 
 			nPixel, ok := c.grid.getPixel(n.gridPos, hpCenter)
 			if !ok {
-				s := "computer.updateForNodeCapture: could not get pixel for grid pos %s"
-				panic(fmt.Sprintf(s, n.gridPos.log()))
+				panic(fmt.Sprintf(
+					"computer.updateForNodeCapture: could not get pixel for grid pos %s",
+					n.gridPos.log()))
 			}
 			n := nPixel.pos()
 			xDelta := (u.X - n.X)

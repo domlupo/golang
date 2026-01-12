@@ -210,7 +210,7 @@ func (d direction) string() string {
 	case northwest:
 		return "northwest"
 	default:
-		panic(fmt.Sprintf("direction.string: cannot convert direction %d", d))
+		panic(fmt.Sprintf("direction.string: unknown direction %d", d))
 	}
 }
 
@@ -223,6 +223,7 @@ func (l pixelLine) isVertical() bool {
 	return l.p1.X == l.p2.X
 }
 
+// Typical log method.
 func (l pixelLine) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, nest("p1", l.p1.log()))
@@ -272,7 +273,7 @@ func (g grid) setupHexTriangleLUT() []hexagonTriangle {
 	for _, t := range lut {
 		switch t {
 		case unknownHexTriangle:
-			panic("grid.setupHexTriangleLUT: The look up table should not have any unknown hex triangles")
+			panic("grid.setupHexTriangleLUT: The LUT should not have any unknown hex triangles")
 		case leftHexTriangle:
 			leftTriangleCount++
 		case middleHexTriangle:
@@ -281,7 +282,10 @@ func (g grid) setupHexTriangleLUT() []hexagonTriangle {
 			rightTriangleCount++
 		}
 	}
-	logger.log(infoLevel, setupLogic, "grid.setupHexTriangleLUT",
+	logger.log(
+		infoLevel,
+		setupLogic,
+		"grid.setupHexTriangleLUT",
 		slog.Int("leftHexTriangleCount", leftTriangleCount),
 		slog.Int("MiddleHexTriangleCount", middleTriangleCount),
 		slog.Int("RightHexTriangleCount", rightTriangleCount),
@@ -370,6 +374,7 @@ func hexSides() []hexSide {
 	return []hexSide{hsNortheast, hsEast, hsSoutheast, hsSouthwest, hsWest, hsNorthwest}
 }
 
+// Typical log method.
 func (gp GridPosition) log() []slog.Attr {
 	var a = []slog.Attr{}
 	a = append(a, slog.Int("X", gp.X))
@@ -377,8 +382,9 @@ func (gp GridPosition) log() []slog.Attr {
 	return a
 }
 
-func (gp GridPosition) equals(other GridPosition) bool {
-	return gp.X == other.X && gp.Y == other.Y
+// Typical equals method.
+func (gp1 GridPosition) equals(gp2 GridPosition) bool {
+	return gp1.X == gp2.X && gp1.Y == gp2.Y
 }
 
 func (g grid) allAdjacentGridPos(gp GridPosition) []GridPosition {
@@ -576,8 +582,10 @@ func (g grid) getGridPosOutbounds(p Pixel) GridPosition {
 			yIndexOffset = 2
 		}
 	default:
-		s := "grid.getGridPosOutbounds: could not find a y section for the inner y: %d and Pixel %s"
-		panic(fmt.Sprintf(s, innerY, p.log()))
+		panic(fmt.Sprintf(
+			"grid.getGridPosOutbounds: could not find a y section for the inner y: %d and Pixel %s",
+			innerY,
+			p.log()))
 	}
 
 	return GridPosition{xIndex + xIndexOffset, yIndex + yIndexOffset}
@@ -609,9 +617,10 @@ func (g grid) demotif(p Pixel) (demotif, bool) {
 		panic("grid.demotif: invalid modulo")
 	}
 	if p.X >= g.hexPixelWidth || p.Y >= g.hexPixelHeight {
-		s := "grid.demotif: by motif definition, x must be less than hex width and y must be less " +
-			"than hex height %s"
-		panic(fmt.Sprintf(s, p.log()))
+		panic(fmt.Sprintf(
+			"grid.demotif: by motif definition, x must be less than hex width and y must be less than "+
+				"hex height %s",
+			p.log()))
 	}
 	return demotif{p}, true
 }
@@ -664,13 +673,13 @@ func (g grid) demotifLinePixels(hs hexSide, clusivity clusivity) []Pixel {
 		d = south
 		trim = append(trim, Pixel{g.hexPixelWidth, g.hexPixelHeight * 3 / 4})
 	default:
-		panic("demotifLinePixels unknown hex side and clusivity combination")
+		panic("grid.demotifLinePixels unknown hex side and clusivity combination")
 	}
 
 	var l pixelLine
 	switch hs {
 	case hsNone:
-		panic("demotifLinePixels: hex side none does not have pixels")
+		panic("grid.demotifLinePixels: hex side none does not have Pixels")
 	case hsWest:
 		l = pixelLine{nw, sw}
 	case hsNorthwest:
@@ -684,7 +693,7 @@ func (g grid) demotifLinePixels(hs hexSide, clusivity clusivity) []Pixel {
 	case hsSoutheast:
 		l = pixelLine{s, se}
 	default:
-		panic(fmt.Sprintf("demotifLinePixels: unknown hex side %s", hs.string()))
+		panic(fmt.Sprintf("grid.demotifLinePixels: unknown hex side %s", hs.string()))
 	}
 	return l.adjacentPixels(d, trim...)
 }
@@ -704,7 +713,7 @@ func (g grid) demotifHexPixels() []Pixel {
 		sp := southPixels[i]
 		l := pixelLine{np, sp}
 		if !l.isVertical() {
-			panic("demotifHexPixels: expect line to be vertical")
+			panic("grid.demotifHexPixels: expect line to be vertical")
 		}
 		demotifPixels = append(demotifPixels, l.adjacentPixels(east)...)
 	}
@@ -785,8 +794,10 @@ func (g grid) adjacentPixel(p Pixel, d direction) (Pixel, bool) {
 		x = -1
 		y = -1
 	default:
-		s := "grid.adjacentPixel cannot get adjacent pixel for %s unknown direction: %d"
-		panic(fmt.Sprintf(s, p.log(), d))
+		panic(fmt.Sprintf(
+			"grid.adjacentPixel cannot get adjacent pixel for %s unknown direction: %d",
+			p.log(),
+			d))
 	}
 
 	a := Pixel{X: p.X + x, Y: p.Y + y}
@@ -806,8 +817,9 @@ func (l pixelLine) adjacentPixels(d direction, trim ...Pixel) []Pixel {
 	switch d {
 	case north, south, west, east:
 	default:
-		s := "grid.adjacentPixels: cannot get Pixels in direction %s since it is unimplemented"
-		panic(fmt.Sprintf(s, d.string()))
+		panic(fmt.Sprintf(
+			"grid.adjacentPixels: cannot get Pixels in direction %s since it is unimplemented",
+			d.string()))
 	}
 
 	var w Pixel
@@ -838,9 +850,10 @@ func (l pixelLine) adjacentPixels(d direction, trim ...Pixel) []Pixel {
 			y += 1
 		}
 	case !l.isVertical() && d == west, !l.isVertical() && d == east:
-		s := "grid.adjacentPixels: cannot get pixels in direction %s for non vertical lines since " +
-			"it is unimplemented"
-		panic(fmt.Sprintf(s, d.string()))
+		panic(fmt.Sprintf(
+			"grid.adjacentPixels: cannot get pixels in direction %s for non vertical lines since it is "+
+				"unimplemented",
+			d.string()))
 	case l.isVertical() && d == north:
 		pixels = append(pixels, Pixel{w.X, sY - 1})
 	case l.isVertical() && d == south:
@@ -877,8 +890,9 @@ func (l pixelLine) adjacentPixels(d direction, trim ...Pixel) []Pixel {
 	for _, p := range trim {
 		i := slices.Index(pixels, p)
 		if i == -1 {
-			s := "grid.adjacentPixels: cannot trim %s since it is not an adjacent pixel"
-			panic(fmt.Sprintf(s, p.log()))
+			panic(fmt.Sprintf(
+				"grid.adjacentPixels: cannot trim %s since it is not an adjacent pixel",
+				p.log()))
 		}
 		pixels = slices.Delete(pixels, i, i+1)
 	}

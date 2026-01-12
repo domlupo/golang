@@ -134,9 +134,11 @@ func (hs hexagons) maxUnitDifferential(opponent player, l layer) []unitDifferent
 func (h *hexagon) add(u *unit) {
 	hl := h.get(u.L)
 	if hl.linkedList == nil && hl.unitCount != 0 {
-		s := "hexagon.add: nil linked list unit count should be 0, not " +
-			" %d. \n hexagon: %s \n unit: %s"
-		panic(fmt.Sprintf(s, hl.unitCount, h.log(), u.log()))
+		panic(fmt.Sprintf(
+			"hexagon.add: nil linked list unit count should be 0, not %d. \n hexagon: %s \n unit: %s",
+			hl.unitCount,
+			h.log(),
+			u.log()))
 	}
 
 	if hl.linkedList == nil {
@@ -156,8 +158,7 @@ func (h *hexagon) add(u *unit) {
 	case pTwo:
 		hl.unitCountPTwo++
 	default:
-		panic(fmt.Sprintf("hexagon.add: cannot add player %d to hexagon",
-			u.player))
+		panic(fmt.Sprintf("hexagon.add: cannot add player %d to hexagon", u.player))
 	}
 
 }
@@ -182,7 +183,6 @@ func (h *hexagon) subtract(u unit) {
 	case pTwo:
 		hl.unitCountPTwo--
 	default:
-		s := "hexagon.subtract: cannot subtract player %d from hexagon"
-		panic(fmt.Sprintf(s, u.player))
+		panic(fmt.Sprintf("hexagon.subtract: cannot subtract player %d from hexagon", u.player))
 	}
 }

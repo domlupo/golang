@@ -85,8 +85,11 @@ func (part partitioner) partitions(u unit, pa partitionAnalysis, buffer int) par
 	}
 
 	if pa == paSteer && u.name != infantry {
-		s := "partitioner.partitions: cannot get partitions for unit %s, analysis %s and buffer %d"
-		panic(fmt.Sprintf(s, u.name.string(), pa.string(), buffer))
+		panic(fmt.Sprintf(
+			"partitioner.partitions: cannot get partitions for unit %s, analysis %s and buffer %d",
+			u.name.string(),
+			pa.string(),
+			buffer))
 	}
 
 	positions = part.defaultPartitions(u.Pos, radius)
@@ -116,8 +119,9 @@ func (part partitioner) lookUpPartitions(u unit, pa partitionAnalysis) partition
 	gp, gpOk := part.grid.getGridPos(u.pixel())
 	positions := []GridPosition{gp}
 	if !gpOk {
-		s := "partitioner.lookUpPartitions: could not find grid position for pixel %s"
-		panic(fmt.Sprintf(s, u.pixel().log()))
+		panic(fmt.Sprintf(
+			"partitioner.lookUpPartitions: could not find grid position for pixel %s",
+			u.pixel().log()))
 	}
 	for _, hs := range hexSides {
 		if gp, ok := part.grid.adjacent(gp, hs); ok {
@@ -158,8 +162,9 @@ func (part partitioner) defaultPartitions(p Pos, d int) []GridPosition {
 				// blocks development.
 				pa, okA := part.grid.getCenterWithFallback(a)
 				if !okA {
-					s := "partitioner.defaultPartitions: cannot find center for pos %s"
-					panic(fmt.Sprintf(s, a.log()))
+					panic(fmt.Sprintf(
+						"partitioner.defaultPartitions: cannot find center for pos %s",
+						a.log()))
 				}
 				_, collides := collides(p, pa.pos(), d, part.grid.conservativeHexPixelRadius)
 				if collides {
@@ -201,8 +206,9 @@ func (part partitioner) setupPartitionLUT(
 		internalRadius = internalUC.vision
 		externalRadius = externalUC.radius
 	default:
-		s := "partitioner.setupPartitionsLUT: unsupported partition analysis %s"
-		panic(fmt.Sprintf(s, pa.string()))
+		panic(fmt.Sprintf(
+			"partitioner.setupPartitionsLUT: unsupported partition analysis %s",
+			pa.string()))
 	}
 
 	lut := make(partitionLUT)

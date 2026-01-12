@@ -90,28 +90,28 @@ func newState(n nodes, o obstacles, h hexagons, oLUT obstacleLUT, nLUT nodeLUT, 
 
 // Progress game state by a single step
 func (s *state) tick() {
-	logger.log(infoLevel, stateLogic, "tick: start", slog.Uint64("step", s.step))
-	logger.log(infoLevel, stateLogic, "tick: refresh")
+	logger.log(infoLevel, stateLogic, "state.tick: start", slog.Uint64("step", s.step))
+	logger.log(infoLevel, stateLogic, "state.tick: refresh")
 	s.refresh()
-	logger.log(infoLevel, stateLogic, "tick: analyzeTargets")
+	logger.log(infoLevel, stateLogic, "state.tick: analyzeTargets")
 	s.analyzeTargets()
-	logger.log(infoLevel, stateLogic, "tick: processReactions")
+	logger.log(infoLevel, stateLogic, "state.tick: processReactions")
 	s.processReactions()
-	logger.log(infoLevel, stateLogic, "tick: processRequests")
+	logger.log(infoLevel, stateLogic, "state.tick: processRequests")
 	s.processRequests()
-	logger.log(infoLevel, stateLogic, "tick: processTerminalPositions")
+	logger.log(infoLevel, stateLogic, "state.tick: processTerminalPositions")
 	s.processTerminalUnits()
-	logger.log(infoLevel, stateLogic, "tick: attackUnits")
+	logger.log(infoLevel, stateLogic, "state.tick: attackUnits")
 	s.attackUnits()
-	logger.log(infoLevel, stateLogic, "tick: attackNodes")
+	logger.log(infoLevel, stateLogic, "state.tick: attackNodes")
 	s.attackNodes()
-	logger.log(infoLevel, stateLogic, "tick: moveUnits")
+	logger.log(infoLevel, stateLogic, "state.tick: moveUnits")
 	if s.config.moveUnits {
 		s.moveUnits()
 	}
-	logger.log(infoLevel, stateLogic, "tick: despawnUnits")
+	logger.log(infoLevel, stateLogic, "state.tick: despawnUnits")
 	s.despawnUnits()
-	logger.log(infoLevel, stateLogic, "tick: produceUnits")
+	logger.log(infoLevel, stateLogic, "state.tick: produceUnits")
 	if s.config.produceUnits && s.step%s.config.produceUnitsStepInterval == 0 {
 		s.produceUnits()
 	}
@@ -187,8 +187,10 @@ func (s state) unitsLayer(p Pos) *units {
 func (s *state) spawn(u *unit) {
 	// TODO: Verify if this should be >= rather than more conservative >
 	if u.radius > s.config.spawnUnitRadiusLimit && !u.isSkipSpawnRadiusCheck {
-		panic(fmt.Sprintf("state.spawn: cannot spawn unit radius %d exceeds spawn radius limit %d",
-			u.radius, s.config.spawnUnitRadiusLimit))
+		panic(fmt.Sprintf(
+			"state.spawn: cannot spawn unit radius %d exceeds spawn radius limit %d",
+			u.radius,
+			s.config.spawnUnitRadiusLimit))
 	}
 	p, ok := s.grid.getGridPos(u.pixel())
 	if !ok {
@@ -208,7 +210,8 @@ func (s *state) spawn(u *unit) {
 	if _, ok := units[u.pixel()]; !ok {
 		units[u.pixel()] = u
 	} else {
-		panic(fmt.Sprintf("state.spawn cannot spawn unit at %s since it is already occupied.",
+		panic(fmt.Sprintf(
+			"state.spawn cannot spawn unit at %s since it is already occupied.",
 			u.pixel().log()))
 	}
 
@@ -237,7 +240,10 @@ func (s *state) moveUnit(u *unit, m move) {
 	old, oOk := s.grid.getGridPos(u.pixel())
 	new, nOk := s.grid.getGridPos(m.pixel())
 	if !oOk || !nOk {
-		panic(fmt.Sprintf("moveUnit: cannot move unit %s with move %s", u.pixel().log(), m.pixel().log()))
+		panic(fmt.Sprintf(
+			"state.moveUnit: cannot move unit %s with move %s",
+			u.pixel().log(),
+			m.pixel().log()))
 	}
 	if !old.equals(new) {
 		oldHex := s.hexagons[old]
@@ -249,8 +255,10 @@ func (s *state) moveUnit(u *unit, m move) {
 	m.confirm()
 	units := *s.unitsLayer(m.Pos)
 	if o, ok := units[u.pixel()]; ok {
-		panic(fmt.Sprintf("moveUnit: position for unit occupied by other unit.\n unit: %s\nother: %s\n",
-			u.log(), o.log()))
+		panic(fmt.Sprintf(
+			"state.moveUnit: position for unit occupied by other unit.\n unit: %s \n other: %s \n",
+			u.log(),
+			o.log()))
 	}
 	units[u.pixel()] = u
 }
@@ -271,7 +279,7 @@ func (s *state) deleteUnit(p Pos) {
 	case lChaff:
 		units = s.chaffUnits
 	default:
-		panic(fmt.Sprintf("deleteUnit: unknown layer %s", p.L.log()))
+		panic(fmt.Sprintf("state.deleteUnit: unknown layer %s", p.L.log()))
 	}
 	delete(units, p.pixel())
 }
@@ -284,7 +292,7 @@ func (s *state) refresh() {
 
 func (s *state) processReactions() {
 	logger.log(infoLevel,
-		stateLogic, "processReactions", slog.Int("reactiveUnitCount", len(s.reactiveUnits)))
+		stateLogic, "state.processReactions", slog.Int("reactiveUnitCount", len(s.reactiveUnits)))
 	for _, u := range s.reactiveUnits {
 		for i, r := range u.reactions {
 			if r.next > s.step {
@@ -302,7 +310,7 @@ func (s *state) processReactions() {
 
 func (s *state) processRequests() {
 	logger.log(infoLevel,
-		stateLogic, "processRequests", slog.Int("requesterUnitCounter", len(s.requesterUnits)))
+		stateLogic, "state.processRequests", slog.Int("requesterUnitCounter", len(s.requesterUnits)))
 	for _, u := range s.requesterUnits {
 		for i, r := range u.requests {
 			if s.spawnRequest(r) {
@@ -400,7 +408,9 @@ func (s *state) analyzeTargets() {
 		u.canReachNode = node{}
 		if s.nLUT[u.pixel()].ChebyshevDistance < u.reach {
 			if len(s.nLUT[u.pixel()].NearestNodes) > 1 {
-				logger.log(errorLevel, undecidedBehavior,
+				logger.log(
+					errorLevel,
+					undecidedBehavior,
 					"Undecided behavior. Unit can reach multiple nodes. Arbitrarily picking one")
 			}
 			p := s.nLUT[u.pixel()].NearestNodes[0]
@@ -563,7 +573,7 @@ func (s *state) moveUnits() {
 	logger.log(
 		infoLevel,
 		stateLogic,
-		"moveUnits",
+		"state.moveUnits",
 		slog.Int("units moved", unitsMovedCount),
 		slog.Int("units not moved", unitsNotMovedCount),
 		slog.Int("units at node", unitsAtNode),
@@ -708,9 +718,11 @@ func (s state) collidesWithUnitLayer(u unit, p Pos, linkedList *unit) (Pos, bool
 		checkOccurred = true
 
 		if u.ignoreCollision != nil && u.ignoreCollision(current) && u.L == current.L {
-			s := "state.collidesWithUnitLayer: Cannot ignore collisions between units in same layer " +
-				" unit: %s, current: %s"
-			panic(fmt.Sprintf(s, u.log(), current.log()))
+			panic(fmt.Sprintf(
+				"state.collidesWithUnitLayer: Cannot ignore collisions between units in same layer "+
+					"unit: %s, current: %s",
+				u.log(),
+				current.log()))
 		}
 
 		if u.ignoreCollision != nil && u.ignoreCollision(current) ||
@@ -782,7 +794,7 @@ func (s *state) attackUnits() {
 	logger.log(
 		debugLevel,
 		stateLogic,
-		"attackUnits",
+		"state.attackUnits",
 		slog.Int("units attacked", unitAttackedOtherUnitCount),
 	)
 }
@@ -794,7 +806,8 @@ func (s *state) despawnUnits() {
 		if u.health <= 0 || (u.collidedThisturn && !u.isSurvivesCollision) {
 			gridPos, ok := s.grid.getGridPos(u.pixel())
 			if !ok {
-				panic(fmt.Sprintf("state.despawnUnits: expected grid pos to exist for %s",
+				panic(fmt.Sprintf(
+					"state.despawnUnits: expected grid pos to exist for %s",
 					u.pixel().log()))
 			}
 			hex := s.hexagons[gridPos]
@@ -813,7 +826,7 @@ func (s *state) despawnUnits() {
 				case pTwo:
 					n.pTwoUnitAliveCount--
 				default:
-					panic(fmt.Sprintf("attackUnits: unknown player %d", u.player))
+					panic(fmt.Sprintf("state.despawnUnits: unknown player %d", u.player))
 				}
 			}
 		}
@@ -822,7 +835,7 @@ func (s *state) despawnUnits() {
 	logger.log(
 		debugLevel,
 		stateLogic,
-		"despawnUnits",
+		"state.despawnUnits",
 		[]slog.Attr{
 			slog.Int("despawn unit turn count", despawnUnitTurnCount),
 			slog.Int("despawn unit total", s.unitDespawnTotal)}...,
@@ -862,7 +875,7 @@ func (s *state) attackNodes() {
 	logger.log(
 		debugLevel,
 		stateLogic,
-		"attackNodes",
+		"state.attackNodes",
 		slog.Int("no target node", noTargetNodeCount),
 		slog.Int("attacked unit this turn", attackedNodeThisTurnCount),
 		slog.Int("attacked node this turn", attackedNodeThisTurnCount),
@@ -968,7 +981,7 @@ func (s *state) produceUnits() {
 			unitAliveCount = n.pTwoUnitAliveCount
 			incrementAliveCount = func() { n.pTwoUnitAliveCount++ }
 		default:
-			panic(fmt.Sprintf("produceUnits: unknown player %d", n.player))
+			panic(fmt.Sprintf("state.produceUnits: unknown player %d", n.player))
 		}
 
 		if unitAliveCount == n.unitConfig.maxAlivePerNode {
@@ -978,7 +991,7 @@ func (s *state) produceUnits() {
 		// TODO: determine behavior for producing units during collision
 		pixel, ok := s.grid.getPixel(n.gridPos, hpCenter)
 		if !ok {
-			panic("could not get pixel pos for produce units")
+			panic(fmt.Sprintf("state.produceUnits: could not get Pixel for grid pos %s", n.gridPos.log()))
 		}
 		p := pixel.posLayer(n.unitConfig.produceLayer)
 		u := newUnit(
@@ -989,9 +1002,6 @@ func (s *state) produceUnits() {
 			n.actions,
 			n.gridPos,
 			n.selectActive() && s.developerMode)
-		if !ok {
-			panic("Could not get node center")
-		}
 		if _, collides := s.collidesWithUnit(p, *u); !collides {
 			s.spawn(u)
 			incrementAliveCount()

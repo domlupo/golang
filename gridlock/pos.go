@@ -74,7 +74,7 @@ func (p1 Pos) equals(p2 Pos) bool {
 // Returns the relative 2D (x, y) orientation among 3 Pos. The Pos directions are p -> q -> r.
 func orientation(p1 Pos, p2 Pos, p3 Pos) posOrientation {
 	if p1.L != p2.L || p2.L != p3.L || p1.L != p3.L {
-		panic(fmt.Sprintf("Pos.orientation: mismatched pos layers p1 layer %s, p2 layer %s, p3 layer %s",
+		panic(fmt.Sprintf("Pos.orientation: mismatched layers p1 layer %s, p2 layer %s, p3 layer %s",
 			p1.L.log(), p2.L.log(), p3.L.log()))
 	}
 

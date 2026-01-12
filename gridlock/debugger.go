@@ -174,7 +174,9 @@ func (d *debugger) registerToggles(tr *toggleRegister) {
 		func() {
 			gridPos, ok := d.grid.getGridPos(d.pixel)
 			if !ok {
-				panic(fmt.Sprintf("cannot sketch hexagon because no grid position for %s", d.pixel.log()))
+				panic(fmt.Sprintf(
+					"debugger: cannot sketch hexagon because no grid position for Pixel %s",
+					d.pixel.log()))
 			}
 			if _, ok := d.sketchedHexagons[gridPos]; ok {
 				delete(d.sketchedHexagons, gridPos)
@@ -202,7 +204,7 @@ func (d *debugger) debug(enableDebugger bool, debugSelection bool, p Pixel) {
 
 	for u := range d.units() {
 		if d.debugUnit {
-			logger.logSelected(u.selected, infoLevel, selectedUnit, "beforeRefresh", u.log()...)
+			logger.logSelected(u.selected, infoLevel, selectedUnit, "debugger.debug", u.log()...)
 			u.angle += d.debugUnitRotationIncrement
 			u.showVision = true
 		}
@@ -226,7 +228,7 @@ func (d *debugger) logPixel() {
 	}
 	attrs = append(attrs, nest("ObstacleLUT", d.oLUT[d.pixel].log()))
 	attrs = append(attrs, nest("NodeLUT", d.nLUT[d.pixel].log()))
-	logger.log(infoLevel, devTool, "pixel", attrs...)
+	logger.log(infoLevel, devTool, "debugger.logPixel", attrs...)
 }
 
 func (d *debugger) logVisibilityGridObstaclePoints() {
@@ -241,7 +243,7 @@ func (d *debugger) logVisibilityGridObstaclePoints() {
 			visited[op.visibilityGridId] = struct{}{}
 			for _, point := range *o.visibilityGrid {
 				if point.selected {
-					logger.log(infoLevel, devTool, "obstaclePoint", point.log()...)
+					logger.log(infoLevel, devTool, "debugger.logVisibilityGridObstaclePoints", point.log()...)
 				}
 			}
 		}
@@ -252,7 +254,7 @@ func (d *debugger) logHexagons() {
 	if d.debugHexagons {
 		for _, h := range d.hexagons {
 			if h.selected {
-				logger.log(infoLevel, devTool, "hexagon", h.log()...)
+				logger.log(infoLevel, devTool, "debugger.logHexagons", h.log()...)
 			}
 		}
 	}
@@ -262,7 +264,7 @@ func (d *debugger) logNodes() {
 	if d.debugNodes {
 		for _, n := range d.nodes {
 			if n.selected {
-				logger.log(infoLevel, devTool, "node", n.log()...)
+				logger.log(infoLevel, devTool, "debugger.logNodes", n.log()...)
 			}
 		}
 	}
@@ -272,7 +274,7 @@ func (d *debugger) selectedUnit() *unit {
 	var unit *unit
 	for u := range d.units() {
 		if u.selected && unit != nil {
-			logger.log(debugLevel, devTool, "selectedUnit: cannot select multiple units to debug")
+			logger.log(debugLevel, devTool, "debugger.selectedUnit: cannot select multiple units")
 			return nil
 		} else if u.selected {
 			unit = u
@@ -285,18 +287,20 @@ func (d *debugger) createUnitPathfindHeatmap() {
 	logger.onlyEnable(devTool)
 
 	if len(d.unitPathfind) != 0 {
-		logger.log(infoLevel, devTool,
-			"createUnitPathfindHeatmap: cannot create heatmap since it was already attempted")
+		logger.log(
+			infoLevel,
+			devTool,
+			"debugger.createUnitPathfindHeatmap: cannot create heatmap since it was already attempted")
 		return
 	}
 
 	unit := d.selectedUnit()
 	if unit == nil {
-		logger.log(debugLevel, devTool, "createUnitPathfindHeatmap: cannot select no units")
+		logger.log(debugLevel, devTool, "debugger.createUnitPathfindHeatmap: need to select one unit")
 		return
 	}
 
-	logger.log(infoLevel, devTool, "createUnitPathfindHeatmap: start")
+	logger.log(infoLevel, devTool, "debugger.createUnitPathfindHeatmap: start creation")
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 	pixelCount := 0
@@ -308,7 +312,10 @@ func (d *debugger) createUnitPathfindHeatmap() {
 			pixelCount++
 			if pixelCount%(d.grid.basePixels/maxPercent) == 0 {
 				percentProgress := pixelCount / (d.grid.basePixels / maxPercent)
-				logger.log(infoLevel, devTool, "createUnitPathfindHeatmap",
+				logger.log(
+					infoLevel,
+					devTool,
+					"debugger.createUnitPathfindHeatmap",
 					slog.Int("pixel positions percent progress", percentProgress))
 			}
 
@@ -321,7 +328,7 @@ func (d *debugger) createUnitPathfindHeatmap() {
 	}
 
 	d.unitPathfindHeatmapComplete = true
-	logger.log(infoLevel, devTool, "createUnitPathfindHeatmap: done")
+	logger.log(infoLevel, devTool, "debugger.createUnitPathfindHeatmap: done creation")
 }
 
 func (d *debugger) updateHeatmapPercent(delta int) {
@@ -331,7 +338,12 @@ func (d *debugger) updateHeatmapPercent(delta int) {
 	d.heatmapPercent = d.heatmapPercent + delta
 	d.heatmapPercent = max(d.heatmapPercent, minPercent+1)
 	d.heatmapPercent = min(d.heatmapPercent, maxPercent)
-	logger.log(infoLevel, devTool, fmt.Sprintf("updateHeatmapPercent: Set to %d", d.heatmapPercent))
+	logger.log(
+		infoLevel,
+		devTool,
+		fmt.Sprintf(
+			"debugger.updateHeatmapPercent: Set to %d",
+			d.heatmapPercent))
 }
 
 func (d debugger) draw(c drawConfig) {
@@ -368,7 +380,7 @@ func (d debugger) draw(c drawConfig) {
 	if d.debugHexagons {
 		u := d.selectedUnit()
 		if u != nil {
-			logger.log(infoLevel, devTool, "debugHexagons", d.partitionAnalysis.log())
+			logger.log(infoLevel, devTool, "debugger.debugHexagons", d.partitionAnalysis.log())
 			partitions := d.partitions(*u, d.partitionAnalysis)
 			for _, h := range partitions {
 				drawHexHighlight(c, d.grid, h.gridPos)
