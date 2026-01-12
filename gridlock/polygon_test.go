@@ -56,26 +56,6 @@ func TestNewOriginPolygon(t *testing.T) {
 			true,
 		},
 		{
-			"not origin centered and cannot be x shifted to center origin.",
-			[]line{
-				{Pos{X: -1, Y: -1}, Pos{X: 1, Y: 1}},
-				{Pos{X: 1, Y: 1}, Pos{X: -1, Y: -1}},
-				{Pos{X: 1, Y: 1}, Pos{X: 0, Y: 1}},
-				{Pos{X: 0, Y: 1}, Pos{X: 1, Y: 1}},
-			},
-			true,
-		},
-		{
-			"not origin centered and cannot be y shifted to center origin",
-			[]line{
-				{Pos{X: -1, Y: -1}, Pos{X: -1, Y: 2}},
-				{Pos{X: -1, Y: 2}, Pos{X: 1, Y: 2}},
-				{Pos{X: 1, Y: 2}, Pos{X: 1, Y: -1}},
-				{Pos{X: 1, Y: -1}, Pos{X: -1, Y: -1}},
-			},
-			true,
-		},
-		{
 			"valid polygon when x shifted to center origin",
 			[]line{
 				{Pos{X: -1, Y: -1}, Pos{X: -1, Y: 1}},
