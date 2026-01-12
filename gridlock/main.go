@@ -46,28 +46,25 @@ type Game struct {
 	cacheSetups                bool
 	cpuProfilerFile            *os.File
 	memoryProfilerFile         *os.File
-	toggleRegister             *toggleRegister
 }
 
 func newGame() Game {
 	developerMode := true
 	g := Game{
-		memProfilerStartBeforeGame: true,
-		developerMode:              developerMode,
-		obstacleSetup:              multiObstacle,
-		nodeSetup:                  leftVsRightVerticalOffsetFighters,
-		slowTickInterval:           1 * time.Second,
-		slowTickTime:               time.Now(),
-		priorTime:                  time.Now(),
-		currentTime:                time.Now(),
-		hotRestart:                 true,
-		initialNodeHealth:          100,
-		outputDirectoryName:        "output",
-		cpuProfilerFileName:        "cpu.prof",
-		memProfilerFileName:        "mem.prof",
-		toggleRegister:             newToggleRegister(developerMode),
+		developerMode:       developerMode,
+		obstacleSetup:       multiObstacle,
+		nodeSetup:           leftVsRightVerticalOffsetFighters,
+		slowTickInterval:    1 * time.Second,
+		slowTickTime:        time.Now(),
+		priorTime:           time.Now(),
+		currentTime:         time.Now(),
+		hotRestart:          true,
+		initialNodeHealth:   100,
+		outputDirectoryName: "output",
+		cpuProfilerFileName: "cpu.prof",
+		memProfilerFileName: "mem.prof",
 	}
-	logger = setupLogger(g.toggleRegister)
+	logger = setupLogger()
 	return g
 }
 
@@ -114,11 +111,14 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 	logger.log(infoLevel, setupLogic, "Game.restart: newState")
 	g.state = newState(nodes, obstacles, hexagons, oLUT, nLUT, grid, partitioner, g.developerMode)
 	logger.log(infoLevel, setupLogic, "Game.restart: newDebugger")
-	debugger := newDebugger(g.state, g.toggleRegister)
+	debugger := newDebugger(g.state)
+	logger.log(infoLevel, setupLogic, "Game.restart: newToggleRegister")
+	tr := newToggleRegister(g, debugger)
 	logger.log(infoLevel, setupLogic, "Game.restart: newComputers")
 	g.computers = newComputers(g.state, unitConfigProvider)
 	logger.log(infoLevel, setupLogic, "Game.restart: newControllers")
-	g.controller = newController(g.state, g.computers, debugger, g.toggleRegister)
+	g.controller = newController(g.state, g.computers, debugger, tr)
+
 	// TODO: I should only invoke newDrawConfig once per game not every restart
 	logger.log(infoLevel, setupLogic, "Game.restart: newDrawer")
 	g.drawer = newDrawer(newDrawConfig(), g.state, g.controller, debugger)
@@ -216,70 +216,6 @@ func main() {
 
 	os.Mkdir(g.outputDirectoryName, 0755)
 
-	// setup cpu profiler
-	toggleCPUProfiler := func() {
-		if g.cpuProfilerOn {
-			logger.log(infoLevel, devTool, "Stopping CPU profiler.")
-			pprof.StopCPUProfile()
-			g.cpuProfilerFile.Close()
-		} else {
-			logger.log(infoLevel, devTool, "Starting CPU profiler.")
-			f, err := os.Create(fmt.Sprintf("%s/%s", g.outputDirectoryName, g.cpuProfilerFileName))
-			if err != nil {
-				logger.log(errorLevel, devTool, "Could not create CPU profiler file.")
-			}
-			g.cpuProfilerFile = f
-			if err := pprof.StartCPUProfile(f); err != nil {
-				logger.log(errorLevel, devTool, "Could not start CPU profiler.")
-			}
-		}
-		g.cpuProfilerOn = !g.cpuProfilerOn
-	}
-	if g.cpuProfilerStartBeforeGame {
-		toggleCPUProfiler()
-	}
-	g.toggleRegister.register(
-		keyC,
-		toggleCPUProfiler,
-	)
-
-	// setup memory profiler
-	toggleMEMProfiler := func() {
-		if g.memoryProfilerOn {
-			logger.log(infoLevel, devTool, "Stopping memory profiler.")
-
-			if err := pprof.WriteHeapProfile(g.memoryProfilerFile); err != nil {
-				logger.log(errorLevel, devTool, "Could not write heap profile.")
-			}
-			g.memoryProfilerFile.Close()
-		} else {
-			logger.log(infoLevel, devTool, "Starting memory profiler.")
-			f, err := os.Create(fmt.Sprintf("%s/%s", g.outputDirectoryName, g.memProfilerFileName))
-			if err != nil {
-				logger.log(errorLevel, devTool, "Could not create memory profiler file.")
-			}
-			g.memoryProfilerFile = f
-			runtime.GC()
-		}
-		g.memoryProfilerOn = !g.memoryProfilerOn
-	}
-	if g.memProfilerStartBeforeGame {
-		toggleMEMProfiler()
-	}
-	g.toggleRegister.register(
-		keyX,
-		toggleMEMProfiler,
-	)
-
-	g.toggleRegister.register(
-		keyP,
-		func() { g.paused = !g.paused },
-	)
-	g.toggleRegister.register(
-		keyT,
-		func() { g.slowTick = !g.slowTick },
-	)
-
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func(g Game) {
@@ -351,4 +287,71 @@ func (g Game) isDeveloperMacStudio() (*ebiten.MonitorType, bool) {
 		}
 	}
 	return nil, false
+}
+
+func (g *Game) registerToggles(tr *toggleRegister) {
+	// setup cpu profiler
+	toggleCPUProfiler := func() {
+		if g.cpuProfilerOn {
+			logger.log(infoLevel, devTool, "Stopping CPU profiler.")
+			pprof.StopCPUProfile()
+			g.cpuProfilerFile.Close()
+		} else {
+			logger.log(infoLevel, devTool, "Starting CPU profiler.")
+			f, err := os.Create(fmt.Sprintf("%s/%s", g.outputDirectoryName, g.cpuProfilerFileName))
+			if err != nil {
+				logger.log(errorLevel, devTool, "Could not create CPU profiler file.")
+			}
+			g.cpuProfilerFile = f
+			if err := pprof.StartCPUProfile(f); err != nil {
+				logger.log(errorLevel, devTool, "Could not start CPU profiler.")
+			}
+		}
+		g.cpuProfilerOn = !g.cpuProfilerOn
+	}
+
+	// setup memory profiler
+	toggleMEMProfiler := func() {
+		if g.memoryProfilerOn {
+			logger.log(infoLevel, devTool, "Stopping memory profiler.")
+
+			if err := pprof.WriteHeapProfile(g.memoryProfilerFile); err != nil {
+				logger.log(errorLevel, devTool, "Could not write heap profile.")
+			}
+			g.memoryProfilerFile.Close()
+		} else {
+			logger.log(infoLevel, devTool, "Starting memory profiler.")
+			f, err := os.Create(fmt.Sprintf("%s/%s", g.outputDirectoryName, g.memProfilerFileName))
+			if err != nil {
+				logger.log(errorLevel, devTool, "Could not create memory profiler file.")
+			}
+			g.memoryProfilerFile = f
+			runtime.GC()
+		}
+		g.memoryProfilerOn = !g.memoryProfilerOn
+	}
+
+	if g.cpuProfilerStartBeforeGame && !g.cpuProfilerOn {
+		toggleCPUProfiler()
+	}
+	if g.memProfilerStartBeforeGame && !g.memoryProfilerOn {
+		toggleMEMProfiler()
+	}
+
+	tr.register(
+		keyC,
+		toggleCPUProfiler,
+	)
+	tr.register(
+		keyX,
+		toggleMEMProfiler,
+	)
+	tr.register(
+		keyP,
+		func() { g.paused = !g.paused },
+	)
+	tr.register(
+		keyT,
+		func() { g.slowTick = !g.slowTick },
+	)
 }

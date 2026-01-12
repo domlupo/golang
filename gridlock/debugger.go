@@ -82,7 +82,7 @@ type debugger struct {
 // A typical heatmap. Used for visual debugging.
 type heatmap map[Pixel]int
 
-func newDebugger(state *state, tr *toggleRegister) *debugger {
+func newDebugger(state *state) *debugger {
 	c := newDebuggerConfig()
 	debugger := debugger{
 		state:           state,
@@ -91,7 +91,6 @@ func newDebugger(state *state, tr *toggleRegister) *debugger {
 		unitPathfind:    make(heatmap),
 	}
 	debugger.setupHeatmaps()
-	debugger.registerToggles(tr)
 	return &debugger
 }
 

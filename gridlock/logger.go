@@ -60,7 +60,7 @@ type l struct {
 	enabledLogTypes map[logType]bool
 }
 
-func setupLogger(tr *toggleRegister) l {
+func setupLogger() l {
 	lc := newLoggerConfig()
 
 	var levelVar = new(slog.LevelVar)
@@ -89,7 +89,6 @@ func setupLogger(tr *toggleRegister) l {
 			devTool:           lc.logDevTool,
 		},
 	}
-	l.registerToggles(tr)
 	return l
 }
 

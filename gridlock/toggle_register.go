@@ -12,24 +12,29 @@ import (
 
 // Contains all toggles registered. Use to register all new toggles and check all toggle presses.
 type toggleRegister struct {
-	enableToggles bool
-	toggles       map[key]*toggle
-	cooldown      time.Duration
+	// allowsToggles flag makes it possible to register toggles even when toggles are turned off.
+	// This is beneficial because it lessens modality between developer and player experiences.
+	allowToggles bool
+	toggles      map[key]*toggle
+	cooldown     time.Duration
 }
 
-// Only create a single instance per application. Interacts with global state via keyboard input.
-func newToggleRegister(enableToggles bool) *toggleRegister {
+// Only persist a single instance at once. Interacts with global state via keyboard input.
+func newToggleRegister(g *Game, d *debugger) *toggleRegister {
 	tr := toggleRegister{
-		enableToggles: enableToggles,
-		toggles:       make(map[key]*toggle),
-		cooldown:      300 * time.Millisecond,
+		allowToggles: g.developerMode,
+		toggles:      make(map[key]*toggle),
+		cooldown:     300 * time.Millisecond,
 	}
+	logger.registerToggles(&tr)
+	g.registerToggles(&tr)
+	d.registerToggles(&tr)
 	return &tr
 }
 
 // Create a toggle with the passed key and callback. Panics if the key is already used by another
 // toggle even if the same callback is registered.
-func (tr toggleRegister) register(key key, callback func()) {
+func (tr *toggleRegister) register(key key, callback func()) {
 	if _, ok := tr.toggles[key]; ok {
 		panic(fmt.Sprintf("toggleRegister.register: key: %d is taken", key))
 	}
@@ -89,7 +94,7 @@ func (tr toggleRegister) register(key key, callback func()) {
 // Activate any enabled toggles which were recently pressed.
 func (tr toggleRegister) checkAllTogglePresses() {
 	currentTime := time.Now()
-	if tr.enableToggles {
+	if tr.allowToggles {
 		for k, t := range tr.toggles {
 			if k == keyNoOp {
 				return

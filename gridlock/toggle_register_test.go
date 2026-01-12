@@ -13,7 +13,7 @@ func TestToggleRegister(t *testing.T) {
 			}
 		}()
 
-		tr := newToggleRegister(true)
+		tr := newToggleRegister(&Game{}, newDebugger(&state{}))
 		tr.register(keyNoOp, func() {})
 		tr.register(keyNoOp, func() {})
 	})
