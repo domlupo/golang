@@ -7,7 +7,7 @@ import (
 	"math"
 )
 
-// Configuration shared by all computers
+// Configuration shared by all computers.
 type computersConfig struct {
 	count               int
 	minUnitDifferential int
@@ -96,11 +96,11 @@ func (c *computer) updateNodeTargets(avgUnitPos Pos) {
 			validDiffsIndex++
 		}
 
-		p, ok := c.state.grid.getCenterWithFallback(d.GridPosition)
+		p, ok := c.state.grid.getCenterWithFallback(d.Tile)
 		if !ok {
 			panic(fmt.Sprintf(
-				"computer.updateNodeTargets: cannot get center with fallback for grid pos %s",
-				d.GridPosition.log()))
+				"computer.updateNodeTargets: cannot get center with fallback for tile %s",
+				d.Tile.log()))
 		}
 		pixels = append(pixels, p)
 	}
@@ -114,11 +114,11 @@ func (c *computer) updateNodeTargets(avgUnitPos Pos) {
 			continue
 		}
 
-		nP, ok := c.grid.getCenterWithFallback(n.gridPos)
+		nP, ok := c.grid.getCenterWithFallback(n.tile)
 		if !ok {
 			panic(fmt.Sprintf(
-				"computer.updateNodeTargets: cannot get pixel for grid pos %s",
-				n.gridPos.log()))
+				"computer.updateNodeTargets: cannot get pixel for tile %s",
+				n.tile.log()))
 		}
 		selfNode := n
 		selfNode.targets = []Pixel{nP}
@@ -146,7 +146,7 @@ func (c *computer) updateForNodeCapture() {
 			continue
 		}
 
-		selfNodePos := n.gridPos
+		selfNodeTile := n.tile
 		selfNode := n
 		selfNode.targets = []Pixel{}
 		nearestTargetDistanceSquared := math.MaxInt
@@ -160,19 +160,19 @@ func (c *computer) updateForNodeCapture() {
 				continue
 			}
 
-			otherNodePos := n.gridPos
+			otherNodeTile := n.tile
 			otherNode := n
-			xDelta := (selfNodePos.X - otherNode.gridPos.X)
-			yDelta := (selfNodePos.Y - otherNode.gridPos.Y)
+			xDelta := (selfNodeTile.X - otherNode.tile.X)
+			yDelta := (selfNodeTile.Y - otherNode.tile.Y)
 			otherTargetDistanceSquared := xDelta*xDelta + yDelta*yDelta
 
 			if otherTargetDistanceSquared < nearestTargetDistanceSquared {
 				nearestTargetDistanceSquared = otherTargetDistanceSquared
-				var targetPixel, ok = c.grid.getPixel(otherNodePos, hpCenter)
+				var targetPixel, ok = c.grid.getPixel(otherNodeTile, hpCenter)
 				if !ok {
 					panic(fmt.Sprintf(
-						"computer.updateForNodeCapture: could not get pixel for grid pos %s",
-						otherNodePos.log()))
+						"computer.updateForNodeCapture: could not get pixel for tile %s",
+						otherNodeTile.log()))
 				}
 
 				selfNode.targets = []Pixel{targetPixel}
@@ -199,11 +199,11 @@ func (c *computer) updateForNodeCapture() {
 				continue
 			}
 
-			nPixel, ok := c.grid.getPixel(n.gridPos, hpCenter)
+			nPixel, ok := c.grid.getPixel(n.tile, hpCenter)
 			if !ok {
 				panic(fmt.Sprintf(
-					"computer.updateForNodeCapture: could not get pixel for grid pos %s",
-					n.gridPos.log()))
+					"computer.updateForNodeCapture: could not get pixel for tile %s",
+					n.tile.log()))
 			}
 			n := nPixel.pos()
 			xDelta := (u.X - n.X)
@@ -231,15 +231,15 @@ func (c *computer) planBombs(n *node, targets []Pixel) {
 				c.player,
 				[]Pixel{t},
 				[]action{},
-				GridPosition{},
+				Tile{},
 				false)
 			c.spawnRequest(request{spawn: u})
 		}})
 	}
 
-	nP, ok := c.grid.getCenterWithFallback(n.gridPos)
+	nP, ok := c.grid.getCenterWithFallback(n.tile)
 	if !ok {
-		panic(fmt.Sprintf("computer.planBombs: cannot get pixel for grid pos %s", n.gridPos.log()))
+		panic(fmt.Sprintf("computer.planBombs: cannot get Pixel for tile %s", n.tile.log()))
 	}
 	n.targets = append(n.targets, nP)
 }

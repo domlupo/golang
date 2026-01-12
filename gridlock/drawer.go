@@ -95,21 +95,21 @@ func (d drawer) drawHexGrid() {
 				continue
 			}
 
-			p := GridPosition{i, j}
+			t := Tile{i, j}
 
-			n := d.grid.getPixelOutbounds(p, hpNorth)
+			n := d.grid.getPixelOutbounds(t, hpNorth)
 			nX := float32(n.X) * d.grid.pixelMultiplier
 			nY := float32(n.Y) * d.grid.pixelMultiplier
 
-			nw := d.grid.getPixelOutbounds(p, hpNorthwest)
+			nw := d.grid.getPixelOutbounds(t, hpNorthwest)
 			nwX := float32(nw.X) * d.grid.pixelMultiplier
 			nwY := float32(nw.Y) * d.grid.pixelMultiplier
 
-			ne := d.grid.getPixelOutbounds(p, hpNortheast)
+			ne := d.grid.getPixelOutbounds(t, hpNortheast)
 			neX := float32(ne.X+1) * d.grid.pixelMultiplier
 			neY := float32(ne.Y) * d.grid.pixelMultiplier
 
-			sw := d.grid.getPixelOutbounds(p, hpSouthwest)
+			sw := d.grid.getPixelOutbounds(t, hpSouthwest)
 			swX := float32(sw.X) * d.grid.pixelMultiplier
 			swY := float32(sw.Y+1) * d.grid.pixelMultiplier
 
@@ -238,14 +238,14 @@ func drawUnfilledBoxInt(
 		pixelMultiplier)
 }
 
-func drawHex(dc drawConfig, g grid, p GridPosition, color drawTriangleColor, selected bool) {
-	center := g.getPixelOutbounds(p, hpCenter)
-	north := g.getPixelOutbounds(p, hpNorth)
-	northeast := g.getPixelOutbounds(p, hpNortheast)
-	southeast := g.getPixelOutbounds(p, hpSoutheast)
-	southwest := g.getPixelOutbounds(p, hpSouthwest)
-	south := g.getPixelOutbounds(p, hpSouth)
-	northwest := g.getPixelOutbounds(p, hpNorthwest)
+func drawHex(dc drawConfig, g grid, t Tile, color drawTriangleColor, selected bool) {
+	center := g.getPixelOutbounds(t, hpCenter)
+	north := g.getPixelOutbounds(t, hpNorth)
+	northeast := g.getPixelOutbounds(t, hpNortheast)
+	southeast := g.getPixelOutbounds(t, hpSoutheast)
+	southwest := g.getPixelOutbounds(t, hpSouthwest)
+	south := g.getPixelOutbounds(t, hpSouth)
+	northwest := g.getPixelOutbounds(t, hpNorthwest)
 
 	// The one pixel offsets for inclusive or exclusive hex points are handled at the game logic
 	// layer. The pixelMultiplier offsets are handled here since pixelMultiplier is a
@@ -287,34 +287,34 @@ func drawHex(dc drawConfig, g grid, p GridPosition, color drawTriangleColor, sel
 		vertices, indices, dc.drawTriangleDefaultImage, &ebiten.DrawTrianglesOptions{})
 
 	if selected {
-		drawHexHighlight(dc, g, p)
+		drawHexHighlight(dc, g, t)
 	}
 }
 
-func drawHexHighlight(dc drawConfig, g grid, p GridPosition) {
+func drawHexHighlight(dc drawConfig, g grid, t Tile) {
 	lineWidth := float32(dc.hexLineWidth) * g.pixelMultiplier
 
-	north := g.getPixelOutbounds(p, hpNorth)
+	north := g.getPixelOutbounds(t, hpNorth)
 	nX := float32(north.X) * g.pixelMultiplier
 	nY := float32(north.Y) * g.pixelMultiplier
 
-	nw := g.getPixelOutbounds(p, hpNorthwest)
+	nw := g.getPixelOutbounds(t, hpNorthwest)
 	nwX := float32(nw.X) * g.pixelMultiplier
 	nwY := float32(nw.Y) * g.pixelMultiplier
 
-	ne := g.getPixelOutbounds(p, hpNortheast)
+	ne := g.getPixelOutbounds(t, hpNortheast)
 	neX := float32(ne.X+1) * g.pixelMultiplier
 	neY := float32(ne.Y) * g.pixelMultiplier
 
-	sw := g.getPixelOutbounds(p, hpSouthwest)
+	sw := g.getPixelOutbounds(t, hpSouthwest)
 	swX := float32(sw.X) * g.pixelMultiplier
 	swY := float32(sw.Y+1) * g.pixelMultiplier
 
-	se := g.getPixelOutbounds(p, hpSoutheast)
+	se := g.getPixelOutbounds(t, hpSoutheast)
 	seX := float32(se.X+1) * g.pixelMultiplier
 	seY := float32(se.Y+1) * g.pixelMultiplier
 
-	s := g.getPixelOutbounds(p, hpSouth)
+	s := g.getPixelOutbounds(t, hpSouth)
 	sX := float32(s.X) * g.pixelMultiplier
 	sY := float32(s.Y+1) * g.pixelMultiplier
 

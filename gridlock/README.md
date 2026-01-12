@@ -104,9 +104,9 @@ Stale: 15
     GPU is less powerful than computer dedicated GPU.
 11. Use cardinal directions for hexagon points and sides (north, northeast, etc) because the order
 is more obvious e.g. northeast not eastnorth where as topRight and rightTop are both used.
-12. Use {19,10} as initial hexagon offsets. These offsets greatly simplify getGridPos but makes
-getPixelPos slightly more complex. If hexagon configuration changes in the future, probably should
-prioritize simplifying getGridPos over getPixelPos.
+12. Use {19,10} as initial hexagon offsets. These offsets greatly simplify getTile but makes
+getPixel slightly more complex. If hexagon configuration changes in the future, probably should
+prioritize simplifying getTile over getPixel.
 13. Infantry is only simple ground unit. Less artwork, less animations, less design decisions.
 Infantry are simple background visual but main visuals are air units above them. If needed, infantry
 can have upgrades which can helps tech tree idea.
@@ -336,7 +336,7 @@ Low level implementation:
 
 - Go through issues to make sure they are all addressed.
 - start per unit heap allocation during new unit production.
-- start with using getGridPos on every turn to figure out hexagon. There many ways to optimize this
+- start with using getTile on every turn to figure out hexagon. There many ways to optimize this
   in future.
 - Avoid two way checks where possible with tagging. Some two ways checks are easier to avoid than
   others.
@@ -360,7 +360,7 @@ Careful of current issues:
 - On unit kill need to handle its double linked list pointers
 - Need to sync or verify or handle units switching layers if layer optimization is needed
 - Units able to move more than one pos per turn cannot transfer hexagons via single line check. Need
-  to use something more robust like current getGridPos.
+  to use something more robust like current getTile.
 - nodes switching ownership should not use newNode anymore unless pointers are preserved.
 
 Potential future issues:

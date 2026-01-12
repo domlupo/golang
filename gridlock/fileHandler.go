@@ -35,11 +35,11 @@ const (
 	fNode
 )
 
-type keys []GridPosition
+type keys []Tile
 
 // Deterministically sort the keys.
 func (keys keys) sort() {
-	slices.SortFunc(keys, func(i, j GridPosition) int {
+	slices.SortFunc(keys, func(i, j Tile) int {
 		switch {
 		case i.X == j.X && i.Y < j.Y:
 			return -1

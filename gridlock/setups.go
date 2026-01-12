@@ -55,7 +55,7 @@ func setupObstacles(setup obstacleSetup, g grid) (obstacles, obstacleLUT) {
 }
 
 func (os obstacles) setupBorder() {
-	GridPositions := []GridPosition{
+	tiles := []Tile{
 		// north west corner
 		{0, 0},
 		{1, 1},
@@ -172,18 +172,18 @@ func (os obstacles) setupBorder() {
 		{0, 23},
 	}
 
-	for _, pos := range GridPositions {
-		os.insert(pos, &obstacle{gridPos: pos, kind: highMountain})
+	for _, t := range tiles {
+		os.insert(t, &obstacle{tile: t, kind: highMountain})
 	}
 }
 
 func (os obstacles) setupInterior(setup obstacleSetup) {
-	var GridPositions []GridPosition
+	var tiles []Tile
 
 	switch setup {
 	case noObstacle:
 	case singleObstacle:
-		GridPositions = []GridPosition{
+		tiles = []Tile{
 			{3, 3},
 			{3, 4},
 			{4, 4},
@@ -212,7 +212,7 @@ func (os obstacles) setupInterior(setup obstacleSetup) {
 			{5, 22},
 		}
 	case doubleObstacle:
-		GridPositions = []GridPosition{
+		tiles = []Tile{
 			{3, 3},
 			{3, 4},
 			{4, 4},
@@ -262,7 +262,7 @@ func (os obstacles) setupInterior(setup obstacleSetup) {
 			{10, 22},
 		}
 	case tripleObstacle:
-		GridPositions = []GridPosition{
+		tiles = []Tile{
 			{8, 6},
 			{8, 7},
 
@@ -278,7 +278,7 @@ func (os obstacles) setupInterior(setup obstacleSetup) {
 			{12, 7},
 		}
 	case multiObstacle:
-		GridPositions = []GridPosition{
+		tiles = []Tile{
 			{2, 4},
 			{3, 3},
 			{3, 4},
@@ -349,7 +349,7 @@ func (os obstacles) setupInterior(setup obstacleSetup) {
 			{13, 22},
 		}
 	case borderObstacle:
-		GridPositions = []GridPosition{
+		tiles = []Tile{
 			{22, 2},
 
 			{9, 3},
@@ -375,7 +375,7 @@ func (os obstacles) setupInterior(setup obstacleSetup) {
 			{9, 23},
 		}
 	case horizontalObstacle:
-		GridPositions = []GridPosition{
+		tiles = []Tile{
 			{1, 3},
 			{2, 3},
 			{3, 3},
@@ -392,8 +392,8 @@ func (os obstacles) setupInterior(setup obstacleSetup) {
 		panic("obstacles.setupInterior: unknown obstacle setup")
 	}
 
-	for _, pos := range GridPositions {
-		os.insert(pos, &obstacle{gridPos: pos, kind: lowMountain})
+	for _, t := range tiles {
+		os.insert(t, &obstacle{tile: t, kind: lowMountain})
 	}
 }
 
@@ -486,7 +486,7 @@ func (ns nodeSetup) string() string {
 }
 
 type nodeSetupInput struct {
-	gridPos    GridPosition
+	tile       Tile
 	player     player
 	unitConfig unitConfig
 }
@@ -522,397 +522,397 @@ func (nodes nodes) setupPositions(
 	case nodeSurrounded:
 		player := pOne
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{3, 1}, player, infantryUC},
-			{GridPosition{4, 1}, player, infantryUC},
-			{GridPosition{2, 2}, player, infantryUC},
-			{GridPosition{3, 2}, player, infantryUC},
-			{GridPosition{4, 2}, player, infantryUC},
-			{GridPosition{3, 3}, player, infantryUC},
-			{GridPosition{4, 3}, player, infantryUC},
+			{Tile{3, 1}, player, infantryUC},
+			{Tile{4, 1}, player, infantryUC},
+			{Tile{2, 2}, player, infantryUC},
+			{Tile{3, 2}, player, infantryUC},
+			{Tile{4, 2}, player, infantryUC},
+			{Tile{3, 3}, player, infantryUC},
+			{Tile{4, 3}, player, infantryUC},
 		}
 	case northWest:
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{2, 2}, pOne, infantryUC},
+			{Tile{2, 2}, pOne, infantryUC},
 		}
 	case horizontal:
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{1, 23}, pOne, infantryUC},
-			{GridPosition{3, 23}, pTwo, infantryUC},
+			{Tile{1, 23}, pOne, infantryUC},
+			{Tile{3, 23}, pTwo, infantryUC},
 		}
 	case horizontalNodeMissileCruise:
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{1, 23}, pOne, missileCruiseUC},
-			{GridPosition{3, 23}, pTwo, missileHeatSeekingUC},
+			{Tile{1, 23}, pOne, missileCruiseUC},
+			{Tile{3, 23}, pTwo, missileHeatSeekingUC},
 		}
 	case vertical:
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{1, 21}, pOne, infantryUC},
-			{GridPosition{1, 23}, pTwo, infantryUC},
+			{Tile{1, 21}, pOne, infantryUC},
+			{Tile{1, 23}, pTwo, infantryUC},
 		}
 	case diagonal:
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{2, 2}, pOne, infantryUC},
-			{GridPosition{5, 5}, pTwo, infantryUC},
+			{Tile{2, 2}, pOne, infantryUC},
+			{Tile{5, 5}, pTwo, infantryUC},
 		}
 	case lowNodeCount:
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{2, 2}, pOne, infantryUC},
-			{GridPosition{2, 5}, pOne, infantryUC},
-			{GridPosition{20, 5}, pTwo, infantryUC},
+			{Tile{2, 2}, pOne, infantryUC},
+			{Tile{2, 5}, pOne, infantryUC},
+			{Tile{20, 5}, pTwo, infantryUC},
 		}
 	case noNeutral:
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{2, 2}, pOne, infantryUC},
-			{GridPosition{6, 1}, pOne, infantryUC},
-			{GridPosition{11, 1}, pOne, infantryUC},
-			{GridPosition{15, 1}, pOne, infantryUC},
-			{GridPosition{21, 1}, pOne, infantryUC},
-			{GridPosition{26, 1}, pOne, infantryUC},
+			{Tile{2, 2}, pOne, infantryUC},
+			{Tile{6, 1}, pOne, infantryUC},
+			{Tile{11, 1}, pOne, infantryUC},
+			{Tile{15, 1}, pOne, infantryUC},
+			{Tile{21, 1}, pOne, infantryUC},
+			{Tile{26, 1}, pOne, infantryUC},
 
-			{GridPosition{1, 6}, pOne, infantryUC},
-			{GridPosition{6, 6}, pOne, infantryUC},
-			{GridPosition{11, 6}, pOne, infantryUC},
-			{GridPosition{16, 6}, pOne, infantryUC},
-			{GridPosition{21, 6}, pOne, infantryUC},
-			{GridPosition{26, 6}, pOne, infantryUC},
+			{Tile{1, 6}, pOne, infantryUC},
+			{Tile{6, 6}, pOne, infantryUC},
+			{Tile{11, 6}, pOne, infantryUC},
+			{Tile{16, 6}, pOne, infantryUC},
+			{Tile{21, 6}, pOne, infantryUC},
+			{Tile{26, 6}, pOne, infantryUC},
 
-			{GridPosition{1, 11}, pOne, infantryUC},
-			{GridPosition{6, 11}, pOne, infantryUC},
-			{GridPosition{11, 11}, pOne, infantryUC},
+			{Tile{1, 11}, pOne, infantryUC},
+			{Tile{6, 11}, pOne, infantryUC},
+			{Tile{11, 11}, pOne, infantryUC},
 
-			{GridPosition{16, 11}, pTwo, infantryUC},
-			{GridPosition{21, 11}, pTwo, infantryUC},
-			{GridPosition{26, 11}, pTwo, infantryUC},
+			{Tile{16, 11}, pTwo, infantryUC},
+			{Tile{21, 11}, pTwo, infantryUC},
+			{Tile{26, 11}, pTwo, infantryUC},
 
-			{GridPosition{1, 16}, pTwo, infantryUC},
-			{GridPosition{6, 16}, pTwo, infantryUC},
-			{GridPosition{11, 16}, pTwo, infantryUC},
-			{GridPosition{16, 16}, pTwo, infantryUC},
-			{GridPosition{21, 16}, pTwo, infantryUC},
-			{GridPosition{26, 16}, pTwo, infantryUC},
+			{Tile{1, 16}, pTwo, infantryUC},
+			{Tile{6, 16}, pTwo, infantryUC},
+			{Tile{11, 16}, pTwo, infantryUC},
+			{Tile{16, 16}, pTwo, infantryUC},
+			{Tile{21, 16}, pTwo, infantryUC},
+			{Tile{26, 16}, pTwo, infantryUC},
 
-			{GridPosition{1, 21}, pTwo, infantryUC},
-			{GridPosition{6, 21}, pTwo, infantryUC},
-			{GridPosition{11, 21}, pTwo, infantryUC},
-			{GridPosition{16, 21}, pTwo, infantryUC},
-			{GridPosition{21, 21}, pTwo, infantryUC},
-			{GridPosition{26, 21}, pTwo, infantryUC},
+			{Tile{1, 21}, pTwo, infantryUC},
+			{Tile{6, 21}, pTwo, infantryUC},
+			{Tile{11, 21}, pTwo, infantryUC},
+			{Tile{16, 21}, pTwo, infantryUC},
+			{Tile{21, 21}, pTwo, infantryUC},
+			{Tile{26, 21}, pTwo, infantryUC},
 		}
 	case leftVsRight:
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{2, 2}, pOne, infantryUC},
-			{GridPosition{6, 1}, pOne, infantryUC},
-			{GridPosition{11, 1}, pNeutral, infantryUC},
-			{GridPosition{15, 1}, pNeutral, infantryUC},
-			{GridPosition{21, 1}, pTwo, infantryUC},
-			{GridPosition{26, 1}, pTwo, infantryUC},
+			{Tile{2, 2}, pOne, infantryUC},
+			{Tile{6, 1}, pOne, infantryUC},
+			{Tile{11, 1}, pNeutral, infantryUC},
+			{Tile{15, 1}, pNeutral, infantryUC},
+			{Tile{21, 1}, pTwo, infantryUC},
+			{Tile{26, 1}, pTwo, infantryUC},
 
-			{GridPosition{1, 6}, pOne, infantryUC},
-			{GridPosition{6, 6}, pOne, infantryUC},
-			{GridPosition{11, 6}, pNeutral, infantryUC},
-			{GridPosition{16, 6}, pNeutral, infantryUC},
-			{GridPosition{21, 6}, pTwo, infantryUC},
-			{GridPosition{26, 6}, pTwo, infantryUC},
+			{Tile{1, 6}, pOne, infantryUC},
+			{Tile{6, 6}, pOne, infantryUC},
+			{Tile{11, 6}, pNeutral, infantryUC},
+			{Tile{16, 6}, pNeutral, infantryUC},
+			{Tile{21, 6}, pTwo, infantryUC},
+			{Tile{26, 6}, pTwo, infantryUC},
 
-			{GridPosition{1, 11}, pOne, infantryUC},
-			{GridPosition{6, 11}, pOne, infantryUC},
-			{GridPosition{11, 11}, pNeutral, infantryUC},
-			{GridPosition{16, 11}, pNeutral, infantryUC},
-			{GridPosition{21, 11}, pTwo, infantryUC},
-			{GridPosition{26, 11}, pTwo, infantryUC},
+			{Tile{1, 11}, pOne, infantryUC},
+			{Tile{6, 11}, pOne, infantryUC},
+			{Tile{11, 11}, pNeutral, infantryUC},
+			{Tile{16, 11}, pNeutral, infantryUC},
+			{Tile{21, 11}, pTwo, infantryUC},
+			{Tile{26, 11}, pTwo, infantryUC},
 
-			{GridPosition{1, 16}, pOne, infantryUC},
-			{GridPosition{6, 16}, pOne, infantryUC},
-			{GridPosition{11, 16}, pNeutral, infantryUC},
-			{GridPosition{16, 16}, pNeutral, infantryUC},
-			{GridPosition{21, 16}, pTwo, infantryUC},
-			{GridPosition{26, 16}, pTwo, infantryUC},
+			{Tile{1, 16}, pOne, infantryUC},
+			{Tile{6, 16}, pOne, infantryUC},
+			{Tile{11, 16}, pNeutral, infantryUC},
+			{Tile{16, 16}, pNeutral, infantryUC},
+			{Tile{21, 16}, pTwo, infantryUC},
+			{Tile{26, 16}, pTwo, infantryUC},
 
-			{GridPosition{1, 21}, pOne, infantryUC},
-			{GridPosition{6, 21}, pOne, infantryUC},
-			{GridPosition{11, 21}, pNeutral, infantryUC},
-			{GridPosition{16, 21}, pNeutral, infantryUC},
-			{GridPosition{21, 21}, pTwo, infantryUC},
-			{GridPosition{26, 21}, pTwo, infantryUC},
+			{Tile{1, 21}, pOne, infantryUC},
+			{Tile{6, 21}, pOne, infantryUC},
+			{Tile{11, 21}, pNeutral, infantryUC},
+			{Tile{16, 21}, pNeutral, infantryUC},
+			{Tile{21, 21}, pTwo, infantryUC},
+			{Tile{26, 21}, pTwo, infantryUC},
 		}
 	case leftVsRightHorizontalOffset:
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{2, 2}, pOne, infantryUC},
-			{GridPosition{6, 1}, pOne, infantryUC},
-			{GridPosition{11, 1}, pNeutral, infantryUC},
-			{GridPosition{16, 1}, pNeutral, infantryUC},
-			{GridPosition{21, 1}, pTwo, infantryUC},
-			{GridPosition{26, 1}, pTwo, infantryUC},
+			{Tile{2, 2}, pOne, infantryUC},
+			{Tile{6, 1}, pOne, infantryUC},
+			{Tile{11, 1}, pNeutral, infantryUC},
+			{Tile{16, 1}, pNeutral, infantryUC},
+			{Tile{21, 1}, pTwo, infantryUC},
+			{Tile{26, 1}, pTwo, infantryUC},
 
-			{GridPosition{1, 1}, pOne, infantryUC},
-			{GridPosition{6, 6}, pOne, infantryUC},
-			{GridPosition{11, 6}, pNeutral, infantryUC},
-			{GridPosition{16, 6}, pNeutral, infantryUC},
-			{GridPosition{21, 6}, pTwo, infantryUC},
-			{GridPosition{26, 6}, pTwo, infantryUC},
+			{Tile{1, 1}, pOne, infantryUC},
+			{Tile{6, 6}, pOne, infantryUC},
+			{Tile{11, 6}, pNeutral, infantryUC},
+			{Tile{16, 6}, pNeutral, infantryUC},
+			{Tile{21, 6}, pTwo, infantryUC},
+			{Tile{26, 6}, pTwo, infantryUC},
 
-			{GridPosition{1, 11}, pOne, infantryUC},
-			{GridPosition{6, 11}, pOne, infantryUC},
-			{GridPosition{11, 11}, pNeutral, infantryUC},
-			{GridPosition{16, 11}, pNeutral, infantryUC},
-			{GridPosition{21, 11}, pTwo, infantryUC},
-			{GridPosition{26, 11}, pTwo, infantryUC},
+			{Tile{1, 11}, pOne, infantryUC},
+			{Tile{6, 11}, pOne, infantryUC},
+			{Tile{11, 11}, pNeutral, infantryUC},
+			{Tile{16, 11}, pNeutral, infantryUC},
+			{Tile{21, 11}, pTwo, infantryUC},
+			{Tile{26, 11}, pTwo, infantryUC},
 
-			{GridPosition{1, 16}, pOne, infantryUC},
-			{GridPosition{6, 16}, pOne, infantryUC},
-			{GridPosition{11, 16}, pNeutral, infantryUC},
-			{GridPosition{16, 16}, pNeutral, infantryUC},
-			{GridPosition{21, 16}, pTwo, infantryUC},
-			{GridPosition{26, 16}, pTwo, infantryUC},
+			{Tile{1, 16}, pOne, infantryUC},
+			{Tile{6, 16}, pOne, infantryUC},
+			{Tile{11, 16}, pNeutral, infantryUC},
+			{Tile{16, 16}, pNeutral, infantryUC},
+			{Tile{21, 16}, pTwo, infantryUC},
+			{Tile{26, 16}, pTwo, infantryUC},
 
-			{GridPosition{1, 21}, pOne, infantryUC},
-			{GridPosition{6, 21}, pOne, infantryUC},
-			{GridPosition{11, 21}, pNeutral, infantryUC},
-			{GridPosition{16, 21}, pNeutral, infantryUC},
-			{GridPosition{21, 21}, pTwo, infantryUC},
-			{GridPosition{26, 21}, pTwo, infantryUC},
+			{Tile{1, 21}, pOne, infantryUC},
+			{Tile{6, 21}, pOne, infantryUC},
+			{Tile{11, 21}, pNeutral, infantryUC},
+			{Tile{16, 21}, pNeutral, infantryUC},
+			{Tile{21, 21}, pTwo, infantryUC},
+			{Tile{26, 21}, pTwo, infantryUC},
 		}
 	case leftVsRightVerticalOffset:
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{2, 2}, pOne, infantryUC},
-			{GridPosition{6, 1}, pOne, infantryUC},
-			{GridPosition{11, 2}, pNeutral, infantryUC},
-			{GridPosition{16, 4}, pNeutral, infantryUC},
-			{GridPosition{21, 3}, pTwo, infantryUC},
-			{GridPosition{26, 3}, pTwo, infantryUC},
+			{Tile{2, 2}, pOne, infantryUC},
+			{Tile{6, 1}, pOne, infantryUC},
+			{Tile{11, 2}, pNeutral, infantryUC},
+			{Tile{16, 4}, pNeutral, infantryUC},
+			{Tile{21, 3}, pTwo, infantryUC},
+			{Tile{26, 3}, pTwo, infantryUC},
 
-			{GridPosition{1, 6}, pOne, infantryUC},
-			{GridPosition{6, 6}, pOne, infantryUC},
-			{GridPosition{11, 7}, pNeutral, infantryUC},
-			{GridPosition{16, 9}, pNeutral, infantryUC},
-			{GridPosition{21, 8}, pTwo, infantryUC},
-			{GridPosition{26, 8}, pTwo, infantryUC},
+			{Tile{1, 6}, pOne, infantryUC},
+			{Tile{6, 6}, pOne, infantryUC},
+			{Tile{11, 7}, pNeutral, infantryUC},
+			{Tile{16, 9}, pNeutral, infantryUC},
+			{Tile{21, 8}, pTwo, infantryUC},
+			{Tile{26, 8}, pTwo, infantryUC},
 
-			{GridPosition{1, 11}, pOne, infantryUC},
-			{GridPosition{6, 11}, pOne, infantryUC},
-			{GridPosition{11, 12}, pNeutral, infantryUC},
-			{GridPosition{16, 14}, pNeutral, infantryUC},
-			{GridPosition{21, 13}, pTwo, infantryUC},
-			{GridPosition{26, 13}, pTwo, infantryUC},
+			{Tile{1, 11}, pOne, infantryUC},
+			{Tile{6, 11}, pOne, infantryUC},
+			{Tile{11, 12}, pNeutral, infantryUC},
+			{Tile{16, 14}, pNeutral, infantryUC},
+			{Tile{21, 13}, pTwo, infantryUC},
+			{Tile{26, 13}, pTwo, infantryUC},
 
-			{GridPosition{1, 16}, pOne, infantryUC},
-			{GridPosition{6, 16}, pOne, infantryUC},
-			{GridPosition{11, 17}, pNeutral, infantryUC},
-			{GridPosition{16, 19}, pNeutral, infantryUC},
-			{GridPosition{21, 18}, pTwo, infantryUC},
-			{GridPosition{26, 18}, pTwo, infantryUC},
+			{Tile{1, 16}, pOne, infantryUC},
+			{Tile{6, 16}, pOne, infantryUC},
+			{Tile{11, 17}, pNeutral, infantryUC},
+			{Tile{16, 19}, pNeutral, infantryUC},
+			{Tile{21, 18}, pTwo, infantryUC},
+			{Tile{26, 18}, pTwo, infantryUC},
 
-			{GridPosition{1, 21}, pOne, infantryUC},
-			{GridPosition{6, 21}, pOne, infantryUC},
-			{GridPosition{11, 22}, pNeutral, infantryUC},
-			{GridPosition{16, 22}, pNeutral, infantryUC},
-			{GridPosition{21, 23}, pTwo, infantryUC},
-			{GridPosition{26, 23}, pTwo, infantryUC},
+			{Tile{1, 21}, pOne, infantryUC},
+			{Tile{6, 21}, pOne, infantryUC},
+			{Tile{11, 22}, pNeutral, infantryUC},
+			{Tile{16, 22}, pNeutral, infantryUC},
+			{Tile{21, 23}, pTwo, infantryUC},
+			{Tile{26, 23}, pTwo, infantryUC},
 		}
 	case leftVsRightVerticalOffsetMissileCruise:
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{2, 2}, pOne, infantryUC},
-			{GridPosition{6, 1}, pOne, infantryUC},
-			{GridPosition{11, 2}, pNeutral, infantryUC},
-			{GridPosition{16, 4}, pNeutral, infantryUC},
-			{GridPosition{21, 3}, pTwo, infantryUC},
-			{GridPosition{26, 3}, pTwo, infantryUC},
+			{Tile{2, 2}, pOne, infantryUC},
+			{Tile{6, 1}, pOne, infantryUC},
+			{Tile{11, 2}, pNeutral, infantryUC},
+			{Tile{16, 4}, pNeutral, infantryUC},
+			{Tile{21, 3}, pTwo, infantryUC},
+			{Tile{26, 3}, pTwo, infantryUC},
 
-			{GridPosition{1, 6}, pOne, infantryUC},
-			{GridPosition{6, 6}, pOne, infantryUC},
-			{GridPosition{11, 7}, pNeutral, infantryUC},
-			{GridPosition{16, 9}, pNeutral, infantryUC},
-			{GridPosition{21, 8}, pTwo, infantryUC},
-			{GridPosition{26, 8}, pTwo, infantryUC},
+			{Tile{1, 6}, pOne, infantryUC},
+			{Tile{6, 6}, pOne, infantryUC},
+			{Tile{11, 7}, pNeutral, infantryUC},
+			{Tile{16, 9}, pNeutral, infantryUC},
+			{Tile{21, 8}, pTwo, infantryUC},
+			{Tile{26, 8}, pTwo, infantryUC},
 
-			{GridPosition{1, 11}, pOne, missileCruiseUC},
-			{GridPosition{6, 11}, pOne, infantryUC},
-			{GridPosition{11, 12}, pNeutral, infantryUC},
-			{GridPosition{16, 14}, pNeutral, infantryUC},
-			{GridPosition{21, 13}, pTwo, infantryUC},
-			{GridPosition{26, 13}, pTwo, missileHeatSeekingUC},
+			{Tile{1, 11}, pOne, missileCruiseUC},
+			{Tile{6, 11}, pOne, infantryUC},
+			{Tile{11, 12}, pNeutral, infantryUC},
+			{Tile{16, 14}, pNeutral, infantryUC},
+			{Tile{21, 13}, pTwo, infantryUC},
+			{Tile{26, 13}, pTwo, missileHeatSeekingUC},
 
-			{GridPosition{1, 16}, pOne, infantryUC},
-			{GridPosition{6, 16}, pOne, infantryUC},
-			{GridPosition{11, 17}, pNeutral, infantryUC},
-			{GridPosition{16, 19}, pNeutral, infantryUC},
-			{GridPosition{21, 18}, pTwo, infantryUC},
-			{GridPosition{26, 18}, pTwo, infantryUC},
+			{Tile{1, 16}, pOne, infantryUC},
+			{Tile{6, 16}, pOne, infantryUC},
+			{Tile{11, 17}, pNeutral, infantryUC},
+			{Tile{16, 19}, pNeutral, infantryUC},
+			{Tile{21, 18}, pTwo, infantryUC},
+			{Tile{26, 18}, pTwo, infantryUC},
 
-			{GridPosition{1, 21}, pOne, infantryUC},
-			{GridPosition{6, 21}, pOne, infantryUC},
-			{GridPosition{11, 22}, pNeutral, infantryUC},
-			{GridPosition{16, 22}, pNeutral, infantryUC},
-			{GridPosition{21, 23}, pTwo, infantryUC},
-			{GridPosition{26, 23}, pTwo, infantryUC},
+			{Tile{1, 21}, pOne, infantryUC},
+			{Tile{6, 21}, pOne, infantryUC},
+			{Tile{11, 22}, pNeutral, infantryUC},
+			{Tile{16, 22}, pNeutral, infantryUC},
+			{Tile{21, 23}, pTwo, infantryUC},
+			{Tile{26, 23}, pTwo, infantryUC},
 		}
 	case leftVsRightVerticalOffsetFighters:
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{2, 2}, pOne, fighterUC},
-			{GridPosition{6, 1}, pOne, infantryUC},
-			{GridPosition{11, 2}, pNeutral, infantryUC},
-			{GridPosition{16, 4}, pNeutral, infantryUC},
-			{GridPosition{21, 3}, pTwo, infantryUC},
-			{GridPosition{26, 3}, pTwo, infantryUC},
+			{Tile{2, 2}, pOne, fighterUC},
+			{Tile{6, 1}, pOne, infantryUC},
+			{Tile{11, 2}, pNeutral, infantryUC},
+			{Tile{16, 4}, pNeutral, infantryUC},
+			{Tile{21, 3}, pTwo, infantryUC},
+			{Tile{26, 3}, pTwo, infantryUC},
 
-			{GridPosition{1, 6}, pOne, infantryUC},
-			{GridPosition{6, 6}, pOne, infantryUC},
-			{GridPosition{11, 7}, pNeutral, infantryUC},
-			{GridPosition{16, 9}, pNeutral, infantryUC},
-			{GridPosition{21, 8}, pTwo, infantryUC},
-			{GridPosition{26, 8}, pTwo, infantryUC},
+			{Tile{1, 6}, pOne, infantryUC},
+			{Tile{6, 6}, pOne, infantryUC},
+			{Tile{11, 7}, pNeutral, infantryUC},
+			{Tile{16, 9}, pNeutral, infantryUC},
+			{Tile{21, 8}, pTwo, infantryUC},
+			{Tile{26, 8}, pTwo, infantryUC},
 
-			{GridPosition{1, 11}, pOne, infantryUC},
-			{GridPosition{6, 11}, pOne, infantryUC},
-			{GridPosition{11, 12}, pNeutral, infantryUC},
-			{GridPosition{16, 14}, pNeutral, infantryUC},
-			{GridPosition{21, 13}, pTwo, infantryUC},
-			{GridPosition{26, 13}, pTwo, infantryUC},
+			{Tile{1, 11}, pOne, infantryUC},
+			{Tile{6, 11}, pOne, infantryUC},
+			{Tile{11, 12}, pNeutral, infantryUC},
+			{Tile{16, 14}, pNeutral, infantryUC},
+			{Tile{21, 13}, pTwo, infantryUC},
+			{Tile{26, 13}, pTwo, infantryUC},
 
-			{GridPosition{1, 16}, pOne, infantryUC},
-			{GridPosition{6, 16}, pOne, infantryUC},
-			{GridPosition{11, 17}, pNeutral, infantryUC},
-			{GridPosition{16, 19}, pNeutral, infantryUC},
-			{GridPosition{21, 18}, pTwo, infantryUC},
-			{GridPosition{26, 18}, pTwo, infantryUC},
+			{Tile{1, 16}, pOne, infantryUC},
+			{Tile{6, 16}, pOne, infantryUC},
+			{Tile{11, 17}, pNeutral, infantryUC},
+			{Tile{16, 19}, pNeutral, infantryUC},
+			{Tile{21, 18}, pTwo, infantryUC},
+			{Tile{26, 18}, pTwo, infantryUC},
 
-			{GridPosition{1, 21}, pOne, infantryUC},
-			{GridPosition{6, 21}, pOne, infantryUC},
-			{GridPosition{11, 22}, pNeutral, infantryUC},
-			{GridPosition{16, 22}, pNeutral, infantryUC},
-			{GridPosition{21, 23}, pTwo, infantryUC},
-			{GridPosition{26, 23}, pTwo, infantryUC},
+			{Tile{1, 21}, pOne, infantryUC},
+			{Tile{6, 21}, pOne, infantryUC},
+			{Tile{11, 22}, pNeutral, infantryUC},
+			{Tile{16, 22}, pNeutral, infantryUC},
+			{Tile{21, 23}, pTwo, infantryUC},
+			{Tile{26, 23}, pTwo, infantryUC},
 		}
 
 	case leftVsRightVerticalOffsetAircraftAndOrdnance:
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{2, 2}, pOne, infantryUC},
-			{GridPosition{6, 1}, pOne, infantryUC},
-			{GridPosition{11, 2}, pNeutral, infantryUC},
-			{GridPosition{16, 4}, pNeutral, infantryUC},
-			{GridPosition{21, 3}, pTwo, infantryUC},
-			{GridPosition{26, 3}, pTwo, infantryUC},
+			{Tile{2, 2}, pOne, infantryUC},
+			{Tile{6, 1}, pOne, infantryUC},
+			{Tile{11, 2}, pNeutral, infantryUC},
+			{Tile{16, 4}, pNeutral, infantryUC},
+			{Tile{21, 3}, pTwo, infantryUC},
+			{Tile{26, 3}, pTwo, infantryUC},
 
-			{GridPosition{1, 6}, pOne, infantryUC},
-			{GridPosition{6, 6}, pOne, infantryUC},
-			{GridPosition{11, 7}, pNeutral, infantryUC},
-			{GridPosition{16, 9}, pNeutral, infantryUC},
-			{GridPosition{21, 8}, pTwo, infantryUC},
-			{GridPosition{26, 8}, pTwo, infantryUC},
+			{Tile{1, 6}, pOne, infantryUC},
+			{Tile{6, 6}, pOne, infantryUC},
+			{Tile{11, 7}, pNeutral, infantryUC},
+			{Tile{16, 9}, pNeutral, infantryUC},
+			{Tile{21, 8}, pTwo, infantryUC},
+			{Tile{26, 8}, pTwo, infantryUC},
 
-			{GridPosition{1, 11}, pOne, fighterUC},
-			{GridPosition{6, 11}, pOne, infantryUC},
-			{GridPosition{11, 12}, pNeutral, infantryUC},
-			{GridPosition{16, 14}, pNeutral, infantryUC},
-			{GridPosition{21, 13}, pTwo, infantryUC},
-			{GridPosition{26, 13}, pTwo, fighterUC},
+			{Tile{1, 11}, pOne, fighterUC},
+			{Tile{6, 11}, pOne, infantryUC},
+			{Tile{11, 12}, pNeutral, infantryUC},
+			{Tile{16, 14}, pNeutral, infantryUC},
+			{Tile{21, 13}, pTwo, infantryUC},
+			{Tile{26, 13}, pTwo, fighterUC},
 
-			{GridPosition{1, 16}, pOne, missileCruiseUC},
-			{GridPosition{6, 16}, pOne, infantryUC},
-			{GridPosition{11, 17}, pNeutral, infantryUC},
-			{GridPosition{16, 19}, pNeutral, infantryUC},
-			{GridPosition{21, 18}, pTwo, missileHeatSeekingUC},
-			{GridPosition{26, 18}, pTwo, infantryUC},
+			{Tile{1, 16}, pOne, missileCruiseUC},
+			{Tile{6, 16}, pOne, infantryUC},
+			{Tile{11, 17}, pNeutral, infantryUC},
+			{Tile{16, 19}, pNeutral, infantryUC},
+			{Tile{21, 18}, pTwo, missileHeatSeekingUC},
+			{Tile{26, 18}, pTwo, infantryUC},
 
-			{GridPosition{1, 21}, pOne, missileBallisticUC},
-			{GridPosition{6, 21}, pOne, missileRadarActiveUC},
-			{GridPosition{11, 22}, pNeutral, infantryUC},
-			{GridPosition{16, 22}, pNeutral, infantryUC},
-			{GridPosition{21, 23}, pTwo, infantryUC},
-			{GridPosition{26, 23}, pTwo, missileAntiBallisticUC},
+			{Tile{1, 21}, pOne, missileBallisticUC},
+			{Tile{6, 21}, pOne, missileRadarActiveUC},
+			{Tile{11, 22}, pNeutral, infantryUC},
+			{Tile{16, 22}, pNeutral, infantryUC},
+			{Tile{21, 23}, pTwo, infantryUC},
+			{Tile{26, 23}, pTwo, missileAntiBallisticUC},
 		}
 	case topVsBottom:
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{2, 2}, pOne, infantryUC},
-			{GridPosition{6, 1}, pOne, infantryUC},
-			{GridPosition{11, 1}, pOne, infantryUC},
-			{GridPosition{16, 1}, pOne, infantryUC},
-			{GridPosition{21, 1}, pOne, infantryUC},
-			{GridPosition{26, 1}, pOne, infantryUC},
+			{Tile{2, 2}, pOne, infantryUC},
+			{Tile{6, 1}, pOne, infantryUC},
+			{Tile{11, 1}, pOne, infantryUC},
+			{Tile{16, 1}, pOne, infantryUC},
+			{Tile{21, 1}, pOne, infantryUC},
+			{Tile{26, 1}, pOne, infantryUC},
 
-			{GridPosition{1, 5}, pOne, infantryUC},
-			{GridPosition{6, 5}, pOne, infantryUC},
-			{GridPosition{11, 5}, pOne, infantryUC},
-			{GridPosition{16, 5}, pOne, infantryUC},
-			{GridPosition{21, 5}, pOne, infantryUC},
-			{GridPosition{26, 5}, pOne, infantryUC},
+			{Tile{1, 5}, pOne, infantryUC},
+			{Tile{6, 5}, pOne, infantryUC},
+			{Tile{11, 5}, pOne, infantryUC},
+			{Tile{16, 5}, pOne, infantryUC},
+			{Tile{21, 5}, pOne, infantryUC},
+			{Tile{26, 5}, pOne, infantryUC},
 
-			{GridPosition{1, 9}, pNeutral, infantryUC},
-			{GridPosition{6, 9}, pNeutral, infantryUC},
-			{GridPosition{11, 9}, pNeutral, infantryUC},
-			{GridPosition{16, 9}, pNeutral, infantryUC},
-			{GridPosition{21, 9}, pNeutral, infantryUC},
-			{GridPosition{26, 9}, pNeutral, infantryUC},
+			{Tile{1, 9}, pNeutral, infantryUC},
+			{Tile{6, 9}, pNeutral, infantryUC},
+			{Tile{11, 9}, pNeutral, infantryUC},
+			{Tile{16, 9}, pNeutral, infantryUC},
+			{Tile{21, 9}, pNeutral, infantryUC},
+			{Tile{26, 9}, pNeutral, infantryUC},
 
-			{GridPosition{1, 13}, pNeutral, infantryUC},
-			{GridPosition{6, 13}, pNeutral, infantryUC},
-			{GridPosition{11, 13}, pNeutral, infantryUC},
-			{GridPosition{16, 13}, pNeutral, infantryUC},
-			{GridPosition{21, 13}, pNeutral, infantryUC},
-			{GridPosition{26, 13}, pNeutral, infantryUC},
+			{Tile{1, 13}, pNeutral, infantryUC},
+			{Tile{6, 13}, pNeutral, infantryUC},
+			{Tile{11, 13}, pNeutral, infantryUC},
+			{Tile{16, 13}, pNeutral, infantryUC},
+			{Tile{21, 13}, pNeutral, infantryUC},
+			{Tile{26, 13}, pNeutral, infantryUC},
 
-			{GridPosition{1, 17}, pTwo, infantryUC},
-			{GridPosition{6, 17}, pTwo, infantryUC},
-			{GridPosition{11, 17}, pTwo, infantryUC},
-			{GridPosition{16, 17}, pTwo, infantryUC},
-			{GridPosition{21, 17}, pTwo, infantryUC},
-			{GridPosition{26, 17}, pTwo, infantryUC},
+			{Tile{1, 17}, pTwo, infantryUC},
+			{Tile{6, 17}, pTwo, infantryUC},
+			{Tile{11, 17}, pTwo, infantryUC},
+			{Tile{16, 17}, pTwo, infantryUC},
+			{Tile{21, 17}, pTwo, infantryUC},
+			{Tile{26, 17}, pTwo, infantryUC},
 
-			{GridPosition{1, 21}, pTwo, infantryUC},
-			{GridPosition{6, 21}, pTwo, infantryUC},
-			{GridPosition{11, 21}, pTwo, infantryUC},
-			{GridPosition{16, 21}, pTwo, infantryUC},
-			{GridPosition{21, 21}, pTwo, infantryUC},
-			{GridPosition{26, 21}, pTwo, infantryUC},
+			{Tile{1, 21}, pTwo, infantryUC},
+			{Tile{6, 21}, pTwo, infantryUC},
+			{Tile{11, 21}, pTwo, infantryUC},
+			{Tile{16, 21}, pTwo, infantryUC},
+			{Tile{21, 21}, pTwo, infantryUC},
+			{Tile{26, 21}, pTwo, infantryUC},
 		}
 	case topVsBottomHorizontalOffset:
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{2, 2}, pOne, infantryUC},
-			{GridPosition{6, 1}, pOne, infantryUC},
-			{GridPosition{11, 1}, pOne, infantryUC},
-			{GridPosition{16, 1}, pOne, infantryUC},
-			{GridPosition{21, 1}, pOne, infantryUC},
-			{GridPosition{26, 1}, pOne, infantryUC},
+			{Tile{2, 2}, pOne, infantryUC},
+			{Tile{6, 1}, pOne, infantryUC},
+			{Tile{11, 1}, pOne, infantryUC},
+			{Tile{16, 1}, pOne, infantryUC},
+			{Tile{21, 1}, pOne, infantryUC},
+			{Tile{26, 1}, pOne, infantryUC},
 
-			{GridPosition{1, 6}, pOne, infantryUC},
-			{GridPosition{6, 6}, pOne, infantryUC},
-			{GridPosition{11, 6}, pOne, infantryUC},
-			{GridPosition{16, 6}, pOne, infantryUC},
-			{GridPosition{21, 6}, pOne, infantryUC},
-			{GridPosition{26, 6}, pOne, infantryUC},
+			{Tile{1, 6}, pOne, infantryUC},
+			{Tile{6, 6}, pOne, infantryUC},
+			{Tile{11, 6}, pOne, infantryUC},
+			{Tile{16, 6}, pOne, infantryUC},
+			{Tile{21, 6}, pOne, infantryUC},
+			{Tile{26, 6}, pOne, infantryUC},
 
-			{GridPosition{1, 11}, pNeutral, infantryUC},
-			{GridPosition{6, 11}, pNeutral, infantryUC},
-			{GridPosition{11, 11}, pNeutral, infantryUC},
-			{GridPosition{16, 11}, pNeutral, infantryUC},
-			{GridPosition{21, 11}, pNeutral, infantryUC},
-			{GridPosition{26, 9}, pNeutral, infantryUC},
+			{Tile{1, 11}, pNeutral, infantryUC},
+			{Tile{6, 11}, pNeutral, infantryUC},
+			{Tile{11, 11}, pNeutral, infantryUC},
+			{Tile{16, 11}, pNeutral, infantryUC},
+			{Tile{21, 11}, pNeutral, infantryUC},
+			{Tile{26, 9}, pNeutral, infantryUC},
 
-			{GridPosition{1, 16}, pTwo, infantryUC},
-			{GridPosition{6, 16}, pTwo, infantryUC},
-			{GridPosition{11, 16}, pTwo, infantryUC},
-			{GridPosition{16, 16}, pTwo, infantryUC},
-			{GridPosition{21, 16}, pTwo, infantryUC},
-			{GridPosition{26, 16}, pTwo, infantryUC},
+			{Tile{1, 16}, pTwo, infantryUC},
+			{Tile{6, 16}, pTwo, infantryUC},
+			{Tile{11, 16}, pTwo, infantryUC},
+			{Tile{16, 16}, pTwo, infantryUC},
+			{Tile{21, 16}, pTwo, infantryUC},
+			{Tile{26, 16}, pTwo, infantryUC},
 
-			{GridPosition{1, 21}, pTwo, infantryUC},
-			{GridPosition{6, 21}, pTwo, infantryUC},
-			{GridPosition{11, 21}, pTwo, infantryUC},
-			{GridPosition{16, 21}, pTwo, infantryUC},
-			{GridPosition{21, 21}, pTwo, infantryUC},
-			{GridPosition{26, 21}, pTwo, infantryUC},
+			{Tile{1, 21}, pTwo, infantryUC},
+			{Tile{6, 21}, pTwo, infantryUC},
+			{Tile{11, 21}, pTwo, infantryUC},
+			{Tile{16, 21}, pTwo, infantryUC},
+			{Tile{21, 21}, pTwo, infantryUC},
+			{Tile{26, 21}, pTwo, infantryUC},
 		}
 	case zoomHorizontal:
 		nodeSetupInputs = []nodeSetupInput{
-			{GridPosition{2, 2}, pOne, infantryUC},
-			{GridPosition{6, 2}, pTwo, infantryUC},
+			{Tile{2, 2}, pOne, infantryUC},
+			{Tile{6, 2}, pTwo, infantryUC},
 		}
 	default:
 		panic("nodes.setupPositions: unknown setup")
 	}
 
 	for _, ni := range nodeSetupInputs {
-		node := newNode(ni.player, ni.gridPos, initialNodeHealth, ni.unitConfig)
-		nodes[ni.gridPos] = &node
+		node := newNode(ni.player, ni.tile, initialNodeHealth, ni.unitConfig)
+		nodes[ni.tile] = &node
 	}
 }

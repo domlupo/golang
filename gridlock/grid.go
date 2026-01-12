@@ -64,18 +64,18 @@ type grid struct {
 
 // The grid struct has a field called hexTriangleLUT which is a look up table (LUT)
 //
-// The hexagon triangle LUT is a hard coded mapping to aid with converting
-// Pixel to hexagon grid position. It avoids the need of CPU intensive math.
-// It helps CPU performance by removing the need for floating point or sqrt math logic.
+// The hexagon triangle LUT is a hard coded mapping to aid with converting Pixel to grid tiles. It
+// avoids the need of CPU intensive math. It helps CPU performance by removing the need for floating
+// point or sqrt math logic.
 //
-// Specific CPU profiling did not prove this optimization was needed but prior CPU profiling
-// for this game showed that integer math is much more efficient. Other Pixel to
-// hexagon algorithms appeared as complex or even more complex than this method so this
-// more optimized solution was implemented first.
+// Specific CPU profiling did not prove this optimization was needed but prior CPU profiling for
+// this game showed that integer math is much more efficient. Other Pixel to hexagon algorithms
+// appeared as complex or even more complex than this method so this more optimized solution was
+// implemented first.
 //
-// It is small portion of the hexagonal grid that is repeated multiple times.
-// It covers 460 (46 cols, 10 rows) of Pixels. The top left point in the most
-// top left pattern is located at {xOffset, yOffset}.
+// It is small portion of the hexagonal grid that is repeated multiple times. It covers 460 (46
+// cols, 10 rows) of Pixels. The top left point in the most top left pattern is located at {xOffset,
+// yOffset}.
 //
 // It has a:
 //   - right triangle on the left side.
@@ -141,8 +141,8 @@ type grid struct {
 // As shown above, the prior section's middle triangle is now converted into
 // this section's left and right triangle.
 
-// Position for low resolution game components such as nodes, obstacles, hexagons, etc
-type GridPosition struct {
+// Represents 2d location for game components such as nodes, obstacles, hexagons, etc
+type Tile struct {
 	X int `json:"x"`
 	Y int `json:"y"`
 }
@@ -155,7 +155,7 @@ const (
 	cExclusive
 )
 
-// A value stored in a lookup table to help determine grid position.
+// A value stored in a lookup table to help determine grid tile.
 type hexagonTriangle int
 
 // A common interior or exterior point of a hexagon.
@@ -239,7 +239,7 @@ func newGrid(gc gridConfig) grid {
 	return g
 }
 
-// Setup a look up table to help determine grid position
+// Setup a look up table to help determine grid tile.
 func (g grid) setupHexTriangleLUT() []hexagonTriangle {
 	switchTriangle := make(map[Pixel]hexagonTriangle)
 	for _, p := range g.demotifLinePixels(hsNorthwest, cExclusive) {
@@ -375,88 +375,88 @@ func hexSides() []hexSide {
 }
 
 // Typical log method.
-func (gp GridPosition) log() []slog.Attr {
+func (t Tile) log() []slog.Attr {
 	var a = []slog.Attr{}
-	a = append(a, slog.Int("X", gp.X))
-	a = append(a, slog.Int("Y", gp.Y))
+	a = append(a, slog.Int("X", t.X))
+	a = append(a, slog.Int("Y", t.Y))
 	return a
 }
 
 // Typical equals method.
-func (gp1 GridPosition) equals(gp2 GridPosition) bool {
-	return gp1.X == gp2.X && gp1.Y == gp2.Y
+func (t1 Tile) equals(t2 Tile) bool {
+	return t1.X == t2.X && t1.Y == t2.Y
 }
 
-func (g grid) allAdjacentGridPos(gp GridPosition) []GridPosition {
-	a := []GridPosition{}
+func (g grid) allAdjacent(t Tile) []Tile {
+	a := []Tile{}
 	for _, hs := range hexSides() {
-		if p, ok := g.adjacent(gp, hs); ok {
+		if p, ok := g.adjacent(t, hs); ok {
 			a = append(a, p)
 		}
 	}
 	return a
 }
 
-func (g grid) adjacent(p GridPosition, side hexSide) (GridPosition, bool) {
-	x := p.X
-	y := p.Y
+func (g grid) adjacent(t Tile, side hexSide) (Tile, bool) {
+	x := t.X
+	y := t.Y
 	switch side {
 	case hsNone:
-		panic("grid.adjacent: need a direction to find adjacent grid position")
+		panic("grid.adjacent: need a direction to find adjacent tile")
 	case hsNortheast:
 		y--
-		if p.Y%2 == 0 {
+		if t.Y%2 == 0 {
 			x++
 		}
 	case hsEast:
 		x++
 	case hsSoutheast:
 		y++
-		if p.Y%2 == 0 {
+		if t.Y%2 == 0 {
 			x++
 		}
 	case hsWest:
 		x--
 	case hsSouthwest:
 		y++
-		if p.Y%2 == 1 {
+		if t.Y%2 == 1 {
 			x--
 		}
 	case hsNorthwest:
 		y--
-		if p.Y%2 == 1 {
+		if t.Y%2 == 1 {
 			x--
 		}
 	default:
-		panic("grid.adjacent: cannot find adjacent grid position due to unknown hex side")
+		panic("grid.adjacent: cannot find adjacent tile due to unknown hex side")
 	}
 
 	if x < 0 || y < 0 || y >= g.yIndexMax || (y%2 == 0 && x >= g.xIndexMax-1) ||
 		(y%2 == 1 && x >= g.xIndexMax) {
-		return GridPosition{}, false
+		return Tile{}, false
 	} else {
-		return GridPosition{x, y}, true
+		return Tile{x, y}, true
 	}
 }
 
-func (g grid) isAdjacent(gp1 GridPosition, gp2 GridPosition) bool {
-	ne, neOk := g.adjacent(gp1, hsNortheast)
-	e, eOk := g.adjacent(gp1, hsEast)
-	se, seOk := g.adjacent(gp1, hsSoutheast)
-	sw, swOk := g.adjacent(gp1, hsSouthwest)
-	w, wOk := g.adjacent(gp1, hsWest)
-	nw, nwOk := g.adjacent(gp1, hsNorthwest)
+func (g grid) isAdjacent(t1 Tile, t2 Tile) bool {
+	ne, neOk := g.adjacent(t1, hsNortheast)
+	e, eOk := g.adjacent(t1, hsEast)
+	se, seOk := g.adjacent(t1, hsSoutheast)
+	sw, swOk := g.adjacent(t1, hsSouthwest)
+	w, wOk := g.adjacent(t1, hsWest)
+	nw, nwOk := g.adjacent(t1, hsNorthwest)
 
-	return (neOk && ne.equals(gp2)) ||
-		(eOk && e.equals(gp2)) ||
-		(seOk && se.equals(gp2)) ||
-		(swOk && sw.equals(gp2)) ||
-		(wOk && w.equals(gp2)) ||
-		(nwOk && nw.equals(gp2))
+	return (neOk && ne.equals(t2)) ||
+		(eOk && e.equals(t2)) ||
+		(seOk && se.equals(t2)) ||
+		(swOk && sw.equals(t2)) ||
+		(wOk && w.equals(t2)) ||
+		(nwOk && nw.equals(t2))
 }
 
-func (g grid) getPixel(gp GridPosition, hexPoint hexPoint) (Pixel, bool) {
-	p := g.getPixelOutbounds(gp, hexPoint)
+func (g grid) getPixel(t Tile, hexPoint hexPoint) (Pixel, bool) {
+	p := g.getPixelOutbounds(t, hexPoint)
 	if !g.contains(p) {
 		return Pixel{}, false
 	} else {
@@ -464,23 +464,23 @@ func (g grid) getPixel(gp GridPosition, hexPoint hexPoint) (Pixel, bool) {
 	}
 }
 
-func (g grid) getCenterWithFallback(gp GridPosition) (Pixel, bool) {
-	if p, ok := g.getPixel(gp, hpCenter); ok {
+func (g grid) getCenterWithFallback(t Tile) (Pixel, bool) {
+	if p, ok := g.getPixel(t, hpCenter); ok {
 		return p, true
 	}
 
 	for _, hp := range hexPoints() {
-		if p, ok := g.getPixel(gp, hp); ok {
+		if p, ok := g.getPixel(t, hp); ok {
 			return p, true
 		}
 	}
 	return Pixel{}, false
 }
 
-func (g grid) getPixelOutbounds(gp GridPosition, hexPoint hexPoint) Pixel {
-	x := gp.X * g.hexPixelWidth
-	y := gp.Y * (g.hexPixelHeight / 4 * 3)
-	if gp.Y%2 == 1 {
+func (g grid) getPixelOutbounds(t Tile, hexPoint hexPoint) Pixel {
+	x := t.X * g.hexPixelWidth
+	y := t.Y * (g.hexPixelHeight / 4 * 3)
+	if t.Y%2 == 1 {
 		x -= (g.hexPixelWidth) / 2
 	}
 
@@ -512,14 +512,14 @@ func (g grid) getPixelOutbounds(gp GridPosition, hexPoint hexPoint) Pixel {
 	return Pixel{x + g.hexXPixelOffset, y + g.hexYPixelOffset}
 }
 
-func (g grid) getGridPos(p Pixel) (GridPosition, bool) {
+func (g grid) getTile(p Pixel) (Tile, bool) {
 	if !g.contains(p) {
-		return GridPosition{}, false
+		return Tile{}, false
 	}
-	return g.getGridPosOutbounds(p), true
+	return g.getTileOutbounds(p), true
 }
 
-func (g grid) getGridPosOutbounds(p Pixel) GridPosition {
+func (g grid) getTileOutbounds(p Pixel) Tile {
 	xIndex := (p.X+g.hexPixelWidth-g.hexXPixelOffset)/g.hexPixelWidth - 1
 	yIndex := (p.Y+(g.hexPixelHeight/4*3)-g.hexYPixelOffset)/(g.hexPixelHeight/4*3) - 2
 	innerX := (p.X + g.hexPixelWidth - g.hexXPixelOffset) % g.hexPixelWidth
@@ -583,12 +583,12 @@ func (g grid) getGridPosOutbounds(p Pixel) GridPosition {
 		}
 	default:
 		panic(fmt.Sprintf(
-			"grid.getGridPosOutbounds: could not find a y section for the inner y: %d and Pixel %s",
+			"grid.getTileOutbounds: could not find a y section for the inner y: %d and Pixel %s",
 			innerY,
 			p.log()))
 	}
 
-	return GridPosition{xIndex + xIndexOffset, yIndex + yIndexOffset}
+	return Tile{xIndex + xIndexOffset, yIndex + yIndexOffset}
 }
 
 // Remove the repeated hexagon grid pattern from the Pixel to find the base
@@ -596,7 +596,7 @@ func (g grid) getGridPosOutbounds(p Pixel) GridPosition {
 // aligned with x=0. The top point of the hexagon is aligned with y=0. By motif
 // definition, x must be less than hex width and y must be less than hex height.
 func (g grid) demotif(p Pixel) (demotif, bool) {
-	gp, ok := g.getGridPos(p)
+	t, ok := g.getTile(p)
 	if !ok {
 		return demotif{}, false
 	}
@@ -606,12 +606,12 @@ func (g grid) demotif(p Pixel) (demotif, bool) {
 	p.X += (g.hexPixelWidth / 2) - g.hexXPixelOffset
 	p.Y += (g.hexPixelHeight / 2)
 	// Remove the repeated hexagon grid pattern.
-	p.Y -= gp.Y * (g.hexPixelHeight * 3 / 4)
-	switch gp.Y % 2 {
+	p.Y -= t.Y * (g.hexPixelHeight * 3 / 4)
+	switch t.Y % 2 {
 	case 0:
-		p.X -= gp.X * g.hexPixelWidth
+		p.X -= t.X * g.hexPixelWidth
 	case 1:
-		p.X -= gp.X * g.hexPixelWidth
+		p.X -= t.X * g.hexPixelWidth
 		p.X += g.hexPixelWidth / 2
 	default:
 		panic("grid.demotif: invalid modulo")

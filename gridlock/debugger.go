@@ -34,7 +34,7 @@ type debuggerConfig struct {
 	heatmapPercent                int
 	debugUnitRotationIncrement    float64
 	sketchedPixelConnections      []Pixel
-	sketchedHexagons              map[GridPosition]struct{}
+	sketchedHexagons              map[Tile]struct{}
 	partitionAnalysis             partitionAnalysis
 	roygbivColors                 []color.RGBA
 }
@@ -52,7 +52,7 @@ func newDebuggerConfig() *debuggerConfig {
 		debugUnitRotationIncrement:    0.01,
 		partitionAnalysis:             paCollision,
 		heatmapPercent:                maxPercent,
-		sketchedHexagons:              make(map[GridPosition]struct{}),
+		sketchedHexagons:              make(map[Tile]struct{}),
 		roygbivColors: []color.RGBA{
 			{200, 0, 0, 255},
 			{250, 150, 0, 255},
@@ -172,16 +172,16 @@ func (d *debugger) registerToggles(tr *toggleRegister) {
 	tr.register(
 		keyK,
 		func() {
-			gridPos, ok := d.grid.getGridPos(d.pixel)
+			t, ok := d.grid.getTile(d.pixel)
 			if !ok {
 				panic(fmt.Sprintf(
-					"debugger: cannot sketch hexagon because no grid position for Pixel %s",
+					"debugger: cannot sketch hexagon because no Tile for Pixel %s",
 					d.pixel.log()))
 			}
-			if _, ok := d.sketchedHexagons[gridPos]; ok {
-				delete(d.sketchedHexagons, gridPos)
+			if _, ok := d.sketchedHexagons[t]; ok {
+				delete(d.sketchedHexagons, t)
 			} else {
-				d.sketchedHexagons[gridPos] = struct{}{}
+				d.sketchedHexagons[t] = struct{}{}
 			}
 		},
 	)
@@ -189,7 +189,7 @@ func (d *debugger) registerToggles(tr *toggleRegister) {
 		keyO,
 		func() {
 			d.sketchedPixelConnections = d.sketchedPixelConnections[:0]
-			d.sketchedHexagons = make(map[GridPosition]struct{})
+			d.sketchedHexagons = make(map[Tile]struct{})
 		},
 	)
 
@@ -221,10 +221,10 @@ func (d *debugger) debug(enableDebugger bool, debugSelection bool, p Pixel) {
 
 func (d *debugger) logPixel() {
 	attrs := []slog.Attr{nest("Pixel", d.pixel.log())}
-	if gridPos, ok := d.grid.getGridPos(d.pixel); ok {
-		attrs = append(attrs, nest("GridPosition", gridPos.log()))
+	if tile, ok := d.grid.getTile(d.pixel); ok {
+		attrs = append(attrs, nest("Tile", tile.log()))
 	} else {
-		attrs = append(attrs, slog.String("GridPosition", "notFound"))
+		attrs = append(attrs, slog.String("Tile", "notFound"))
 	}
 	attrs = append(attrs, nest("ObstacleLUT", d.oLUT[d.pixel].log()))
 	attrs = append(attrs, nest("NodeLUT", d.nLUT[d.pixel].log()))
@@ -316,7 +316,7 @@ func (d *debugger) createUnitPathfindHeatmap() {
 					infoLevel,
 					devTool,
 					"debugger.createUnitPathfindHeatmap",
-					slog.Int("pixel positions percent progress", percentProgress))
+					slog.Int("Pixel percent progress", percentProgress))
 			}
 
 			if info.Walkable {
@@ -383,14 +383,14 @@ func (d debugger) draw(c drawConfig) {
 			logger.log(infoLevel, devTool, "debugger.debugHexagons", d.partitionAnalysis.log())
 			partitions := d.partitions(*u, d.partitionAnalysis)
 			for _, h := range partitions {
-				drawHexHighlight(c, d.grid, h.gridPos)
+				drawHexHighlight(c, d.grid, h.tile)
 			}
 		} else {
 			for _, h := range d.hexagons {
-				center := d.grid.getPixelOutbounds(h.gridPos, hpCenter)
+				center := d.grid.getPixelOutbounds(h.tile, hpCenter)
 				center.draw(c, *d.debuggerConfig, color.White, false, d.grid.pixelMultiplier)
 				if h.selected {
-					drawHexHighlight(c, d.grid, h.gridPos)
+					drawHexHighlight(c, d.grid, h.tile)
 				}
 			}
 		}

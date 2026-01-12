@@ -1,4 +1,4 @@
-// Obstacles which block movement on a specific grid position.
+// Obstacles which block movement on a specific grid tile.
 
 package main
 
@@ -11,14 +11,14 @@ import (
 )
 
 // All obstacles on map.
-type obstacles map[GridPosition]*obstacle
+type obstacles map[Tile]*obstacle
 
 // All points on map from every obstacle visibility grid.
 type obstaclePoints map[Pixel]*obstaclePoint
 
 // A grid level component which blocks unit movement.
 type obstacle struct {
-	gridPos        GridPosition
+	tile           Tile
 	kind           obstacleKind
 	visibilityGrid *[]obstaclePoint
 }
@@ -26,7 +26,7 @@ type obstacle struct {
 // A point on an obstacle visibility grid.
 type obstaclePoint struct {
 	Pixel
-	source           GridPosition
+	source           Tile
 	visibilityGridId id
 	cw               *obstaclePoint
 	cwDistance       int
@@ -79,10 +79,10 @@ func (op obstaclePoint) isZero() bool {
 	return op.Pixel.equals(Pixel{0, 0})
 }
 
-func (os obstacles) insert(k GridPosition, v *obstacle) {
+func (os obstacles) insert(k Tile, v *obstacle) {
 	_, ok := os[k]
 	if ok {
-		panic(fmt.Sprintf("obstacles.insert: grid pos {%d, %d} already contains obstacle: ", k.X, k.Y))
+		panic(fmt.Sprintf("obstacles.insert: tile %s already contains obstacle: ", k.log()))
 	}
 	os[k] = v
 }
@@ -97,8 +97,8 @@ func (os obstacles) key() []byte {
 	var b []byte
 	for i := 0; i < len(keys); i++ {
 		o := os[keys[i]]
-		b = append(b, truncate(o.gridPos.X))
-		b = append(b, truncate(o.gridPos.Y))
+		b = append(b, truncate(o.tile.X))
+		b = append(b, truncate(o.tile.Y))
 		b = append(b, truncate(int(o.kind)))
 	}
 	return b
@@ -134,13 +134,13 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 	for x := range g.pixelWidth {
 		for y := range g.pixelHeight {
 			p := Pixel{X: x, Y: y}
-			gridPos, ok := g.getGridPos(p)
+			t, ok := g.getTile(p)
 			if !ok {
 				panic(fmt.Sprintf(
-					"obstacles.setupObstacleLUT: could not get grid pos for Pixel %s",
+					"obstacles.setupObstacleLUT: could not get tile for Pixel %s",
 					p.log()))
 			}
-			o := os[gridPos]
+			o := os[t]
 			if o != nil && (o.kind == lowMountain || o.kind == highMountain) {
 				oLUT[p] = obstacleInfo{Walkable: false}
 				nearestUnwalkables[p] = []Pixel{p}
@@ -226,22 +226,22 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 		// Currently, this calculation takes the longest e.g. (30s of 45s total). I looked into removing
 		// floating point math. A few CPU profiles showed this is only slightly less performant (< 5
 		// seconds) than integer math. I suspect using integer math may lead to very hard to debug
-		// issues which I want to avoid. Another potential error prone optimization that I am avoiding is
-		// summing the pixel position as they are added to the array. Optimizing may be needed in the
-		// future to speed up setup, but LUT caching is sufficient for now.
+		// issues which I want to avoid. Another potential error prone optimization that I am avoiding
+		// is summing the Pixel as they are added to the array. Optimizing may be needed in the future
+		// to speed up setup, but LUT caching is sufficient for now.
 		for x := range g.pixelWidth {
 			for y := range g.pixelHeight {
 				p := Pixel{X: x, Y: y}
-				n := nearestUnwalkables[p]
+				nearestUnwalkable := nearestUnwalkables[p]
 
 				xSum := 0
 				ySum := 0
-				for _, pos := range n {
-					xSum += pos.X
-					ySum += pos.Y
+				for _, n := range nearestUnwalkable {
+					xSum += n.X
+					ySum += n.Y
 				}
-				xAvg := int(math.Round(float64(xSum) / float64(len(n))))
-				yAvg := int(math.Round(float64(ySum) / float64(len(n))))
+				xAvg := int(math.Round(float64(xSum) / float64(len(nearestUnwalkable))))
+				yAvg := int(math.Round(float64(ySum) / float64(len(nearestUnwalkable))))
 
 				info := oLUT[p]
 				info.NearestUnwalkablesAvg = Pixel{X: xAvg, Y: yAvg}
@@ -284,7 +284,7 @@ func (os obstacles) setupObstacleLUT(g grid) obstacleLUT {
 }
 
 func (os obstacles) getGroups(g grid) []obstacles {
-	needsGrouped := make(map[GridPosition]bool)
+	needsGrouped := make(map[Tile]bool)
 	for k := range os {
 		needsGrouped[k] = true
 	}
@@ -297,7 +297,7 @@ func (os obstacles) getGroups(g grid) []obstacles {
 		}
 
 		group := make(obstacles)
-		q := []GridPosition{k}
+		q := []Tile{k}
 		for len(q) != 0 {
 			current := q[0]
 			q = q[1:]
@@ -340,11 +340,11 @@ func (os obstacles) getGroups(g grid) []obstacles {
 }
 
 // Returns true if a point to point line of sight exists using Bresenham's algorithm
-func (pos Pixel) lineOfSight(otherPos Pixel, oLUT obstacleLUT, radius int) (Pixel, bool) {
-	x0 := pos.X
-	y0 := pos.Y
-	x1 := otherPos.X
-	y1 := otherPos.Y
+func (p1 Pixel) lineOfSight(p2 Pixel, oLUT obstacleLUT, radius int) (Pixel, bool) {
+	x0 := p1.X
+	y0 := p1.Y
+	x1 := p2.X
+	y1 := p2.Y
 
 	var sx int
 	var sy int
@@ -403,12 +403,12 @@ func (start Pixel) obstaclePoint(
 
 	nearest := math.MaxInt64
 	var nearestIndex int
-	gridPos, ok := g.getGridPos(obstaclePixel)
+	t, ok := g.getTile(obstaclePixel)
 	if !ok {
 		// occurs when cursor is off screen
 		return obstaclePoint{}, los
 	}
-	visibilityGrid := *obstacles[gridPos].visibilityGrid
+	visibilityGrid := *obstacles[t].visibilityGrid
 	for index, op := range visibilityGrid {
 		distance := obstaclePixel.chebyshevDistance(op.Pixel)
 		if distance < nearest {
@@ -447,19 +447,19 @@ func (points obstaclePoints) createAllPoints(os obstacles, g grid) {
 	nwOffset := Pixel{-4, -2}
 
 	for _, o := range os {
-		nObstaclePoint := &obstaclePoint{source: o.gridPos}
-		neObstaclePoint := &obstaclePoint{source: o.gridPos}
-		seObstaclePoint := &obstaclePoint{source: o.gridPos}
-		sObstaclePoint := &obstaclePoint{source: o.gridPos}
-		swObstaclePoint := &obstaclePoint{source: o.gridPos}
-		nwObstaclePoint := &obstaclePoint{source: o.gridPos}
+		nObstaclePoint := &obstaclePoint{source: o.tile}
+		neObstaclePoint := &obstaclePoint{source: o.tile}
+		seObstaclePoint := &obstaclePoint{source: o.tile}
+		sObstaclePoint := &obstaclePoint{source: o.tile}
+		swObstaclePoint := &obstaclePoint{source: o.tile}
+		nwObstaclePoint := &obstaclePoint{source: o.tile}
 
-		hpN := g.getPixelOutbounds(o.gridPos, hpNorth)
-		hpNe := g.getPixelOutbounds(o.gridPos, hpNortheast)
-		hpSe := g.getPixelOutbounds(o.gridPos, hpSoutheast)
-		hpS := g.getPixelOutbounds(o.gridPos, hpSouth)
-		hpSw := g.getPixelOutbounds(o.gridPos, hpSouthwest)
-		hpNw := g.getPixelOutbounds(o.gridPos, hpNorthwest)
+		hpN := g.getPixelOutbounds(o.tile, hpNorth)
+		hpNe := g.getPixelOutbounds(o.tile, hpNortheast)
+		hpSe := g.getPixelOutbounds(o.tile, hpSoutheast)
+		hpS := g.getPixelOutbounds(o.tile, hpSouth)
+		hpSw := g.getPixelOutbounds(o.tile, hpSouthwest)
+		hpNw := g.getPixelOutbounds(o.tile, hpNorthwest)
 
 		if n, ok := g.sum(hpN, nOffset); ok {
 			nObstaclePoint.Pixel = n
@@ -496,9 +496,8 @@ func (points obstaclePoints) removeDuplicatePoints() {
 				continue
 			}
 
-			// remove unneeded positions. Very hacky approach is to remove
-			// any positions that collides with a radius of 5.
-			// TODO: Don't hard code 5 and don't hack
+			// remove unneeded points. Very hacky approach is to remove any points that collides with a
+			// radius of 5. TODO: Don't hard code 5 and don't hack
 			xDelta := op.X - otherOp.X
 			yDelta := op.Y - otherOp.Y
 			rSum := 5 + 5
@@ -595,8 +594,8 @@ func (op *obstaclePoint) connectCwTo(other *obstaclePoint) {
 func (o obstacle) drawObstacle(dc drawConfig, g grid) {
 	switch o.kind {
 	case lowMountain:
-		drawHex(dc, g, o.gridPos, drawTriangleColor{red: 0.2, blue: 0.2, green: 0.2, alpha: 0.8}, false)
+		drawHex(dc, g, o.tile, drawTriangleColor{red: 0.2, blue: 0.2, green: 0.2, alpha: 0.8}, false)
 	case highMountain:
-		drawHex(dc, g, o.gridPos, drawTriangleColor{red: 0.0, blue: 0.0, green: 0.0, alpha: 0.8}, false)
+		drawHex(dc, g, o.tile, drawTriangleColor{red: 0.0, blue: 0.0, green: 0.0, alpha: 0.8}, false)
 	}
 }

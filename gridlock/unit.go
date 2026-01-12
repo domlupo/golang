@@ -52,7 +52,7 @@ func (ut unitTarget) string() string {
 	}
 }
 
-// All units within a 2 dimensional layer. It may be wrong to use Pixel as key when unit positions
+// All units within a 2 dimensional layer. It may be wrong to use Pixel as key when unit Positions
 // are the higher resolution Pos but I think this is simpler and can switch if needed.
 type units map[Pixel]*unit
 
@@ -90,7 +90,7 @@ type unit struct {
 	next                *unit
 	spawnOrder          int
 	angle               float64
-	sourceNode          GridPosition
+	sourceNode          Tile
 	sourcePosition      Pos
 	sourceUnit          id
 	showVision          bool
@@ -129,7 +129,7 @@ func newUnit(
 	p player,
 	globalTargets []Pixel,
 	actions []action,
-	sourceNode GridPosition,
+	sourceNode Tile,
 	selected bool) *unit {
 
 	u := unit{
@@ -371,12 +371,12 @@ func (u *unit) updateTarget(ut unitTarget, target Pixel) {
 // Not optimal but close enough to unblock future development. A hack is used which is not guaranteed
 // to find the best path. I suspect future path finding will need to be optimal and cache results at startup.
 //
-// The hack is when creating a path, los checks are performed from the current path position to the unit. The
+// The hack is when creating a path, los checks are performed from the current path Pixel to the unit. The
 // path only considers jumping to obstacles which directly block the los but certain paths are more efficient
 // when jumping to obstacles which are not in the los.
 //
-// A smaller issue is when the desired final position is within a visibility grid, but the los check from
-// the position to unit immediately jumps to a different obstacle visibility grid when the first
+// A smaller issue is when the desired final Pixel is within a visibility grid, but the los check from
+// the Pixel to unit immediately jumps to a different obstacle visibility grid when the first
 // visibility grid should have been traveled.
 func (u *unit) pathfindGlobalTarget(obstacles obstacles, oLUT obstacleLUT, g grid) int {
 	logger.logSelected(u.selected, infoLevel, selectedUnit, "unit.pathfindGlobalTarget")
@@ -422,10 +422,10 @@ func (u *unit) pathfindGlobalTarget(obstacles obstacles, oLUT obstacleLUT, g gri
 	for i, path := range paths {
 		trimPath := []Pixel{path[0]}
 		for j := 0; j < len(path); j++ {
-			pos := path[j]
+			p1 := path[j]
 			for k := len(path) - 1; k > j; k-- {
-				otherPixel := path[k]
-				if _, los := pos.lineOfSight(otherPixel, oLUT, u.radius); los {
+				p2 := path[k]
+				if _, los := p1.lineOfSight(p2, oLUT, u.radius); los {
 					j = k
 					trimPath = append(trimPath, path[k])
 					j--

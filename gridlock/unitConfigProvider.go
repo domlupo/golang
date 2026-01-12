@@ -199,7 +199,7 @@ func (ucProvider unitConfigProvider) setReactions() {
 							fighter.player,
 							[]Pixel{fighter.nearest.pixel()},
 							[]action{},
-							GridPosition{},
+							Tile{},
 							fighter.selected)
 						spawn.sourceUnit = fighter.id
 						fighter.requests = append(fighter.requests, request{spawn: spawn})
@@ -233,7 +233,7 @@ func (ucProvider unitConfigProvider) reactChaff(fireOrdnanceDelay uint64) reacti
 				u.player,
 				[]Pixel{u.pixel()},
 				[]action{},
-				GridPosition{},
+				Tile{},
 				u.selected)
 			u.requests = append(u.requests, request{spawn: newChafff})
 			consumable := u.consumables[chaff]
@@ -258,7 +258,7 @@ func (ucProvider unitConfigProvider) reactFlare(fireOrdnanceDelay uint64) reacti
 				u.player,
 				[]Pixel{u.nearest.pixel()},
 				[]action{},
-				GridPosition{},
+				Tile{},
 				u.selected)
 			u.requests = append(u.requests, request{spawn: newFlare})
 			consumable := u.consumables[flare]

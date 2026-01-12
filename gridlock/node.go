@@ -13,20 +13,20 @@ import (
 )
 
 // All nodes on map
-type nodes map[GridPosition]*node
+type nodes map[Tile]*node
 
 // Lookup table for processed node information.
 type nodeLUT map[Pixel]nodeInfo
 
 // Processed node information.
 type nodeInfo struct {
-	ChebyshevDistance int            `json:"chebyshevDistance"`
-	NearestNodes      []GridPosition `json:"nearestNodes"`
+	ChebyshevDistance int    `json:"chebyshevDistance"`
+	NearestNodes      []Tile `json:"nearestNodes"`
 }
 
 // Game component which spawns units and is captured by opposing units
 type node struct {
-	gridPos            GridPosition
+	tile               Tile
 	player             player
 	control            []*hexagon
 	singleSelect       bool
@@ -42,10 +42,10 @@ type node struct {
 	selected           bool
 }
 
-func newNode(p player, gridPos GridPosition, initialNodeHealth int, uc unitConfig) node {
+func newNode(p player, t Tile, initialNodeHealth int, uc unitConfig) node {
 	n := node{
 		player:        p,
-		gridPos:       gridPos,
+		tile:          t,
 		control:       []*hexagon{},
 		maxHealth:     initialNodeHealth,
 		currentHealth: initialNodeHealth,
@@ -57,14 +57,14 @@ func newNode(p player, gridPos GridPosition, initialNodeHealth int, uc unitConfi
 
 func (n node) log() []slog.Attr {
 	var a []slog.Attr
-	a = append(a, nest("gridPos", n.gridPos.log()))
+	a = append(a, nest("tile", n.tile.log()))
 	a = append(a, slog.String("player", n.capturedBy.string()))
 	if len(n.control) == 0 {
 		a = append(a, slog.String("control", "none"))
 	} else {
 		control := []slog.Attr{}
 		for _, c := range n.control {
-			control = append(control, c.gridPos.log()...)
+			control = append(control, c.tile.log()...)
 		}
 		a = append(a, nest("control", control))
 	}
@@ -107,8 +107,8 @@ func (nodes nodes) key() []byte {
 	var b []byte
 	for i := 0; i < len(keys); i++ {
 		n := nodes[keys[i]]
-		b = append(b, truncate(n.gridPos.X))
-		b = append(b, truncate(n.gridPos.Y))
+		b = append(b, truncate(n.tile.X))
+		b = append(b, truncate(n.tile.Y))
 		b = append(b, truncate(int(n.player)))
 	}
 	return b
@@ -141,13 +141,13 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 	for x := range g.pixelWidth {
 		for y := range g.pixelHeight {
 			p := Pixel{X: x, Y: y}
-			gridPos, ok := g.getGridPos(p)
+			t, ok := g.getTile(p)
 			if !ok {
-				panic("nodes.setupNodeLUT: expected grid position to exist")
+				panic(fmt.Sprintf("nodes.setupNodeLUT: expected tile to exist for pixel %s", p.log()))
 			}
-			n := nodes[gridPos]
+			n := nodes[t]
 			if n != nil && n.player != pNone {
-				nodeLUT[p] = nodeInfo{ChebyshevDistance: 0, NearestNodes: []GridPosition{n.gridPos}}
+				nodeLUT[p] = nodeInfo{ChebyshevDistance: 0, NearestNodes: []Tile{n.tile}}
 			} else {
 				nodeLUT[p] = nodeInfo{ChebyshevDistance: distanceLimit}
 			}
@@ -270,7 +270,7 @@ func (nodes nodes) setupNodeLUT(oLUT obstacleLUT, g grid) nodeLUT {
 
 func (n node) isZero() bool {
 	// TODO: fix implementation
-	return n.player == pNone && n.gridPos.X == 0 && n.gridPos.Y == 0
+	return n.player == pNone && n.tile.X == 0 && n.tile.Y == 0
 }
 
 func (n node) selectActive() bool {
@@ -280,8 +280,8 @@ func (n node) selectActive() bool {
 func (nodes nodes) setupControl(g grid, hexagons hexagons, oLUT obstacleLUT) {
 
 	for _, h := range hexagons {
-		q := []GridPosition{h.gridPos}
-		visited := make(map[GridPosition]struct{})
+		q := []Tile{h.tile}
+		visited := make(map[Tile]struct{})
 
 		for len(q) > 0 {
 			current := q[0]
@@ -296,7 +296,7 @@ func (nodes nodes) setupControl(g grid, hexagons hexagons, oLUT obstacleLUT) {
 			p, ok := g.getCenterWithFallback(current)
 			if !ok {
 				panic(fmt.Sprintf(
-					"nodes.setupControl, could not find any pixel for grid pos %s",
+					"nodes.setupControl: could not find any pixel for tile %s",
 					current.log()))
 			} else if !oLUT[p].Walkable {
 				continue
@@ -331,7 +331,7 @@ func (nodes nodes) setupControl(g grid, hexagons hexagons, oLUT obstacleLUT) {
 				n.control = append(n.control, h)
 				// TODO: Need to determine behavior for same depth conflicts.
 				// Currently, code selects first encountered node which is not correct.
-				q = []GridPosition{}
+				q = []Tile{}
 			case pNone:
 				continue
 			default:
@@ -353,12 +353,12 @@ func (n *node) drawNode(dc drawConfig, g grid) {
 	default:
 		panic("node.drawNode: unknown player")
 	}
-	drawHex(dc, g, n.gridPos, drawTriangleColor, n.multiSelect)
+	drawHex(dc, g, n.tile, drawTriangleColor, n.multiSelect)
 
 	if n.currentHealth != n.maxHealth {
-		c := g.getPixelOutbounds(n.gridPos, hpCenter)
-		ne := g.getPixelOutbounds(n.gridPos, hpNortheast)
-		nw := g.getPixelOutbounds(n.gridPos, hpNorthwest)
+		c := g.getPixelOutbounds(n.tile, hpCenter)
+		ne := g.getPixelOutbounds(n.tile, hpNortheast)
+		nw := g.getPixelOutbounds(n.tile, hpNorthwest)
 		width := ne.X - nw.X
 		healthLineLength := (float32(n.currentHealth) / float32(n.maxHealth)) * float32(width)
 
@@ -375,8 +375,8 @@ func (n *node) drawNode(dc drawConfig, g grid) {
 
 	if n.singleSelect {
 		for _, h := range n.control {
-			if !n.gridPos.equals(h.gridPos) {
-				drawHex(dc, g, h.gridPos, dc.nodeControlColor, false)
+			if !n.tile.equals(h.tile) {
+				drawHex(dc, g, h.tile, dc.nodeControlColor, false)
 			}
 		}
 
@@ -397,9 +397,9 @@ func (n *node) drawTargets(dc drawConfig, g grid, debugNodeTargets bool) {
 	}
 
 	if !n.isZero() && debugNodeTargets {
-		var centerPixel, ok = g.getPixel(n.gridPos, hpCenter)
+		var centerPixel, ok = g.getPixel(n.tile, hpCenter)
 		if !ok {
-			panic(fmt.Sprintf("node.drawTargets: could not get Pixel for grid pos: %s", n.gridPos.log()))
+			panic(fmt.Sprintf("node.drawTargets: could not get Pixel for tile: %s", n.tile.log()))
 		}
 		for _, t := range n.targets {
 			vector.StrokeLine(

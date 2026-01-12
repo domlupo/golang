@@ -18,8 +18,8 @@ type partitionAnalysis int
 // for the 132 adjacent Pixels. If a collision occurs the hexSide which caused it is stored. Second,
 // optimized number of partitions means no extra partitions are considered for unit <-> unit
 // collisions since spatial partitioning checks all units within the partition. The LUT is utilized
-// via: Unit Pixel -> demotif -> hex sides from LUT -> check unit grid position for collision ->
-// check hex sides from LUT for collision.
+// via: Unit Pixel -> demotif -> hex sides from LUT -> check unit tile for collision -> check hex
+// sides from LUT for collision.
 type partitionLUT map[demotif][]hexSide
 
 const (
@@ -69,7 +69,7 @@ func newPartitioner(g grid, h hexagons, ucProvider unitConfigProvider) partition
 }
 
 func (part partitioner) partitions(u unit, pa partitionAnalysis, buffer int) partitions {
-	var positions []GridPosition
+	var tiles []Tile
 	radius := buffer
 	switch {
 	case u.name == infantry && pa != paSteer:
@@ -92,10 +92,10 @@ func (part partitioner) partitions(u unit, pa partitionAnalysis, buffer int) par
 			buffer))
 	}
 
-	positions = part.defaultPartitions(u.Pos, radius)
+	tiles = part.defaultPartitions(u.Pos, radius)
 	var parts partitions
-	for _, p := range positions {
-		parts = append(parts, part.hexagons[p])
+	for _, t := range tiles {
+		parts = append(parts, part.hexagons[t])
 	}
 	return parts
 }
@@ -116,59 +116,59 @@ func (part partitioner) lookUpPartitions(u unit, pa partitionAnalysis) partition
 		panic(fmt.Sprintf("partitioner.lookUpPartitions: could not demotif pixel %s", u.pixel().log()))
 	}
 	hexSides := lut[demotif]
-	gp, gpOk := part.grid.getGridPos(u.pixel())
-	positions := []GridPosition{gp}
-	if !gpOk {
+	tile, tileOk := part.grid.getTile(u.pixel())
+	tiles := []Tile{tile}
+	if !tileOk {
 		panic(fmt.Sprintf(
-			"partitioner.lookUpPartitions: could not find grid position for pixel %s",
+			"partitioner.lookUpPartitions: could not get Tile for Pixel %s",
 			u.pixel().log()))
 	}
 	for _, hs := range hexSides {
-		if gp, ok := part.grid.adjacent(gp, hs); ok {
-			positions = append(positions, gp)
+		if t, ok := part.grid.adjacent(tile, hs); ok {
+			tiles = append(tiles, t)
 		}
 	}
 	var parts partitions
-	for _, p := range positions {
-		parts = append(parts, part.hexagons[p])
+	for _, t := range tiles {
+		parts = append(parts, part.hexagons[t])
 	}
 	return parts
 }
 
-// Returns conservative partitions which collide with the passed position and distance.
-// The caller is responsible for verifying the analysis performed with the partitions is valid.
-// For example, analyzing partitions for collision detection between two circles would be invalid
-// if the circle with the position and distance not passed has a radius which exceeds the
-// conservative hex radius. Not optimized because the hexagon collision uses conservative circles.
-func (part partitioner) defaultPartitions(p Pos, d int) []GridPosition {
-	gridPos, ok := part.grid.getGridPos(p.pixel())
+// Returns conservative partitions which collide with the passed Pos and distance. The caller is
+// responsible for verifying the analysis performed with the partitions is valid. For example,
+// analyzing partitions for collision detection between two circles would be invalid if the circle
+// with the Pos and distance not passed has a radius which exceeds the conservative hex radius. Not
+// optimized because the hexagon collision uses conservative circles.
+func (part partitioner) defaultPartitions(p Pos, d int) []Tile {
+	t, ok := part.grid.getTile(p.pixel())
 	if !ok {
-		panic(fmt.Sprintf("partitioner.defaultPartitions: cannot find grid pos for %s", p.log()))
+		panic(fmt.Sprintf("partitioner.defaultPartitions: cannot find tile for %s", p.log()))
 	}
-	visited := make(map[GridPosition]struct{})
-	visited[gridPos] = struct{}{}
-	q := []GridPosition{gridPos}
-	nextQ := []GridPosition{}
+	visited := make(map[Tile]struct{})
+	visited[t] = struct{}{}
+	q := []Tile{t}
+	nextQ := []Tile{}
 	for len(q) > 0 {
 		current := q[0]
 		q = q[1:]
 
-		for _, a := range part.grid.allAdjacentGridPos(current) {
-			if _, ok := visited[a]; !ok {
-				visited[a] = struct{}{}
+		for _, aT := range part.grid.allAdjacent(current) {
+			if _, ok := visited[aT]; !ok {
+				visited[aT] = struct{}{}
 				// TODO: Fix this. This isn't correct but will probably work fine for awhile.
 				// It doesn't handle border partition collisions 100% correct but this should be rare.
 				// Also, I suspect this partitions method will most likely be refactored before issue
 				// blocks development.
-				pa, okA := part.grid.getCenterWithFallback(a)
+				pa, okA := part.grid.getCenterWithFallback(aT)
 				if !okA {
 					panic(fmt.Sprintf(
-						"partitioner.defaultPartitions: cannot find center for pos %s",
-						a.log()))
+						"partitioner.defaultPartitions: cannot find center for tile %s",
+						aT.log()))
 				}
 				_, collides := collides(p, pa.pos(), d, part.grid.conservativeHexPixelRadius)
 				if collides {
-					nextQ = append(nextQ, a)
+					nextQ = append(nextQ, aT)
 				}
 			}
 		}
@@ -177,11 +177,11 @@ func (part partitioner) defaultPartitions(p Pos, d int) []GridPosition {
 			break
 		} else if len(q) == 0 {
 			q = nextQ
-			nextQ = []GridPosition{}
+			nextQ = []Tile{}
 		}
 	}
 
-	partitions := make([]GridPosition, len(visited))
+	partitions := make([]Tile, len(visited))
 	i := 0
 	for p := range visited {
 		partitions[i] = p

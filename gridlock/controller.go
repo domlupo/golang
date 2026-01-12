@@ -44,6 +44,7 @@ func (c *controller) processInput() {
 	c.leftMouseReleased = false
 	c.leftMouseHeld = false
 
+	// TODO: revisit graphical name once I figure out pixelMultiplier
 	graphicalX, graphicalY := ebiten.CursorPosition()
 	_, mouseWheelDelta := ebiten.Wheel()
 	c.debugger.updateHeatmapPercent(-int(mouseWheelDelta))
@@ -81,19 +82,19 @@ func (c *controller) processInput() {
 }
 
 func (c controller) updateSelected(clickPosition Pixel, releasePosition Pixel) {
-	var priorSingleSelect GridPosition
+	var priorSingleSelect Tile
 	for _, n := range c.state.nodes {
 		if n.singleSelect {
-			priorSingleSelect = n.gridPos
+			priorSingleSelect = n.tile
 		}
 		n.singleSelect = false
 		n.multiSelect = false
 	}
 
-	clickedGridPos, _ := c.state.grid.getGridPos(clickPosition)
-	clickedNode, nodeClicked := c.state.nodes[clickedGridPos]
+	clickedTile, _ := c.state.grid.getTile(clickPosition)
+	clickedNode, nodeClicked := c.state.nodes[clickedTile]
 	if nodeClicked && clickPosition.equals(releasePosition) &&
-		clickedGridPos.equals(priorSingleSelect) {
+		clickedTile.equals(priorSingleSelect) {
 		for _, n := range c.state.nodes {
 			if n.player == clickedNode.player && n.unitConfig.name == clickedNode.unitConfig.name {
 				n.multiSelect = true
@@ -129,16 +130,16 @@ func (c controller) updateSelected(clickPosition Pixel, releasePosition Pixel) {
 	// usually causes too much selection to occur. The behavior is correct when
 	// the cursor ends right or below window. It is tricky and error prone to fix this
 	// due to hexagon LUT repetition, so I am punting it.
-	topLeftGridPos, _ := c.state.grid.getGridPos(topLeftPixel)
-	bottomRightGridPos := c.state.grid.getGridPosOutbounds(bottomRightPixel)
+	topLeftTile, _ := c.state.grid.getTile(topLeftPixel)
+	bottomRightTile := c.state.grid.getTileOutbounds(bottomRightPixel)
 
 	var firstSelectedNode *node
 	for _, n := range c.state.nodes {
 		// TODO: Fix broken code or remove it? Not sure if this is still needed.
-		if (topLeftGridPos.X < n.gridPos.X) &&
-			(n.gridPos.X < bottomRightGridPos.X) &&
-			(topLeftGridPos.Y < n.gridPos.Y) &&
-			(n.gridPos.Y < bottomRightGridPos.Y) {
+		if (topLeftTile.X < n.tile.X) &&
+			(n.tile.X < bottomRightTile.X) &&
+			(topLeftTile.Y < n.tile.Y) &&
+			(n.tile.Y < bottomRightTile.Y) {
 
 			if firstSelectedNode == nil {
 				firstSelectedNode = n
@@ -165,7 +166,7 @@ func (c controller) updateSelected(clickPosition Pixel, releasePosition Pixel) {
 		}
 
 		for _, h := range c.state.hexagons {
-			p := c.state.grid.getPixelOutbounds(h.gridPos, hpCenter)
+			p := c.state.grid.getPixelOutbounds(h.tile, hpCenter)
 			if (topLeftPixel.X < p.X) &&
 				(p.X < bottomRightPixel.X) &&
 				(topLeftPixel.Y < p.Y) &&
@@ -177,7 +178,7 @@ func (c controller) updateSelected(clickPosition Pixel, releasePosition Pixel) {
 		}
 
 		for _, n := range c.state.nodes {
-			p := c.state.grid.getPixelOutbounds(n.gridPos, hpCenter)
+			p := c.state.grid.getPixelOutbounds(n.tile, hpCenter)
 			if (topLeftPixel.X < p.X) &&
 				(p.X < bottomRightPixel.X) &&
 				(topLeftPixel.Y < p.Y) &&

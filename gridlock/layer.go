@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-// A layer is a 2 dimensional plane which units occupy. Units occupy a unique position
-// within a single layer. Units can interact with units in other layers. Units never switch layers.
+// A layer is a 2 dimensional plane which units occupy. Units occupy a unique Pos within a single
+// layer. Units can interact with units in other layers. Units never switch layers.
 type layer int
 
 const (

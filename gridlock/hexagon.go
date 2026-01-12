@@ -10,11 +10,11 @@ import (
 )
 
 // All hexagons on grid.
-type hexagons map[GridPosition]*hexagon
+type hexagons map[Tile]*hexagon
 
 // A hexagon which spatially partitions the map. Stores dynamic data bucketed by layer.
 type hexagon struct {
-	gridPos     GridPosition
+	tile        Tile
 	land        hexLayer
 	ordnance    hexLayer
 	aircraft    hexLayer
@@ -35,7 +35,7 @@ type hexLayer struct {
 // Typical log method.
 func (h hexagon) log() []slog.Attr {
 	var a = []slog.Attr{}
-	a = append(a, nest("GridPosition", h.gridPos.log()))
+	a = append(a, nest("Tile", h.tile.log()))
 	a = append(a, nest("land", h.land.log()))
 	a = append(a, nest("ordnance", h.ordnance.log()))
 	a = append(a, nest("aircraft", h.aircraft.log()))
@@ -78,28 +78,28 @@ func (h *hexagon) get(l layer) *hexLayer {
 	}
 }
 
-func newHexagons(g grid) map[GridPosition]*hexagon {
-	hexagons := make(map[GridPosition]*hexagon)
+func newHexagons(g grid) map[Tile]*hexagon {
+	hexagons := make(map[Tile]*hexagon)
 	for i := range g.xIndexMax {
 		for j := range g.yIndexMax {
 			if j%2 == 0 && i == g.xIndexMax-1 {
 				continue
 			}
 
-			gridPos := GridPosition{i, j}
-			hexagons[gridPos] = &hexagon{gridPos: gridPos}
+			t := Tile{i, j}
+			hexagons[t] = &hexagon{tile: t}
 		}
 	}
 	return hexagons
 }
 
 type unitDifferential struct {
-	GridPosition
+	Tile
 	diff int
 }
 
-// Returns all hexagon GridPositions sorted by largest unit count differential for the passed
-// player. No guaranteed sort for multiple grid positions with equal differential.
+// Returns all hexagon Tiles sorted by largest unit count differential for the passed player. No
+// guaranteed sort for multiple tiles with equal differential.
 func (hs hexagons) maxUnitDifferential(opponent player, l layer) []unitDifferential {
 	var diffs = []unitDifferential{}
 	for p := range hs {

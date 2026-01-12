@@ -103,7 +103,7 @@ func (g *Game) restart(nodeSetup nodeSetup, obstacleSetup obstacleSetup, verify 
 		for nPos := range nodes {
 			for oPos := range obstacles {
 				if nPos.equals(oPos) {
-					panic("Game.restart: grid position conflict between node and obstacle")
+					panic("Game.restart: tile conflict between node and obstacle")
 				}
 			}
 		}

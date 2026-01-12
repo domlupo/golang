@@ -192,11 +192,11 @@ func (s *state) spawn(u *unit) {
 			u.radius,
 			s.config.spawnUnitRadiusLimit))
 	}
-	p, ok := s.grid.getGridPos(u.pixel())
+	t, ok := s.grid.getTile(u.pixel())
 	if !ok {
-		panic(fmt.Sprintf("state.spawn: cannot get grid position for pixel %s", u.pixel().log()))
+		panic(fmt.Sprintf("state.spawn: cannot get tile for Pixel %s", u.pixel().log()))
 	}
-	hex := s.hexagons[p]
+	hex := s.hexagons[t]
 	hex.add(u)
 
 	if u.isReactive {
@@ -237,8 +237,8 @@ func (s *state) spawnRequest(r request) bool {
 }
 
 func (s *state) moveUnit(u *unit, m move) {
-	old, oOk := s.grid.getGridPos(u.pixel())
-	new, nOk := s.grid.getGridPos(m.pixel())
+	old, oOk := s.grid.getTile(u.pixel())
+	new, nOk := s.grid.getTile(m.pixel())
 	if !oOk || !nOk {
 		panic(fmt.Sprintf(
 			"state.moveUnit: cannot move unit %s with move %s",
@@ -256,7 +256,7 @@ func (s *state) moveUnit(u *unit, m move) {
 	units := *s.unitsLayer(m.Pos)
 	if o, ok := units[u.pixel()]; ok {
 		panic(fmt.Sprintf(
-			"state.moveUnit: position for unit occupied by other unit.\n unit: %s \n other: %s \n",
+			"state.moveUnit: Pixel for unit occupied by other unit.\n unit: %s \n other: %s \n",
 			u.log(),
 			o.log()))
 	}
@@ -804,13 +804,11 @@ func (s *state) despawnUnits() {
 
 	for u := range s.units() {
 		if u.health <= 0 || (u.collidedThisturn && !u.isSurvivesCollision) {
-			gridPos, ok := s.grid.getGridPos(u.pixel())
+			t, ok := s.grid.getTile(u.pixel())
 			if !ok {
-				panic(fmt.Sprintf(
-					"state.despawnUnits: expected grid pos to exist for %s",
-					u.pixel().log()))
+				panic(fmt.Sprintf("state.despawnUnits: expected tile to exist for %s", u.pixel().log()))
 			}
-			hex := s.hexagons[gridPos]
+			hex := s.hexagons[t]
 			hex.subtract(*u)
 			s.deleteUnit(u.Pos)
 			delete(s.reactiveUnits, u.id)
@@ -818,7 +816,7 @@ func (s *state) despawnUnits() {
 			s.unitDespawnTotal++
 			despawnUnitTurnCount++
 
-			if !u.sourceNode.equals(GridPosition{}) {
+			if !u.sourceNode.equals(Tile{}) {
 				n := s.nodes[u.sourceNode]
 				switch u.player {
 				case pOne:
@@ -861,7 +859,7 @@ func (s *state) attackNodes() {
 
 		if !u.canReachNode.isZero() {
 			attackedNodeThisTurnCount++
-			n := s.nodes[u.canReachNode.gridPos]
+			n := s.nodes[u.canReachNode.tile]
 			n.currentHealth = max(n.currentHealth-u.attack, 0)
 			u.attackedThisTurn = true
 			if n.currentHealth == 0 {
@@ -888,13 +886,13 @@ func (s *state) updateForNodeCapture() bool {
 
 	for _, n := range s.nodes {
 		if n.currentHealth == 0 {
-			newNode := newNode(n.capturedBy, n.gridPos, n.maxHealth, n.unitConfig)
+			newNode := newNode(n.capturedBy, n.tile, n.maxHealth, n.unitConfig)
 			newNode.control = n.control
 			newNode.singleSelect = n.singleSelect
 			newNode.multiSelect = n.multiSelect
 			newNode.pOneUnitAliveCount = n.pOneUnitAliveCount
 			newNode.pTwoUnitAliveCount = n.pTwoUnitAliveCount
-			s.nodes[n.gridPos] = &newNode
+			s.nodes[n.tile] = &newNode
 			nodeOwnershipChanged = true
 		}
 	}
@@ -941,7 +939,7 @@ func (s *state) updateTargets(target Pixel, filter []player) {
 			}
 		} else if n.multiSelect {
 			// TODO: Fix this so air units are selected, need a multi layer iterator
-			end := s.hexagons[n.gridPos].get(lLand).linkedList
+			end := s.hexagons[n.tile].get(lLand).linkedList
 			current := end
 			var checkOccurred bool
 			for {
@@ -989,9 +987,9 @@ func (s *state) produceUnits() {
 		}
 
 		// TODO: determine behavior for producing units during collision
-		pixel, ok := s.grid.getPixel(n.gridPos, hpCenter)
+		pixel, ok := s.grid.getPixel(n.tile, hpCenter)
 		if !ok {
-			panic(fmt.Sprintf("state.produceUnits: could not get Pixel for grid pos %s", n.gridPos.log()))
+			panic(fmt.Sprintf("state.produceUnits: could not get Pixel for tile %s", n.tile.log()))
 		}
 		p := pixel.posLayer(n.unitConfig.produceLayer)
 		u := newUnit(
@@ -1000,7 +998,7 @@ func (s *state) produceUnits() {
 			n.player,
 			n.targets,
 			n.actions,
-			n.gridPos,
+			n.tile,
 			n.selectActive() && s.developerMode)
 		if _, collides := s.collidesWithUnit(p, *u); !collides {
 			s.spawn(u)
