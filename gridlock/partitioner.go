@@ -166,7 +166,7 @@ func (part partitioner) defaultPartitions(p Pos, d int) []Tile {
 						"partitioner.defaultPartitions: cannot find center for tile %s",
 						aT.log()))
 				}
-				_, collides := collides(p, pa.pos(), d, part.grid.conservativeHexPixelRadius)
+				_, collides := collides(p.noLayer(), pa.pos(), d, part.grid.conservativeHexPixelRadius)
 				if collides {
 					nextQ = append(nextQ, aT)
 				}

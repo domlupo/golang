@@ -24,7 +24,7 @@ func newStateConfig(g grid) stateConfig {
 		moveUnits:                 true,
 		produceUnits:              true,
 		produceUnitsStepInterval:  180,
-		optimizeSpatialPartitions: false,
+		optimizeSpatialPartitions: true,
 		spawnUnitRadiusLimit:      g.minimumPixelsBetweenNonAdjacentHexagons,
 	}
 	return c
@@ -339,7 +339,6 @@ func (s *state) partitions(u unit, pa partitionAnalysis) []*hexagon {
 		}
 		return parts
 	}
-	// TODO: fix, panics at start up
 	return s.partitioner.partitions(u, pa, s.config.spawnUnitRadiusLimit)
 }
 
