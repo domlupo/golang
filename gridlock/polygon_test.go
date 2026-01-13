@@ -254,3 +254,373 @@ func TestCollides(t *testing.T) {
 		})
 	}
 }
+
+func TestCollidesCircle(t *testing.T) {
+	t.Parallel()
+	var tests = []struct {
+		name         string
+		p            polygon
+		c            circle
+		wantCollides bool
+	}{
+
+		{
+			"polygon within circle",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 2, Y: 4}},
+				{Pos{X: 2, Y: 4}, Pos{X: 4, Y: 4}},
+				{Pos{X: 4, Y: 4}, Pos{X: 4, Y: 2}},
+				{Pos{X: 4, Y: 2}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 3, Y: 3},
+				radius: 5,
+			},
+			true,
+		},
+		{
+			"circle within polygon",
+			newPolygon([]line{
+				{Pos{X: 1, Y: 1}, Pos{X: 1, Y: 5}},
+				{Pos{X: 1, Y: 5}, Pos{X: 5, Y: 5}},
+				{Pos{X: 5, Y: 5}, Pos{X: 5, Y: 1}},
+				{Pos{X: 5, Y: 1}, Pos{X: 1, Y: 1}}}),
+			circle{
+				center: Pos{X: 3, Y: 3},
+				radius: 1,
+			},
+			true,
+		},
+		// north east corner, collision from east
+		{
+			"north east corner, no collision from east",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 5, Y: 3},
+				radius: 1,
+			},
+			false,
+		},
+		{
+			"north east corner, exact collision from east",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 4, Y: 3},
+				radius: 1,
+			},
+			true,
+		},
+		{
+			"north east corner, overlap collision from east",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 4, Y: 3},
+				radius: 2,
+			},
+			true,
+		},
+		// north east corner, collision from north
+		{
+			"north east corner, no collision from north",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 3, Y: 5},
+				radius: 1,
+			},
+			false,
+		},
+		{
+			"north east corner, exact collision from north",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 3, Y: 4},
+				radius: 1,
+			},
+			true,
+		},
+		{
+			"north east corner, overlap collision from north",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 3, Y: 4},
+				radius: 2,
+			},
+			true,
+		},
+		// north west corner, collision from west
+		{
+			"north west corner, no collision from west",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 0, Y: 3},
+				radius: 1,
+			},
+			false,
+		},
+		{
+			"north west corner, exact collision from west",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 1, Y: 3},
+				radius: 1,
+			},
+			true,
+		},
+		{
+			"north west corner, overlap collision from west",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 1, Y: 3},
+				radius: 2,
+			},
+			true,
+		},
+		// north west corner, collision from north
+		{
+			"north west corner, no collision from north",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 2, Y: 5},
+				radius: 1,
+			},
+			false,
+		},
+		{
+			"north west corner, exact collision from north",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 2, Y: 4},
+				radius: 1,
+			},
+			true,
+		},
+		{
+			"north west corner, overlap collision from north",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 2, Y: 4},
+				radius: 2,
+			},
+			true,
+		},
+		// south west corner, collision from west
+		{
+			"south west corner, no collision from west",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 0, Y: 2},
+				radius: 1,
+			},
+			false,
+		},
+		{
+			"south west corner, exact collision from west",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 1, Y: 2},
+				radius: 1,
+			},
+			true,
+		},
+		{
+			"south west corner, overlap collision from west",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 1, Y: 2},
+				radius: 2,
+			},
+			true,
+		},
+		// south west corner, collision from south
+		{
+			"south west corner, no collision from south",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 2, Y: 0},
+				radius: 1,
+			},
+			false,
+		},
+		{
+			"south west corner, exact collision from south",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 2, Y: 1},
+				radius: 1,
+			},
+			true,
+		},
+		{
+			"south west corner, over lap collision from south",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 2, Y: 1},
+				radius: 2,
+			},
+			true,
+		},
+		// south east corner, collision from east
+		{
+			"south east corner, no collision from east",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 5, Y: 2},
+				radius: 1,
+			},
+			false,
+		},
+		{
+			"south east corner, exact collision from east",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 4, Y: 2},
+				radius: 1,
+			},
+			true,
+		},
+		{
+			"south east corner, overlap collision from east",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 4, Y: 2},
+				radius: 2,
+			},
+			true,
+		},
+		// south east corner, collision from south
+		{
+			"south east corner, no collision from south",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 3, Y: 0},
+				radius: 1,
+			},
+			false,
+		},
+		{
+			"south east corner, exact collision from south",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 3, Y: 1},
+				radius: 1,
+			},
+			true,
+		},
+		{
+			"south east corner, overlap collision from south",
+			newPolygon([]line{
+				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
+				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
+				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+			circle{
+				center: Pos{X: 3, Y: 1},
+				radius: 2,
+			},
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			collides := tt.p.collidesCircle(tt.c)
+			if tt.wantCollides && !collides {
+				t.Errorf("want collides but did not collide")
+			}
+			if !tt.wantCollides && collides {
+				t.Errorf("do not want collides but did collide")
+			}
+		})
+	}
+}

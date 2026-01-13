@@ -146,3 +146,48 @@ func (p1 polygon) collides(p2 polygon) bool {
 
 	return true
 }
+
+type circle struct {
+	center Pos
+	radius int
+}
+
+// Returns true if the polygon collides with the circle. The algorithm first finds the nearest point
+// on every polygon edge to the circle exterior. Then the algorithm returns true any edge's nearest
+// point is touching or within the circle. A ray cast is used to handle circle within polygon edge
+// case.
+func (p polygon) collidesCircle(c circle) bool {
+	rayCast := line{p1: c.center, p2: Pos{X: math.MaxFloat64, Y: c.center.Y}}
+	intersectionCount := 0
+
+	for _, e := range p.edges {
+		if rayCast.intersects(e) && !rayCast.parallel(e) {
+			intersectionCount++
+		}
+
+		x := math.Abs(e.p2.X - e.p1.X)
+		y := math.Abs(e.p2.Y - e.p1.Y)
+		cosineSimularity := (x*c.center.X + y*c.center.Y) / ((x * x) + (y * y))
+
+		nearestPos := Pos{}
+		switch {
+		case cosineSimularity <= 0:
+			nearestPos = e.p1
+		case cosineSimularity >= 0:
+			nearestPos = e.p2
+		default:
+			nearestPos = Pos{
+				X: cosineSimularity * x,
+				Y: cosineSimularity,
+			}
+		}
+
+		xDelta := nearestPos.X - c.center.X
+		yDelta := nearestPos.Y - c.center.Y
+		if (xDelta*xDelta)+(yDelta*yDelta) <= float64(c.radius)*float64(c.radius) {
+			return true
+		}
+	}
+
+	return intersectionCount%2 == 1
+}
