@@ -31,48 +31,46 @@ type static struct {
 
 // The equipment physics which may be mutated.
 type dynamic struct {
-	offset  Pos
 	polygon polygon
+	circle  Pos
 }
 
 // Rotate the equipment around its attached unit.
 func (equip *equipment) rotate() {
 	a := equip.attached.angle
-	equip.dynamic.offset = Pos{
-		X: equip.static.offset.X*math.Cos(a) - equip.static.offset.Y*math.Sin(a),
-		Y: equip.static.offset.X*math.Sin(a) + equip.static.offset.Y*math.Cos(a),
-	}
+	xOffset := equip.static.offset.X*math.Cos(a) - equip.static.offset.Y*math.Sin(a)
+	yOffset := equip.static.offset.X*math.Sin(a) + equip.static.offset.Y*math.Cos(a)
+	x := equip.attached.X + xOffset
+	y := equip.attached.Y + yOffset
 	if equip.static.polygon != nil {
 		edges := []line{}
 		for _, e := range equip.static.polygon.edges {
 			p1 := Pos{
-				X: e.p1.X*math.Cos(a) - e.p1.Y*math.Sin(a),
-				Y: e.p1.X*math.Sin(a) + e.p1.Y*math.Cos(a),
+				X: x + (e.p1.X*math.Cos(a) - e.p1.Y*math.Sin(a)),
+				Y: y + (e.p1.X*math.Sin(a) + e.p1.Y*math.Cos(a)),
 			}
 			p2 := Pos{
-				X: e.p2.X*math.Cos(a) - e.p2.Y*math.Sin(a),
-				Y: e.p2.X*math.Sin(a) + e.p2.Y*math.Cos(a),
+				X: x + (e.p2.X*math.Cos(a) - e.p2.Y*math.Sin(a)),
+				Y: y + (e.p2.X*math.Sin(a) + e.p2.Y*math.Cos(a)),
 			}
 			edges = append(edges, line{p1, p2})
 		}
 		equip.dynamic.polygon.edges = edges
+	}
+	if equip.static.radius != nil {
+		equip.circle = Pos{X: x, Y: y}
 	}
 }
 
 func (equip equipment) draw(dc drawConfig, pixelMultiplier float32) {
 	if equip.static.polygon != nil {
 		for _, e := range equip.dynamic.polygon.edges {
-			p1X := equip.attached.X + equip.dynamic.offset.X + e.p1.X
-			p1Y := equip.attached.Y + equip.dynamic.offset.Y + e.p1.Y
-			p2X := equip.attached.X + equip.dynamic.offset.X + e.p2.X
-			p2Y := equip.attached.Y + equip.dynamic.offset.Y + e.p2.Y
-
 			vector.StrokeLine(
 				dc.screen,
-				float32(p1X)*pixelMultiplier,
-				float32(p1Y)*pixelMultiplier,
-				float32(p2X)*pixelMultiplier,
-				float32(p2Y)*pixelMultiplier,
+				float32(e.p1.X)*pixelMultiplier,
+				float32(e.p1.Y)*pixelMultiplier,
+				float32(e.p2.X)*pixelMultiplier,
+				float32(e.p2.Y)*pixelMultiplier,
 				float32(dc.defaultLineWidth)*pixelMultiplier,
 				color.Black,
 				true)
@@ -80,12 +78,10 @@ func (equip equipment) draw(dc drawConfig, pixelMultiplier float32) {
 	}
 
 	if equip.radius != nil {
-		x := equip.attached.X + equip.dynamic.offset.X
-		y := equip.attached.Y + equip.dynamic.offset.Y
 		vector.StrokeCircle(
 			dc.screen,
-			float32(x)*pixelMultiplier,
-			float32(y)*pixelMultiplier,
+			float32(equip.dynamic.circle.X)*pixelMultiplier,
+			float32(equip.dynamic.circle.Y)*pixelMultiplier,
 			float32(*equip.radius)*pixelMultiplier,
 			float32(dc.defaultLineWidth)*pixelMultiplier,
 			color.Black,
