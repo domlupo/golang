@@ -10,16 +10,23 @@ import (
 )
 
 type unitConfig struct {
-	name                   name
-	radius                 int
-	vision                 int
-	maxHealth              int
-	attack                 int
-	reach                  int
-	produceLayer           layer
-	tracks                 func(t unitConfig) bool
-	trackLayers            layers
-	collisionLayers        layers
+	name       name
+	radius     int
+	vision     int
+	maxHealth  int
+	attack     int
+	reach      int
+	staticBody static
+	// TODO: decide to rename produceLayer. It implies units switch layers when they do not.
+	produceLayer    layer
+	tracks          func(t unitConfig) bool
+	trackLayers     layers
+	collisionLayers layers
+	// collisionLayerStatic is conservative because the worst case of partitions is returned rather
+	// than returning partitions per layer. At the moment, I don't think the complexity is worth the
+	// performance trade off.
+	collisionLayerStatic   static
+	visionLayerStatic      static
 	explodeRadius          int
 	terminalStepDelay      step
 	terminalStep           step
@@ -58,7 +65,7 @@ func (uc *unitConfig) setUCFields() {
 	case fighter:
 		uc.ignoreTarget = func(t *unit) bool { return t.name == flare }
 	case bomber:
-		uc.ignore = func(u, t *unit) bool { return slices.Contains(u.skipTargets, t.id) }
+		uc.ignore = func(u, t *unit) bool { return slices.Contains(u.skipTargetIds, t.id) }
 	case missileRadarActive:
 		uc.ignoreTarget = func(t *unit) bool { return t.name == flare }
 	case missileHeatSeeking:
@@ -72,6 +79,7 @@ func (uc *unitConfig) setUCFields() {
 	uc.setVision()
 	uc.setReach()
 	uc.setExplodeRadius()
+	uc.setStaticBody()
 	uc.setMaxAlivePerNode()
 	uc.setSpeedFactor()
 	uc.setIsSurvivesCollision()
@@ -203,6 +211,18 @@ func (uc *unitConfig) setExplodeRadius() {
 		panic(fmt.Sprintf("unitConfig.setExplodeRadius: unknown unit %s", uc.name.string()))
 	}
 	uc.explodeRadius = explodeRadius
+}
+
+func (uc *unitConfig) setStaticBody() {
+	var staticBody static
+	switch uc.name {
+	case infantry, fighter, bomber, flare, chaff, bombGravity, missileCruise, missileBallistic,
+		missileRadarActive, missileHeatSeeking, missileAntiBallistic:
+		staticBody = static{circleRadius: &uc.radius}
+	default:
+		panic(fmt.Sprintf("unitConfig.setStaticBody: unknown unit %s", uc.name.string()))
+	}
+	uc.staticBody = staticBody
 }
 
 func (uc *unitConfig) setMaxAlivePerNode() {
@@ -478,21 +498,21 @@ func (uc *unitConfig) setEquipments() {
 		uc.equipments = []equipment{
 			{effectiveArea: effectiveArea{
 				static: static{
-					polygon: &rotaryCannon,
-					offset:  Pos{X: -8, Y: -30},
+					originPolygon: &rotaryCannon,
+					offset:        Pos{X: -8, Y: -30},
 				},
 			}},
 			{effectiveArea: effectiveArea{
 				static: static{
-					polygon: &rotaryCannon,
-					offset:  Pos{X: 3, Y: -30},
+					originPolygon: &rotaryCannon,
+					offset:        Pos{X: 3, Y: -30},
 				},
 			}},
 			// arbitrary equipment to prove radius (not only polygon) equipment behaves correctly.
 			{effectiveArea: effectiveArea{
 				static: static{
-					radius: intPtr(10),
-					offset: Pos{X: 10, Y: 40},
+					circleRadius: intPtr(10),
+					offset:       Pos{X: 10, Y: 40},
 				},
 			}},
 		}
@@ -513,6 +533,7 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.Int("attack", uc.attack))
 	a = append(a, slog.Int("vision", uc.vision))
 	a = append(a, slog.Int("reach", uc.reach))
+	a = append(a, nest("staticBody", uc.staticBody.log()))
 	a = append(a, slog.Int("reactionsCount", len(uc.reactions)))
 	a = append(a, slog.Bool("staticTarget", uc.isStaticTarget))
 	a = append(a, slog.Bool("heatSeeking", uc.isHeatSeeking))

@@ -4,7 +4,6 @@ package main
 
 import (
 	"fmt"
-	"log/slog"
 	"slices"
 )
 
@@ -22,33 +21,6 @@ type partitionAnalysis int
 // sides from LUT for collision.
 type partitionLUT map[demotif][]hexSide
 
-const (
-	paNone partitionAnalysis = iota
-	paCollision
-	paVision
-	paSteer
-)
-
-func (pa partitionAnalysis) string() string {
-	switch pa {
-	case paNone:
-		return "paNone"
-	case paCollision:
-		return "paCollision"
-	case paVision:
-		return "paVision"
-	case paSteer:
-		return "paSteer"
-	default:
-		panic(fmt.Sprintf("partitionAnalysis.string unknown partitionAnalysis: %d", pa))
-	}
-}
-
-// Typical log method.
-func (pa partitionAnalysis) log() slog.Attr {
-	return slog.String("partitionAnalysis", pa.string())
-}
-
 type partitioner struct {
 	grid                 grid
 	hexagons             hexagons
@@ -63,36 +35,17 @@ func newPartitioner(g grid, h hexagons, ucProvider unitConfigProvider) partition
 		hexagons:           h,
 		unitConfigProvider: ucProvider,
 	}
-	p.infantryCollisionLUT = p.setupPartitionLUT(infantry, infantry, paCollision)
-	p.infantryVisionLUT = p.setupPartitionLUT(infantry, infantry, paVision)
+	infantryUC := ucProvider.provide(infantry)
+	p.infantryCollisionLUT = p.setupPartitionLUT(infantryUC.radius, infantryUC.radius)
+	p.infantryVisionLUT = p.setupPartitionLUT(infantryUC.vision, infantryUC.radius)
 	return p
 }
 
-func (part partitioner) partitions(u unit, pa partitionAnalysis, buffer int) partitions {
-	var tiles []Tile
-	radius := buffer
-	switch {
-	case u.name == infantry && pa != paSteer:
-		return part.lookUpPartitions(u, pa)
-	case pa == paCollision:
-		radius += u.radius
-	case pa == paVision:
-		radius += u.vision
-	case pa == paSteer:
-		radius += 0
-	default:
-		panic(fmt.Sprintf("partitioner.partitions: unknown partition analysis %s", pa.string()))
+func (part partitioner) partitions(d dynamic, s static) partitions {
+	if tiles, ok := part.lookUpPartitionsFromTable(d, s); ok {
+		return tiles
 	}
-
-	if pa == paSteer && u.name != infantry {
-		panic(fmt.Sprintf(
-			"partitioner.partitions: cannot get partitions for unit %s, analysis %s and buffer %d",
-			u.name.string(),
-			pa.string(),
-			buffer))
-	}
-
-	tiles = part.defaultPartitions(u.Pos, radius)
+	tiles := part.defaultPartitions(d, s)
 	var parts partitions
 	for _, t := range tiles {
 		parts = append(parts, part.hexagons[t])
@@ -100,39 +53,44 @@ func (part partitioner) partitions(u unit, pa partitionAnalysis, buffer int) par
 	return parts
 }
 
-func (part partitioner) lookUpPartitions(u unit, pa partitionAnalysis) partitions {
+func (part partitioner) lookUpPartitionsFromTable(d dynamic, s static) (partitions, bool) {
+	var parts partitions
 	var lut partitionLUT
-	switch pa {
-	case paCollision:
+	infantryUC := part.unitConfigProvider.provide(infantry)
+	switch {
+	case d.circle != nil && d.circle.radius == infantryUC.radius && s.circleRadius != nil &&
+		*s.circleRadius == infantryUC.radius && s.offset.equals(infantryUC.staticBody.offset):
 		lut = part.infantryCollisionLUT
-	case paVision:
+	case d.circle != nil && d.circle.radius == infantryUC.vision && s.circleRadius != nil &&
+		*s.circleRadius == infantryUC.radius && s.offset.equals(infantryUC.staticBody.offset):
 		lut = part.infantryVisionLUT
 	default:
-		panic(fmt.Sprintf("partitioner.lookUpPartitions: unknown partition analysis %s", pa.string()))
+		return parts, false
 	}
 
-	demotif, demotifOk := part.grid.demotif(u.pixel())
+	demotif, demotifOk := part.grid.demotif(d.circle.center.pixel())
 	if !demotifOk {
-		panic(fmt.Sprintf("partitioner.lookUpPartitions: could not demotif pixel %s", u.pixel().log()))
+		panic(fmt.Sprintf(
+			"partitioner.lookUpPartitionsFromTable: could not demotif pixel %s",
+			d.circle.center.pixel().log()))
 	}
 	hexSides := lut[demotif]
-	tile, tileOk := part.grid.getTile(u.pixel())
+	tile, tileOk := part.grid.getTile(d.circle.center.pixel())
 	tiles := []Tile{tile}
 	if !tileOk {
 		panic(fmt.Sprintf(
-			"partitioner.lookUpPartitions: could not get Tile for Pixel %s",
-			u.pixel().log()))
+			"partitioner.lookUpPartitionsFromTable: could not get Tile for Pixel %s",
+			d.circle.center.pixel().log()))
 	}
 	for _, hs := range hexSides {
 		if t, ok := part.grid.adjacent(tile, hs); ok {
 			tiles = append(tiles, t)
 		}
 	}
-	var parts partitions
 	for _, t := range tiles {
 		parts = append(parts, part.hexagons[t])
 	}
-	return parts
+	return parts, true
 }
 
 // Returns conservative partitions which collide with the passed Pos and distance. The caller is
@@ -140,10 +98,11 @@ func (part partitioner) lookUpPartitions(u unit, pa partitionAnalysis) partition
 // analyzing partitions for collision detection between two circles would be invalid if the circle
 // with the Pos and distance not passed has a radius which exceeds the conservative hex radius. Not
 // optimized because the hexagon collision uses conservative circles.
-func (part partitioner) defaultPartitions(p Pos, d int) []Tile {
+func (part partitioner) defaultPartitions(d dynamic, s static) []Tile {
+	p := d.center()
 	t, ok := part.grid.getTile(p.pixel())
 	if !ok {
-		panic(fmt.Sprintf("partitioner.defaultPartitions: cannot find tile for %s", p.log()))
+		panic(fmt.Sprintf("partitioner.defaultPartitions: cannot find tile for %s", p.pixel().log()))
 	}
 	visited := make(map[Tile]struct{})
 	visited[t] = struct{}{}
@@ -166,7 +125,11 @@ func (part partitioner) defaultPartitions(p Pos, d int) []Tile {
 						"partitioner.defaultPartitions: cannot find center for tile %s",
 						aT.log()))
 				}
-				_, collides := collides(p.noLayer(), pa.pos(), d, part.grid.conservativeHexPixelRadius)
+				_, collides := collides(
+					p.noLayer(),
+					pa.pos(),
+					d.circle.radius,
+					part.grid.conservativeHexPixelRadius)
 				if collides {
 					nextQ = append(nextQ, aT)
 				}
@@ -190,26 +153,11 @@ func (part partitioner) defaultPartitions(p Pos, d int) []Tile {
 	return partitions
 }
 
+// does not work for polygons but may be easy to extend. Also this method signature can probably be
+// improved by using partitionerRequest or something else but it is low priority.
 func (part partitioner) setupPartitionLUT(
-	internalUnitName name,
-	externalUnitName name,
-	pa partitionAnalysis) partitionLUT {
-	var internalRadius int
-	var externalRadius int
-	internalUC := part.unitConfigProvider.provide(internalUnitName)
-	externalUC := part.unitConfigProvider.provide(externalUnitName)
-	switch pa {
-	case paCollision:
-		internalRadius = internalUC.radius
-		externalRadius = externalUC.radius
-	case paVision:
-		internalRadius = internalUC.vision
-		externalRadius = externalUC.radius
-	default:
-		panic(fmt.Sprintf(
-			"partitioner.setupPartitionsLUT: unsupported partition analysis %s",
-			pa.string()))
-	}
+	internalRadius int,
+	externalRadius int) partitionLUT {
 
 	lut := make(partitionLUT)
 	collisionSources := part.grid.demotifHexPixelsAdjacent()

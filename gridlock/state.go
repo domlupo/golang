@@ -39,6 +39,40 @@ type request struct {
 	complete bool
 }
 
+// Adds complexity to state but is a simple way for debugger to inspect active partitions during
+// runtime. Remove if debugger is ever improved to show all partition types at once but that is
+// relatively complex to implement. Also, I should only attempt that once equipment is implemnted
+// further.
+type partitionerRequest int
+
+const (
+	prNone partitionerRequest = iota
+	prCollision
+	prSteer
+	prNearest
+)
+
+// Typical string method.
+func (pr partitionerRequest) string() string {
+	switch pr {
+	case prNone:
+		return "prNone"
+	case prCollision:
+		return "prCollision"
+	case prSteer:
+		return "prSteer"
+	case prNearest:
+		return "prNearest"
+	default:
+		panic(fmt.Sprintf("partitionerRequest.string unknown %d", pr))
+	}
+}
+
+// Typical log method.
+func (pr partitionerRequest) log() slog.Attr {
+	return slog.String("partitionerRequest", pr.string())
+}
+
 // not enforced but must be a singleton
 type state struct {
 	config           stateConfig
@@ -331,7 +365,7 @@ func (s *state) processRequests() {
 	}
 }
 
-func (s *state) partitions(u unit, pa partitionAnalysis) []*hexagon {
+func (s *state) partitions(u *unit, e *equipment, pr partitionerRequest) []*hexagon {
 	if !s.config.optimizeSpatialPartitions {
 		parts := []*hexagon{}
 		for _, part := range s.hexagons {
@@ -339,7 +373,24 @@ func (s *state) partitions(u unit, pa partitionAnalysis) []*hexagon {
 		}
 		return parts
 	}
-	return s.partitioner.partitions(u, pa, s.config.spawnUnitRadiusLimit)
+
+	var static static
+	var dynamic dynamic
+	switch pr {
+	case prNone:
+		panic("state.partitions: cannot get partitions for prNone")
+	// Not sure if steer should be coupled to collision layer. Not working on steer at the moment.
+	case prCollision, prSteer:
+		static = u.collisionLayerStatic
+		dynamic = u.dynamicBody
+	case prNearest:
+		panic("TODO")
+	default:
+		panic("state.partitions: unknown partitionerRequest")
+	}
+
+	// TODO: add buffer from state. I think I need to move into partitioner
+	return s.partitioner.partitions(dynamic, static)
 }
 
 func (s *state) analyzeTargets() {
@@ -350,8 +401,11 @@ func (s *state) analyzeTargets() {
 
 		if u.name == missileHeatSeeking ||
 			u.name == missileAntiBallistic || u.name == missileRadarActive {
-			s.nearestTargetWithinVision(u)
-			u.updateTargetUnit(enemyTarget, u.nearest)
+			/*
+				TODO: re-enable and add debugger support
+				s.nearesttUnit()
+				u.updateTargetUnit(enemyTarget, e.nearest)
+			*/
 		}
 
 		if u.name == missileHeatSeeking ||
@@ -366,7 +420,10 @@ func (s *state) analyzeTargets() {
 		}
 
 		if u.name == fighter {
-			s.nearestTargetWithinVision(u)
+			/*
+				TODO: re-enable and add debugger support
+				s.nearesttUnit(e)
+			*/
 			if u.moveDone && len(u.globalTargets) > 1 {
 				if len(u.actions) > 0 && u.actions[0].equals(u.globalTargets[0]) {
 					u.actions[0].do()
@@ -383,7 +440,8 @@ func (s *state) analyzeTargets() {
 		}
 
 		if u.name == bomber {
-			s.nearestTargetWithinVision(u)
+			// TODO: reenable
+			//s.nearestTargetWithinVision(u)
 			if u.moveDone && len(u.globalTargets) > 1 {
 				if len(u.actions) > 0 && u.actions[0].equals(u.globalTargets[0]) {
 					u.actions[0].do()
@@ -419,8 +477,13 @@ func (s *state) analyzeTargets() {
 			}
 		}
 
-		s.nearestTargetWithinVision(u)
-		u.updateTargetUnit(enemyTarget, u.nearest)
+		// infantry to one equip
+		/*
+			TODO: re-enable
+				e := &u.equipments[0]
+				s.setNearestUnit(&u.equipments[0])
+				u.updateTargetUnit(enemyTarget, e.nearest)
+		*/
 		if len(u.globalTargets) > 0 && u.pathGlobalTarget {
 			u.pathfindGlobalTarget(s.obstacles, s.oLUT, s.grid)
 		} else if len(u.localTargets) > 0 && u.moveDone {
@@ -432,7 +495,7 @@ func (s *state) analyzeTargets() {
 }
 
 func (s *state) steer(u *unit) Pixel {
-	partitions := s.partitions(*u, paSteer)
+	partitions := s.partitions(u, nil, prSteer)
 
 	var xSteer int
 	var ySteer int
@@ -542,10 +605,10 @@ func (s *state) moveUnits() {
 			// TODO: Should this be optimized to only perform this check when the unit
 			// does not typically move e.g. chaff
 			collidedBorder = s.grid.collidesWithBorder(u.pixel(), u.radius)
-			collidedUnitPos, collidesWithUnit = s.collidesWithUnit(u.Pos, *u)
+			collidedUnitPos, collidesWithUnit = s.collidesWithUnit(u.Pos, u)
 		} else {
 			collidedBorder = s.grid.collidesWithBorder(move.pixel(), u.radius)
-			collidedUnitPos, collidesWithUnit = s.collidesWithUnit(move.Pos, *u)
+			collidedUnitPos, collidesWithUnit = s.collidesWithUnit(move.Pos, u)
 		}
 
 		if collidedBorder && collidesWithUnit {
@@ -603,8 +666,9 @@ func (s *state) explode(u *unit) {
 	}
 }
 
-func (s state) nearestTargetWithinVision(u *unit) {
-	partitions := s.partitions(*u, paVision)
+func (s state) setNearestUnit(e *equipment) {
+	// TODO: set vision for equipment. Decide if it s the largest body within its target layers.
+	partitions := s.partitions(nil, e, prNearest)
 	d := math.MaxFloat64
 	var t *unit
 	for _, partition := range partitions {
@@ -612,21 +676,21 @@ func (s state) nearestTargetWithinVision(u *unit) {
 			continue
 		}
 
-		for _, l := range u.trackLayers {
+		for _, l := range e.trackLayers {
 			linkedList := partition.get(l).linkedList
-			if target, distance := s.nearestTargetWithinLayer(*u, linkedList); distance < d {
+			if target, distance := s.nearestTargetWithinLayer(e, linkedList); distance < d {
 				t = target
 				d = distance
 			}
 		}
 	}
-	u.nearest = t
+	e.nearest = t
 }
 
-func (s state) nearestTargetWithinLayer(u unit, linkedList *unit) (*unit, float64) {
+func (s state) nearestTargetWithinLayer(e *equipment, linkedList *unit) (*unit, float64) {
 	d := math.MaxFloat64
 	var t *unit
-	if linkedList == nil || (linkedList.id == u.id && linkedList == linkedList.next) {
+	if linkedList == nil || (linkedList.id == e.attached.id && linkedList == linkedList.next) {
 		return t, d
 	}
 
@@ -643,23 +707,23 @@ func (s state) nearestTargetWithinLayer(u unit, linkedList *unit) (*unit, float6
 			break
 		}
 
-		if current.id == u.id {
+		if current.id == e.attached.id {
 			current = current.next
 			continue
 		}
 
 		checkOccurred = true
 
-		if u.player == current.player ||
-			u.ignoreTarget != nil && u.ignoreTarget(current) ||
-			u.ignore != nil && u.ignore(&u, current) {
+		if e.attached.player == current.player ||
+			e.ignoreTarget != nil && e.ignoreTarget(current) ||
+			e.ignore != nil && e.ignore(e, current) {
 			current = current.next
 			continue
 		}
 
-		squaredDistance, collides := collides(u.Pos, current.Pos, u.vision, current.vision)
+		squaredDistance, collides := collides(e.attached.Pos, current.Pos, e.attached.vision, current.vision)
 		if squaredDistance < d && collides {
-			if _, los := u.pixel().lineOfSight(current.pixel(), s.oLUT, u.radius); los {
+			if _, los := e.attached.pixel().lineOfSight(current.pixel(), s.oLUT, e.attached.radius); los {
 				d = squaredDistance
 				t = current
 			}
@@ -674,8 +738,8 @@ func (s state) nearestTargetWithinLayer(u unit, linkedList *unit) (*unit, float6
 	return t, d
 }
 
-func (s *state) collidesWithUnit(p Pos, u unit) (Pos, bool) {
-	partitions := s.partitions(u, paCollision)
+func (s *state) collidesWithUnit(p Pos, u *unit) (Pos, bool) {
+	partitions := s.partitions(u, nil, prCollision)
 	for _, partition := range partitions {
 		if partition == nil {
 			continue
@@ -683,7 +747,7 @@ func (s *state) collidesWithUnit(p Pos, u unit) (Pos, bool) {
 
 		for _, l := range u.collisionLayers {
 			linkedList := partition.get(l).linkedList
-			if p, collides := s.collidesWithUnitLayer(u, p, linkedList); collides {
+			if p, collides := s.collidesWithUnitLayer(*u, p, linkedList); collides {
 				return p, collides
 			}
 		}
@@ -999,7 +1063,7 @@ func (s *state) produceUnits() {
 			n.actions,
 			n.tile,
 			n.selectActive() && s.developerMode)
-		if _, collides := s.collidesWithUnit(p, *u); !collides {
+		if _, collides := s.collidesWithUnit(p, u); !collides {
 			s.spawn(u)
 			incrementAliveCount()
 		}

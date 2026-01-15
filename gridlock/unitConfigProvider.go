@@ -83,6 +83,27 @@ func (ucProvider unitConfigProvider) setUCFieldsDependentOnOtherUCs() {
 	ucProvider.setTracksLayers()
 	ucProvider.setConsumables()
 	ucProvider.setReactions()
+	ucProvider.setCollisionLayerStatic()
+}
+
+func (ucProvider unitConfigProvider) setCollisionLayerStatic() {
+	for _, uc := range ucProvider.unitConfigs {
+		maxConservativeRadius := 0
+		switch uc.name {
+		case infantry, fighter, bomber, missileCruise, missileBallistic, missileAntiBallistic,
+			missileHeatSeeking, missileRadarActive, flare, bombGravity, chaff:
+			for _, other := range ucProvider.unitConfigs {
+				if uc.produceLayer == other.produceLayer {
+					maxConservativeRadius = max(maxConservativeRadius,
+						other.staticBody.conservativeRadius())
+				}
+			}
+		default:
+			panic(fmt.Sprintf("unitConfigProvider.setCollisionLayerStatic: unknown unit %s", uc.name.string()))
+		}
+		uc.collisionLayerStatic = static{circleRadius: &maxConservativeRadius}
+		ucProvider.unitConfigs[uc.name] = uc
+	}
 }
 
 func (ucProvider unitConfigProvider) setTracksLayers() {
@@ -98,6 +119,7 @@ func (ucProvider unitConfigProvider) setTracksLayers() {
 		uc.trackLayers = layers
 		ucProvider.unitConfigs[name] = uc
 	}
+	// TODO: add panic here for no default? Not sure why this doesn't exist.
 }
 
 func (ucProvider unitConfigProvider) setConsumables() {
@@ -170,7 +192,7 @@ func (ucProvider unitConfigProvider) setReactions() {
 						// rather than do this during restock. Not sure if this is a realistic upgrade.
 						// Also, multiple ordnance might make this complex. Just because a single ordnance skips
 						// a target does not mean others should or can this be avoided?
-						fighter.skipTargets = []id{}
+						fighter.skipTargetIds = []id{}
 					},
 					delay: fighterUC.reloadPayloadDelay,
 				},

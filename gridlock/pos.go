@@ -93,6 +93,8 @@ func orientation(p1 Pos, p2 Pos, p3 Pos) posOrientation {
 }
 
 // Returns the squared distance if passed values collide.
+// TODO: This method should probably be removed once I add a collides method to dynamic that works
+// for both circle and polygon?
 func collides(p1, p2 Pos, r1, r2 int) (float64, bool) {
 	if p1.L != p2.L {
 		panic(fmt.Sprintf("Pos.collides: p1 layer %s != p2 layer %s", p1.L.log(), p2.L.log()))

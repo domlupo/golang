@@ -35,7 +35,7 @@ type debuggerConfig struct {
 	debugUnitRotationIncrement    float64
 	sketchedPixelConnections      []Pixel
 	sketchedHexagons              map[Tile]struct{}
-	partitionAnalysis             partitionAnalysis
+	partitionerRequest            partitionerRequest
 	roygbivColors                 []color.RGBA
 }
 
@@ -50,7 +50,7 @@ func newDebuggerConfig() *debuggerConfig {
 		heatmapB:                      0,
 		heatmapAlphaMaxLimit:          200,
 		debugUnitRotationIncrement:    0.01,
-		partitionAnalysis:             paCollision,
+		partitionerRequest:            prCollision,
 		heatmapPercent:                maxPercent,
 		sketchedHexagons:              make(map[Tile]struct{}),
 		roygbivColors: []color.RGBA{
@@ -379,8 +379,8 @@ func (d debugger) draw(c drawConfig) {
 	if d.debugHexagons {
 		u := d.selectedUnit()
 		if u != nil {
-			logger.log(infoLevel, devTool, "debugger.debugHexagons", d.partitionAnalysis.log())
-			partitions := d.partitions(*u, d.partitionAnalysis)
+			logger.log(infoLevel, devTool, "debugger.debugHexagons", d.partitionerRequest.log())
+			partitions := d.partitions(u, nil, d.partitionerRequest)
 			for _, h := range partitions {
 				drawHexHighlight(c, d.grid, h.tile)
 			}

@@ -59,6 +59,8 @@ type units map[Pixel]*unit
 type unit struct {
 	unitConfig
 	Pos
+	// TODO: use this for Pos. Also need to make a single polygon.collides which takes dynamic
+	dynamicBody         dynamic
 	subPos              subPos
 	id                  id
 	player              player
@@ -69,8 +71,7 @@ type unit struct {
 	localTarget         Pixel
 	localTargets        []Pixel
 	globalTargets       []Pixel
-	nearest             *unit
-	skipTargets         []id
+	skipTargetIds       []id
 	actions             []action
 	pathGlobalTarget    bool
 	terminalPosition    Pos
@@ -94,6 +95,7 @@ type unit struct {
 	sourcePosition      Pos
 	sourceUnit          id
 	showVision          bool
+	nearest             *unit // TODO: move this to equipment
 }
 
 // High resolution 2D point.
@@ -147,6 +149,7 @@ func newUnit(
 		sourcePosition:      pos,
 	}
 
+	u.dynamicBody = u.staticBody.dynamic(pos)
 	u.subPos = u.newSubPos(u.Pos)
 	for i, e := range u.equipments {
 		e.attached = &u
@@ -183,7 +186,7 @@ func (u *unit) refresh() {
 	}
 
 	for i, e := range u.equipments {
-		e.rotate()
+		e.move()
 		u.equipments[i] = e
 	}
 }
@@ -313,7 +316,9 @@ func (u *unit) newMove(s subPos) move {
 }
 
 func (u *unit) confirmMove(s subPos) {
+	// TOOD: move Pos into dynamic
 	u.Pos = u.downscale(s).layer(u.L)
+	u.dynamicBody.circle.center = u.Pos
 	u.movedThisTurn = true
 	if u.subPos.x != s.x {
 		u.bresenhamError += u.bresenhamErrorDy
@@ -584,7 +589,7 @@ func (u unit) log() []slog.Attr {
 		}
 		a = append(a, nest("actions", actions))
 	}
-	a = append(a, nest("terminalPosition", u.terminalPosition.log()))
+	a = append(a, nest("dynamicBody", u.dynamicBody.log()))
 	a = append(a, slog.Bool("moveDone", u.moveDone))
 	a = append(a, slog.Int("bresenhamError", u.bresenhamError))
 	a = append(a, slog.Int("bresenhamErrorDx", u.bresenhamErrorDx))
@@ -595,11 +600,6 @@ func (u unit) log() []slog.Attr {
 	a = append(a, slog.Any("canReachNode", u.canReachNode))
 	a = append(a, slog.Bool("selected", u.selected))
 	a = append(a, slog.String("activeTargetType", u.activeTargetType.string()))
-	if u.nearest == nil {
-		a = append(a, slog.String("nearest", "none"))
-	} else {
-		a = append(a, slog.Any("nearest", u.nearest.logShort()))
-	}
 	a = append(a, slog.Bool("collidedThisTurn", u.collidedThisturn))
 	a = append(a, u.unitConfig.log()...)
 	return a

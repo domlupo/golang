@@ -3,38 +3,52 @@
 package main
 
 import (
+	"fmt"
+	"log/slog"
 	"math"
 	"slices"
 )
 
 // A convex shape.
 type polygon struct {
-	edges []line
+	center Pos
+	edges  []line
 	// not every edge normal is a separating axis. Parallel edges only require testing one axis.
 	separatingAxes []line
 	vertices       []Pos
 }
 
 // An origin centered convex shape. Useful for rotations.
-type originPolygon polygon
+type originPolygon struct {
+	polygon
+	conservativeRadius float64
+}
 
 // Creates an origin centered polygon by shifting passed lines. Refer to newPolygon() for details.
 func newOriginPolygon(lines []line) originPolygon {
 	poly := newPolygon(lines)
 
-	var midPoint Pos
-	for _, p := range poly.vertices {
-		midPoint.X += p.X
-		midPoint.Y += p.Y
-	}
+	xShift := poly.center.X / float64(len(poly.vertices)) / 2.0
+	yShift := poly.center.Y / float64(len(poly.vertices)) / 2.0
 
-	xShift := midPoint.X / float64(len(poly.vertices)) / 2.0
-	yShift := midPoint.Y / float64(len(poly.vertices)) / 2.0
+	shiftedCenter := Pos{
+		X: poly.center.X + xShift,
+		Y: poly.center.Y + yShift,
+	}
+	if !shiftedCenter.equals(Pos{}) {
+		// TODO: debug why is this isn't working? or is this fine? This should panic?
+	}
 
 	var shiftedVertices []Pos
 	for _, p := range poly.vertices {
 		s := Pos{X: p.X + xShift, Y: p.Y + yShift}
 		shiftedVertices = append(shiftedVertices, s)
+	}
+
+	var conservativeRadius float64
+	for _, p := range poly.vertices {
+		radius := math.Sqrt(p.X*p.X + p.Y*p.Y)
+		conservativeRadius = max(conservativeRadius, radius)
 	}
 
 	var shiftedEdges []line
@@ -48,8 +62,12 @@ func newOriginPolygon(lines []line) originPolygon {
 	}
 
 	return originPolygon{
-		edges:    shiftedEdges,
-		vertices: shiftedVertices,
+		polygon: polygon{
+			center:   shiftedCenter,
+			edges:    shiftedEdges,
+			vertices: shiftedVertices,
+		},
+		conservativeRadius: conservativeRadius,
 	}
 }
 
@@ -93,6 +111,14 @@ func newPolygon(lines []line) polygon {
 		}
 	}
 
+	center := Pos{}
+	for _, v := range vertices {
+		center.X += v.X
+		center.Y += v.Y
+	}
+	center.X = center.X / float64(len(vertices))
+	center.Y = center.Y / float64(len(vertices))
+
 	axes := []line{}
 	for _, e := range lines {
 		axis := e.perpendicular()
@@ -105,6 +131,7 @@ func newPolygon(lines []line) polygon {
 	}
 
 	return polygon{
+		center:         center,
 		edges:          lines,
 		separatingAxes: axes,
 		vertices:       vertices,
@@ -147,11 +174,6 @@ func (p1 polygon) collides(p2 polygon) bool {
 	return true
 }
 
-type circle struct {
-	center Pos
-	radius int
-}
-
 // Returns true if the polygon collides with the circle. The algorithm first finds the nearest point
 // on every polygon edge to the circle exterior. Then the algorithm returns true any edge's nearest
 // point is touching or within the circle. A ray cast is used to handle circle within polygon edge
@@ -190,4 +212,95 @@ func (p polygon) collidesCircle(c circle) bool {
 	}
 
 	return intersectionCount%2 == 1
+}
+
+type circle struct {
+	center Pos
+	radius int
+}
+
+// physics which may not be be mutated.
+type static struct {
+	offset        Pos
+	originPolygon *originPolygon
+	circleRadius  *int
+}
+
+// Typical log method.
+func (s static) log() []slog.Attr {
+	a := []slog.Attr{}
+	if s.originPolygon == nil {
+		a = append(a, slog.String("originPolygon", "none"))
+	} else {
+		// TODO: add polygon.log() method
+		a = append(a, slog.String("originPolygon", "some"))
+	}
+	if s.circleRadius == nil {
+		a = append(a, slog.String("circleRadius", "none"))
+	} else {
+		a = append(a, slog.Int("circleRadius", *s.circleRadius))
+	}
+	return a
+}
+
+// allows partitioner.go to treat hexagons as circles. This is simple and correct but conservative
+// any may need optimized in the future once units use hexagon bodies.
+func (s static) conservativeRadius() int {
+	switch {
+	case s.circleRadius != nil:
+		return *s.circleRadius
+	case s.originPolygon != nil:
+		return int(math.Ceil(s.originPolygon.conservativeRadius))
+	default:
+		panic("static.conservativeRadius: no static pointer set")
+	}
+}
+
+// physics which may be mutated.
+// TODO: decide if I should add tests? e.g. move a polygon.
+// TODO: decide if rotate and move methods be on dynamic struct.
+type dynamic struct {
+	// TODO: add Pos here and remove center within circle and polygon.
+	polygon *polygon
+	circle  *circle
+}
+
+func (s static) dynamic(p Pos) dynamic {
+	switch {
+	case s.circleRadius != nil:
+		return dynamic{circle: &circle{center: p, radius: *s.circleRadius}}
+	case s.originPolygon != nil:
+		return dynamic{polygon: &s.originPolygon.polygon}
+	default:
+		panic("static.dynamic")
+	}
+}
+
+// Typical log method.
+func (d dynamic) log() []slog.Attr {
+	a := []slog.Attr{}
+	if d.polygon == nil {
+		a = append(a, slog.String("polygon", "none"))
+	} else {
+		// TODO: add polygon log method once debugging requires it or small time slot to implement.
+		a = append(a, slog.String("polygon", "some"))
+	}
+	if d.circle == nil {
+		a = append(a, slog.String("circle", "none"))
+	} else {
+		// TODO: add circle log method once debugging requires it or small time slot to implement.
+		a = append(a, slog.String("circle", "some"))
+	}
+	return a
+}
+
+func (d dynamic) center() Pos {
+	switch {
+	case d.circle != nil:
+		return d.circle.center
+	case d.polygon != nil:
+		return d.polygon.center
+	default:
+		panic(fmt.Sprintf("dynamic.center: %s", d.log()))
+	}
 }
