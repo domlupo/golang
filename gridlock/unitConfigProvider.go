@@ -119,7 +119,6 @@ func (ucProvider unitConfigProvider) setTracksLayers() {
 		uc.trackLayers = layers
 		ucProvider.unitConfigs[name] = uc
 	}
-	// TODO: add panic here for no default? Not sure why this doesn't exist.
 }
 
 func (ucProvider unitConfigProvider) setConsumables() {
