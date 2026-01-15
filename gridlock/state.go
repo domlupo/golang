@@ -382,7 +382,7 @@ func (s *state) partitions(u *unit, e *equipment, pr partitionerRequest) []*hexa
 	// Not sure if steer should be coupled to collision layer. Not working on steer at the moment.
 	case prCollision, prSteer:
 		static = u.collisionLayerStatic
-		dynamic = u.dynamicBody
+		dynamic = u.dynamic
 	case prNearest:
 		panic("TODO")
 	default:

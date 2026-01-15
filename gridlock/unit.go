@@ -58,9 +58,7 @@ type units map[Pixel]*unit
 
 type unit struct {
 	unitConfig
-	Pos
-	// TODO: use this for Pos. Also need to make a single polygon.collides which takes dynamic
-	dynamicBody         dynamic
+	dynamic
 	subPos              subPos
 	id                  id
 	player              player
@@ -136,7 +134,6 @@ func newUnit(
 
 	u := unit{
 		id:                  generateId(),
-		Pos:                 pos,
 		player:              p,
 		globalTargets:       globalTargets,
 		pathGlobalTarget:    true,
@@ -149,7 +146,7 @@ func newUnit(
 		sourcePosition:      pos,
 	}
 
-	u.dynamicBody = u.staticBody.dynamic(pos)
+	u.dynamic = u.staticBody.dynamic(pos)
 	u.subPos = u.newSubPos(u.Pos)
 	for i, e := range u.equipments {
 		e.attached = &u
@@ -316,9 +313,7 @@ func (u *unit) newMove(s subPos) move {
 }
 
 func (u *unit) confirmMove(s subPos) {
-	// TOOD: move Pos into dynamic
-	u.Pos = u.downscale(s).layer(u.L)
-	u.dynamicBody.circle.center = u.Pos
+	u.dynamic.Pos = u.downscale(s).layer(u.L)
 	u.movedThisTurn = true
 	if u.subPos.x != s.x {
 		u.bresenhamError += u.bresenhamErrorDy
@@ -589,7 +584,7 @@ func (u unit) log() []slog.Attr {
 		}
 		a = append(a, nest("actions", actions))
 	}
-	a = append(a, nest("dynamicBody", u.dynamicBody.log()))
+	a = append(a, nest("dynamic", u.dynamic.log()))
 	a = append(a, slog.Bool("moveDone", u.moveDone))
 	a = append(a, slog.Int("bresenhamError", u.bresenhamError))
 	a = append(a, slog.Int("bresenhamErrorDx", u.bresenhamErrorDx))

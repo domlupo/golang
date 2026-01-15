@@ -3,7 +3,6 @@
 package main
 
 import (
-	"fmt"
 	"log/slog"
 	"math"
 	"slices"
@@ -11,8 +10,7 @@ import (
 
 // A convex shape.
 type polygon struct {
-	center Pos
-	edges  []line
+	edges []line
 	// not every edge normal is a separating axis. Parallel edges only require testing one axis.
 	separatingAxes []line
 	vertices       []Pos
@@ -28,16 +26,14 @@ type originPolygon struct {
 func newOriginPolygon(lines []line) originPolygon {
 	poly := newPolygon(lines)
 
-	xShift := poly.center.X / float64(len(poly.vertices)) / 2.0
-	yShift := poly.center.Y / float64(len(poly.vertices)) / 2.0
+	var center Pos
+	for _, p := range poly.vertices {
+		center.X += p.X
+		center.Y += p.Y
+	}
 
-	shiftedCenter := Pos{
-		X: poly.center.X + xShift,
-		Y: poly.center.Y + yShift,
-	}
-	if !shiftedCenter.equals(Pos{}) {
-		// TODO: debug why is this isn't working? or is this fine? This should panic?
-	}
+	xShift := center.X / float64(len(poly.vertices)) / 2.0
+	yShift := center.Y / float64(len(poly.vertices)) / 2.0
 
 	var shiftedVertices []Pos
 	for _, p := range poly.vertices {
@@ -63,7 +59,6 @@ func newOriginPolygon(lines []line) originPolygon {
 
 	return originPolygon{
 		polygon: polygon{
-			center:   shiftedCenter,
 			edges:    shiftedEdges,
 			vertices: shiftedVertices,
 		},
@@ -131,7 +126,6 @@ func newPolygon(lines []line) polygon {
 	}
 
 	return polygon{
-		center:         center,
 		edges:          lines,
 		separatingAxes: axes,
 		vertices:       vertices,
@@ -178,8 +172,8 @@ func (p1 polygon) collides(p2 polygon) bool {
 // on every polygon edge to the circle exterior. Then the algorithm returns true any edge's nearest
 // point is touching or within the circle. A ray cast is used to handle circle within polygon edge
 // case.
-func (p polygon) collidesCircle(c circle) bool {
-	rayCast := line{p1: c.center, p2: Pos{X: math.MaxFloat64, Y: c.center.Y}}
+func (p polygon) collidesCircle(d dynamic) bool {
+	rayCast := line{p1: d.Pos, p2: Pos{X: math.MaxFloat64, Y: d.Pos.Y}}
 	intersectionCount := 0
 
 	for _, e := range p.edges {
@@ -189,7 +183,7 @@ func (p polygon) collidesCircle(c circle) bool {
 
 		x := math.Abs(e.p2.X - e.p1.X)
 		y := math.Abs(e.p2.Y - e.p1.Y)
-		cosineSimularity := (x*c.center.X + y*c.center.Y) / ((x * x) + (y * y))
+		cosineSimularity := (x*d.Pos.X + y*d.Pos.Y) / ((x * x) + (y * y))
 
 		nearestPos := Pos{}
 		switch {
@@ -204,19 +198,14 @@ func (p polygon) collidesCircle(c circle) bool {
 			}
 		}
 
-		xDelta := nearestPos.X - c.center.X
-		yDelta := nearestPos.Y - c.center.Y
-		if (xDelta*xDelta)+(yDelta*yDelta) <= float64(c.radius)*float64(c.radius) {
+		xDelta := nearestPos.X - d.Pos.X
+		yDelta := nearestPos.Y - d.Pos.Y
+		if (xDelta*xDelta)+(yDelta*yDelta) <= float64(*d.circleRadius)*float64(*d.circleRadius) {
 			return true
 		}
 	}
 
 	return intersectionCount%2 == 1
-}
-
-type circle struct {
-	center Pos
-	radius int
 }
 
 // physics which may not be be mutated.
@@ -260,20 +249,23 @@ func (s static) conservativeRadius() int {
 // TODO: decide if I should add tests? e.g. move a polygon.
 // TODO: decide if rotate and move methods be on dynamic struct.
 type dynamic struct {
+	Pos
 	// TODO: add Pos here and remove center within circle and polygon.
-	polygon *polygon
-	circle  *circle
+	polygon      *polygon
+	circleRadius *int
 }
 
 func (s static) dynamic(p Pos) dynamic {
+	d := dynamic{Pos: p}
 	switch {
 	case s.circleRadius != nil:
-		return dynamic{circle: &circle{center: p, radius: *s.circleRadius}}
+		d.circleRadius = s.circleRadius
 	case s.originPolygon != nil:
-		return dynamic{polygon: &s.originPolygon.polygon}
+		d.polygon = &s.originPolygon.polygon
 	default:
 		panic("static.dynamic")
 	}
+	return d
 }
 
 // Typical log method.
@@ -285,22 +277,11 @@ func (d dynamic) log() []slog.Attr {
 		// TODO: add polygon log method once debugging requires it or small time slot to implement.
 		a = append(a, slog.String("polygon", "some"))
 	}
-	if d.circle == nil {
+	if d.circleRadius == nil {
 		a = append(a, slog.String("circle", "none"))
 	} else {
 		// TODO: add circle log method once debugging requires it or small time slot to implement.
 		a = append(a, slog.String("circle", "some"))
 	}
 	return a
-}
-
-func (d dynamic) center() Pos {
-	switch {
-	case d.circle != nil:
-		return d.circle.center
-	case d.polygon != nil:
-		return d.polygon.center
-	default:
-		panic(fmt.Sprintf("dynamic.center: %s", d.log()))
-	}
 }

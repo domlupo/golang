@@ -58,29 +58,29 @@ func (part partitioner) lookUpPartitionsFromTable(d dynamic, s static) (partitio
 	var lut partitionLUT
 	infantryUC := part.unitConfigProvider.provide(infantry)
 	switch {
-	case d.circle != nil && d.circle.radius == infantryUC.radius && s.circleRadius != nil &&
+	case d.circleRadius != nil && *d.circleRadius == infantryUC.radius && s.circleRadius != nil &&
 		*s.circleRadius == infantryUC.radius && s.offset.equals(infantryUC.staticBody.offset):
 		lut = part.infantryCollisionLUT
-	case d.circle != nil && d.circle.radius == infantryUC.vision && s.circleRadius != nil &&
+	case d.circleRadius != nil && *d.circleRadius == infantryUC.vision && s.circleRadius != nil &&
 		*s.circleRadius == infantryUC.radius && s.offset.equals(infantryUC.staticBody.offset):
 		lut = part.infantryVisionLUT
 	default:
 		return parts, false
 	}
 
-	demotif, demotifOk := part.grid.demotif(d.circle.center.pixel())
+	demotif, demotifOk := part.grid.demotif(d.Pos.pixel())
 	if !demotifOk {
 		panic(fmt.Sprintf(
 			"partitioner.lookUpPartitionsFromTable: could not demotif pixel %s",
-			d.circle.center.pixel().log()))
+			d.Pos.pixel().log()))
 	}
 	hexSides := lut[demotif]
-	tile, tileOk := part.grid.getTile(d.circle.center.pixel())
+	tile, tileOk := part.grid.getTile(d.Pos.pixel())
 	tiles := []Tile{tile}
 	if !tileOk {
 		panic(fmt.Sprintf(
 			"partitioner.lookUpPartitionsFromTable: could not get Tile for Pixel %s",
-			d.circle.center.pixel().log()))
+			d.Pos.pixel().log()))
 	}
 	for _, hs := range hexSides {
 		if t, ok := part.grid.adjacent(tile, hs); ok {
@@ -99,7 +99,7 @@ func (part partitioner) lookUpPartitionsFromTable(d dynamic, s static) (partitio
 // with the Pos and distance not passed has a radius which exceeds the conservative hex radius. Not
 // optimized because the hexagon collision uses conservative circles.
 func (part partitioner) defaultPartitions(d dynamic, s static) []Tile {
-	p := d.center()
+	p := d.Pos
 	t, ok := part.grid.getTile(p.pixel())
 	if !ok {
 		panic(fmt.Sprintf("partitioner.defaultPartitions: cannot find tile for %s", p.pixel().log()))
@@ -128,7 +128,7 @@ func (part partitioner) defaultPartitions(d dynamic, s static) []Tile {
 				_, collides := collides(
 					p.noLayer(),
 					pa.pos(),
-					d.circle.radius,
+					*d.circleRadius,
 					part.grid.conservativeHexPixelRadius)
 				if collides {
 					nextQ = append(nextQ, aT)

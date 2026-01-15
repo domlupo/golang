@@ -48,6 +48,9 @@ func (equip *equipment) move() {
 	x := equip.attached.X + xOffset
 	y := equip.attached.Y + yOffset
 
+	// TODO: move dynamic Pos
+	equip.dynamic.Pos = Pos{}
+
 	if equip.dynamic.polygon != nil {
 		// TODO: refactor to remove the duplicate logic?
 		vertices := []Pos{}
@@ -87,15 +90,10 @@ func (equip *equipment) move() {
 			separatingAxes = append(separatingAxes, line{p1, p2})
 		}
 	}
-
-	c := equip.dynamic.circle
-	if c != nil {
-		c.center = Pos{X: x, Y: y}
-	}
 }
 
 func (equip equipment) draw(dc drawConfig, pixelMultiplier float32) {
-	p := equip.dynamic.polygon
+	p := equip.effectiveArea.dynamic.polygon
 	if p != nil {
 		for _, e := range p.edges {
 			vector.StrokeLine(
@@ -110,13 +108,13 @@ func (equip equipment) draw(dc drawConfig, pixelMultiplier float32) {
 		}
 	}
 
-	c := equip.dynamic.circle
-	if c != nil {
+	d := equip.effectiveArea.dynamic
+	if d.circleRadius != nil {
 		vector.StrokeCircle(
 			dc.screen,
-			float32(c.center.X)*pixelMultiplier,
-			float32(c.center.Y)*pixelMultiplier,
-			float32(c.radius)*pixelMultiplier,
+			float32(d.X)*pixelMultiplier,
+			float32(d.Y)*pixelMultiplier,
+			float32(*d.circleRadius)*pixelMultiplier,
 			float32(dc.defaultLineWidth)*pixelMultiplier,
 			color.Black,
 			false,
