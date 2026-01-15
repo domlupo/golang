@@ -260,7 +260,7 @@ func TestCollidesCircle(t *testing.T) {
 	var tests = []struct {
 		name         string
 		p            polygon
-		c            circle
+		d            dynamic
 		wantCollides bool
 	}{
 
@@ -271,9 +271,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 2, Y: 4}, Pos{X: 4, Y: 4}},
 				{Pos{X: 4, Y: 4}, Pos{X: 4, Y: 2}},
 				{Pos{X: 4, Y: 2}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 3, Y: 3},
-				radius: 5,
+			dynamic{
+				Pos:          Pos{X: 3, Y: 3},
+				circleRadius: intPtr(5),
 			},
 			true,
 		},
@@ -284,9 +284,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 1, Y: 5}, Pos{X: 5, Y: 5}},
 				{Pos{X: 5, Y: 5}, Pos{X: 5, Y: 1}},
 				{Pos{X: 5, Y: 1}, Pos{X: 1, Y: 1}}}),
-			circle{
-				center: Pos{X: 3, Y: 3},
-				radius: 1,
+			dynamic{
+				Pos:          Pos{X: 3, Y: 3},
+				circleRadius: intPtr(1),
 			},
 			true,
 		},
@@ -298,9 +298,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 5, Y: 3},
-				radius: 1,
+			dynamic{
+				Pos:          Pos{X: 5, Y: 3},
+				circleRadius: intPtr(1),
 			},
 			false,
 		},
@@ -311,9 +311,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 4, Y: 3},
-				radius: 1,
+			dynamic{
+				Pos:          Pos{X: 4, Y: 3},
+				circleRadius: intPtr(1),
 			},
 			true,
 		},
@@ -324,9 +324,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 4, Y: 3},
-				radius: 2,
+			dynamic{
+				Pos:          Pos{X: 4, Y: 3},
+				circleRadius: intPtr(2),
 			},
 			true,
 		},
@@ -338,9 +338,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 3, Y: 5},
-				radius: 1,
+			dynamic{
+				Pos:          Pos{X: 3, Y: 5},
+				circleRadius: intPtr(1),
 			},
 			false,
 		},
@@ -351,9 +351,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 3, Y: 4},
-				radius: 1,
+			dynamic{
+				Pos:          Pos{X: 3, Y: 4},
+				circleRadius: intPtr(1),
 			},
 			true,
 		},
@@ -364,9 +364,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 3, Y: 4},
-				radius: 2,
+			dynamic{
+				Pos:          Pos{X: 3, Y: 4},
+				circleRadius: intPtr(2),
 			},
 			true,
 		},
@@ -378,9 +378,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 0, Y: 3},
-				radius: 1,
+			dynamic{
+				Pos:          Pos{X: 0, Y: 3},
+				circleRadius: intPtr(1),
 			},
 			false,
 		},
@@ -391,9 +391,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 1, Y: 3},
-				radius: 1,
+			dynamic{
+				Pos:          Pos{X: 1, Y: 3},
+				circleRadius: intPtr(1),
 			},
 			true,
 		},
@@ -404,9 +404,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 1, Y: 3},
-				radius: 2,
+			dynamic{
+				Pos:          Pos{X: 1, Y: 3},
+				circleRadius: intPtr(2),
 			},
 			true,
 		},
@@ -418,9 +418,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 2, Y: 5},
-				radius: 1,
+			dynamic{
+				Pos:          Pos{X: 2, Y: 5},
+				circleRadius: intPtr(1),
 			},
 			false,
 		},
@@ -431,9 +431,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 2, Y: 4},
-				radius: 1,
+			dynamic{
+				Pos:          Pos{X: 2, Y: 4},
+				circleRadius: intPtr(1),
 			},
 			true,
 		},
@@ -444,9 +444,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 2, Y: 4},
-				radius: 2,
+			dynamic{
+				Pos:          Pos{X: 2, Y: 4},
+				circleRadius: intPtr(2),
 			},
 			true,
 		},
@@ -458,9 +458,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 0, Y: 2},
-				radius: 1,
+			dynamic{
+				Pos:          Pos{X: 0, Y: 2},
+				circleRadius: intPtr(1),
 			},
 			false,
 		},
@@ -471,9 +471,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 1, Y: 2},
-				radius: 1,
+			dynamic{
+				Pos:          Pos{X: 1, Y: 2},
+				circleRadius: intPtr(1),
 			},
 			true,
 		},
@@ -484,9 +484,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 1, Y: 2},
-				radius: 2,
+			dynamic{
+				Pos:          Pos{X: 1, Y: 2},
+				circleRadius: intPtr(2),
 			},
 			true,
 		},
@@ -498,9 +498,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 2, Y: 0},
-				radius: 1,
+			dynamic{
+				Pos:          Pos{X: 2, Y: 0},
+				circleRadius: intPtr(1),
 			},
 			false,
 		},
@@ -511,9 +511,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 2, Y: 1},
-				radius: 1,
+			dynamic{
+				Pos:          Pos{X: 2, Y: 1},
+				circleRadius: intPtr(1),
 			},
 			true,
 		},
@@ -524,9 +524,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 2, Y: 1},
-				radius: 2,
+			dynamic{
+				Pos:          Pos{X: 2, Y: 1},
+				circleRadius: intPtr(2),
 			},
 			true,
 		},
@@ -538,9 +538,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 5, Y: 2},
-				radius: 1,
+			dynamic{
+				Pos:          Pos{X: 5, Y: 2},
+				circleRadius: intPtr(1),
 			},
 			false,
 		},
@@ -551,9 +551,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 4, Y: 2},
-				radius: 1,
+			dynamic{
+				Pos:          Pos{X: 4, Y: 2},
+				circleRadius: intPtr(1),
 			},
 			true,
 		},
@@ -564,9 +564,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 4, Y: 2},
-				radius: 2,
+			dynamic{
+				Pos:          Pos{X: 4, Y: 2},
+				circleRadius: intPtr(2),
 			},
 			true,
 		},
@@ -578,9 +578,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 3, Y: 0},
-				radius: 1,
+			dynamic{
+				Pos:          Pos{X: 3, Y: 0},
+				circleRadius: intPtr(1),
 			},
 			false,
 		},
@@ -591,9 +591,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 3, Y: 1},
-				radius: 1,
+			dynamic{
+				Pos:          Pos{X: 3, Y: 1},
+				circleRadius: intPtr(1),
 			},
 			true,
 		},
@@ -604,9 +604,9 @@ func TestCollidesCircle(t *testing.T) {
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
 				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			circle{
-				center: Pos{X: 3, Y: 1},
-				radius: 2,
+			dynamic{
+				Pos:          Pos{X: 3, Y: 1},
+				circleRadius: intPtr(2),
 			},
 			true,
 		},
@@ -614,7 +614,7 @@ func TestCollidesCircle(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			collides := tt.p.collidesCircle(tt.c)
+			collides := tt.p.collidesCircle(tt.d)
 			if tt.wantCollides && !collides {
 				t.Errorf("want collides but did not collide")
 			}
