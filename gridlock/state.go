@@ -1054,7 +1054,7 @@ func (s *state) produceUnits() {
 		if !ok {
 			panic(fmt.Sprintf("state.produceUnits: could not get Pixel for tile %s", n.tile.log()))
 		}
-		p := pixel.posLayer(n.unitConfig.produceLayer)
+		p := pixel.posLayer(n.unitConfig.moveLayer)
 		u := newUnit(
 			n.unitConfig,
 			p,

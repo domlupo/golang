@@ -10,15 +10,14 @@ import (
 )
 
 type unitConfig struct {
-	name       name
-	radius     int
-	vision     int
-	maxHealth  int
-	attack     int
-	reach      int
-	staticBody static
-	// TODO: decide to rename produceLayer. It implies units switch layers when they do not.
-	produceLayer    layer
+	name            name
+	radius          int
+	vision          int
+	maxHealth       int
+	attack          int
+	reach           int
+	staticBody      static
+	moveLayer       layer
 	tracks          func(t unitConfig) bool
 	trackLayers     layers
 	collisionLayers layers
@@ -96,7 +95,7 @@ func (uc *unitConfig) setUCFields() {
 	uc.setIsHeatSeeking()
 	uc.setIsSkipSpawnRadiusCheck()
 	uc.setTracks()
-	uc.setProduceLayer()
+	uc.setMoveLayer()
 	uc.setCollisionLayers()
 	uc.setEquipments()
 }
@@ -321,7 +320,7 @@ func (uc *unitConfig) setIsReactive() {
 	uc.isReactive = isReactive
 }
 
-func (uc *unitConfig) setProduceLayer() {
+func (uc *unitConfig) setMoveLayer() {
 	var produceLayer layer
 	switch uc.name {
 	case infantry:
@@ -339,7 +338,7 @@ func (uc *unitConfig) setProduceLayer() {
 	default:
 		panic(fmt.Sprintf("unitConfig.setProduceLayer: unknown unit %s", uc.name.string()))
 	}
-	uc.produceLayer = produceLayer
+	uc.moveLayer = produceLayer
 }
 
 func (uc *unitConfig) setTerminalStepDelay() {
@@ -450,7 +449,7 @@ func (uc *unitConfig) setCollisionLayers() {
 	switch uc.name {
 	case infantry, fighter, bomber, bombGravity, missileCruise, missileBallistic,
 		missileAntiBallistic, flare:
-		collisionLayers = []layer{uc.produceLayer}
+		collisionLayers = []layer{uc.moveLayer}
 	case missileRadarActive:
 		collisionLayers = []layer{lOrdnance, lAircraft, lChaff}
 	case missileHeatSeeking:
@@ -543,7 +542,7 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.Uint64("terminalStep", uc.terminalStep))
 	a = append(a, slog.String("collisionLayers", uc.collisionLayers.string()))
 	a = append(a, slog.String("trackLayers", uc.trackLayers.string()))
-	a = append(a, slog.String("produceLayer", uc.produceLayer.string()))
+	a = append(a, slog.String("moveLayer", uc.moveLayer.string()))
 	a = append(a, uc.consumables.log()...)
 	a = append(a, slog.String("name", uc.name.string()))
 	return a

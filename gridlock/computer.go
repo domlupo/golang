@@ -227,7 +227,7 @@ func (c *computer) planBombs(n *node, targets []Pixel) {
 		n.actions = append(n.actions, action{Pixel: t, do: func() {
 			u := newUnit(
 				bombGravityUnitConfig,
-				t.posLayer(bombGravityUnitConfig.produceLayer),
+				t.posLayer(bombGravityUnitConfig.moveLayer),
 				c.player,
 				[]Pixel{t},
 				[]action{},

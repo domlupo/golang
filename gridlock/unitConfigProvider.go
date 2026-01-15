@@ -93,7 +93,7 @@ func (ucProvider unitConfigProvider) setCollisionLayerStatic() {
 		case infantry, fighter, bomber, missileCruise, missileBallistic, missileAntiBallistic,
 			missileHeatSeeking, missileRadarActive, flare, bombGravity, chaff:
 			for _, other := range ucProvider.unitConfigs {
-				if uc.produceLayer == other.produceLayer {
+				if uc.moveLayer == other.moveLayer {
 					maxConservativeRadius = max(maxConservativeRadius,
 						other.staticBody.conservativeRadius())
 				}
@@ -112,7 +112,7 @@ func (ucProvider unitConfigProvider) setTracksLayers() {
 		if uc.tracks != nil {
 			for _, other := range ucProvider.unitConfigs {
 				if uc.tracks(other) {
-					layers = append(layers, other.produceLayer)
+					layers = append(layers, other.moveLayer)
 				}
 			}
 		}
@@ -217,7 +217,7 @@ func (ucProvider unitConfigProvider) setReactions() {
 						fighter.consumables[uc.name] = missiles
 						spawn := newUnit(
 							uc,
-							fighter.layer(uc.produceLayer),
+							fighter.layer(uc.moveLayer),
 							fighter.player,
 							[]Pixel{fighter.nearest.pixel()},
 							[]action{},
@@ -251,7 +251,7 @@ func (ucProvider unitConfigProvider) reactChaff(fireOrdnanceDelay uint64) reacti
 		do: func(u *unit) {
 			newChafff := newUnit(
 				chaffUC,
-				u.Pos.layer(chaffUC.produceLayer),
+				u.Pos.layer(chaffUC.moveLayer),
 				u.player,
 				[]Pixel{u.pixel()},
 				[]action{},
@@ -276,7 +276,7 @@ func (ucProvider unitConfigProvider) reactFlare(fireOrdnanceDelay uint64) reacti
 		do: func(u *unit) {
 			newFlare := newUnit(
 				flareUC,
-				u.layer(flareUC.produceLayer),
+				u.layer(flareUC.moveLayer),
 				u.player,
 				[]Pixel{u.nearest.pixel()},
 				[]action{},

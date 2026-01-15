@@ -84,7 +84,7 @@ func (cProvider consumableProvider) setFiresAtLayers(unitConfigs unitConfigs) {
 	for name, c := range cProvider.consumables {
 		for _, uc := range unitConfigs {
 			if c.firesAt(uc) {
-				layers = append(layers, uc.produceLayer)
+				layers = append(layers, uc.moveLayer)
 			}
 		}
 		c.firesAtLayers = layers
