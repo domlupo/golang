@@ -24,8 +24,8 @@ type unitConfig struct {
 	// collisionLayerStatic is conservative because the worst case of partitions is returned rather
 	// than returning partitions per layer. At the moment, I don't think the complexity is worth the
 	// performance trade off.
-	collisionLayerStatic   static
-	visionLayerStatic      static
+	collisionLayerStatic   static // the largest static body which will collide with the unit.
+	visionLayerStatic      static // the largest static body which will be seen by the unit.
 	explodeRadius          int
 	terminalStepDelay      step
 	terminalStep           step

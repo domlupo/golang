@@ -218,15 +218,12 @@ type static struct {
 // Typical log method.
 func (s static) log() []slog.Attr {
 	a := []slog.Attr{}
-	if s.originPolygon == nil {
-		a = append(a, slog.String("originPolygon", "none"))
-	} else {
-		// TODO: add polygon.log() method
+	a = append(a, nest("offset", s.offset.log()))
+	if s.originPolygon != nil {
+		// TODO: add polygon log method once debugging requires it or small time slot to implement.
 		a = append(a, slog.String("originPolygon", "some"))
 	}
-	if s.circleRadius == nil {
-		a = append(a, slog.String("circleRadius", "none"))
-	} else {
+	if s.circleRadius != nil {
 		a = append(a, slog.Int("circleRadius", *s.circleRadius))
 	}
 	return a
@@ -271,17 +268,13 @@ func (s static) dynamic(p Pos) dynamic {
 // Typical log method.
 func (d dynamic) log() []slog.Attr {
 	a := []slog.Attr{}
-	if d.polygon == nil {
-		a = append(a, slog.String("polygon", "none"))
-	} else {
+	a = append(a, nest("Pos", d.Pos.log()))
+	if d.polygon != nil {
 		// TODO: add polygon log method once debugging requires it or small time slot to implement.
 		a = append(a, slog.String("polygon", "some"))
 	}
-	if d.circleRadius == nil {
-		a = append(a, slog.String("circle", "none"))
-	} else {
-		// TODO: add circle log method once debugging requires it or small time slot to implement.
-		a = append(a, slog.String("circle", "some"))
+	if d.circleRadius != nil {
+		a = append(a, slog.Int("circleRadius", *d.circleRadius))
 	}
 	return a
 }

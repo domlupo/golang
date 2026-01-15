@@ -584,7 +584,6 @@ func (u unit) log() []slog.Attr {
 		}
 		a = append(a, nest("actions", actions))
 	}
-	a = append(a, nest("dynamic", u.dynamic.log()))
 	a = append(a, slog.Bool("moveDone", u.moveDone))
 	a = append(a, slog.Int("bresenhamError", u.bresenhamError))
 	a = append(a, slog.Int("bresenhamErrorDx", u.bresenhamErrorDx))
@@ -603,7 +602,7 @@ func (u unit) log() []slog.Attr {
 func (u unit) logShort() []slog.Attr {
 	a := []slog.Attr{}
 	a = append(a, slog.Any("id", u.id))
-	a = append(a, nest("Pos", u.Pos.log()))
+	a = append(a, nest("dynamic", u.dynamic.log()))
 	return a
 }
 
