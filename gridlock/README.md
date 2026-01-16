@@ -154,6 +154,16 @@ other.
 
 ## Game Design Questions
 
+- reward systems:
+  - extra reward for capturing node?
+    - it could become more valuable over time e.g. paratrooper incentive
+  - extra reward for control hexagon tile area.
+  - extra reward for killing infantry?
+  - extra reward for completing techs
+  - extra reward for killing X? 
+    - A risk is you can tech quicker to something, but player gets x tech per jet kill or
+      something like that. The theme would be that you researched jets without prioritizing stealth
+      parts.
 - It would be cool optional polish setting if over time the battle field slightly changed colors
   - frequently traveled hex changed colors -> can reuse hex linked list logic
   - plane explosions left burn marks
