@@ -49,8 +49,8 @@ const (
 // Typical log method.
 func (p Pos) log() []slog.Attr {
 	var a = []slog.Attr{}
-	a = append(a, slog.Float64("X", float64(p.X)))
-	a = append(a, slog.Float64("Y", float64(p.Y)))
+	a = append(a, slog.String("X", fmt.Sprintf("%.2f", p.X)))
+	a = append(a, slog.String("Y", fmt.Sprintf("%.2f", p.Y)))
 	a = append(a, p.L.log())
 	return a
 }

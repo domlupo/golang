@@ -36,7 +36,7 @@ func (l line) contains(p Pos) bool {
 }
 
 func (l line) perpendicular() line {
-	return line{l.p1, Pos{X: -l.p2.Y, Y: l.p2.X}}
+	return line{Pos{X: -l.p1.Y, Y: l.p1.X}, Pos{X: -l.p2.Y, Y: l.p2.X}}
 }
 
 func (l1 line) parallel(l2 line) bool {

@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"log/slog"
 	"math"
@@ -12,35 +13,69 @@ import (
 
 // Equipment provides functionality to certain units. A unit may have 0, 1 or several equipments.
 type equipment struct {
+	name equipName
+	*effectiveArea
 	attached     *unit
 	nearest      *unit
 	trackLayers  layers
 	ignoreTarget func(t *unit) bool // TODO: decide if this should be renamed. "target" seems wrong.
 	ignore       func(e *equipment, t *unit) bool
-	effectiveArea
 }
 
-// Denotes the zone affected by equipment. Different types of equipment have different zone shapes
-// which is indicated via set or unset pointer. Every equipment has a single zone shape.
-type effectiveArea struct {
-	static
-	dynamic
-}
-
+// Typical log method.
 func (equip equipment) log() []slog.Attr {
 	a := []slog.Attr{}
+
+	a = append(a, slog.String("name", equip.name.string()))
+	a = append(a, nest("effectiveArea", equip.effectiveArea.log()))
+
 	if equip.nearest == nil {
 		a = append(a, slog.String("nearest", "none"))
 	} else {
 		a = append(a, slog.Any("nearest", equip.nearest.logShort()))
 	}
+
 	return a
 }
 
-// move the equipment around its attached unit.
+type equipName int
+
+const (
+	enNone equipName = iota
+	enRotaryCannnon
+	enRadar
+)
+
+// Typical string method.
+func (en equipName) string() string {
+	switch en {
+	case enNone:
+		return "none"
+	case enRotaryCannnon:
+		return "rotaryCannon"
+	case enRadar:
+		return "radar"
+	default:
+		panic(fmt.Sprintf("equipName.string unknown equip name %d", en))
+	}
+}
+
+// Denotes the zone affected by equipment.
+type effectiveArea struct {
+	static  static
+	dynamic *dynamic
+}
+
+// Typical log method.
+func (ea effectiveArea) log() []slog.Attr {
+	a := []slog.Attr{}
+	a = append(a, nest("static", ea.static.log()))
+	a = append(a, nest("dynamic", ea.dynamic.log()))
+	return a
+}
+
 // TODO: decide if this logic should exist within polygon and circle
-// TODO: Need to rotate vertex then line? This is incorrect
-// TODO: Need to handle separating axis.
+// move the equipment around its attached unit.
 func (equip *equipment) move() {
 	a := equip.attached.angle
 	xOffset := equip.static.offset.X*math.Cos(a) - equip.static.offset.Y*math.Sin(a)
@@ -48,11 +83,10 @@ func (equip *equipment) move() {
 	x := equip.attached.X + xOffset
 	y := equip.attached.Y + yOffset
 
-	// TODO: move dynamic Pos
-	equip.dynamic.Pos = Pos{}
+	equip.dynamic.Pos = Pos{X: x, Y: y}
 
 	if equip.dynamic.polygon != nil {
-		// TODO: refactor to remove the duplicate logic?
+
 		vertices := []Pos{}
 		for _, v := range equip.static.originPolygon.vertices {
 			v := Pos{
@@ -89,6 +123,7 @@ func (equip *equipment) move() {
 			}
 			separatingAxes = append(separatingAxes, line{p1, p2})
 		}
+		equip.dynamic.polygon.separatingAxes = separatingAxes
 	}
 }
 

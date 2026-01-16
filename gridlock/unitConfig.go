@@ -494,26 +494,40 @@ func (uc *unitConfig) setEquipments() {
 			{Pos{X: x, Y: y}, Pos{X: x, Y: 0}},
 			{Pos{X: x, Y: 0}, Pos{X: 0, Y: 0}},
 		})
+
+		rc1 := effectiveArea{
+			static: static{
+				originPolygon: &rotaryCannon,
+				offset:        Pos{X: -8, Y: -30},
+			},
+		}
+		rc2 := effectiveArea{
+			static: static{
+				originPolygon: &rotaryCannon,
+				offset:        Pos{X: 3, Y: -30},
+			},
+		}
+		radar := effectiveArea{
+			static: static{
+				circleRadius: intPtr(10),
+				offset:       Pos{X: 10, Y: 40},
+			},
+		}
+
 		uc.equipments = []equipment{
-			{effectiveArea: effectiveArea{
-				static: static{
-					originPolygon: &rotaryCannon,
-					offset:        Pos{X: -8, Y: -30},
-				},
-			}},
-			{effectiveArea: effectiveArea{
-				static: static{
-					originPolygon: &rotaryCannon,
-					offset:        Pos{X: 3, Y: -30},
-				},
-			}},
+			{
+				name:          enRotaryCannnon,
+				effectiveArea: &rc1,
+			},
+			{
+				name:          enRotaryCannnon,
+				effectiveArea: &rc2,
+			},
 			// arbitrary equipment to prove radius (not only polygon) equipment behaves correctly.
-			{effectiveArea: effectiveArea{
-				static: static{
-					circleRadius: intPtr(10),
-					offset:       Pos{X: 10, Y: 40},
-				},
-			}},
+			{
+				name:          enRadar,
+				effectiveArea: &radar,
+			},
 		}
 	case infantry, missileRadarActive, missileHeatSeeking, missileCruise, missileBallistic,
 		missileAntiBallistic, flare, bombGravity, bomber, chaff:
@@ -544,6 +558,9 @@ func (uc unitConfig) log() []slog.Attr {
 	a = append(a, slog.String("trackLayers", uc.trackLayers.string()))
 	a = append(a, slog.String("moveLayer", uc.moveLayer.string()))
 	a = append(a, uc.consumables.log()...)
+	for i, e := range uc.equipments {
+		a = append(a, nest(fmt.Sprintf("equip-%d:%s", i, e.name.string()), e.log()))
+	}
 	a = append(a, slog.String("name", uc.name.string()))
 	return a
 }

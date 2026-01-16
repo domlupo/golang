@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"math"
 	"slices"
@@ -16,9 +17,34 @@ type polygon struct {
 	vertices       []Pos
 }
 
+// Typical log method.
+func (p polygon) log() []slog.Attr {
+	a := []slog.Attr{}
+
+	edges := []slog.Attr{}
+	for _, e := range p.edges {
+		edges = append(edges, e.log()...)
+	}
+	a = append(a, nest("edges", edges))
+
+	axes := []slog.Attr{}
+	for _, sa := range p.separatingAxes {
+		axes = append(axes, sa.log()...)
+	}
+	a = append(a, nest("separatingAxes", axes))
+
+	vertices := []slog.Attr{}
+	for _, v := range p.vertices {
+		vertices = append(vertices, v.log()...)
+	}
+	a = append(a, nest("vertices", vertices))
+
+	return a
+}
+
 // An origin centered convex shape. Useful for rotations.
 type originPolygon struct {
-	polygon
+	*polygon
 	conservativeRadius float64
 }
 
@@ -31,37 +57,61 @@ func newOriginPolygon(lines []line) originPolygon {
 		center.X += p.X
 		center.Y += p.Y
 	}
+	xShift := center.X / float64(len(poly.vertices))
+	yShift := center.Y / float64(len(poly.vertices))
 
-	xShift := center.X / float64(len(poly.vertices)) / 2.0
-	yShift := center.Y / float64(len(poly.vertices)) / 2.0
-
-	var shiftedVertices []Pos
-	for _, p := range poly.vertices {
-		s := Pos{X: p.X + xShift, Y: p.Y + yShift}
-		shiftedVertices = append(shiftedVertices, s)
-	}
-
-	var conservativeRadius float64
-	for _, p := range poly.vertices {
-		radius := math.Sqrt(p.X*p.X + p.Y*p.Y)
-		conservativeRadius = max(conservativeRadius, radius)
-	}
-
+	uniqPoints := make(map[Pos]struct{})
 	var shiftedEdges []line
 	for _, e := range poly.edges {
 		s := e
-		s.p1.X += xShift
-		s.p1.Y += yShift
-		s.p2.X += xShift
-		s.p2.Y += yShift
+		s.p1.X -= xShift
+		s.p1.Y -= yShift
+		s.p2.X -= xShift
+		s.p2.Y -= yShift
 		shiftedEdges = append(shiftedEdges, s)
+		uniqPoints[s.p1] = struct{}{}
+		uniqPoints[s.p2] = struct{}{}
+	}
+
+	if len(uniqPoints) != len(poly.edges) {
+		panic(fmt.Sprintf(
+			"newOriginPolygon: expected %d unique points but found %d",
+			len(poly.edges),
+			len(uniqPoints)))
+	}
+
+	var conservativeRadius float64
+	for p := range uniqPoints {
+		x := (p.X - center.X)
+		y := (p.Y - center.Y)
+		r := math.Sqrt(x*x + y*y)
+		conservativeRadius = max(conservativeRadius, r)
+	}
+
+	shiftedPolygon := newPolygon(shiftedEdges)
+
+	vCenter := Pos{}
+	for _, v := range shiftedPolygon.vertices {
+		vCenter.X += v.X
+		vCenter.Y += v.Y
+	}
+	if !vCenter.equals(Pos{}) {
+		panic("newOriginPolygon: shifted vertices not centered")
+	}
+
+	eCenter := Pos{}
+	for _, e := range shiftedPolygon.edges {
+		eCenter.X += e.p1.X
+		eCenter.X += e.p2.X
+		eCenter.Y += e.p1.Y
+		eCenter.Y += e.p2.Y
+	}
+	if !eCenter.equals(Pos{}) {
+		panic("newOriginPolygon: shifted edges not centered")
 	}
 
 	return originPolygon{
-		polygon: polygon{
-			edges:    shiftedEdges,
-			vertices: shiftedVertices,
-		},
+		polygon:            &shiftedPolygon,
 		conservativeRadius: conservativeRadius,
 	}
 }
@@ -208,7 +258,9 @@ func (p polygon) collidesCircle(d dynamic) bool {
 	return intersectionCount%2 == 1
 }
 
-// physics which may not be be mutated.
+// A physical shape which may not be be mutated. The single shape is indicated by set pointer.
+// This struct is typically used for either calculating values to create a dynamic or an analysis
+// which only considers the physical shape not the physical position.
 type static struct {
 	offset        Pos
 	originPolygon *originPolygon
@@ -220,8 +272,7 @@ func (s static) log() []slog.Attr {
 	a := []slog.Attr{}
 	a = append(a, nest("offset", s.offset.log()))
 	if s.originPolygon != nil {
-		// TODO: add polygon log method once debugging requires it or small time slot to implement.
-		a = append(a, slog.String("originPolygon", "some"))
+		a = append(a, nest("originPolygon", s.originPolygon.log()))
 	}
 	if s.circleRadius != nil {
 		a = append(a, slog.Int("circleRadius", *s.circleRadius))
@@ -242,27 +293,31 @@ func (s static) conservativeRadius() int {
 	}
 }
 
-// physics which may be mutated.
 // TODO: decide if I should add tests? e.g. move a polygon.
 // TODO: decide if rotate and move methods be on dynamic struct.
+// A physical shape which may be mutated. The single shape is indicated by set pointer.
 type dynamic struct {
 	Pos
-	// TODO: add Pos here and remove center within circle and polygon.
 	polygon      *polygon
 	circleRadius *int
 }
 
-func (s static) dynamic(p Pos) dynamic {
+func (s static) dynamic(p Pos) *dynamic {
 	d := dynamic{Pos: p}
 	switch {
 	case s.circleRadius != nil:
 		d.circleRadius = s.circleRadius
 	case s.originPolygon != nil:
-		d.polygon = &s.originPolygon.polygon
+		p := polygon{
+			edges:          s.originPolygon.polygon.edges,
+			separatingAxes: s.originPolygon.polygon.separatingAxes,
+			vertices:       s.originPolygon.vertices,
+		}
+		d.polygon = &p
 	default:
 		panic("static.dynamic")
 	}
-	return d
+	return &d
 }
 
 // Typical log method.
@@ -270,8 +325,7 @@ func (d dynamic) log() []slog.Attr {
 	a := []slog.Attr{}
 	a = append(a, nest("Pos", d.Pos.log()))
 	if d.polygon != nil {
-		// TODO: add polygon log method once debugging requires it or small time slot to implement.
-		a = append(a, slog.String("polygon", "some"))
+		a = append(a, nest("polygon", d.polygon.log()))
 	}
 	if d.circleRadius != nil {
 		a = append(a, slog.Int("circleRadius", *d.circleRadius))

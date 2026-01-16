@@ -58,7 +58,7 @@ type units map[Pixel]*unit
 
 type unit struct {
 	unitConfig
-	dynamic
+	*dynamic
 	subPos              subPos
 	id                  id
 	player              player
@@ -125,8 +125,8 @@ func (u unit) downscale(s subPos) Pos {
 
 func newUnit(
 	uc unitConfig,
-	pos Pos,
-	p player,
+	p Pos,
+	player player,
 	globalTargets []Pixel,
 	actions []action,
 	sourceNode Tile,
@@ -134,7 +134,7 @@ func newUnit(
 
 	u := unit{
 		id:                  generateId(),
-		player:              p,
+		player:              player,
 		globalTargets:       globalTargets,
 		pathGlobalTarget:    true,
 		actions:             actions,
@@ -143,13 +143,14 @@ func newUnit(
 		selected:            selected,
 		steerTurnCountLimit: 20,
 		sourceNode:          sourceNode,
-		sourcePosition:      pos,
+		sourcePosition:      p,
 	}
 
-	u.dynamic = u.staticBody.dynamic(pos)
+	u.dynamic = u.staticBody.dynamic(p)
 	u.subPos = u.newSubPos(u.Pos)
 	for i, e := range u.equipments {
 		e.attached = &u
+		e.dynamic = e.static.dynamic(p)
 		u.equipments[i] = e
 	}
 
@@ -182,9 +183,8 @@ func (u *unit) refresh() {
 		u.angle = u.Pos.noLayer().angle(u.globalTargets[0].pos())
 	}
 
-	for i, e := range u.equipments {
+	for _, e := range u.equipments {
 		e.move()
-		u.equipments[i] = e
 	}
 }
 
