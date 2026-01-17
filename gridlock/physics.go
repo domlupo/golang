@@ -14,6 +14,7 @@ import (
 type dynamic struct {
 	Pos
 	static       static
+	angle        float64
 	polygon      *polygon
 	circleRadius *int
 }
@@ -99,7 +100,8 @@ func (d *dynamic) move(p Pos, a float64) {
 	x := p.X + xOffset
 	y := p.Y + yOffset
 
-	d.Pos = Pos{X: x, Y: y}
+	d.Pos = Pos{X: x, Y: y, L: p.L}
+	d.angle = a
 
 	if d.polygon != nil {
 
