@@ -88,7 +88,6 @@ type unit struct {
 	prior               *unit
 	next                *unit
 	spawnOrder          int
-	angle               float64
 	sourceNode          Tile
 	sourcePosition      Pos
 	sourceUnit          id
@@ -148,10 +147,11 @@ func newUnit(
 
 	u.dynamic = u.staticBody.newDynamic(p)
 	u.subPos = u.newSubPos(u.Pos)
+	u.move(p, 0)
 	for i, e := range u.equipments {
 		e.attached = &u
 		e.dynamic = e.static.newDynamic(p)
-		e.dynamic.move(u.Pos, u.angle+math.Pi/2)
+		e.dynamic.move(u.Pos, 0)
 		u.equipments[i] = e
 	}
 
@@ -176,13 +176,6 @@ func (u *unit) refresh() {
 	u.movedThisTurn = false
 	u.attackedThisTurn = false
 	u.collidedThisturn = false
-
-	// TODO: Fix once target contract / structure is better understood. Needed for human players.
-	if len(u.globalTargets) == 0 {
-		u.angle = 0
-	} else {
-		u.angle = u.Pos.noLayer().angle(u.globalTargets[0].pos())
-	}
 }
 
 func (u *unit) prioritizeTargets() {
@@ -310,8 +303,14 @@ func (u *unit) newMove(s subPos) move {
 }
 
 func (u *unit) confirmMove(s subPos) {
-	u.dynamic.Pos = u.downscale(s).layer(u.L)
+	var a float64
+	if len(u.globalTargets) > 0 {
+		a = u.Pos.noLayer().angle(u.globalTargets[0].pos())
+	}
+
+	u.move(u.downscale(s).layer(u.L), a)
 	u.movedThisTurn = true
+
 	if u.subPos.x != s.x {
 		u.bresenhamError += u.bresenhamErrorDy
 	}
@@ -319,8 +318,9 @@ func (u *unit) confirmMove(s subPos) {
 		u.bresenhamError += u.bresenhamErrorDx
 	}
 	u.subPos = s
+
 	for _, e := range u.equipments {
-		e.dynamic.move(e.attached.dynamic.Pos, e.attached.angle)
+		e.dynamic.move(e.attached.dynamic.Pos, a)
 	}
 }
 
