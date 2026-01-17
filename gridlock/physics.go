@@ -9,13 +9,11 @@ import (
 	"slices"
 )
 
-// TODO: decide if I should add tests? e.g. move dynamic.
-// TODO: decide if rotate and move methods be on dynamic struct.
-
 // A physical shape which may be mutated. The single shape is indicated by set pointer.
 // Do not create directly, use a constructor.
 type dynamic struct {
 	Pos
+	static       static
 	polygon      *polygon
 	circleRadius *int
 }
@@ -32,12 +30,18 @@ type static struct {
 
 // Create a dynamic circle. Typical constructor.
 func newDynamicCircle(p Pos, r int) *dynamic {
-	d := dynamic{Pos: p, circleRadius: &r}
+	s := newStaticCircle(r, Pos{})
+	d := dynamic{
+		static:       s,
+		Pos:          p,
+		circleRadius: &r,
+	}
 	return &d
 }
 
 // Create a dynamic polygon. Sets the Pos from the passed lines center.
 func newDynamicPolygon(lines []line) *dynamic {
+	s := newStaticPolygon(lines, Pos{})
 	polygon := newPolygon(lines)
 	p := Pos{}
 	for _, v := range polygon.vertices {
@@ -46,13 +50,20 @@ func newDynamicPolygon(lines []line) *dynamic {
 	}
 	p.X = p.X / float64(len(polygon.vertices))
 	p.Y = p.Y / float64(len(polygon.vertices))
-	d := dynamic{Pos: p, polygon: &polygon}
+	d := dynamic{
+		static:  s,
+		Pos:     p,
+		polygon: &polygon,
+	}
 	return &d
 }
 
 // Create a mutable dynamic from a static which should not be mutated.
 func (s static) newDynamic(p Pos) *dynamic {
-	d := dynamic{Pos: p}
+	d := dynamic{
+		static: s,
+		Pos:    p,
+	}
 	switch {
 	case s.circleRadius != nil:
 		d.circleRadius = s.circleRadius
@@ -71,7 +82,7 @@ func (s static) newDynamic(p Pos) *dynamic {
 
 // Create a static polygon. Shifts the polygon lines if not origin centered. The passed offset
 // should be used to indicate position relative to origin.
-func newStaticPolygon(offset Pos, lines []line) static {
+func newStaticPolygon(lines []line, offset Pos) static {
 	op := newOriginPolygon(lines)
 	return static{offset: offset, originPolygon: &op}
 }
@@ -79,6 +90,57 @@ func newStaticPolygon(offset Pos, lines []line) static {
 // Create a static circle. Typical constructor.
 func newStaticCircle(r int, offset Pos) static {
 	return static{offset: offset, circleRadius: &r}
+}
+
+// TODO: low priorty but I should add smoke screen unit tests to catch regressions before release.
+func (d *dynamic) move(p Pos, a float64) {
+	xOffset := d.static.offset.X*math.Cos(a) - d.static.offset.Y*math.Sin(a)
+	yOffset := d.static.offset.X*math.Sin(a) + d.static.offset.Y*math.Cos(a)
+	x := p.X + xOffset
+	y := p.Y + yOffset
+
+	d.Pos = Pos{X: x, Y: y}
+
+	if d.polygon != nil {
+
+		vertices := []Pos{}
+		for _, v := range d.static.originPolygon.vertices {
+			v := Pos{
+				X: x + (v.X*math.Cos(a) - v.Y*math.Sin(a)),
+				Y: y + (v.X*math.Sin(a) + v.Y*math.Cos(a)),
+			}
+			vertices = append(vertices, v)
+		}
+		d.polygon.vertices = vertices
+
+		edges := []line{}
+		for _, e := range d.static.originPolygon.edges {
+			p1 := Pos{
+				X: x + (e.p1.X*math.Cos(a) - e.p1.Y*math.Sin(a)),
+				Y: y + (e.p1.X*math.Sin(a) + e.p1.Y*math.Cos(a)),
+			}
+			p2 := Pos{
+				X: x + (e.p2.X*math.Cos(a) - e.p2.Y*math.Sin(a)),
+				Y: y + (e.p2.X*math.Sin(a) + e.p2.Y*math.Cos(a)),
+			}
+			edges = append(edges, line{p1, p2})
+		}
+		d.polygon.edges = edges
+
+		separatingAxes := []line{}
+		for _, e := range d.static.originPolygon.separatingAxes {
+			p1 := Pos{
+				X: x + (e.p1.X*math.Cos(a) - e.p1.Y*math.Sin(a)),
+				Y: y + (e.p1.X*math.Sin(a) + e.p1.Y*math.Cos(a)),
+			}
+			p2 := Pos{
+				X: x + (e.p2.X*math.Cos(a) - e.p2.Y*math.Sin(a)),
+				Y: y + (e.p2.X*math.Sin(a) + e.p2.Y*math.Cos(a)),
+			}
+			separatingAxes = append(separatingAxes, line{p1, p2})
+		}
+		d.polygon.separatingAxes = separatingAxes
+	}
 }
 
 // Returns true if the two dynamics collide.
@@ -215,6 +277,7 @@ func (d dynamic) log() []slog.Attr {
 	if d.circleRadius != nil {
 		a = append(a, slog.Int("circleRadius", *d.circleRadius))
 	}
+	a = append(a, nest("static", d.static.log()))
 	return a
 }
 

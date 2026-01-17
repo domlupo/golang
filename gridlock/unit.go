@@ -151,6 +151,7 @@ func newUnit(
 	for i, e := range u.equipments {
 		e.attached = &u
 		e.dynamic = e.static.newDynamic(p)
+		e.dynamic.move(u.Pos, u.angle+math.Pi/2)
 		u.equipments[i] = e
 	}
 
@@ -181,10 +182,6 @@ func (u *unit) refresh() {
 		u.angle = 0
 	} else {
 		u.angle = u.Pos.noLayer().angle(u.globalTargets[0].pos())
-	}
-
-	for _, e := range u.equipments {
-		e.move()
 	}
 }
 
@@ -322,6 +319,9 @@ func (u *unit) confirmMove(s subPos) {
 		u.bresenhamError += u.bresenhamErrorDx
 	}
 	u.subPos = s
+	for _, e := range u.equipments {
+		e.dynamic.move(e.attached.dynamic.Pos, e.attached.angle)
+	}
 }
 
 func (u *unit) updateTargetUnit(ut unitTarget, unit *unit) {

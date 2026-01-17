@@ -519,8 +519,8 @@ func (uc *unitConfig) setEquipments() {
 			{Pos{X: x, Y: 0}, Pos{X: 0, Y: 0}},
 		}
 
-		rc1 := effectiveArea{static: newStaticPolygon(Pos{X: -8, Y: -30}, rotaryCannon)}
-		rc2 := effectiveArea{static: newStaticPolygon(Pos{X: 3, Y: -30}, rotaryCannon)}
+		rc1 := effectiveArea{static: newStaticPolygon(rotaryCannon, Pos{X: -8, Y: -30})}
+		rc2 := effectiveArea{static: newStaticPolygon(rotaryCannon, Pos{X: 3, Y: -30})}
 		radar := effectiveArea{static: newStaticCircle(10, Pos{X: 10, Y: 40})}
 
 		uc.equipments = []equipment{
