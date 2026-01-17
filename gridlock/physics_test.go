@@ -133,7 +133,7 @@ func TestNewOriginPolygon(t *testing.T) {
 	}
 }
 
-func TestCollides(t *testing.T) {
+func TestCollidesTwoPolygons(t *testing.T) {
 	t.Parallel()
 	var tests = []struct {
 		name         string
@@ -244,7 +244,15 @@ func TestCollides(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			collides := tt.p1.collides(tt.p2)
+			d1 := dynamic{
+				// TODO: Fix this assumes a zero value Pos which is wrong.
+				polygon: &tt.p1,
+			}
+			d2 := dynamic{
+				// TODO: Fix this assumes a zero value Pos which is wrong.
+				polygon: &tt.p2,
+			}
+			collides := d1.collides(d2)
 			if tt.wantCollides && !collides {
 				t.Errorf("want collides but did not collide")
 			}
@@ -255,7 +263,7 @@ func TestCollides(t *testing.T) {
 	}
 }
 
-func TestCollidesCircle(t *testing.T) {
+func TestCollidesOnePolygonOneCircle(t *testing.T) {
 	t.Parallel()
 	var tests = []struct {
 		name         string
@@ -614,7 +622,11 @@ func TestCollidesCircle(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			collides := tt.p.collidesCircle(tt.d)
+			p := dynamic{
+				// TODO: Fix this assumes a zero value Pos which is wrong.
+				polygon: &tt.p,
+			}
+			collides := p.collides(tt.d)
 			if tt.wantCollides && !collides {
 				t.Errorf("want collides but did not collide")
 			}
