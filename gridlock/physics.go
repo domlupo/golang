@@ -9,9 +9,11 @@ import (
 	"slices"
 )
 
-// TODO: decide if I should add tests? e.g. move a polygon.
+// TODO: decide if I should add tests? e.g. move dynamic.
 // TODO: decide if rotate and move methods be on dynamic struct.
+
 // A physical shape which may be mutated. The single shape is indicated by set pointer.
+// Do not create directly, use a constructor.
 type dynamic struct {
 	Pos
 	polygon      *polygon
@@ -21,27 +23,35 @@ type dynamic struct {
 // A physical shape which may not be be mutated. The single shape is indicated by set pointer.
 // This struct is typically used for either calculating values to create a dynamic or an analysis
 // which only considers the physical shape not the physical position.
+// Do not create directly, use a constructor.
 type static struct {
 	offset        Pos
 	originPolygon *originPolygon
 	circleRadius  *int
 }
 
-// A convex shape.
-type polygon struct {
-	edges []line
-	// not every edge normal is a separating axis. Parallel edges only require testing one axis.
-	separatingAxes []line
-	vertices       []Pos
+// Create a dynamic circle. Typical constructor.
+func newDynamicCircle(p Pos, r int) *dynamic {
+	d := dynamic{Pos: p, circleRadius: &r}
+	return &d
 }
 
-// An origin centered convex shape. Useful for rotations.
-type originPolygon struct {
-	*polygon
-	conservativeRadius float64
+// Create a dynamic polygon. Sets the Pos from the passed lines center.
+func newDynamicPolygon(lines []line) *dynamic {
+	polygon := newPolygon(lines)
+	p := Pos{}
+	for _, v := range polygon.vertices {
+		p.X += v.X
+		p.Y += v.Y
+	}
+	p.X = p.X / float64(len(polygon.vertices))
+	p.Y = p.Y / float64(len(polygon.vertices))
+	d := dynamic{Pos: p, polygon: &polygon}
+	return &d
 }
 
-func (s static) dynamic(p Pos) *dynamic {
+// Create a mutable dynamic from a static which should not be mutated.
+func (s static) newDynamic(p Pos) *dynamic {
 	d := dynamic{Pos: p}
 	switch {
 	case s.circleRadius != nil:
@@ -59,140 +69,19 @@ func (s static) dynamic(p Pos) *dynamic {
 	return &d
 }
 
-// Creates an origin centered polygon by shifting passed lines. Refer to newPolygon() for details.
-func newOriginPolygon(lines []line) originPolygon {
-	poly := newPolygon(lines)
-
-	var center Pos
-	for _, p := range poly.vertices {
-		center.X += p.X
-		center.Y += p.Y
-	}
-	xShift := center.X / float64(len(poly.vertices))
-	yShift := center.Y / float64(len(poly.vertices))
-
-	uniqPoints := make(map[Pos]struct{})
-	var shiftedEdges []line
-	for _, e := range poly.edges {
-		s := e
-		s.p1.X -= xShift
-		s.p1.Y -= yShift
-		s.p2.X -= xShift
-		s.p2.Y -= yShift
-		shiftedEdges = append(shiftedEdges, s)
-		uniqPoints[s.p1] = struct{}{}
-		uniqPoints[s.p2] = struct{}{}
-	}
-
-	if len(uniqPoints) != len(poly.edges) {
-		panic(fmt.Sprintf(
-			"newOriginPolygon: expected %d unique points but found %d",
-			len(poly.edges),
-			len(uniqPoints)))
-	}
-
-	var conservativeRadius float64
-	for p := range uniqPoints {
-		x := (p.X - center.X)
-		y := (p.Y - center.Y)
-		r := math.Sqrt(x*x + y*y)
-		conservativeRadius = max(conservativeRadius, r)
-	}
-
-	shiftedPolygon := newPolygon(shiftedEdges)
-
-	vCenter := Pos{}
-	for _, v := range shiftedPolygon.vertices {
-		vCenter.X += v.X
-		vCenter.Y += v.Y
-	}
-	if !vCenter.equals(Pos{}) {
-		panic("newOriginPolygon: shifted vertices not centered")
-	}
-
-	eCenter := Pos{}
-	for _, e := range shiftedPolygon.edges {
-		eCenter.X += e.p1.X
-		eCenter.X += e.p2.X
-		eCenter.Y += e.p1.Y
-		eCenter.Y += e.p2.Y
-	}
-	if !eCenter.equals(Pos{}) {
-		panic("newOriginPolygon: shifted edges not centered")
-	}
-
-	return originPolygon{
-		polygon:            &shiftedPolygon,
-		conservativeRadius: conservativeRadius,
-	}
+// Create a static polygon. Shifts the polygon lines if not origin centered. The passed offset
+// should be used to indicate position relative to origin.
+func newStaticPolygon(offset Pos, lines []line) static {
+	op := newOriginPolygon(lines)
+	return static{offset: offset, originPolygon: &op}
 }
 
-// Creates a new polygon with basic polygon verifications. Polygon verifications will not
-// prevent creation for all invalid polygons, but will catch typical invalid polygons. I suspect it
-// is very hard to verify all invalid polygon creation so it is not an efficient use of time.
-// Specifically collinear lines are probably tricky.
-func newPolygon(lines []line) polygon {
-	if len(lines) != 4 {
-		panic("newPolygon: only 4 sided polygons are implemented")
-	}
-
-	sorted := []line{lines[0]}
-	current := lines[0].p1
-	end := lines[0].p2
-	vertices := []Pos{}
-	for {
-		vertices = append(vertices, current)
-		priorSortCount := len(sorted)
-		for _, l := range lines {
-			if slices.Contains(sorted, l) {
-				continue
-			}
-			if l.p1 == current {
-				current = l.p2
-				sorted = append(sorted, l)
-				break
-			}
-			if l.p2 == current {
-				current = l.p1
-				sorted = append(sorted, l)
-				break
-			}
-		}
-
-		if len(sorted) == priorSortCount || (len(sorted) == len(lines) && current != end) {
-			panic("newPolygon: valid polygon connections cannot be created with provided lines")
-		} else if len(sorted) == len(lines) {
-			vertices = append(vertices, current)
-			break
-		}
-	}
-
-	center := Pos{}
-	for _, v := range vertices {
-		center.X += v.X
-		center.Y += v.Y
-	}
-	center.X = center.X / float64(len(vertices))
-	center.Y = center.Y / float64(len(vertices))
-
-	axes := []line{}
-	for _, e := range lines {
-		axis := e.perpendicular()
-		noParallel := !slices.ContainsFunc(axes, func(a line) bool {
-			return axis.parallel(a)
-		})
-		if noParallel {
-			axes = append(axes, axis)
-		}
-	}
-
-	return polygon{
-		edges:          lines,
-		separatingAxes: axes,
-		vertices:       vertices,
-	}
+// Create a static circle. Typical constructor.
+func newStaticCircle(offset Pos, r int) static {
+	return static{offset: offset, circleRadius: &r}
 }
 
+// Returns true if the two dynamics collide.
 func (d1 dynamic) collides(d2 dynamic) bool {
 	c1 := d1.circleRadius
 	p1 := d1.polygon
@@ -293,8 +182,8 @@ func (d1 dynamic) collides(d2 dynamic) bool {
 
 }
 
-// allows partitioner.go to treat hexagons as circles. This is simple and correct but conservative
-// and may need optimized in the future once units use hexagon bodies.
+// Allows partitioner layer to treat hexagons as circles. This is simple and correct but
+// conservative and may need optimized in the future once units use hexagon bodies.
 func (s static) conservativeRadius() int {
 	switch {
 	case s.circleRadius != nil:
@@ -355,4 +244,154 @@ func (p polygon) log() []slog.Attr {
 	a = append(a, nest("vertices", vertices))
 
 	return a
+}
+
+// Do not use outside physics.go. A convex shape.
+type polygon struct {
+	edges []line
+	// not every edge normal is a separating axis. Parallel edges only require testing one axis.
+	separatingAxes []line
+	vertices       []Pos
+}
+
+// Do not use outside physics.go. An origin centered convex shape. Useful for rotations.
+type originPolygon struct {
+	*polygon
+	conservativeRadius float64
+}
+
+// Do not use outside physics.go. Instead use a dynamic or static constructor. Creates an origin
+// centered polygon by shifting passed lines. Refer to newPolygon() for details.
+func newOriginPolygon(lines []line) originPolygon {
+	poly := newPolygon(lines)
+
+	var center Pos
+	for _, p := range poly.vertices {
+		center.X += p.X
+		center.Y += p.Y
+	}
+	xShift := center.X / float64(len(poly.vertices))
+	yShift := center.Y / float64(len(poly.vertices))
+
+	uniqPoints := make(map[Pos]struct{})
+	var shiftedEdges []line
+	for _, e := range poly.edges {
+		s := e
+		s.p1.X -= xShift
+		s.p1.Y -= yShift
+		s.p2.X -= xShift
+		s.p2.Y -= yShift
+		shiftedEdges = append(shiftedEdges, s)
+		uniqPoints[s.p1] = struct{}{}
+		uniqPoints[s.p2] = struct{}{}
+	}
+
+	if len(uniqPoints) != len(poly.edges) {
+		panic(fmt.Sprintf(
+			"newOriginPolygon: expected %d unique points but found %d",
+			len(poly.edges),
+			len(uniqPoints)))
+	}
+
+	var conservativeRadius float64
+	for p := range uniqPoints {
+		x := (p.X - center.X)
+		y := (p.Y - center.Y)
+		r := math.Sqrt(x*x + y*y)
+		conservativeRadius = max(conservativeRadius, r)
+	}
+
+	shiftedPolygon := newPolygon(shiftedEdges)
+
+	vCenter := Pos{}
+	for _, v := range shiftedPolygon.vertices {
+		vCenter.X += v.X
+		vCenter.Y += v.Y
+	}
+	if !vCenter.equals(Pos{}) {
+		panic("newOriginPolygon: shifted vertices not centered")
+	}
+
+	eCenter := Pos{}
+	for _, e := range shiftedPolygon.edges {
+		eCenter.X += e.p1.X
+		eCenter.X += e.p2.X
+		eCenter.Y += e.p1.Y
+		eCenter.Y += e.p2.Y
+	}
+	if !eCenter.equals(Pos{}) {
+		panic("newOriginPolygon: shifted edges not centered")
+	}
+
+	return originPolygon{
+		polygon:            &shiftedPolygon,
+		conservativeRadius: conservativeRadius,
+	}
+}
+
+// Do not use outside physics.go. Instead use a dynamic or static constructor. Creates a new polygon
+// with basic polygon verifications. Polygon verifications will not prevent creation for all invalid
+// polygons, but will catch typical invalid polygons. I suspect it is very hard to verify all
+// invalid polygon creation so it is not an efficient use of time. Specifically collinear lines are
+// probably tricky.
+func newPolygon(lines []line) polygon {
+	if len(lines) != 4 {
+		panic("newPolygon: only 4 sided polygons are implemented")
+	}
+
+	sorted := []line{lines[0]}
+	current := lines[0].p1
+	end := lines[0].p2
+	vertices := []Pos{}
+	for {
+		vertices = append(vertices, current)
+		priorSortCount := len(sorted)
+		for _, l := range lines {
+			if slices.Contains(sorted, l) {
+				continue
+			}
+			if l.p1 == current {
+				current = l.p2
+				sorted = append(sorted, l)
+				break
+			}
+			if l.p2 == current {
+				current = l.p1
+				sorted = append(sorted, l)
+				break
+			}
+		}
+
+		if len(sorted) == priorSortCount || (len(sorted) == len(lines) && current != end) {
+			panic("newPolygon: valid polygon connections cannot be created with provided lines")
+		} else if len(sorted) == len(lines) {
+			vertices = append(vertices, current)
+			break
+		}
+	}
+
+	center := Pos{}
+	for _, v := range vertices {
+		center.X += v.X
+		center.Y += v.Y
+	}
+	center.X = center.X / float64(len(vertices))
+	center.Y = center.Y / float64(len(vertices))
+
+	axes := []line{}
+	for _, e := range lines {
+		axis := e.perpendicular()
+		noParallel := !slices.ContainsFunc(axes, func(a line) bool {
+			return axis.parallel(a)
+		})
+		if noParallel {
+			axes = append(axes, axis)
+		}
+	}
+
+	return polygon{
+		edges:          lines,
+		separatingAxes: axes,
+		vertices:       vertices,
+	}
 }

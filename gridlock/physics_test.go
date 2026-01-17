@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestNewOriginPolygon(t *testing.T) {
+func TestNewStaticPolygon(t *testing.T) {
 	t.Parallel()
 	var tests = []struct {
 		name      string
@@ -128,7 +128,7 @@ func TestNewOriginPolygon(t *testing.T) {
 					t.Errorf("do not want panic but did panic: %s", r)
 				}
 			}()
-			newOriginPolygon(tt.lines)
+			newStaticPolygon(Pos{}, tt.lines)
 		})
 	}
 }
@@ -136,123 +136,121 @@ func TestNewOriginPolygon(t *testing.T) {
 func TestCollidesTwoPolygons(t *testing.T) {
 	t.Parallel()
 	var tests = []struct {
-		name         string
-		p1           polygon
-		p2           polygon
-		wantCollides bool
+		name          string
+		polygonLines1 []line
+		polygonLines2 []line
+		wantCollides  bool
 	}{
 
 		{
 			"two squares do not collide",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 0, Y: 0}, Pos{X: 1, Y: 0}},
 				{Pos{X: 1, Y: 0}, Pos{X: 1, Y: 1}},
 				{Pos{X: 1, Y: 1}, Pos{X: 0, Y: 1}},
-				{Pos{X: 0, Y: 1}, Pos{X: 0, Y: 0}}}),
-			newPolygon([]line{
+				{Pos{X: 0, Y: 1}, Pos{X: 0, Y: 0}}},
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
 			false,
 		},
 		{
 			"two squares collide top right and bottom left",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 1, Y: 1}, Pos{X: 2, Y: 1}},
 				{Pos{X: 2, Y: 1}, Pos{X: 2, Y: 2}},
 				{Pos{X: 2, Y: 2}, Pos{X: 1, Y: 2}},
-				{Pos{X: 1, Y: 2}, Pos{X: 1, Y: 1}}}),
-			newPolygon([]line{
+				{Pos{X: 1, Y: 2}, Pos{X: 1, Y: 1}}},
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
 			true,
 		},
 		{
 			"two squares collide top left and bottom right",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 1, Y: 1}, Pos{X: 2, Y: 1}},
 				{Pos{X: 2, Y: 1}, Pos{X: 2, Y: 2}},
 				{Pos{X: 2, Y: 2}, Pos{X: 1, Y: 2}},
-				{Pos{X: 1, Y: 2}, Pos{X: 1, Y: 1}}}),
-			newPolygon([]line{
+				{Pos{X: 1, Y: 2}, Pos{X: 1, Y: 1}}},
+			[]line{
 				{Pos{X: 1, Y: 2}, Pos{X: 1, Y: 3}},
 				{Pos{X: 1, Y: 3}, Pos{X: 0, Y: 3}},
 				{Pos{X: 0, Y: 3}, Pos{X: 0, Y: 2}},
-				{Pos{X: 0, Y: 2}, Pos{X: 1, Y: 2}}}),
+				{Pos{X: 0, Y: 2}, Pos{X: 1, Y: 2}}},
 			true,
 		},
 		{
 			"two squares collide bottom right and top left",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 1, Y: 1}, Pos{X: 2, Y: 1}},
 				{Pos{X: 2, Y: 1}, Pos{X: 2, Y: 2}},
 				{Pos{X: 2, Y: 2}, Pos{X: 1, Y: 2}},
-				{Pos{X: 1, Y: 2}, Pos{X: 1, Y: 1}}}),
-			newPolygon([]line{
+				{Pos{X: 1, Y: 2}, Pos{X: 1, Y: 1}}},
+			[]line{
 				{Pos{X: 2, Y: 1}, Pos{X: 3, Y: 1}},
 				{Pos{X: 3, Y: 1}, Pos{X: 3, Y: 0}},
 				{Pos{X: 3, Y: 0}, Pos{X: 2, Y: 0}},
-				{Pos{X: 2, Y: 0}, Pos{X: 2, Y: 1}}}),
+				{Pos{X: 2, Y: 0}, Pos{X: 2, Y: 1}}},
 			true,
 		},
 		{
 			"two squares collide bottom left and top right",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 1, Y: 1}, Pos{X: 2, Y: 1}},
 				{Pos{X: 2, Y: 1}, Pos{X: 2, Y: 2}},
 				{Pos{X: 2, Y: 2}, Pos{X: 1, Y: 2}},
-				{Pos{X: 1, Y: 2}, Pos{X: 1, Y: 1}}}),
-			newPolygon([]line{
+				{Pos{X: 1, Y: 2}, Pos{X: 1, Y: 1}}},
+			[]line{
 				{Pos{X: 0, Y: 0}, Pos{X: 1, Y: 0}},
 				{Pos{X: 1, Y: 0}, Pos{X: 1, Y: 1}},
 				{Pos{X: 1, Y: 1}, Pos{X: 0, Y: 1}},
-				{Pos{X: 0, Y: 1}, Pos{X: 0, Y: 0}}}),
+				{Pos{X: 0, Y: 1}, Pos{X: 0, Y: 0}}},
 			true,
 		},
 		{
 			"two equal squares collide ",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 1, Y: 1}, Pos{X: 2, Y: 1}},
 				{Pos{X: 2, Y: 1}, Pos{X: 2, Y: 2}},
 				{Pos{X: 2, Y: 2}, Pos{X: 1, Y: 2}},
-				{Pos{X: 1, Y: 2}, Pos{X: 1, Y: 1}}}),
-			newPolygon([]line{
+				{Pos{X: 1, Y: 2}, Pos{X: 1, Y: 1}}},
+			[]line{
 				{Pos{X: 1, Y: 1}, Pos{X: 2, Y: 1}},
 				{Pos{X: 2, Y: 1}, Pos{X: 2, Y: 2}},
 				{Pos{X: 2, Y: 2}, Pos{X: 1, Y: 2}},
-				{Pos{X: 1, Y: 2}, Pos{X: 1, Y: 1}}}),
+				{Pos{X: 1, Y: 2}, Pos{X: 1, Y: 1}}},
 			true,
 		},
 		{
 			"two squares collide by subset",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 1, Y: 1}, Pos{X: 2, Y: 1}},
 				{Pos{X: 2, Y: 1}, Pos{X: 2, Y: 2}},
 				{Pos{X: 2, Y: 2}, Pos{X: 1, Y: 2}},
-				{Pos{X: 1, Y: 2}, Pos{X: 1, Y: 1}}}),
-			newPolygon([]line{
+				{Pos{X: 1, Y: 2}, Pos{X: 1, Y: 1}}},
+			[]line{
 				{Pos{X: 0, Y: 0}, Pos{X: 0, Y: 3}},
 				{Pos{X: 0, Y: 3}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 3, Y: 0}},
-				{Pos{X: 3, Y: 0}, Pos{X: 0, Y: 0}}}),
+				{Pos{X: 3, Y: 0}, Pos{X: 0, Y: 0}}},
 			true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			d1 := dynamic{
-				// TODO: Fix this assumes a zero value Pos which is wrong.
-				polygon: &tt.p1,
+			p1 := newDynamicPolygon(tt.polygonLines1)
+			p2 := newDynamicPolygon(tt.polygonLines2)
+			collides := p1.collides(*p2)
+			otherCollides := p2.collides(*p1)
+			if collides != otherCollides {
+				t.Errorf("the struct used as the receiver should not affect collision")
 			}
-			d2 := dynamic{
-				// TODO: Fix this assumes a zero value Pos which is wrong.
-				polygon: &tt.p2,
-			}
-			collides := d1.collides(d2)
 			if tt.wantCollides && !collides {
 				t.Errorf("want collides but did not collide")
 			}
@@ -267,366 +265,316 @@ func TestCollidesOnePolygonOneCircle(t *testing.T) {
 	t.Parallel()
 	var tests = []struct {
 		name         string
-		p            polygon
-		d            dynamic
+		polygonLines []line
+		circlePos    Pos
+		radius       int
 		wantCollides bool
 	}{
 
 		{
 			"polygon within circle",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 2, Y: 4}},
 				{Pos{X: 2, Y: 4}, Pos{X: 4, Y: 4}},
 				{Pos{X: 4, Y: 4}, Pos{X: 4, Y: 2}},
-				{Pos{X: 4, Y: 2}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 3, Y: 3},
-				circleRadius: intPtr(5),
-			},
+				{Pos{X: 4, Y: 2}, Pos{X: 2, Y: 2}}},
+			Pos{X: 3, Y: 3},
+			5,
 			true,
 		},
 		{
 			"circle within polygon",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 1, Y: 1}, Pos{X: 1, Y: 5}},
 				{Pos{X: 1, Y: 5}, Pos{X: 5, Y: 5}},
 				{Pos{X: 5, Y: 5}, Pos{X: 5, Y: 1}},
-				{Pos{X: 5, Y: 1}, Pos{X: 1, Y: 1}}}),
-			dynamic{
-				Pos:          Pos{X: 3, Y: 3},
-				circleRadius: intPtr(1),
-			},
+				{Pos{X: 5, Y: 1}, Pos{X: 1, Y: 1}}},
+			Pos{X: 3, Y: 3},
+			1,
 			true,
 		},
 		// north east corner, collision from east
 		{
 			"north east corner, no collision from east",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 5, Y: 3},
-				circleRadius: intPtr(1),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 5, Y: 3},
+			1,
 			false,
 		},
 		{
 			"north east corner, exact collision from east",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 4, Y: 3},
-				circleRadius: intPtr(1),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 4, Y: 3},
+			1,
 			true,
 		},
 		{
 			"north east corner, overlap collision from east",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 4, Y: 3},
-				circleRadius: intPtr(2),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 4, Y: 3},
+			2,
 			true,
 		},
 		// north east corner, collision from north
 		{
 			"north east corner, no collision from north",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 3, Y: 5},
-				circleRadius: intPtr(1),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 3, Y: 5},
+			1,
 			false,
 		},
 		{
 			"north east corner, exact collision from north",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 3, Y: 4},
-				circleRadius: intPtr(1),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 3, Y: 4},
+			1,
 			true,
 		},
 		{
 			"north east corner, overlap collision from north",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 3, Y: 4},
-				circleRadius: intPtr(2),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 3, Y: 4},
+			2,
 			true,
 		},
 		// north west corner, collision from west
 		{
 			"north west corner, no collision from west",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 0, Y: 3},
-				circleRadius: intPtr(1),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 0, Y: 3},
+			1,
 			false,
 		},
-		{
-			"north west corner, exact collision from west",
-			newPolygon([]line{
+		{"north west corner, exact collision from west",
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 1, Y: 3},
-				circleRadius: intPtr(1),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 1, Y: 3},
+			1,
 			true,
 		},
 		{
 			"north west corner, overlap collision from west",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 1, Y: 3},
-				circleRadius: intPtr(2),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 1, Y: 3},
+			2,
 			true,
 		},
 		// north west corner, collision from north
 		{
 			"north west corner, no collision from north",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 2, Y: 5},
-				circleRadius: intPtr(1),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 2, Y: 5},
+			1,
 			false,
 		},
 		{
 			"north west corner, exact collision from north",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 2, Y: 4},
-				circleRadius: intPtr(1),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 2, Y: 4},
+			1,
 			true,
 		},
 		{
 			"north west corner, overlap collision from north",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 2, Y: 4},
-				circleRadius: intPtr(2),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 2, Y: 4},
+			2,
 			true,
 		},
 		// south west corner, collision from west
 		{
 			"south west corner, no collision from west",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 0, Y: 2},
-				circleRadius: intPtr(1),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 0, Y: 2},
+			1,
 			false,
 		},
 		{
 			"south west corner, exact collision from west",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 1, Y: 2},
-				circleRadius: intPtr(1),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 1, Y: 2},
+			1,
 			true,
 		},
 		{
 			"south west corner, overlap collision from west",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 1, Y: 2},
-				circleRadius: intPtr(2),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 1, Y: 2},
+			2,
 			true,
 		},
 		// south west corner, collision from south
 		{
 			"south west corner, no collision from south",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 2, Y: 0},
-				circleRadius: intPtr(1),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 2, Y: 0},
+			1,
 			false,
 		},
 		{
 			"south west corner, exact collision from south",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 2, Y: 1},
-				circleRadius: intPtr(1),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 2, Y: 1},
+			1,
 			true,
 		},
 		{
 			"south west corner, over lap collision from south",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 2, Y: 1},
-				circleRadius: intPtr(2),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 2, Y: 1},
+			2,
 			true,
 		},
 		// south east corner, collision from east
 		{
 			"south east corner, no collision from east",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 5, Y: 2},
-				circleRadius: intPtr(1),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 5, Y: 2},
+			1,
 			false,
 		},
 		{
 			"south east corner, exact collision from east",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 4, Y: 2},
-				circleRadius: intPtr(1),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 4, Y: 2},
+			1,
 			true,
 		},
 		{
 			"south east corner, overlap collision from east",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 4, Y: 2},
-				circleRadius: intPtr(2),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 4, Y: 2},
+			2,
 			true,
 		},
 		// south east corner, collision from south
 		{
 			"south east corner, no collision from south",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 3, Y: 0},
-				circleRadius: intPtr(1),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 3, Y: 0},
+			1,
 			false,
 		},
 		{
 			"south east corner, exact collision from south",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 3, Y: 1},
-				circleRadius: intPtr(1),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 3, Y: 1},
+			1,
 			true,
 		},
 		{
 			"south east corner, overlap collision from south",
-			newPolygon([]line{
+			[]line{
 				{Pos{X: 2, Y: 2}, Pos{X: 3, Y: 2}},
 				{Pos{X: 3, Y: 2}, Pos{X: 3, Y: 3}},
 				{Pos{X: 3, Y: 3}, Pos{X: 2, Y: 3}},
-				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}}),
-			dynamic{
-				Pos:          Pos{X: 3, Y: 1},
-				circleRadius: intPtr(2),
-			},
+				{Pos{X: 2, Y: 3}, Pos{X: 2, Y: 2}}},
+			Pos{X: 3, Y: 1},
+			2,
 			true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := dynamic{
-				// TODO: Fix this assumes a zero value Pos which is wrong.
-				polygon: &tt.p,
+			p := newDynamicPolygon(tt.polygonLines)
+			c := newDynamicCircle(tt.circlePos, tt.radius)
+			collides := p.collides(*c)
+			otherCollides := c.collides(*p)
+			if collides != otherCollides {
+				t.Errorf("the struct used as the receiver should not affect collision")
 			}
-			collides := p.collides(tt.d)
 			if tt.wantCollides && !collides {
 				t.Errorf("want collides but did not collide")
 			}

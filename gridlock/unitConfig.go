@@ -488,31 +488,17 @@ func (uc *unitConfig) setEquipments() {
 	case fighter:
 		x := 2.0
 		y := 20.0
-		rotaryCannon := newOriginPolygon([]line{
+
+		rotaryCannon := []line{
 			{Pos{X: 0, Y: 0}, Pos{X: 0, Y: y}},
 			{Pos{X: 0, Y: y}, Pos{X: x, Y: y}},
 			{Pos{X: x, Y: y}, Pos{X: x, Y: 0}},
 			{Pos{X: x, Y: 0}, Pos{X: 0, Y: 0}},
-		})
+		}
 
-		rc1 := effectiveArea{
-			static: static{
-				originPolygon: &rotaryCannon,
-				offset:        Pos{X: -8, Y: -30},
-			},
-		}
-		rc2 := effectiveArea{
-			static: static{
-				originPolygon: &rotaryCannon,
-				offset:        Pos{X: 3, Y: -30},
-			},
-		}
-		radar := effectiveArea{
-			static: static{
-				circleRadius: intPtr(10),
-				offset:       Pos{X: 10, Y: 40},
-			},
-		}
+		rc1 := effectiveArea{static: newStaticPolygon(Pos{X: -8, Y: -30}, rotaryCannon)}
+		rc2 := effectiveArea{static: newStaticPolygon(Pos{X: 3, Y: -30}, rotaryCannon)}
+		radar := effectiveArea{static: newStaticCircle(Pos{X: 10, Y: 40}, 10)}
 
 		uc.equipments = []equipment{
 			{

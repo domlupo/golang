@@ -146,11 +146,11 @@ func newUnit(
 		sourcePosition:      p,
 	}
 
-	u.dynamic = u.staticBody.dynamic(p)
+	u.dynamic = u.staticBody.newDynamic(p)
 	u.subPos = u.newSubPos(u.Pos)
 	for i, e := range u.equipments {
 		e.attached = &u
-		e.dynamic = e.static.dynamic(p)
+		e.dynamic = e.static.newDynamic(p)
 		u.equipments[i] = e
 	}
 
