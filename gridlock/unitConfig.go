@@ -17,6 +17,7 @@ type unitConfig struct {
 	attack          int
 	reach           int
 	staticBody      static
+	staticSteerBody static
 	moveLayer       layer
 	tracks          func(t unitConfig) bool
 	trackLayers     layers
@@ -79,6 +80,7 @@ func (uc *unitConfig) setUCFields() {
 	uc.setReach()
 	uc.setExplodeRadius()
 	uc.setStaticBody()
+	uc.setStaticSteerBody()
 	uc.setMaxAlivePerNode()
 	uc.setSpeedFactor()
 	uc.setIsSurvivesCollision()
@@ -222,6 +224,27 @@ func (uc *unitConfig) setStaticBody() {
 		panic(fmt.Sprintf("unitConfig.setStaticBody: unknown unit %s", uc.name.string()))
 	}
 	uc.staticBody = staticBody
+}
+
+func (uc *unitConfig) setStaticSteerBody() {
+	var staticSteerBody static
+	switch uc.name {
+	case infantry, fighter, bomber, flare, chaff, bombGravity, missileCruise, missileBallistic,
+		missileRadarActive, missileHeatSeeking, missileAntiBallistic:
+		if uc.staticBody.circleRadius == nil {
+			panic("unitConfig.setSteerBody: assumes circule shape. Prboably needs updated")
+		}
+		// TODO: Improve steering so I don't have to do weird increments here? Or are these
+		// increments fine since units should steer before colliding? I also enabled infantry
+		// to survive collisions which seems correct long term but that may be wrong.
+		// Also, a similar but not equivalent collision check is done during moveUnits. This
+		// logic can maybe be moved there to save CPU.
+		r := uc.radius + 1
+		staticSteerBody = static{circleRadius: &r}
+	default:
+		panic(fmt.Sprintf("unitConfig.setStaticBody: unknown unit %s", uc.name.string()))
+	}
+	uc.staticSteerBody = staticSteerBody
 }
 
 func (uc *unitConfig) setMaxAlivePerNode() {
@@ -498,7 +521,7 @@ func (uc *unitConfig) setEquipments() {
 
 		rc1 := effectiveArea{static: newStaticPolygon(Pos{X: -8, Y: -30}, rotaryCannon)}
 		rc2 := effectiveArea{static: newStaticPolygon(Pos{X: 3, Y: -30}, rotaryCannon)}
-		radar := effectiveArea{static: newStaticCircle(Pos{X: 10, Y: 40}, 10)}
+		radar := effectiveArea{static: newStaticCircle(10, Pos{X: 10, Y: 40})}
 
 		uc.equipments = []equipment{
 			{

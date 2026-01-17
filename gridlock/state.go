@@ -494,11 +494,15 @@ func (s *state) analyzeTargets() {
 	}
 }
 
+// A future optimization could be to create the steer bodies once for all units, cache, then
+// reference them. Instead of creating redundant. This is error prone and steer is no where near
+// finalized so punting. Probably will never be needed.
 func (s *state) steer(u *unit) Pixel {
 	partitions := s.partitions(u, nil, prSteer)
 
 	var xSteer int
 	var ySteer int
+	d1 := u.staticSteerBody.newDynamic(u.Pos)
 	for _, partition := range partitions {
 		if partition == nil {
 			continue
@@ -534,14 +538,10 @@ func (s *state) steer(u *unit) Pixel {
 				continue
 			}
 
-			// TODO: Improve steering so I don't have to do weird increments here? Or are these
-			// increments fine since units should steer before colliding? I also enabled infantry
-			// to survive collisions which seems correct long term but that may be wrong.
-			// Also, a similar but not equivalent collision check is done during moveUnits. This
-			// logic can maybe be moved there to save CPU.
 			// TODO: I think technically there should be a check on collides so the second radius
 			// is never greater than state.spawnUnitRadiusLimit. This should be a minor issue until later.
-			if _, ok := collides(u.Pos, current.Pos, u.radius+1, current.radius+1); ok {
+			d2 := current.staticSteerBody.newDynamic(current.Pos)
+			if d1.collides(*d2) {
 				magnitude := 1
 
 				switch {
@@ -795,7 +795,7 @@ func (s state) collidesWithUnitLayer(u unit, p Pos, linkedList *unit) (Pos, bool
 			continue
 		}
 
-		if _, ok := collides(p, current.Pos, u.radius, current.radius); ok {
+		if u.collides(*current.dynamic) {
 			return current.Pos, true
 		}
 		current = current.next

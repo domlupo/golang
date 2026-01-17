@@ -77,11 +77,12 @@ func newStaticPolygon(offset Pos, lines []line) static {
 }
 
 // Create a static circle. Typical constructor.
-func newStaticCircle(offset Pos, r int) static {
+func newStaticCircle(r int, offset Pos) static {
 	return static{offset: offset, circleRadius: &r}
 }
 
 // Returns true if the two dynamics collide.
+// TODO: long term this will probably need to return distance
 func (d1 dynamic) collides(d2 dynamic) bool {
 	c1 := d1.circleRadius
 	p1 := d1.polygon
@@ -89,10 +90,19 @@ func (d1 dynamic) collides(d2 dynamic) bool {
 	p2 := d2.polygon
 
 	switch {
+	// Returns true if two circles collide. Uses distance formula.
 	case c1 != nil && c2 != nil:
-		panic("TODO: need to implement this when I refactor existing circle collisions to use dynamic")
+		xDelta := d1.X - d2.X
+		yDelta := d1.Y - d2.Y
+		rSum := float64(*c1 + *c2)
+		squaredDistance := xDelta*xDelta + yDelta*yDelta
+		if squaredDistance <= rSum*rSum {
+			return true
+		} else {
+			return false
+		}
 
-	// Check if two polygons collide via separating axis theorem.
+	// Returns true if two polygons collide. Uses separating axis theorem.
 	case p1 != nil && p2 != nil:
 		axes := []line{}
 		axes = append(axes, p1.separatingAxes...)

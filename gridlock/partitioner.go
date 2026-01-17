@@ -45,7 +45,7 @@ func (part partitioner) partitions(d dynamic, s static) partitions {
 	if tiles, ok := part.lookUpPartitionsFromTable(d, s); ok {
 		return tiles
 	}
-	tiles := part.defaultPartitions(d, s)
+	tiles := part.defaultPartitions(d)
 	var parts partitions
 	for _, t := range tiles {
 		parts = append(parts, part.hexagons[t])
@@ -98,7 +98,8 @@ func (part partitioner) lookUpPartitionsFromTable(d dynamic, s static) (partitio
 // analyzing partitions for collision detection between two circles would be invalid if the circle
 // with the Pos and distance not passed has a radius which exceeds the conservative hex radius. Not
 // optimized because the hexagon collision uses conservative circles.
-func (part partitioner) defaultPartitions(d dynamic, s static) []Tile {
+func (part partitioner) defaultPartitions(d dynamic) []Tile {
+	conservativeStatic := newStaticCircle(part.grid.conservativeHexPixelRadius, Pos{})
 	p := d.Pos
 	t, ok := part.grid.getTile(p.pixel())
 	if !ok {
@@ -125,11 +126,7 @@ func (part partitioner) defaultPartitions(d dynamic, s static) []Tile {
 						"partitioner.defaultPartitions: cannot find center for tile %s",
 						aT.log()))
 				}
-				_, collides := collides(
-					p.noLayer(),
-					pa.pos(),
-					*d.circleRadius,
-					part.grid.conservativeHexPixelRadius)
+				collides := d.collides(*conservativeStatic.newDynamic(pa.pos()))
 				if collides {
 					nextQ = append(nextQ, aT)
 				}
@@ -164,7 +161,9 @@ func (part partitioner) setupPartitionLUT(
 	pixels := part.grid.demotifHexPixels()
 	for externalP, hs := range collisionSources {
 		for _, internalP := range pixels {
-			if _, ok := collides(internalP.pos(), externalP.pos(), internalRadius, externalRadius); ok {
+			d1 := newStaticCircle(internalRadius, Pos{}).newDynamic(internalP.pos())
+			d2 := newStaticCircle(externalRadius, Pos{}).newDynamic(externalP.pos())
+			if d1.collides(*d2) {
 				hexSides := lut[demotif{internalP}]
 				if !slices.Contains(hexSides, hs) {
 					hexSides = append(hexSides, hs)
