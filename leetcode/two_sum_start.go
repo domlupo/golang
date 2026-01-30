@@ -3,5 +3,5 @@
 package main
 
 func twoSumStart(nums []int, target int) []int {
-	panic("implement")
+	panic("TODO")
 }
