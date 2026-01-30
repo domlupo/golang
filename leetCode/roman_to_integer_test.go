@@ -1,4 +1,4 @@
-// https://leetcode.com/problems/two-sum/
+// https://leetcode.com/problems/roman-to-integer/description/
 
 package main
 
@@ -18,7 +18,7 @@ func TestRomanToInteger(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run("twoSum", func(t *testing.T) {
+		t.Run("romanToInteger", func(t *testing.T) {
 			if romanToInt(tt.roman) != tt.output {
 				t.Errorf("incorrect")
 			}
