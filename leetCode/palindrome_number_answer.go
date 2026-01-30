@@ -9,14 +9,9 @@ func isPalindrome(x int) bool {
 
 	xRemainder := x
 	var reversed int
-	for i := 0; xRemainder > 0; i++ {
-		rightDigit := xRemainder % 10
-		reversed = reversed*10 + rightDigit
+	for xRemainder > 0 {
+		reversed = reversed*10 + xRemainder%10
 		xRemainder /= 10
-
-		if xRemainder == 0 {
-			break
-		}
 	}
 
 	return x == reversed
