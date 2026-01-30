@@ -11,6 +11,5 @@ func twoSum(nums []int, target int) []int {
 		}
 		complements[target-n] = ni
 	}
-
-	panic("implement")
+	panic("twoSum: no solution found")
 }
