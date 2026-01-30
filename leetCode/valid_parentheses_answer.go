@@ -2,37 +2,20 @@
 
 package main
 
-import "fmt"
-
 func isValid(s string) bool {
+	leftBrackets := map[rune]rune{')': '(', '}': '{', ']': '['}
+
 	var stack []rune
 	for _, r := range s {
-		switch r {
-		case '(', '{', '[':
+		leftBracket, ok := leftBrackets[r]
+		if ok && len(stack) > 0 && stack[len(stack)-1] == leftBracket {
+			stack = stack[0 : len(stack)-1]
+		} else if ok {
+			return false
+		} else {
 			stack = append(stack, r)
-		case ')', '}', ']':
-			if len(stack) > 0 && leftBracket(r) == stack[len(stack)-1] {
-				stack = stack[0 : len(stack)-1]
-			} else {
-				return false
-			}
-		default:
-			panic(fmt.Sprintf("isValid: unknown rune %c", r))
 		}
 	}
 
 	return len(stack) == 0
-}
-
-func leftBracket(r rune) rune {
-	switch r {
-	case ')':
-		return '('
-	case '}':
-		return '{'
-	case ']':
-		return '['
-	default:
-		panic(fmt.Sprintf("openBracket: unknown rune %c", r))
-	}
 }
