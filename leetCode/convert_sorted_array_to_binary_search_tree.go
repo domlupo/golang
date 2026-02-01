@@ -9,7 +9,7 @@ func sortedArrayToBST(nums []int) *TreeNode {
 	mid := len(nums) / 2
 	n := &TreeNode{
 		Val:   nums[mid],
-		Left:  sortedArrayToBST(nums[0:mid]),
+		Left:  sortedArrayToBST(nums[:mid]),
 		Right: sortedArrayToBST(nums[mid+1:]),
 	}
 	return n
