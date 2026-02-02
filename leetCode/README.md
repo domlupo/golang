@@ -9,6 +9,11 @@
   - Read N Characters Given Read4
   - This one's explanation is confusing
 
+## Skipped
+
+- 170
+  - Very few companies have used this recently and it is an implement class
+
 ## Tips
 
 - It is usually easiest to form strings by using r := rune[] then string(r)
