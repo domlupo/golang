@@ -12,8 +12,10 @@ func hasPathSumRecursive(root *TreeNode, targetSum int) bool {
 		return true
 	}
 
-	return hasPathSumRecursive(root.Left, targetSum-root.Val) ||
-		hasPathSumRecursive(root.Right, targetSum-root.Val)
+	l := hasPathSumRecursive(root.Left, targetSum-root.Val)
+	r := hasPathSumRecursive(root.Right, targetSum-root.Val)
+
+	return l || r
 }
 
 // iterative
