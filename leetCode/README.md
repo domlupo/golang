@@ -8,10 +8,12 @@
 - 157
   - Read N Characters Given Read4
   - This one's explanation is confusing
+- 222
+  - This is harder than an easy
 
 ## Skipped
 
-- 170
+- 170, 225
   - Very few companies have used this recently and it is an implement class
 - 175, 181, 182, 183, 196, 197
   - SQL question. I think this is for data engineers?
