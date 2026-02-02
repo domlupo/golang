@@ -8,7 +8,7 @@ import (
 func main() {
 	problems := []int{1, 9, 13, 14, 20, 21, 26, 27, 28, 35, 58, 66, 67, 69, 70, 83, 88, 94, 100, 101,
 		104, 108, 110, 111, 112, 118, 119, 121, 136, 141, 144, 145, 160, 163, 168, 169, 171, 190, 191,
-		202, 203, 205, 206, 217, 219}
+		202, 203, 205, 206, 217, 219, 226, 228, 231, 234, 242, 243, 246}
 
 	i := rand.IntN(len(problems))
 	fmt.Printf("Random problem number %d of %d problems total.\n", problems[i], len(problems))
