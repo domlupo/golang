@@ -31,8 +31,8 @@ func preorderTraversalRecursive(root *TreeNode) []int {
 	if root == nil {
 		return []int{}
 	}
-	nodes := []int{root.Val}
-	nodes = append(nodes, preorderTraversalRecursive(root.Left)...)
-	nodes = append(nodes, preorderTraversalRecursive(root.Right)...)
-	return nodes
+	v := []int{root.Val}
+	v = append(v, preorderTraversalRecursive(root.Left)...)
+	v = append(v, preorderTraversalRecursive(root.Right)...)
+	return v
 }
