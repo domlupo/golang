@@ -3,7 +3,11 @@
 package main
 
 func isValid(s string) bool {
-	leftBrackets := map[rune]rune{')': '(', '}': '{', ']': '['}
+	leftBrackets := map[rune]rune{
+		')': '(',
+		'}': '{',
+		']': '[',
+	}
 
 	var stack []rune
 	for _, r := range s {
