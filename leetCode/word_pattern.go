@@ -21,20 +21,20 @@ func wordPattern(pattern string, s string) bool {
 		return false
 	}
 
-	letterToString := make(map[byte]string)
-	stringToLetter := make(map[string]byte)
-
+	lToS := make(map[byte]string)
+	sToL := make(map[string]byte)
 	for i := 0; i < len(words); i++ {
-		s, sOk := letterToString[pattern[i]]
-		l, lOk := stringToLetter[words[i]]
+		s, sOk := lToS[pattern[i]]
+		l, lOk := sToL[words[i]]
+
 		if sOk && s != words[i] {
 			return false
 		}
 		if lOk && l != pattern[i] {
 			return false
 		}
-		letterToString[pattern[i]] = words[i]
-		stringToLetter[words[i]] = pattern[i]
+		lToS[pattern[i]] = words[i]
+		sToL[words[i]] = pattern[i]
 	}
 
 	return true
