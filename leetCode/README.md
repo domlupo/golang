@@ -25,3 +25,4 @@
 - It is usually easiest to form strings by using r := rune[] then string(r)
 - string(rune('A'+1)) -> B, string(rune('A'+2)) -> C.
 - strconv.Itoa(1)+"->"+strconv.Itoa(2) returns "1->2"
+- s := "hello", s[5:] == "". Even though intuitively 5 is out of bounds
