@@ -31,3 +31,4 @@
 - odd position bit mask is 0x55555555 -> 0x55555555 & 0b11111111 -> 0b01010101
 - even position bit mask:  0xAAAAAAAA -> 0xAAAAAAAA & 0b11111111 -> 0b10101010
 - power of two check: (n & (n-1)) == 0. power of two means only 1 bit is set.
+- When _, ok := contains[n]. ok is true if contains[n] was ever set. Even for contains[n] = false.
