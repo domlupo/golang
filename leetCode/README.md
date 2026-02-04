@@ -28,3 +28,6 @@
 - string(rune('A'+1)) -> B, string(rune('A'+2)) -> C.
 - strconv.Itoa(1)+"->"+strconv.Itoa(2) returns "1->2"
 - s := "hello", s[5:] == "". Even though intuitively 5 is out of bounds
+- odd position bit mask is 0x55555555 -> 0x55555555 & 0b11111111 -> 0b01010101
+- even position bit mask:  0xAAAAAAAA -> 0xAAAAAAAA & 0b11111111 -> 0b10101010
+- power of two check: (n & (n-1)) == 0. power of two means only 1 bit is set.
