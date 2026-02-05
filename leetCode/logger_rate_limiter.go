@@ -6,12 +6,6 @@ type Logger struct {
 	last map[string]int
 }
 
-func Constructor() Logger {
-	return Logger{
-		last: make(map[string]int),
-	}
-}
-
 func (this *Logger) ShouldPrintMessage(timestamp int, message string) bool {
 	l, ok := this.last[message]
 	if !ok || (ok && timestamp >= l+10) {
