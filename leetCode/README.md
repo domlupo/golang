@@ -32,3 +32,22 @@
 - even position bit mask:  0xAAAAAAAA -> 0xAAAAAAAA & 0b11111111 -> 0b10101010
 - power of two check: (n & (n-1)) == 0. power of two means only 1 bit is set.
 - When _, ok := contains[n]. ok is true if contains[n] was ever set. Even for contains[n] = false.
+
+### Brian Kernighan's algorithm to set count bits
+
+func countSetBitsManual(n int) int {
+	count := 0
+	for n != 0 {
+		n &= (n - 1) // Clears the rightmost set bit
+		count++
+	}
+	return count
+}
+
+count = 0
+111 &= 110 -> 110
+count = 1
+110 &= 101 -> 100
+count = 2
+100 &= 011 -> 000
+count = 3
