@@ -34,6 +34,8 @@
 - even position bit mask:  0xAAAAAAAA -> 0xAAAAAAAA & 0b11111111 -> 0b10101010
 - power of two check: (n & (n-1)) == 0. power of two means only 1 bit is set.
 - When _, ok := contains[n]. ok is true if contains[n] was ever set. Even for contains[n] = false.
+- fmt.Println(string('a'-32)) lower to upper
+- fmt.Println(string('A'+32)) upper to lower
 
 ### Brian Kernighan's algorithm to set count bits
 
