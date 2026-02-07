@@ -37,6 +37,23 @@
 - fmt.Println(string('a'-32)) lower to upper
 - fmt.Println(string('A'+32)) upper to lower
 
+## Binary Search Tree
+
+Is a tree where all values left are lower, and all values right are higher.
+
+The structure is typically:
+  call recursive function on left child of node
+  do work on node
+  call recursive function on right child of node
+
+### math.MaxInt bounds
+
+Avoid math.MaxInt when possible. math.MaxInt has weirdness near bounds for addition and subtraction.
+
+i := -math.MaxInt
+i -= 1
+i *= -1 is still a negative number
+
 ### Brian Kernighan's algorithm to set count bits
 
 func countSetBitsManual(n int) int {
