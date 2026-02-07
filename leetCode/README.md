@@ -24,6 +24,7 @@
 
 ## Tips
 
+- Can convert a string "s" into bytes via "bytes := []byte(s)".
 - Can do s = "1" + s to avoid string mutation
 - To get integer do, i, _ := strconv.Atoi(string(number1[p1]))
 - It is usually easiest to form strings by using s := rune[] or s := byte[] then string(s).
