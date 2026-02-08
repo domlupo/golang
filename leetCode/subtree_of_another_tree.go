@@ -1,0 +1,62 @@
+// https://leetcode.com/problems/subtree-of-another-tree/
+
+package main
+
+import "strconv"
+
+// iteration aka serialization
+func isSubtreeSerial(root *TreeNode, subRoot *TreeNode) bool {
+	r := serialize(root)
+	s := serialize(subRoot)
+
+	for i := 0; i < len(r); i++ {
+		p1 := i
+		var p2 int
+		for r[p1] == s[p2] {
+			p1++
+			p2++
+			if p2 == len(s) {
+				return true
+			}
+			if p1 == len(r) {
+				return false
+			}
+		}
+	}
+	return false
+}
+
+func serialize(n *TreeNode) string {
+	if n == nil {
+		return "N"
+	}
+	return "(" + serialize(n.Left) + "," + strconv.Itoa(n.Val) + "," + serialize(n.Right) + ")"
+}
+
+// recursion
+func isSubtree(root *TreeNode, subRoot *TreeNode) bool {
+	return travel(root, subRoot)
+}
+
+func travel(tree, sub *TreeNode) bool {
+	if tree == nil || sub == nil {
+		return false
+	}
+	if isSameTree(tree, sub) {
+		return true
+	}
+	return travel(tree.Left, sub) || travel(tree.Right, sub)
+}
+
+func isSameTree1(n1, n2 *TreeNode) bool {
+	if n1 == nil && n2 == nil {
+		return true
+	}
+	if n1 == nil || n2 == nil {
+		return false
+	}
+	if n1.Val != n2.Val {
+		return false
+	}
+	return isSameTree1(n1.Left, n2.Left) && isSameTree1(n1.Right, n2.Right)
+}
