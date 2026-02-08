@@ -17,7 +17,7 @@
 
 ## Skipped
 
-- 175, 181, 182, 183, 196, 197, 511, 512
+- 175, 181, 182, 183, 196, 197, 511, 512, 577, 584, 586, 
   - SQL question. I think this is for data engineers?
 - 193, 195
   - bash
