@@ -12,7 +12,7 @@
   - This is harder than an easy
 - 170, 225, 232
   - Very few companies have used this recently and it is an implement class
-- 338
+- 338, 645
   - Bit manipulation
 
 ## Skipped
