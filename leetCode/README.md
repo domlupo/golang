@@ -2,9 +2,10 @@
 
 ## Revisit
 
-- 125
+- 125, 703
   - Valid Palindrome
   - This one is complex and requires remembering standard library functions.
+    - Kth Largest Element in a stream requires heap import and knowing interfaces.
 - 157
   - Read N Characters Given Read4
   - This one's explanation is confusing
