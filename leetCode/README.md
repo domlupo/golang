@@ -13,6 +13,8 @@
   - Very few companies have used this recently and it is an implement class
 - 338, 645
   - Bit manipulation
+- 705, 706
+  - I need to research how hash sets and hash maps are implemented
 
 ## Skipped
 
