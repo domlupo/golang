@@ -59,8 +59,8 @@ i *= -1 is still a negative number
 
 ### Brian Kernighan's algorithm to set count bits
 
-func countSetBitsManual(n int) int {
-	count := 0
+func countSetBits(n int) int {
+	var count int
 	for n != 0 {
 		n &= (n - 1) // Clears the rightmost set bit
 		count++
