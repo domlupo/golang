@@ -40,7 +40,7 @@
 - fmt.Println(string('a'-32)) lower to upper
 - fmt.Println(string('A'+32)) upper to lower
 
-## Binary Search Tree
+### Binary Search Tree
 
 Is a tree where all values left are lower, and all values right are higher.
 
@@ -48,6 +48,24 @@ The structure is typically:
   call recursive function on left child of node
   do work on node
   call recursive function on right child of node
+
+### Area of a triangle
+
+// the point order should rotate in increasing or decreasing order.
+// increasing
+// 1 -> 2 -> 3
+// 2 -> 3 -> 1
+// 3 -> 1 -> 2
+area := 0.5 * float64( p1x*(p2y-p3y) + p2x*(p3y-p1y) + p3x*(p1y-p2y) )
+if area < 0 {
+  area *= -1
+}
+
+// decreasing shown below
+area := 0.5 * float64( p1x*(p3y-p2y) + p2x*(p1y-p3y) + p3x*(p2y-p1y) )
+if area < 0 {
+  area *= -1
+}
 
 ### math.MaxInt bounds
 
