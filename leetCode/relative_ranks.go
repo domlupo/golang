@@ -8,7 +8,7 @@ import (
 )
 
 func findRelativeRanks(score []int) []string {
-	m := -math.MaxInt
+	m := math.MinInt
 	for _, s := range score {
 		m = max(m, s)
 	}

@@ -6,8 +6,8 @@ import "math"
 
 func thirdMax(nums []int) int {
 	first := nums[0]
-	second := -math.MaxInt
-	third := -math.MaxInt
+	second := math.MinInt
+	third := math.MinInt
 
 	for _, n := range nums {
 		if n == first || n == second || n == third {
@@ -26,7 +26,7 @@ func thirdMax(nums []int) int {
 		}
 	}
 
-	if third == -math.MaxInt {
+	if third == math.MinInt {
 		return first
 	} else {
 		return third

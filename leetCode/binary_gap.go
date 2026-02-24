@@ -5,8 +5,8 @@ package main
 import "math"
 
 func binaryGap(n int) int {
-	gap := -math.MaxInt
-	maxGap := -math.MaxInt
+	gap := math.MinInt
+	maxGap := math.MinInt
 
 	for n > 0 {
 		if n%2 == 0 {

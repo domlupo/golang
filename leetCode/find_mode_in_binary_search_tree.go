@@ -5,9 +5,9 @@ package main
 import "math"
 
 func findMode(root *TreeNode) []int {
-	val := -math.MaxInt
-	count := -math.MaxInt
-	m := -math.MaxInt
+	val := math.MinInt
+	count := math.MinInt
+	m := math.MinInt
 	var o []int
 	h(root, &val, &count, &m, &o)
 	return o

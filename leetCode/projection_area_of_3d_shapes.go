@@ -7,8 +7,8 @@ import "math"
 func projectionArea(grid [][]int) int {
 	var area int
 	for i := range len(grid) {
-		rowMax := -math.MaxInt
-		colMax := -math.MaxInt
+		rowMax := math.MinInt
+		colMax := math.MinInt
 		for j := range len(grid[i]) {
 			if grid[i][j] > 0 {
 				area++

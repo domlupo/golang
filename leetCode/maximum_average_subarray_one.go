@@ -10,7 +10,7 @@ func findMaxAverage(nums []int, k int) float64 {
 		sum += nums[i]
 	}
 
-	m := float64(-math.MaxInt)
+	m := float64(math.MinInt)
 	for i := k - 1; i < len(nums); i++ {
 		sum += nums[i]
 		m = max(m, float64(sum)/float64(k))

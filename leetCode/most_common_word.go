@@ -11,7 +11,7 @@ func mostCommonWord(paragraph string, banned []string) string {
 	}
 
 	nonBanCount := make(map[string]int)
-	maxCount := -math.MaxInt
+	maxCount := math.MinInt
 	var mostCommon string
 	for i := 0; i < len(paragraph); i++ {
 		b := []byte{}

@@ -5,7 +5,7 @@ package main
 import "math"
 
 func largestTriangleArea(points [][]int) float64 {
-	maxArea := float64(-math.MaxInt)
+	maxArea := float64(math.MinInt)
 	for i := 0; i < len(points)-2; i++ {
 		for j := i + 1; j < len(points)-1; j++ {
 			for k := j + 1; k < len(points); k++ {

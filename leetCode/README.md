@@ -69,9 +69,9 @@ if area < 0 {
 
 ### math.MaxInt bounds
 
-Avoid math.MaxInt when possible. math.MaxInt has weirdness near bounds for addition and subtraction.
+Avoid math.MaxInt and math.MinInt when possible. They have weirdness near bounds for addition and subtraction.
 
-i := -math.MaxInt
+i := math.MinInt
 i -= 1
 i *= -1 is still a negative number
 

@@ -10,7 +10,7 @@ func buddyStrings(s string, goal string) bool {
 	}
 
 	counts := make(map[byte]int)
-	maxCharCount := -math.MaxInt
+	maxCharCount := math.MinInt
 
 	first, second := -1, -1
 	for i := 0; i < len(s); i++ {

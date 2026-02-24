@@ -3,8 +3,8 @@
 package main
 
 func getMinimumDifference(root *TreeNode) int {
-	// don't use math.MaxInt due to weirdness near bounds
-	// i := -math.MaxInt
+	// don't use math.MaxInt or math.MinInt due to weirdness near bounds
+	// i := math.MinInt
 	// i -= 1
 	// i *= -1 is still a negative number
 	minVal := 1_000_000

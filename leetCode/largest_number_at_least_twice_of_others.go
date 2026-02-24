@@ -6,8 +6,8 @@ import "math"
 
 func dominantIndex(nums []int) int {
 	var firstI int
-	first := -math.MaxInt
-	second := -math.MaxInt
+	first := math.MinInt
+	second := math.MinInt
 
 	for i := 0; i < len(nums); i++ {
 		if nums[i] > first {
