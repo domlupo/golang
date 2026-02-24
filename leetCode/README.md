@@ -42,12 +42,13 @@
 
 ### Binary Search Tree
 
-Is a tree where all values left are lower, and all values right are higher.
-
-The structure is typically:
-  call recursive function on left child of node
-  do work on node
-  call recursive function on right child of node
+- Clarify with interviewer or LeetCode question if the values are unique or not.
+- Is a tree where all values left are lower, and all values right are higher unless there are
+  duplicate values.
+- The structure is typically:
+  - call recursive function on left child of node
+  - do work on node
+  - call recursive function on right child of node
 
 ### Area of a triangle
 
