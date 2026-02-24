@@ -93,3 +93,12 @@ count = 1
 count = 2
 100 &= 011 -> 000
 count = 3
+
+### Greatest Common Divisor found from Euclid's algorithm
+
+func gcd(v1, v2 int) int{
+  for v2 != 0 {
+    v1, v2 = v2, v1%v2
+  }
+  return v1
+}
