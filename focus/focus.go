@@ -7,6 +7,8 @@ import (
 	"image/color"
 	"log"
 	"os"
+	"os/exec"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -29,6 +31,7 @@ type Game struct {
 	doneColor                   color.RGBA
 	directoryName               string
 	logFileName                 string
+	catLogCmds                  []string
 	timerStarted                bool
 	intDurationStart            int
 	intDurationStartFromLog     int
@@ -65,6 +68,7 @@ func newGame() Game {
 		doneColor:        color.RGBA{0, 150, 100, 255},
 		directoryName:    "/tmp/focus_timer",
 		logFileName:      "log.txt",
+		catLogCmds:       []string{"l", "lo", "log"},
 	}
 	defer g.minuteTicker.Stop()
 	return g
@@ -208,8 +212,12 @@ func main() {
 	ebiten.SetWindowSize(int(float32(g.windowWidth)*g.windowMultiplier),
 		int(float32(g.windowHeight)*g.windowMultiplier))
 
+	logPath := path(g.directoryName, g.logFileName)
+	if readCatLogCmdFromCLI(logPath, g.catLogCmds) {
+		return
+	}
 	intDurationStartFromCLI := readMinsFromCLI()
-	file, progressPercentFromLog, intDurationStartFromLog := readProgressFromLog(path(g.directoryName, g.logFileName))
+	file, progressPercentFromLog, intDurationStartFromLog := readProgressFromLog(logPath)
 
 	if intDurationStartFromCLI > 0 {
 		g.intDurationStart = intDurationStartFromCLI
@@ -226,6 +234,21 @@ func main() {
 	}
 
 	g.file.Close()
+}
+
+func readCatLogCmdFromCLI(logPath string, catLogCmds []string) bool {
+	args := os.Args
+	if len(args) == 2 && (slices.Contains(catLogCmds, strings.ToLower(args[1]))) {
+		cmd := exec.Command("cat", logPath)
+
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		// Run the command
+		cmd.Run()
+		return true
+	}
+	return false
 }
 
 func readMinsFromCLI() int {
