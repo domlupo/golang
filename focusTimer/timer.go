@@ -27,6 +27,7 @@ type Game struct {
 	backgroundColor             color.RGBA
 	timerColor                  color.RGBA
 	doneColor                   color.RGBA
+	directoryName               string
 	logFileName                 string
 	timerStarted                bool
 	intDurationStart            int
@@ -62,7 +63,8 @@ func newGame() Game {
 		backgroundColor:  color.RGBA{50, 50, 50, 255},
 		timerColor:       color.RGBA{75, 75, 75, 255},
 		doneColor:        color.RGBA{0, 150, 100, 255},
-		logFileName:      "logFocusTimer.txt",
+		directoryName:    "/tmp/focus_timer",
+		logFileName:      "log.txt",
 	}
 	defer g.minuteTicker.Stop()
 	return g
@@ -136,7 +138,7 @@ func (g *Game) Update() error {
 func (g *Game) startTimer() {
 	if !g.progressLoadedFromLogFile || g.intDurationStart != g.intDurationStartFromLog {
 		g.progressPercentStart = 0
-		g.file, g.err = os.Create(g.logFileName)
+		g.file, g.err = os.Create(path(g.directoryName, g.logFileName))
 		if g.err != nil {
 			log.Fatal(g.err)
 		}
@@ -207,7 +209,7 @@ func main() {
 		int(float32(g.windowHeight)*g.windowMultiplier))
 
 	intDurationStartFromCLI := readMinsFromCLI()
-	file, progressPercentFromLog, intDurationStartFromLog := readProgressFromLog(g.logFileName)
+	file, progressPercentFromLog, intDurationStartFromLog := readProgressFromLog(path(g.directoryName, g.logFileName))
 
 	if intDurationStartFromCLI > 0 {
 		g.intDurationStart = intDurationStartFromCLI
@@ -280,4 +282,13 @@ func readProgressFromLog(filename string) (*os.File, float64, int) {
 		}
 	}
 	return file, progressPercentFromLog, intDurationStartFromLog
+}
+
+func path(directoryName string, fileName string) string {
+	filepath := fmt.Sprintf("%s/%s", directoryName, fileName)
+	dirErr := os.MkdirAll(directoryName, 0755)
+	if dirErr != nil {
+		panic(fmt.Sprintf("paths: cannot make directory: %s", dirErr.Error()))
+	}
+	return filepath
 }
