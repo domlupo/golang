@@ -33,6 +33,7 @@ type Game struct {
 	logFileName                 string
 	logFilepath                 string
 	logFile                     *os.File
+	lastSecondFileLine          int
 	catLogCmds                  []string
 	timerStarted                bool
 	intDurationStart            int
@@ -102,7 +103,7 @@ func (g *Game) Update() error {
 
 	if g.timerStarted && g.intProgressPercent < maxPercentage {
 		g.progressPercent = float64(g.currentTime.Sub(g.startTime)/time.Millisecond) /
-			float64(g.duration/time.Millisecond) * 100
+			float64(g.duration/time.Millisecond) * maxPercentage
 
 		if g.intProgressPercent != int(g.progressPercent) {
 			g.intProgressPercent = int(g.progressPercent)
@@ -124,7 +125,7 @@ func (g *Game) Update() error {
 			for {
 				select {
 				case <-g.secondTicker.C:
-					g.logSecond()
+					g.overwriteLastSecond()
 				case <-g.minuteTicker.C:
 					g.intDurationCount = g.intDurationCount - 1
 					loggedProgressPercent := (g.progressPercent * (float64(maxPercentage) -
@@ -152,14 +153,14 @@ func (g *Game) Update() error {
 	return nil
 }
 
-func (g *Game) logSecond() {
+func (g *Game) overwriteLastSecond() {
 	input, err := os.ReadFile(g.logFilepath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	lines := strings.Split(string(input), "\n")
-	lines[3] = lastSecondFormat(g.currentTime, g.logInfoPadding)
+	lines[g.lastSecondFileLine] = lastSecondFormat(g.currentTime, g.logInfoPadding)
 	output := strings.Join(lines, "\n")
 
 	err = os.WriteFile(g.logFilepath, []byte(output), 0644)
@@ -200,8 +201,13 @@ func (g *Game) startTimer() {
 	lastSecond := lastSecondFormat(g.startTime, g.logInfoPadding)
 	dashes := strings.Repeat("-", max(len(timerSet), len(timerStarted), len(lastSecond)))
 
-	_, g.err = fmt.Fprint(g.logFile,
-		dashes+"\n"+timerSet+"\n"+timerStarted+"\n"+lastSecond+"\n"+dashes+"\n")
+	lines := []string{dashes, timerSet, timerStarted, lastSecond, dashes}
+	for i, line := range lines {
+		if line == lastSecond {
+			g.lastSecondFileLine = i
+		}
+		_, g.err = fmt.Fprint(g.logFile, line+"\n")
+	}
 
 	if g.err != nil {
 		log.Fatal(g.err)
@@ -214,9 +220,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	} else {
 		screen.Fill(g.backgroundColor)
 		// Use int not percent read from log for prior timer progress since timer has 1 min granularity.
-		priorTimerProgress := g.progressPercentStart / 100
+		priorTimerProgress := g.progressPercentStart / maxPercentage
 		currentTimerProgess := (g.progressPercent * (maxPercentage - g.progressPercentStart) /
-			maxPercentage) / 100
+			maxPercentage) / maxPercentage
 		vector.FillRect(
 			screen,
 			0,
@@ -257,23 +263,25 @@ func main() {
 		}
 	}
 
-	ebiten.SetWindowSize(int(float32(g.windowWidth)*g.windowMultiplier),
+	ebiten.SetWindowSize(
+		int(float32(g.windowWidth)*g.windowMultiplier),
 		int(float32(g.windowHeight)*g.windowMultiplier))
 
 	if readCatLogCmdFromCLI(g.logFilepath, g.catLogCmds) {
 		return
 	}
-	intDurationStartFromCLI := readMinsFromCLI()
-	file, progressPercentFromLog, intDurationStartFromLog := readProgressFromLog(g.logFilepath)
 
-	if intDurationStartFromCLI > 0 {
-		g.intDurationStart = intDurationStartFromCLI
-	} else if intDurationStartFromLog > 0 && progressPercentFromLog < 100 {
+	durationStartFromCLI := readMinsFromCLI()
+	file, progressPercentFromLog, durationStartFromLog := readProgressFromLog(g.logFilepath)
+
+	if durationStartFromCLI > 0 {
+		g.intDurationStart = durationStartFromCLI
+	} else if durationStartFromLog > 0 && progressPercentFromLog < maxPercentage {
 		g.logFile = file
 		g.progressLoadedFromLogFile = true
 		g.progressPercentStart = progressPercentFromLog
-		g.intDurationStartFromLog = intDurationStartFromLog
-		g.intDurationStart = intDurationStartFromLog
+		g.intDurationStartFromLog = durationStartFromLog
+		g.intDurationStart = durationStartFromLog
 	}
 
 	if err := ebiten.RunGameWithOptions(&g, &ebiten.RunGameOptions{InitUnfocused: true}); err != nil {
@@ -287,11 +295,8 @@ func readCatLogCmdFromCLI(logPath string, catLogCmds []string) bool {
 	args := os.Args
 	if len(args) == 2 && (slices.Contains(catLogCmds, strings.ToLower(args[1]))) {
 		cmd := exec.Command("cat", logPath)
-
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-
-		// Run the command
 		cmd.Run()
 		return true
 	}
@@ -300,31 +305,30 @@ func readCatLogCmdFromCLI(logPath string, catLogCmds []string) bool {
 
 func readMinsFromCLI() int {
 	args := os.Args
-	if len(args) > 2 {
+	switch {
+	case len(args) > 2:
 		panic("Invalid number of arguments passed, only one is expected.")
-	}
-
-	if len(args) == 2 {
+	case len(args) == 2:
 		mins, convertMinsErr := strconv.Atoi(os.Args[1])
-
 		if convertMinsErr != nil {
 			panic("Invalid type passed, an integer is expected.")
 		}
 		if mins < 1 || mins > minutesInADay {
-			panic("Invalid number passed, expected a number between 1 and 1440.")
+			panic(fmt.Sprintf(
+				"Invalid number passed, expected a number between 1 and %d. (maximum minutes in a day)",
+				minutesInADay))
 		}
-
 		return mins
+	default:
+		return 0
 	}
-
-	return 0
 }
 
 func readProgressFromLog(filename string) (*os.File, float64, int) {
 	file, fileErr := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-
 	var progressPercentFromLog float64
-	var intDurationStartFromLog int
+	var durationStartFromLog int
+
 	if fileErr == nil {
 		scanner := bufio.NewReader(file)
 		for {
@@ -346,10 +350,10 @@ func readProgressFromLog(filename string) (*os.File, float64, int) {
 					if err != nil {
 						break
 					}
-					intDurationStartFromLog = loggedMins
+					durationStartFromLog = loggedMins
 				}
 			}
 		}
 	}
-	return file, progressPercentFromLog, intDurationStartFromLog
+	return file, progressPercentFromLog, durationStartFromLog
 }
