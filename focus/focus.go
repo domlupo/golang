@@ -42,7 +42,9 @@ type Game struct {
 	logMinsElapsedThresholdMins int
 	logPercentPadding           int
 	logMinutePadding            int
+	logInfoPadding              int
 	minuteTicker                time.Ticker
+	secondTicker                time.Ticker
 	progressPercent             float64
 	progressPercentStart        float64
 	intProgressPercent          int
@@ -70,7 +72,9 @@ func newGame() Game {
 		logFileName:      "log.txt",
 		catLogCmds:       []string{"l", "lo", "log"},
 	}
+	g.logInfoPadding = max(g.logPercentPadding, g.logMinutePadding)
 	defer g.minuteTicker.Stop()
+	defer g.secondTicker.Stop()
 	return g
 }
 
@@ -112,6 +116,8 @@ func (g *Game) Update() error {
 		go func() {
 			for {
 				select {
+				case <-g.secondTicker.C:
+					g.logSecond()
 				case <-g.minuteTicker.C:
 					g.intDurationCount = g.intDurationCount - 1
 					loggedProgressPercent := (g.progressPercent * (float64(maxPercentage) -
@@ -139,6 +145,32 @@ func (g *Game) Update() error {
 	return nil
 }
 
+func (g *Game) logSecond() {
+	input, err := os.ReadFile(path(g.directoryName, g.logFileName))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	lines := strings.Split(string(input), "\n")
+	lines[3] = lastSecondFormat(g.currentTime, g.logInfoPadding)
+	output := strings.Join(lines, "\n")
+
+	err = os.WriteFile(path(g.directoryName, g.logFileName), []byte(output), 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func lastSecondFormat(t time.Time, padding int) string {
+	return pad(fmt.Sprintf("Last second %s", t.Format(time.RFC3339)), padding)
+}
+
+func pad(info string, padding int) string {
+	p := strings.Repeat(" ", padding)
+	i := p + info + p
+	return i
+}
+
 func (g *Game) startTimer() {
 	if !g.progressLoadedFromLogFile || g.intDurationStart != g.intDurationStartFromLog {
 		g.progressPercentStart = 0
@@ -153,8 +185,17 @@ func (g *Game) startTimer() {
 	g.duration = time.Duration(g.intDurationStart) * time.Minute
 	g.intDurationCount = g.intDurationStart
 	g.minuteTicker = *time.NewTicker(1 * time.Minute)
-	_, g.err = fmt.Fprintf(g.file, "Timer set for %d minutes. \n startTime: %s\n",
-		g.intDurationStart, g.startTime.Format(time.RFC3339))
+	g.secondTicker = *time.NewTicker(1 * time.Second)
+
+	timerSet := pad(fmt.Sprintf("Timer set for %d minutes.", g.intDurationStart), g.logInfoPadding)
+	timerStarted := pad(fmt.Sprintf(
+		"Timer started at %s", g.startTime.Format(time.RFC3339)), g.logInfoPadding)
+	lastSecond := lastSecondFormat(g.startTime, g.logInfoPadding)
+	dashes := strings.Repeat("-", max(len(timerSet), len(timerStarted), len(lastSecond)))
+
+	_, g.err = fmt.Fprint(g.file,
+		dashes+"\n"+timerSet+"\n"+timerStarted+"\n"+lastSecond+"\n"+dashes+"\n")
+
 	if g.err != nil {
 		log.Fatal(g.err)
 	}
