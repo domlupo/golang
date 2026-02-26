@@ -31,6 +31,8 @@ type Game struct {
 	doneColor                   color.RGBA
 	directoryName               string
 	logFileName                 string
+	logFilepath                 string
+	logFile                     *os.File
 	catLogCmds                  []string
 	timerStarted                bool
 	intDurationStart            int
@@ -48,7 +50,6 @@ type Game struct {
 	progressPercent             float64
 	progressPercentStart        float64
 	intProgressPercent          int
-	file                        *os.File
 	progressLoadedFromLogFile   bool
 	err                         error
 	mplusFaceSource             *text.GoTextFaceSource
@@ -72,7 +73,13 @@ func newGame() Game {
 		logFileName:      "log.txt",
 		catLogCmds:       []string{"l", "lo", "log"},
 	}
+
 	g.logInfoPadding = max(g.logPercentPadding, g.logMinutePadding)
+	g.logFilepath = fmt.Sprintf("%s/%s", g.directoryName, g.logFileName)
+	dirErr := os.MkdirAll(g.directoryName, 0755)
+	if dirErr != nil {
+		panic(fmt.Sprintf("paths: cannot make directory: %s", dirErr.Error()))
+	}
 	defer g.minuteTicker.Stop()
 	defer g.secondTicker.Stop()
 	return g
@@ -101,7 +108,7 @@ func (g *Game) Update() error {
 			g.intProgressPercent = int(g.progressPercent)
 			loggedProgressPercent := int((float64(g.intProgressPercent) * (float64(maxPercentage) -
 				g.progressPercentStart) / maxPercentage) + g.progressPercentStart)
-			_, g.err = fmt.Fprintf(g.file,
+			_, g.err = fmt.Fprintf(g.logFile,
 				"%*d%% %s %*d minutes remaining\n",
 				g.logPercentPadding,
 				loggedProgressPercent,
@@ -123,7 +130,7 @@ func (g *Game) Update() error {
 					loggedProgressPercent := (g.progressPercent * (float64(maxPercentage) -
 						g.progressPercentStart) / maxPercentage) + g.progressPercentStart
 					if g.intDurationStart > g.logMinsElapsedThresholdMins {
-						_, g.err = fmt.Fprintf(g.file,
+						_, g.err = fmt.Fprintf(g.logFile,
 							"%*.1f%% %s %*d minutes remaining\n",
 							g.logPercentPadding,
 							loggedProgressPercent,
@@ -139,14 +146,14 @@ func (g *Game) Update() error {
 	}
 
 	if g.intProgressPercent == maxPercentage {
-		g.file.Close()
+		g.logFile.Close()
 	}
 
 	return nil
 }
 
 func (g *Game) logSecond() {
-	input, err := os.ReadFile(path(g.directoryName, g.logFileName))
+	input, err := os.ReadFile(g.logFilepath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -155,7 +162,7 @@ func (g *Game) logSecond() {
 	lines[3] = lastSecondFormat(g.currentTime, g.logInfoPadding)
 	output := strings.Join(lines, "\n")
 
-	err = os.WriteFile(path(g.directoryName, g.logFileName), []byte(output), 0644)
+	err = os.WriteFile(g.logFilepath, []byte(output), 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -174,7 +181,7 @@ func pad(info string, padding int) string {
 func (g *Game) startTimer() {
 	if !g.progressLoadedFromLogFile || g.intDurationStart != g.intDurationStartFromLog {
 		g.progressPercentStart = 0
-		g.file, g.err = os.Create(path(g.directoryName, g.logFileName))
+		g.logFile, g.err = os.Create(g.logFilepath)
 		if g.err != nil {
 			log.Fatal(g.err)
 		}
@@ -193,7 +200,7 @@ func (g *Game) startTimer() {
 	lastSecond := lastSecondFormat(g.startTime, g.logInfoPadding)
 	dashes := strings.Repeat("-", max(len(timerSet), len(timerStarted), len(lastSecond)))
 
-	_, g.err = fmt.Fprint(g.file,
+	_, g.err = fmt.Fprint(g.logFile,
 		dashes+"\n"+timerSet+"\n"+timerStarted+"\n"+lastSecond+"\n"+dashes+"\n")
 
 	if g.err != nil {
@@ -253,17 +260,16 @@ func main() {
 	ebiten.SetWindowSize(int(float32(g.windowWidth)*g.windowMultiplier),
 		int(float32(g.windowHeight)*g.windowMultiplier))
 
-	logPath := path(g.directoryName, g.logFileName)
-	if readCatLogCmdFromCLI(logPath, g.catLogCmds) {
+	if readCatLogCmdFromCLI(g.logFilepath, g.catLogCmds) {
 		return
 	}
 	intDurationStartFromCLI := readMinsFromCLI()
-	file, progressPercentFromLog, intDurationStartFromLog := readProgressFromLog(logPath)
+	file, progressPercentFromLog, intDurationStartFromLog := readProgressFromLog(g.logFilepath)
 
 	if intDurationStartFromCLI > 0 {
 		g.intDurationStart = intDurationStartFromCLI
 	} else if intDurationStartFromLog > 0 && progressPercentFromLog < 100 {
-		g.file = file
+		g.logFile = file
 		g.progressLoadedFromLogFile = true
 		g.progressPercentStart = progressPercentFromLog
 		g.intDurationStartFromLog = intDurationStartFromLog
@@ -274,7 +280,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	g.file.Close()
+	g.logFile.Close()
 }
 
 func readCatLogCmdFromCLI(logPath string, catLogCmds []string) bool {
@@ -346,13 +352,4 @@ func readProgressFromLog(filename string) (*os.File, float64, int) {
 		}
 	}
 	return file, progressPercentFromLog, intDurationStartFromLog
-}
-
-func path(directoryName string, fileName string) string {
-	filepath := fmt.Sprintf("%s/%s", directoryName, fileName)
-	dirErr := os.MkdirAll(directoryName, 0755)
-	if dirErr != nil {
-		panic(fmt.Sprintf("paths: cannot make directory: %s", dirErr.Error()))
-	}
-	return filepath
 }
