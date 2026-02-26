@@ -29,8 +29,6 @@ type Game struct {
 	backgroundColor             color.RGBA
 	timerColor                  color.RGBA
 	doneColor                   color.RGBA
-	directoryName               string
-	logFileName                 string
 	logFilepath                 string
 	logFile                     *os.File
 	lastSecondFileLine          int
@@ -57,32 +55,32 @@ type Game struct {
 }
 
 func newGame() Game {
+	// configs
+	directoryName := "/tmp/focus_timer"
+	logFileName := "log.txt"
 	g := Game{
 		windowMultiplier:            1.0,
 		windowWidth:                 1280,
 		windowHeight:                720,
 		intDurationStart:            60,
 		logMinsElapsedThresholdMins: 100,
-		// Largest percent logged (100.0) char length is 5.
-		logPercentPadding: 5,
-		// Largest minute log (1440) char length is 4.
-		logMinutePadding: 4,
-		backgroundColor:  color.RGBA{50, 50, 50, 255},
-		timerColor:       color.RGBA{75, 75, 75, 255},
-		doneColor:        color.RGBA{0, 150, 100, 255},
-		directoryName:    "/tmp/focus_timer",
-		logFileName:      "log.txt",
-		catLogCmds:       []string{"l", "lo", "log"},
+		logPercentPadding:           5, // Largest percent logged (100.0) char length is 5.
+		logMinutePadding:            4, // Largest minute log (1440) char length is 4.
+		backgroundColor:             color.RGBA{50, 50, 50, 255},
+		timerColor:                  color.RGBA{75, 75, 75, 255},
+		doneColor:                   color.RGBA{0, 150, 100, 255},
+		catLogCmds:                  []string{"l", "lo", "log"},
 	}
 
+	// set game fields which are calculated from configs
 	g.logInfoPadding = max(g.logPercentPadding, g.logMinutePadding)
-	g.logFilepath = fmt.Sprintf("%s/%s", g.directoryName, g.logFileName)
-	dirErr := os.MkdirAll(g.directoryName, 0755)
+	g.logFilepath = fmt.Sprintf("%s/%s", directoryName, logFileName)
+	dirErr := os.MkdirAll(directoryName, 0755)
 	if dirErr != nil {
 		panic(fmt.Sprintf("paths: cannot make directory: %s", dirErr.Error()))
 	}
-	defer g.minuteTicker.Stop()
-	defer g.secondTicker.Stop()
+	g.formatStartInfo(false)
+
 	return g
 }
 
@@ -179,15 +177,32 @@ func pad(info string, padding int) string {
 	return i
 }
 
-func (g *Game) startTimer() {
-	if !g.progressLoadedFromLogFile || g.intDurationStart != g.intDurationStartFromLog {
-		g.progressPercentStart = 0
-		g.logFile, g.err = os.Create(g.logFilepath)
-		if g.err != nil {
-			log.Fatal(g.err)
+func (g *Game) formatStartInfo(writeToFile bool) {
+	timerSet := pad(fmt.Sprintf("Timer set for %d minutes.", g.intDurationStart), g.logInfoPadding)
+	timerStarted := pad(fmt.Sprintf(
+		"Timer creation %s", g.startTime.Format(time.RFC3339)), g.logInfoPadding)
+	lastSecond := lastSecondFormat(g.startTime, g.logInfoPadding)
+	dashes := strings.Repeat("-", max(len(timerSet), len(timerStarted), len(lastSecond)))
+
+	lines := []string{dashes, timerSet, timerStarted, lastSecond, dashes}
+	var formattedLines string
+	for i, line := range lines {
+		if line == lastSecond {
+			g.lastSecondFileLine = i
 		}
+		formattedLines = formattedLines + line + "\n"
 	}
 
+	if writeToFile {
+		_, g.err = fmt.Fprint(g.logFile, formattedLines)
+	}
+
+	if g.err != nil {
+		log.Fatal(g.err)
+	}
+}
+
+func (g *Game) startTimer() {
 	g.timerStarted = true
 	g.startTime = time.Now()
 	g.duration = time.Duration(g.intDurationStart) * time.Minute
@@ -195,22 +210,13 @@ func (g *Game) startTimer() {
 	g.minuteTicker = *time.NewTicker(1 * time.Minute)
 	g.secondTicker = *time.NewTicker(1 * time.Second)
 
-	timerSet := pad(fmt.Sprintf("Timer set for %d minutes.", g.intDurationStart), g.logInfoPadding)
-	timerStarted := pad(fmt.Sprintf(
-		"Timer started at %s", g.startTime.Format(time.RFC3339)), g.logInfoPadding)
-	lastSecond := lastSecondFormat(g.startTime, g.logInfoPadding)
-	dashes := strings.Repeat("-", max(len(timerSet), len(timerStarted), len(lastSecond)))
-
-	lines := []string{dashes, timerSet, timerStarted, lastSecond, dashes}
-	for i, line := range lines {
-		if line == lastSecond {
-			g.lastSecondFileLine = i
+	if !g.progressLoadedFromLogFile || g.intDurationStart != g.intDurationStartFromLog {
+		g.progressPercentStart = 0
+		g.logFile, g.err = os.Create(g.logFilepath)
+		if g.err != nil {
+			log.Fatal(g.err)
 		}
-		_, g.err = fmt.Fprint(g.logFile, line+"\n")
-	}
-
-	if g.err != nil {
-		log.Fatal(g.err)
+		g.formatStartInfo(true)
 	}
 }
 
