@@ -184,7 +184,8 @@ func (g *Game) formatStartInfo(writeToFile bool) {
 	lastSecond := lastSecondFormat(g.startTime, g.logInfoPadding)
 	dashes := strings.Repeat("-", max(len(timerSet), len(timerStarted), len(lastSecond)))
 
-	lines := []string{dashes, timerSet, timerStarted, lastSecond, dashes}
+	// first line is empty to prevent cat format issues when running in background via &
+	lines := []string{"", dashes, timerSet, timerStarted, lastSecond, dashes}
 	var formattedLines string
 	for i, line := range lines {
 		if line == lastSecond {
