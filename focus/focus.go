@@ -82,7 +82,7 @@ func newGame() Game {
 	}
 
 	// set game fields which are calculated from configs
-	g.logInfoPadding = max(g.logPercentPadding, g.logMinutePadding)
+	g.logInfoPadding = max(g.logPercentPadding, g.logMinutePadding) * 2
 	g.logFilepath = fmt.Sprintf("%s/%s", directoryName, logFileName)
 	dirErr := os.MkdirAll(directoryName, 0755)
 	if dirErr != nil {
@@ -122,7 +122,7 @@ func (g *Game) Update() error {
 				"%*d%% %s %*d minutes remaining\n",
 				g.logPercentPadding,
 				loggedProgressPercent,
-				g.currentTime.Format(time.RFC3339),
+				g.currentTime.Format(g.timeLayout),
 				g.logMinutePadding,
 				g.intDurationCount)
 			if g.err != nil {
@@ -144,7 +144,7 @@ func (g *Game) Update() error {
 							"%*.1f%% %s %*d minutes remaining\n",
 							g.logPercentPadding,
 							loggedProgressPercent,
-							g.currentTime.Format(time.RFC3339),
+							g.currentTime.Format(g.timeLayout),
 							g.logMinutePadding,
 							g.intDurationCount)
 					}
@@ -187,7 +187,8 @@ func (g *Game) overwriteLastSecond() {
 	lines := strings.Split(string(input), "\n")
 	// TODO: verify this is safe. This is related to other TODO for using time across two goroutines.
 	g.lastWrittenSecond = g.currentTime
-	lines[g.lastSecondFileLine] = lastSecondFormat(g.lastWrittenSecond, g.logInfoPadding)
+	lines[g.lastSecondFileLine] = lastSecondFormat(
+		g.lastWrittenSecond, g.logInfoPadding, g.timeLayout)
 	output := strings.Join(lines, "\n")
 
 	err = os.WriteFile(g.logFilepath, []byte(output), 0644)
@@ -217,8 +218,8 @@ func readTime(filepath string, lineNumber int, layout string) (time.Time, bool) 
 	return time.Time{}, false
 }
 
-func lastSecondFormat(t time.Time, padding int) string {
-	return pad(fmt.Sprintf("Last second: %s", t.Format(time.RFC3339)), padding)
+func lastSecondFormat(t time.Time, padding int, layout string) string {
+	return pad(fmt.Sprintf("Last second:   %s", t.Format(layout)), padding)
 }
 
 func pad(info string, padding int) string {
@@ -399,10 +400,11 @@ func (g *Game) checkFileLock(writeInitialFileInfo bool) {
 	}
 	timerSet := pad(fmt.Sprintf("Timer set for %d %s.", g.intDurationStart, minStr), g.logInfoPadding)
 	timerStarted := pad(fmt.Sprintf(
-		"Timer created: %s", g.startTime.Format(time.RFC3339)), g.logInfoPadding)
-	lastSecond := lastSecondFormat(g.startTime, g.logInfoPadding)
+		"Timer created: %s", g.startTime.Format(g.timeLayout)), g.logInfoPadding)
+	lastSecond := lastSecondFormat(g.startTime, g.logInfoPadding, g.timeLayout)
 	dashes := strings.Repeat("-", max(len(timerSet), len(timerStarted), len(lastSecond)))
 
+	// set last second file line aka the lock line
 	// first line is empty to prevent cat format issues when running in background via &
 	lines := []string{"", dashes, timerSet, timerStarted, lastSecond, dashes}
 	var formattedLines string
@@ -413,8 +415,8 @@ func (g *Game) checkFileLock(writeInitialFileInfo bool) {
 		formattedLines = formattedLines + line + "\n"
 	}
 
+	// check lock
 	lock, ok := readTime(g.logFilepath, g.lastSecondFileLine, g.timeLayout)
-
 	if ok && lock.Add(g.lockReleaseDelay).After(time.Now()) {
 		panic(fmt.Sprintf(
 			"Cannot start timer. A timer is currently running or was stopped within the last %d seconds",
@@ -425,6 +427,16 @@ func (g *Game) checkFileLock(writeInitialFileInfo bool) {
 	if writeInitialFileInfo && (!g.progressLoadedFromLogFile || g.intDurationStart != g.intDurationStartFromLog) {
 		_, g.err = fmt.Fprint(g.logFile, formattedLines)
 	} else if writeInitialFileInfo {
+		timerPaused := pad(fmt.Sprintf("Timer paused:   %s", lock.Format(g.timeLayout)), g.logInfoPadding)
+		timerUnpaused := pad(fmt.Sprintf("Timer unpaused: %s", g.currentTime.Format(g.timeLayout)), g.logInfoPadding)
+
+		lines = []string{dashes, timerPaused, timerUnpaused, dashes}
+		formattedLines := ""
+		for _, line := range lines {
+			formattedLines = formattedLines + line + "\n"
+		}
+		_, g.err = fmt.Fprint(g.logFile, formattedLines)
+
 		g.overwriteLastSecond()
 	}
 
