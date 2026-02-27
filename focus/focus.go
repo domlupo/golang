@@ -78,7 +78,8 @@ func newGame() Game {
 	}
 
 	if g.lockReleaseDelay < time.Second*2 {
-		panic("cannot set lock release delay to 1 second or less since write frequency is ~1 second")
+		panic("newGame: cannot set lock release delay less than 2 seconds since writes occur every ~1" +
+			"second")
 	}
 
 	// set game fields which are calculated from configs
@@ -86,7 +87,7 @@ func newGame() Game {
 	g.logFilepath = fmt.Sprintf("%s/%s", directoryName, logFileName)
 	dirErr := os.MkdirAll(directoryName, 0755)
 	if dirErr != nil {
-		panic(fmt.Sprintf("paths: cannot make directory: %s", dirErr.Error()))
+		panic(fmt.Sprintf("newGame: cannot make directory: %s", dirErr.Error()))
 	}
 
 	return g
@@ -175,8 +176,6 @@ func (g *Game) overwriteLastSecond() {
 		// continue since the log file may be incorrect. Or a very rare bug happened since there are
 		// several protections to avoid multiple timers running. Losing timer progress and failing
 		// loudly for rare bugs is better than suppressing rare bugs.
-
-		// TODO: decide if I should add file invalidation
 		panic("overwriteLastSecond: invalid log file. detected inconsistent seconds in log file.")
 	}
 
@@ -340,16 +339,15 @@ func readMinsFromCLI() int {
 	args := os.Args
 	switch {
 	case len(args) > 2:
-		panic("Invalid number of arguments passed, only one is expected.")
+		panic("readMinsFromCLI: Invalid number of arguments passed, only one is expected.")
 	case len(args) == 2:
 		mins, convertMinsErr := strconv.Atoi(os.Args[1])
 		if convertMinsErr != nil {
-			panic("Invalid type passed, an integer is expected.")
+			panic("readMinsFromCLI: Invalid type passed, an integer is expected.")
 		}
 		if mins < 1 || mins > minutesInADay {
-			panic(fmt.Sprintf(
-				"Invalid number passed, expected a number between 1 and %d. (maximum minutes in a day)",
-				minutesInADay))
+			panic(fmt.Sprintf("readMinsFromCLI: Invalid number passed, expected a number between 1 and "+
+				"%d. (maximum minutes in a day)", minutesInADay))
 		}
 		return mins
 	default:
@@ -407,36 +405,34 @@ func (g *Game) checkFileLock(writeInitialFileInfo bool) {
 	// set last second file line aka the lock line
 	// first line is empty to prevent cat format issues when running in background via &
 	lines := []string{"", dashes, timerSet, timerStarted, lastSecond, dashes}
-	var formattedLines string
 	for i, line := range lines {
 		if line == lastSecond {
 			g.lastSecondFileLine = i
 		}
-		formattedLines = formattedLines + line + "\n"
 	}
 
 	// check lock
 	lock, ok := readTime(g.logFilepath, g.lastSecondFileLine, g.timeLayout)
 	if ok && lock.Add(g.lockReleaseDelay).After(time.Now()) {
-		panic(fmt.Sprintf(
-			"Cannot start timer. A timer is currently running or was stopped within the last %d seconds",
-			int(g.lockReleaseDelay.Seconds())))
+		panic(fmt.Sprintf("checkFileLock: cannot start timer. A timer is currently running or was "+
+			"stopped within the last %d seconds", int(g.lockReleaseDelay.Seconds())))
 	}
 
 	// TODO: DRY this logic. It is repeated in startTimer fn
+	var formattedLines string
 	if writeInitialFileInfo && (!g.progressLoadedFromLogFile || g.intDurationStart != g.intDurationStartFromLog) {
-		_, g.err = fmt.Fprint(g.logFile, formattedLines)
-	} else if writeInitialFileInfo {
-		timerPaused := pad(fmt.Sprintf("Timer paused:   %s", lock.Format(g.timeLayout)), g.logInfoPadding)
-		timerUnpaused := pad(fmt.Sprintf("Timer unpaused: %s", g.currentTime.Format(g.timeLayout)), g.logInfoPadding)
-
-		lines = []string{dashes, timerPaused, timerUnpaused, dashes}
-		formattedLines := ""
 		for _, line := range lines {
 			formattedLines = formattedLines + line + "\n"
 		}
 		_, g.err = fmt.Fprint(g.logFile, formattedLines)
-
+	} else if writeInitialFileInfo {
+		timerPaused := pad(fmt.Sprintf("Timer paused:   %s", lock.Format(g.timeLayout)), g.logInfoPadding)
+		timerUnpaused := pad(fmt.Sprintf("Timer unpaused: %s", g.currentTime.Format(g.timeLayout)), g.logInfoPadding)
+		lines = []string{dashes, timerPaused, timerUnpaused, dashes}
+		for _, line := range lines {
+			formattedLines = formattedLines + line + "\n"
+		}
+		_, g.err = fmt.Fprint(g.logFile, formattedLines)
 		g.overwriteLastSecond()
 	}
 
