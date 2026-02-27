@@ -52,6 +52,9 @@ type Game struct {
 	progressLoadedFromLogFile   bool
 	err                         error
 	mplusFaceSource             *text.GoTextFaceSource
+	timeLayout                  string
+	lockReleaseDelay            time.Duration
+	lastWrittenSecond           time.Time
 }
 
 func newGame() Game {
@@ -70,6 +73,12 @@ func newGame() Game {
 		timerColor:                  color.RGBA{75, 75, 75, 255},
 		doneColor:                   color.RGBA{0, 150, 100, 255},
 		catLogCmds:                  []string{"l", "lo", "log"},
+		timeLayout:                  time.RFC3339,
+		lockReleaseDelay:            time.Second * 2,
+	}
+
+	if g.lockReleaseDelay < time.Second*2 {
+		panic("cannot set lock release delay to 1 second or less since write frequency is ~1 second")
 	}
 
 	// set game fields which are calculated from configs
@@ -79,12 +88,14 @@ func newGame() Game {
 	if dirErr != nil {
 		panic(fmt.Sprintf("paths: cannot make directory: %s", dirErr.Error()))
 	}
-	g.formatStartInfo(false)
 
 	return g
 }
 
 func (g *Game) Update() error {
+	// TODO: verify this is safe to set here. I am worried because I use this same value across two
+	// goroutines. I think this is likely to cause race conditions and the focus timer should be
+	// restructured.
 	g.currentTime = time.Now()
 
 	if !g.timerStarted {
@@ -152,13 +163,31 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) overwriteLastSecond() {
+	lastWrittenSecond, ok := readTime(g.logFilepath, g.lastSecondFileLine, g.timeLayout)
+	if !ok {
+		panic("overwriteLastSecond: cannot read last second from log file")
+	}
+	epoch := time.Time{}
+	if !g.lastWrittenSecond.Equal(epoch) &&
+		lastWrittenSecond.Format(g.timeLayout) != g.lastWrittenSecond.Format(g.timeLayout) {
+		// invalid log file. Most likely more than one focus timer is running or the log file was
+		// manually updated. I believe panic is the best user experience rather than letting any timers
+		// continue since the log file may be incorrect. Or a very rare bug happened since there are
+		// several protections to avoid multiple timers running. Losing timer progress and failing
+		// loudly for rare bugs is better than suppressing rare bugs.
+
+		// TODO: decide if I should add file invalidation
+		panic("overwriteLastSecond: invalid log file. detected inconsistent seconds in log file.")
+	}
+
 	input, err := os.ReadFile(g.logFilepath)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	lines := strings.Split(string(input), "\n")
-	lines[g.lastSecondFileLine] = lastSecondFormat(g.currentTime, g.logInfoPadding)
+	// TODO: verify this is safe. This is related to other TODO for using time across two goroutines.
+	g.lastWrittenSecond = g.currentTime
+	lines[g.lastSecondFileLine] = lastSecondFormat(g.lastWrittenSecond, g.logInfoPadding)
 	output := strings.Join(lines, "\n")
 
 	err = os.WriteFile(g.logFilepath, []byte(output), 0644)
@@ -167,40 +196,35 @@ func (g *Game) overwriteLastSecond() {
 	}
 }
 
+func readTime(filepath string, lineNumber int, layout string) (time.Time, bool) {
+	input, readFileErr := os.ReadFile(filepath)
+	if readFileErr != nil {
+		// one reason is when file does not exist
+	}
+
+	if len(input) == 0 {
+		return time.Time{}, false
+	}
+
+	lines := strings.Split(string(input), "\n")
+	for str := range strings.SplitSeq(lines[lineNumber], " ") {
+		t, err := time.Parse(layout, str)
+		if err == nil {
+			return t, true
+		}
+	}
+
+	return time.Time{}, false
+}
+
 func lastSecondFormat(t time.Time, padding int) string {
-	return pad(fmt.Sprintf("Last second %s", t.Format(time.RFC3339)), padding)
+	return pad(fmt.Sprintf("Last second: %s", t.Format(time.RFC3339)), padding)
 }
 
 func pad(info string, padding int) string {
 	p := strings.Repeat(" ", padding)
 	i := p + info + p
 	return i
-}
-
-func (g *Game) formatStartInfo(writeToFile bool) {
-	timerSet := pad(fmt.Sprintf("Timer set for %d minutes.", g.intDurationStart), g.logInfoPadding)
-	timerStarted := pad(fmt.Sprintf(
-		"Timer creation %s", g.startTime.Format(time.RFC3339)), g.logInfoPadding)
-	lastSecond := lastSecondFormat(g.startTime, g.logInfoPadding)
-	dashes := strings.Repeat("-", max(len(timerSet), len(timerStarted), len(lastSecond)))
-
-	// first line is empty to prevent cat format issues when running in background via &
-	lines := []string{"", dashes, timerSet, timerStarted, lastSecond, dashes}
-	var formattedLines string
-	for i, line := range lines {
-		if line == lastSecond {
-			g.lastSecondFileLine = i
-		}
-		formattedLines = formattedLines + line + "\n"
-	}
-
-	if writeToFile {
-		_, g.err = fmt.Fprint(g.logFile, formattedLines)
-	}
-
-	if g.err != nil {
-		log.Fatal(g.err)
-	}
 }
 
 func (g *Game) startTimer() {
@@ -217,8 +241,9 @@ func (g *Game) startTimer() {
 		if g.err != nil {
 			log.Fatal(g.err)
 		}
-		g.formatStartInfo(true)
 	}
+
+	g.checkFileLock(true)
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -257,6 +282,10 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 
 func main() {
 	g := newGame()
+	if readCatLogCmdFromCLI(g.logFilepath, g.catLogCmds) {
+		return
+	}
+	g.checkFileLock(false)
 
 	g.mplusFaceSource, _ = text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
 
@@ -273,10 +302,6 @@ func main() {
 	ebiten.SetWindowSize(
 		int(float32(g.windowWidth)*g.windowMultiplier),
 		int(float32(g.windowHeight)*g.windowMultiplier))
-
-	if readCatLogCmdFromCLI(g.logFilepath, g.catLogCmds) {
-		return
-	}
 
 	durationStartFromCLI := readMinsFromCLI()
 	file, progressPercentFromLog, durationStartFromLog := readProgressFromLog(g.logFilepath)
@@ -363,4 +388,47 @@ func readProgressFromLog(filename string) (*os.File, float64, int) {
 		}
 	}
 	return file, progressPercentFromLog, durationStartFromLog
+}
+
+// Prevents two focus timers from ticking at once. The last second logged is used as a lock.
+func (g *Game) checkFileLock(writeInitialFileInfo bool) {
+	// format initial file info. This is needed to determine which line number the lock is located on.
+	minStr := "minutes"
+	if g.intDurationStart == 1 {
+		minStr = "minute"
+	}
+	timerSet := pad(fmt.Sprintf("Timer set for %d %s.", g.intDurationStart, minStr), g.logInfoPadding)
+	timerStarted := pad(fmt.Sprintf(
+		"Timer created: %s", g.startTime.Format(time.RFC3339)), g.logInfoPadding)
+	lastSecond := lastSecondFormat(g.startTime, g.logInfoPadding)
+	dashes := strings.Repeat("-", max(len(timerSet), len(timerStarted), len(lastSecond)))
+
+	// first line is empty to prevent cat format issues when running in background via &
+	lines := []string{"", dashes, timerSet, timerStarted, lastSecond, dashes}
+	var formattedLines string
+	for i, line := range lines {
+		if line == lastSecond {
+			g.lastSecondFileLine = i
+		}
+		formattedLines = formattedLines + line + "\n"
+	}
+
+	lock, ok := readTime(g.logFilepath, g.lastSecondFileLine, g.timeLayout)
+
+	if ok && lock.Add(g.lockReleaseDelay).After(time.Now()) {
+		panic(fmt.Sprintf(
+			"Cannot start timer. A timer is currently running or was stopped within the last %d seconds",
+			int(g.lockReleaseDelay.Seconds())))
+	}
+
+	// TODO: DRY this logic. It is repeated in startTimer fn
+	if writeInitialFileInfo && (!g.progressLoadedFromLogFile || g.intDurationStart != g.intDurationStartFromLog) {
+		_, g.err = fmt.Fprint(g.logFile, formattedLines)
+	} else if writeInitialFileInfo {
+		g.overwriteLastSecond()
+	}
+
+	if g.err != nil {
+		log.Fatal(g.err)
+	}
 }
