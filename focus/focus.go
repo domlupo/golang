@@ -33,14 +33,13 @@ type Game struct {
 	logFile                     *os.File
 	lastSecondFileLine          int
 	catLogCmds                  []string
-	timerStarted                bool
+	timerSessionStarted         bool
 	progressReadFromLogFile     bool
 	minuteDurationToggle        int
 	secondDurationToggle        int
 	timerDurationTotal          time.Duration
 	timerDurationLeft           time.Duration
-	currentTime                 time.Time
-	startTime                   time.Time
+	sessionStartTime            time.Time
 	logMinsElapsedThresholdMins int
 	logPercentPadding           int
 	logMinutePadding            int
@@ -57,8 +56,8 @@ type Game struct {
 	lastWrittenSecond           time.Time
 }
 
+// Set configs that are accessed through the Game struct.
 func newGame() Game {
-	// configs
 	directoryName := "/tmp/focus_timer"
 	logFileName := "log.txt"
 	g := Game{
@@ -83,7 +82,7 @@ func newGame() Game {
 			"second")
 	}
 
-	// set game fields which are calculated from configs
+	// set fields which are calculated from configs
 	g.logInfoPadding = max(g.logPercentPadding, g.logMinutePadding) * 2
 	g.logFilepath = fmt.Sprintf("%s/%s", directoryName, logFileName)
 	dirErr := os.MkdirAll(directoryName, 0755)
@@ -94,13 +93,9 @@ func newGame() Game {
 	return g
 }
 
+// main event loop for ebiten applications.
 func (g *Game) Update() error {
-	// TODO: verify this is safe to set here. I am worried because I use this same value across two
-	// goroutines. I think this is likely to cause race conditions and the focus timer should be
-	// restructured.
-	g.currentTime = time.Now()
-
-	if !g.timerStarted {
+	if !g.timerSessionStarted {
 		_, dy := ebiten.Wheel()
 		g.minuteDurationToggle = max(g.minuteDurationToggle+int(dy), 0)
 		g.minuteDurationToggle = min(g.minuteDurationToggle, minutesInADay)
@@ -115,20 +110,20 @@ func (g *Game) Update() error {
 			ebiten.IsMouseButtonPressed(ebiten.MouseButton0) ||
 			ebiten.IsMouseButtonPressed(ebiten.MouseButton1) ||
 			ebiten.IsMouseButtonPressed(ebiten.MouseButton2) {
-			g.startTimer()
+			g.startSessionTimer()
 		}
 	}
 
-	if g.timerStarted && g.progressPercent != maxPercentage {
+	if g.timerSessionStarted && g.progressPercent != maxPercentage {
 		priorSessionTime := float64(g.timerDurationTotal - g.timerDurationLeft)
-		currentSessionTime := float64(time.Since(g.startTime))
+		currentSessionTime := float64(time.Since(g.sessionStartTime))
 		g.progressPercent = (priorSessionTime + currentSessionTime) / float64(g.timerDurationTotal) *
 			maxPercentage
 		g.progressPercent = min(g.progressPercent, maxPercentage)
 
 		if g.intProgressPercent != int(g.progressPercent) {
 			g.intProgressPercent = int(g.progressPercent)
-			durationLeft := g.timerDurationLeft - (time.Since(g.startTime))
+			durationLeft := g.timerDurationLeft - (time.Since(g.sessionStartTime))
 			minsLeft := int(durationLeft.Minutes())
 			secsLeft := int(durationLeft.Seconds()) - minsLeft*60
 
@@ -136,7 +131,7 @@ func (g *Game) Update() error {
 				"%*d%% %s %*d minutes %0*d seconds left\n",
 				g.logPercentPadding,
 				g.intProgressPercent,
-				g.currentTime.Format(g.timeLayout),
+				time.Now().Format(g.timeLayout),
 				g.logMinutePadding,
 				minsLeft,
 				g.logSecondPadding,
@@ -153,7 +148,7 @@ func (g *Game) Update() error {
 				case <-g.secondTicker.C:
 					g.overwriteLastSecond()
 				case <-g.minuteTicker.C:
-					durationLeft := g.timerDurationLeft - (time.Since(g.startTime))
+					durationLeft := g.timerDurationLeft - (time.Since(g.sessionStartTime))
 					minsLeft := int(durationLeft.Minutes())
 					secsLeft := int(durationLeft.Seconds()) - minsLeft*60
 
@@ -162,7 +157,7 @@ func (g *Game) Update() error {
 							"%*.1f%% %s %*d minutes %0*d seconds left\n",
 							g.logPercentPadding,
 							g.progressPercent,
-							g.currentTime.Format(g.timeLayout),
+							time.Now().Format(g.timeLayout),
 							g.logMinutePadding,
 							minsLeft,
 							g.logSecondPadding,
@@ -182,73 +177,10 @@ func (g *Game) Update() error {
 	return nil
 }
 
-func (g *Game) overwriteLastSecond() {
-	lastWrittenSecond, ok := readTime(g.logFilepath, g.lastSecondFileLine, g.timeLayout)
-	if !ok {
-		panic("overwriteLastSecond: cannot read last second from log file")
-	}
-	epoch := time.Time{}
-	if !g.lastWrittenSecond.Equal(epoch) &&
-		lastWrittenSecond.Format(g.timeLayout) != g.lastWrittenSecond.Format(g.timeLayout) {
-		// invalid log file. Most likely more than one focus timer is running or the log file was
-		// manually updated. I believe panic is the best user experience rather than letting any timers
-		// continue since the log file may be incorrect. Or a very rare bug happened since there are
-		// several protections to avoid multiple timers running. Losing timer progress and failing
-		// loudly for rare bugs is better than suppressing rare bugs.
-		panic("overwriteLastSecond: invalid log file. detected inconsistent seconds in log file.")
-	}
-
-	input, err := os.ReadFile(g.logFilepath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	lines := strings.Split(string(input), "\n")
-	// TODO: verify this is safe. This is related to other TODO for using time across two goroutines.
-	g.lastWrittenSecond = g.currentTime
-	lines[g.lastSecondFileLine] = lastSecondFormat(
-		g.lastWrittenSecond, g.logInfoPadding, g.timeLayout)
-	output := strings.Join(lines, "\n")
-
-	err = os.WriteFile(g.logFilepath, []byte(output), 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func readTime(filepath string, lineNumber int, layout string) (time.Time, bool) {
-	input, readFileErr := os.ReadFile(filepath)
-	if readFileErr != nil {
-		// one reason is when file does not exist
-	}
-
-	if len(input) == 0 {
-		return time.Time{}, false
-	}
-
-	lines := strings.Split(string(input), "\n")
-	for str := range strings.SplitSeq(lines[lineNumber], " ") {
-		t, err := time.Parse(layout, str)
-		if err == nil {
-			return t, true
-		}
-	}
-
-	return time.Time{}, false
-}
-
-func lastSecondFormat(t time.Time, padding int, layout string) string {
-	return pad(fmt.Sprintf("Last second:   %s", t.Format(layout)), padding)
-}
-
-func pad(info string, padding int) string {
-	p := strings.Repeat(" ", padding)
-	i := p + info + p
-	return i
-}
-
-func (g *Game) startTimer() {
-	g.timerStarted = true
-	g.startTime = time.Now()
+// start session timer with or without progress read from log file.
+func (g *Game) startSessionTimer() {
+	g.timerSessionStarted = true
+	g.sessionStartTime = time.Now()
 	g.minuteTicker = *time.NewTicker(1 * time.Minute)
 	g.secondTicker = *time.NewTicker(1 * time.Second)
 
@@ -264,47 +196,7 @@ func (g *Game) startTimer() {
 	g.checkFileLock(true)
 }
 
-func (g *Game) Draw(screen *ebiten.Image) {
-	if !g.timerStarted || g.progressPercent == 100 {
-		screen.Fill(g.doneColor)
-	} else {
-		screen.Fill(g.backgroundColor)
-		vector.FillRect(
-			screen,
-			0,
-			0,
-			float32(g.windowWidth)*g.windowMultiplier*float32(g.progressPercent)/maxPercentage,
-			float32(g.windowHeight)*g.windowMultiplier,
-			g.timerColor,
-			false)
-	}
-
-	if !g.timerStarted {
-		op := &text.DrawOptions{}
-		suffix := " Mouse wheel changes minutes. Press any mouse button to start timer."
-		if g.secondDurationToggle == 0 {
-			s := "Timer set to %d minutes." + suffix
-			text.Draw(screen, fmt.Sprintf(s, g.minuteDurationToggle),
-				&text.GoTextFace{
-					Source: g.mplusFaceSource,
-					Size:   float64(24 * g.windowMultiplier),
-				}, op)
-		} else {
-			s := "Timer set to %d minutes %d seconds." + suffix
-			text.Draw(screen, fmt.Sprintf(s, g.minuteDurationToggle, g.secondDurationToggle),
-				&text.GoTextFace{
-					Source: g.mplusFaceSource,
-					Size:   float64(24 * g.windowMultiplier),
-				}, op)
-		}
-	}
-}
-
-func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return int(float32(g.windowWidth) * g.windowMultiplier),
-		int(float32(g.windowHeight) * g.windowMultiplier)
-}
-
+// entry point before event loop.
 func main() {
 	g := newGame()
 	if readCatLogCmdFromCLI(g.logFilepath, g.catLogCmds) {
@@ -328,11 +220,11 @@ func main() {
 		int(float32(g.windowWidth)*g.windowMultiplier),
 		int(float32(g.windowHeight)*g.windowMultiplier))
 
-	durationStartFromCLI := readMinsFromCLI()
+	minsFromCLI := readMinsFromCLI()
 	file, durationLeft, durationTotal := readTimerProgressFromLog(g.logFilepath, g.timeLayout)
 
-	if durationStartFromCLI > 0 {
-		g.minuteDurationToggle = durationStartFromCLI
+	if minsFromCLI > 0 {
+		g.minuteDurationToggle = minsFromCLI
 	} else if durationLeft.Seconds() > 0 {
 		g.progressReadFromLogFile = true
 		g.logFile = file
@@ -349,6 +241,7 @@ func main() {
 	g.logFile.Close()
 }
 
+// check if cat command passed from CLI. Execute if needed.
 func readCatLogCmdFromCLI(logPath string, catLogCmds []string) bool {
 	args := os.Args
 	if len(args) == 2 && (slices.Contains(catLogCmds, strings.ToLower(args[1]))) {
@@ -361,6 +254,7 @@ func readCatLogCmdFromCLI(logPath string, catLogCmds []string) bool {
 	return false
 }
 
+// read mins passed from CLI.
 func readMinsFromCLI() int {
 	args := os.Args
 	switch {
@@ -455,8 +349,8 @@ func (g *Game) checkFileLock(writeInitialFileInfo bool) {
 	}
 	timerSet := pad(fmt.Sprintf("Timer set for %d %s.", g.minuteDurationToggle, minStr), g.logInfoPadding)
 	timerStarted := pad(fmt.Sprintf(
-		"Timer created: %s", g.startTime.Format(g.timeLayout)), g.logInfoPadding)
-	lastSecond := lastSecondFormat(g.startTime, g.logInfoPadding, g.timeLayout)
+		"Timer created: %s", g.sessionStartTime.Format(g.timeLayout)), g.logInfoPadding)
+	lastSecond := lastSecondFormat(g.sessionStartTime, g.logInfoPadding, g.timeLayout)
 	dashes := strings.Repeat("-", max(len(timerSet), len(timerStarted), len(lastSecond)))
 
 	// set last second file line aka the lock line
@@ -483,7 +377,7 @@ func (g *Game) checkFileLock(writeInitialFileInfo bool) {
 		_, g.err = fmt.Fprint(g.logFile, formattedLines)
 	} else if writeInitialFileInfo && g.isTimerSetToUseLogFileProgress() {
 		timerPaused := pad(fmt.Sprintf("Timer paused:   %s", lock.Format(g.timeLayout)), g.logInfoPadding)
-		timerUnpaused := pad(fmt.Sprintf("Timer unpaused: %s", g.currentTime.Format(g.timeLayout)), g.logInfoPadding)
+		timerUnpaused := pad(fmt.Sprintf("Timer unpaused: %s", time.Now().Format(g.timeLayout)), g.logInfoPadding)
 		lines = []string{dashes, timerPaused, timerUnpaused, dashes}
 		for _, line := range lines {
 			formattedLines = formattedLines + line + "\n"
@@ -497,8 +391,120 @@ func (g *Game) checkFileLock(writeInitialFileInfo bool) {
 	}
 }
 
+// rewrite the entire log file with the most recent second ticked. Verifies only one timer is
+// running by comparing the current last second in file with the second written last tick.
+func (g *Game) overwriteLastSecond() {
+	lastWrittenSecond, ok := readTime(g.logFilepath, g.lastSecondFileLine, g.timeLayout)
+	if !ok {
+		panic("overwriteLastSecond: cannot read last second from log file")
+	}
+	epoch := time.Time{}
+	if !g.lastWrittenSecond.Equal(epoch) &&
+		lastWrittenSecond.Format(g.timeLayout) != g.lastWrittenSecond.Format(g.timeLayout) {
+		// invalid log file. Most likely more than one focus timer is running or the log file was
+		// manually updated. I believe panic is the best user experience rather than letting any timers
+		// continue since the log file may be incorrect. Or a very rare bug happened since there are
+		// several protections to avoid multiple timers running. Losing timer progress and failing
+		// loudly for rare bugs is better than suppressing rare bugs.
+		panic("overwriteLastSecond: invalid log file. detected inconsistent seconds in log file.")
+	}
+
+	input, err := os.ReadFile(g.logFilepath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	lines := strings.Split(string(input), "\n")
+	g.lastWrittenSecond = time.Now()
+	lines[g.lastSecondFileLine] = lastSecondFormat(
+		g.lastWrittenSecond, g.logInfoPadding, g.timeLayout)
+	output := strings.Join(lines, "\n")
+
+	err = os.WriteFile(g.logFilepath, []byte(output), 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+// Check if log progress was read successfully and user wants to use it rather than start new timer.
 func (g *Game) isTimerSetToUseLogFileProgress() bool {
 	return g.progressReadFromLogFile &&
 		g.minuteDurationToggle == int(g.timerDurationLeft.Minutes()) &&
 		int(g.timerDurationLeft.Seconds()) > 0
+}
+
+// typical method required by ebiten to set layout.
+func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+	return int(float32(g.windowWidth) * g.windowMultiplier),
+		int(float32(g.windowHeight) * g.windowMultiplier)
+}
+
+// render screen. called after ever event loop tick.
+func (g *Game) Draw(screen *ebiten.Image) {
+	if !g.timerSessionStarted || g.progressPercent == 100 {
+		screen.Fill(g.doneColor)
+	} else {
+		screen.Fill(g.backgroundColor)
+		vector.FillRect(
+			screen,
+			0,
+			0,
+			float32(g.windowWidth)*g.windowMultiplier*float32(g.progressPercent)/maxPercentage,
+			float32(g.windowHeight)*g.windowMultiplier,
+			g.timerColor,
+			false)
+	}
+
+	if !g.timerSessionStarted {
+		op := &text.DrawOptions{}
+		suffix := " Mouse wheel changes minutes. Press any mouse button to start timer."
+		if g.secondDurationToggle == 0 {
+			s := "Timer set to %d minutes." + suffix
+			text.Draw(screen, fmt.Sprintf(s, g.minuteDurationToggle),
+				&text.GoTextFace{
+					Source: g.mplusFaceSource,
+					Size:   float64(24 * g.windowMultiplier),
+				}, op)
+		} else {
+			s := "Timer set to %d minutes %d seconds." + suffix
+			text.Draw(screen, fmt.Sprintf(s, g.minuteDurationToggle, g.secondDurationToggle),
+				&text.GoTextFace{
+					Source: g.mplusFaceSource,
+					Size:   float64(24 * g.windowMultiplier),
+				}, op)
+		}
+	}
+}
+
+// attempt to read time from any line in log file.
+func readTime(filepath string, lineNumber int, layout string) (time.Time, bool) {
+	input, readFileErr := os.ReadFile(filepath)
+	if readFileErr != nil {
+		// one reason is when file does not exist
+	}
+
+	if len(input) == 0 {
+		return time.Time{}, false
+	}
+
+	lines := strings.Split(string(input), "\n")
+	for str := range strings.SplitSeq(lines[lineNumber], " ") {
+		t, err := time.Parse(layout, str)
+		if err == nil {
+			return t, true
+		}
+	}
+
+	return time.Time{}, false
+}
+
+// the last second is written from multiple places and is used as a lock. Consistent format needed.
+func lastSecondFormat(t time.Time, padding int, layout string) string {
+	return pad(fmt.Sprintf("Last second:   %s", t.Format(layout)), padding)
+}
+
+// use for consistent padding format when writing to log file.
+func pad(info string, padding int) string {
+	p := strings.Repeat(" ", padding)
+	i := p + info + p
+	return i
 }
