@@ -34,22 +34,22 @@ type Game struct {
 	lastSecondFileLine          int
 	catLogCmds                  []string
 	timerStarted                bool
-	intDurationStart            int
-	intDurationStartFromLog     int
-	intDurationCount            int
-	duration                    time.Duration
+	progressReadFromLogFile     bool
+	minuteDurationToggle        int
+	secondDurationToggle        int
+	timerDurationTotal          time.Duration
+	timerDurationLeft           time.Duration
 	currentTime                 time.Time
 	startTime                   time.Time
 	logMinsElapsedThresholdMins int
 	logPercentPadding           int
 	logMinutePadding            int
+	logSecondPadding            int
 	logInfoPadding              int
 	minuteTicker                time.Ticker
 	secondTicker                time.Ticker
 	progressPercent             float64
-	progressPercentStart        float64
 	intProgressPercent          int
-	progressLoadedFromLogFile   bool
 	err                         error
 	mplusFaceSource             *text.GoTextFaceSource
 	timeLayout                  string
@@ -65,10 +65,11 @@ func newGame() Game {
 		windowMultiplier:            1.0,
 		windowWidth:                 1280,
 		windowHeight:                720,
-		intDurationStart:            60,
+		minuteDurationToggle:        60,
 		logMinsElapsedThresholdMins: 100,
 		logPercentPadding:           5, // Largest percent logged (100.0) char length is 5.
-		logMinutePadding:            4, // Largest minute log (1440) char length is 4.
+		logMinutePadding:            4, // Largest minute logged (1440) char length is 4.
+		logSecondPadding:            2, // Largest second logged (60) char length is 2.
 		backgroundColor:             color.RGBA{50, 50, 50, 255},
 		timerColor:                  color.RGBA{75, 75, 75, 255},
 		doneColor:                   color.RGBA{0, 150, 100, 255},
@@ -101,31 +102,46 @@ func (g *Game) Update() error {
 
 	if !g.timerStarted {
 		_, dy := ebiten.Wheel()
-		g.intDurationStart = max(g.intDurationStart+int(dy), 1)
-		g.intDurationStart = min(g.intDurationStart, minutesInADay)
+		g.minuteDurationToggle = max(g.minuteDurationToggle+int(dy), 0)
+		g.minuteDurationToggle = min(g.minuteDurationToggle, minutesInADay)
 
-		if ebiten.IsMouseButtonPressed(ebiten.MouseButton0) ||
+		if g.isTimerSetToUseLogFileProgress() {
+			g.secondDurationToggle = int(g.timerDurationLeft.Seconds()) - g.minuteDurationToggle*60
+		} else {
+			g.secondDurationToggle = 0
+		}
+
+		if (g.minuteDurationToggle > 0 || g.secondDurationToggle > 0) &&
+			ebiten.IsMouseButtonPressed(ebiten.MouseButton0) ||
 			ebiten.IsMouseButtonPressed(ebiten.MouseButton1) ||
 			ebiten.IsMouseButtonPressed(ebiten.MouseButton2) {
 			g.startTimer()
 		}
 	}
 
-	if g.timerStarted && g.intProgressPercent < maxPercentage {
-		g.progressPercent = float64(g.currentTime.Sub(g.startTime)/time.Millisecond) /
-			float64(g.duration/time.Millisecond) * maxPercentage
+	if g.timerStarted && g.progressPercent != maxPercentage {
+		priorSessionTime := float64(g.timerDurationTotal - g.timerDurationLeft)
+		currentSessionTime := float64(time.Since(g.startTime))
+		g.progressPercent = (priorSessionTime + currentSessionTime) / float64(g.timerDurationTotal) *
+			maxPercentage
+		g.progressPercent = min(g.progressPercent, maxPercentage)
 
 		if g.intProgressPercent != int(g.progressPercent) {
 			g.intProgressPercent = int(g.progressPercent)
-			loggedProgressPercent := int((float64(g.intProgressPercent) * (float64(maxPercentage) -
-				g.progressPercentStart) / maxPercentage) + g.progressPercentStart)
+			durationLeft := g.timerDurationLeft - (time.Since(g.startTime))
+			minsLeft := int(durationLeft.Minutes())
+			secsLeft := int(durationLeft.Seconds()) - minsLeft*60
+
 			_, g.err = fmt.Fprintf(g.logFile,
-				"%*d%% %s %*d minutes remaining\n",
+				"%*d%% %s %*d minutes %0*d seconds left\n",
 				g.logPercentPadding,
-				loggedProgressPercent,
+				g.intProgressPercent,
 				g.currentTime.Format(g.timeLayout),
 				g.logMinutePadding,
-				g.intDurationCount)
+				minsLeft,
+				g.logSecondPadding,
+				secsLeft)
+
 			if g.err != nil {
 				log.Fatal(g.err)
 			}
@@ -137,17 +153,20 @@ func (g *Game) Update() error {
 				case <-g.secondTicker.C:
 					g.overwriteLastSecond()
 				case <-g.minuteTicker.C:
-					g.intDurationCount = g.intDurationCount - 1
-					loggedProgressPercent := (g.progressPercent * (float64(maxPercentage) -
-						g.progressPercentStart) / maxPercentage) + g.progressPercentStart
-					if g.intDurationStart > g.logMinsElapsedThresholdMins {
+					durationLeft := g.timerDurationLeft - (time.Since(g.startTime))
+					minsLeft := int(durationLeft.Minutes())
+					secsLeft := int(durationLeft.Seconds()) - minsLeft*60
+
+					if g.minuteDurationToggle > g.logMinsElapsedThresholdMins {
 						_, g.err = fmt.Fprintf(g.logFile,
-							"%*.1f%% %s %*d minutes remaining\n",
+							"%*.1f%% %s %*d minutes %0*d seconds left\n",
 							g.logPercentPadding,
-							loggedProgressPercent,
+							g.progressPercent,
 							g.currentTime.Format(g.timeLayout),
 							g.logMinutePadding,
-							g.intDurationCount)
+							minsLeft,
+							g.logSecondPadding,
+							secsLeft)
 					}
 				default:
 					time.Sleep(1 * time.Microsecond)
@@ -230,13 +249,12 @@ func pad(info string, padding int) string {
 func (g *Game) startTimer() {
 	g.timerStarted = true
 	g.startTime = time.Now()
-	g.duration = time.Duration(g.intDurationStart) * time.Minute
-	g.intDurationCount = g.intDurationStart
 	g.minuteTicker = *time.NewTicker(1 * time.Minute)
 	g.secondTicker = *time.NewTicker(1 * time.Second)
 
-	if !g.progressLoadedFromLogFile || g.intDurationStart != g.intDurationStartFromLog {
-		g.progressPercentStart = 0
+	if !g.isTimerSetToUseLogFileProgress() {
+		g.timerDurationTotal = time.Duration(g.minuteDurationToggle) * time.Minute
+		g.timerDurationLeft = g.timerDurationTotal
 		g.logFile, g.err = os.Create(g.logFilepath)
 		if g.err != nil {
 			log.Fatal(g.err)
@@ -247,19 +265,15 @@ func (g *Game) startTimer() {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	if !g.timerStarted || g.currentTime.Sub(g.startTime) > g.duration {
+	if !g.timerStarted || g.progressPercent == 100 {
 		screen.Fill(g.doneColor)
 	} else {
 		screen.Fill(g.backgroundColor)
-		// Use int not percent read from log for prior timer progress since timer has 1 min granularity.
-		priorTimerProgress := g.progressPercentStart / maxPercentage
-		currentTimerProgess := (g.progressPercent * (maxPercentage - g.progressPercentStart) /
-			maxPercentage) / maxPercentage
 		vector.FillRect(
 			screen,
 			0,
 			0,
-			float32(g.windowWidth)*g.windowMultiplier*float32(priorTimerProgress+currentTimerProgess),
+			float32(g.windowWidth)*g.windowMultiplier*float32(g.progressPercent)/maxPercentage,
 			float32(g.windowHeight)*g.windowMultiplier,
 			g.timerColor,
 			false)
@@ -267,11 +281,22 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	if !g.timerStarted {
 		op := &text.DrawOptions{}
-		s := "%d minutes. Change minutes with mouse wheel. Press any mouse button to start timer"
-		text.Draw(screen, fmt.Sprintf(s, g.intDurationStart), &text.GoTextFace{
-			Source: g.mplusFaceSource,
-			Size:   float64(24 * g.windowMultiplier),
-		}, op)
+		suffix := " Mouse wheel changes minutes. Press any mouse button to start timer."
+		if g.secondDurationToggle == 0 {
+			s := "Timer set to %d minutes." + suffix
+			text.Draw(screen, fmt.Sprintf(s, g.minuteDurationToggle),
+				&text.GoTextFace{
+					Source: g.mplusFaceSource,
+					Size:   float64(24 * g.windowMultiplier),
+				}, op)
+		} else {
+			s := "Timer set to %d minutes %d seconds." + suffix
+			text.Draw(screen, fmt.Sprintf(s, g.minuteDurationToggle, g.secondDurationToggle),
+				&text.GoTextFace{
+					Source: g.mplusFaceSource,
+					Size:   float64(24 * g.windowMultiplier),
+				}, op)
+		}
 	}
 }
 
@@ -304,16 +329,17 @@ func main() {
 		int(float32(g.windowHeight)*g.windowMultiplier))
 
 	durationStartFromCLI := readMinsFromCLI()
-	file, progressPercentFromLog, durationStartFromLog := readProgressFromLog(g.logFilepath)
+	file, durationLeft, durationTotal := readTimerProgressFromLog(g.logFilepath, g.timeLayout)
 
 	if durationStartFromCLI > 0 {
-		g.intDurationStart = durationStartFromCLI
-	} else if durationStartFromLog > 0 && progressPercentFromLog < maxPercentage {
+		g.minuteDurationToggle = durationStartFromCLI
+	} else if durationLeft.Seconds() > 0 {
+		g.progressReadFromLogFile = true
 		g.logFile = file
-		g.progressLoadedFromLogFile = true
-		g.progressPercentStart = progressPercentFromLog
-		g.intDurationStartFromLog = durationStartFromLog
-		g.intDurationStart = durationStartFromLog
+		g.timerDurationLeft = durationLeft
+		g.timerDurationTotal = durationTotal
+		g.minuteDurationToggle = int(durationLeft.Minutes())
+		g.secondDurationToggle = int(durationLeft.Seconds()) - g.minuteDurationToggle*60
 	}
 
 	if err := ebiten.RunGameWithOptions(&g, &ebiten.RunGameOptions{InitUnfocused: true}); err != nil {
@@ -355,48 +381,79 @@ func readMinsFromCLI() int {
 	}
 }
 
-func readProgressFromLog(filename string) (*os.File, float64, int) {
+// Attempt to read timer progress from log. Returns the file, duration left, and total duration.
+func readTimerProgressFromLog(filename string, layout string) (*os.File, time.Duration, time.Duration) {
 	file, fileErr := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	var progressPercentFromLog float64
-	var durationStartFromLog int
+	var timerDurationTotal time.Duration
+	var timerStarts []time.Time
+	var timerStops []time.Time
 
 	if fileErr == nil {
 		scanner := bufio.NewReader(file)
 		for {
-			textLine, readLineErr := scanner.ReadString('\n')
+			line, readLineErr := scanner.ReadString('\n')
 			if readLineErr != nil {
 				break
 			}
+			line = line[:len(line)-1]
+			lowercaseLine := strings.ToLower(line)
 
-			percent := strings.Split(textLine, "%")[0]
-			percent = strings.TrimSpace(percent)
-			if loggedProgressPercent, convertErr := strconv.ParseFloat(percent, 64); convertErr == nil {
-				progressPercentFromLog = loggedProgressPercent
+			if strings.Contains(lowercaseLine, "set") {
+				for str := range strings.SplitSeq((line), " ") {
+					mins, err := strconv.Atoi(str)
+					if err == nil {
+						timerDurationTotal = time.Minute * time.Duration(mins)
+					}
+				}
 			}
 
-			text := strings.Split(textLine, " ")
-			for i, v := range text {
-				if v == "minutes" {
-					loggedMins, err := strconv.Atoi(text[i-1])
-					if err != nil {
-						break
-					}
-					durationStartFromLog = loggedMins
+			// TODO: add keywords to config rather than hard code
+			var timerStart, timerStop bool
+			if strings.Contains(lowercaseLine, "created") ||
+				strings.Contains(lowercaseLine, "unpaused") {
+				timerStart = true
+			} else if strings.Contains(lowercaseLine, "last") ||
+				strings.Contains(lowercaseLine, "paused") {
+				timerStop = true
+			}
+
+			for str := range strings.SplitSeq(line, " ") {
+				t, err := time.Parse(layout, str)
+				if err == nil && timerStart {
+					timerStarts = append(timerStarts, t)
+				} else if err == nil && timerStop {
+					timerStops = append(timerStops, t)
 				}
 			}
 		}
 	}
-	return file, progressPercentFromLog, durationStartFromLog
+
+	if len(timerStarts) != len(timerStops) {
+		panic(fmt.Sprintf("readDurationLeftFromLog: cannot determine duration since start and stops "+
+			" are not equal. starts: %d stops: %d", len(timerStarts), len(timerStops)))
+	}
+
+	if len(timerStops) > 0 {
+		lastTimerStop := timerStops[0]
+		timerStops = append(timerStops[1:], lastTimerStop)
+	}
+
+	var timerDurationComplete time.Duration
+	for i := 0; i < len(timerStarts); i++ {
+		timerDurationComplete += timerStops[i].Sub(timerStarts[i])
+	}
+
+	return file, timerDurationTotal - timerDurationComplete, timerDurationTotal
 }
 
 // Prevents two focus timers from ticking at once. The last second logged is used as a lock.
 func (g *Game) checkFileLock(writeInitialFileInfo bool) {
 	// format initial file info. This is needed to determine which line number the lock is located on.
 	minStr := "minutes"
-	if g.intDurationStart == 1 {
+	if g.minuteDurationToggle == 1 {
 		minStr = "minute"
 	}
-	timerSet := pad(fmt.Sprintf("Timer set for %d %s.", g.intDurationStart, minStr), g.logInfoPadding)
+	timerSet := pad(fmt.Sprintf("Timer set for %d %s.", g.minuteDurationToggle, minStr), g.logInfoPadding)
 	timerStarted := pad(fmt.Sprintf(
 		"Timer created: %s", g.startTime.Format(g.timeLayout)), g.logInfoPadding)
 	lastSecond := lastSecondFormat(g.startTime, g.logInfoPadding, g.timeLayout)
@@ -418,14 +475,13 @@ func (g *Game) checkFileLock(writeInitialFileInfo bool) {
 			"stopped within the last %d seconds", int(g.lockReleaseDelay.Seconds())))
 	}
 
-	// TODO: DRY this logic. It is repeated in startTimer fn
 	var formattedLines string
-	if writeInitialFileInfo && (!g.progressLoadedFromLogFile || g.intDurationStart != g.intDurationStartFromLog) {
+	if writeInitialFileInfo && !g.isTimerSetToUseLogFileProgress() {
 		for _, line := range lines {
 			formattedLines = formattedLines + line + "\n"
 		}
 		_, g.err = fmt.Fprint(g.logFile, formattedLines)
-	} else if writeInitialFileInfo {
+	} else if writeInitialFileInfo && g.isTimerSetToUseLogFileProgress() {
 		timerPaused := pad(fmt.Sprintf("Timer paused:   %s", lock.Format(g.timeLayout)), g.logInfoPadding)
 		timerUnpaused := pad(fmt.Sprintf("Timer unpaused: %s", g.currentTime.Format(g.timeLayout)), g.logInfoPadding)
 		lines = []string{dashes, timerPaused, timerUnpaused, dashes}
@@ -439,4 +495,10 @@ func (g *Game) checkFileLock(writeInitialFileInfo bool) {
 	if g.err != nil {
 		log.Fatal(g.err)
 	}
+}
+
+func (g *Game) isTimerSetToUseLogFileProgress() bool {
+	return g.progressReadFromLogFile &&
+		g.minuteDurationToggle == int(g.timerDurationLeft.Minutes()) &&
+		int(g.timerDurationLeft.Seconds()) > 0
 }
