@@ -352,8 +352,8 @@ func (g *Game) acquireFileLock() {
 
 	// set last second file line aka the lock line
 	// first line is empty to prevent cat format issues when running in background via &
-	lines := []string{"", dashes, timerSet, timerStarted, lastSecond, dashes}
-	for i, line := range lines {
+	header := []string{"", dashes, timerSet, timerStarted, lastSecond, dashes}
+	for i, line := range header {
 		if line == lastSecond {
 			g.lastSecondFileLine = i
 		}
@@ -367,16 +367,16 @@ func (g *Game) acquireFileLock() {
 	}
 
 	var formattedLines string
-	if !g.isTimerSetToUseLogFileProgress() {
-		for _, line := range lines {
+	if g.timerDurationLeft == g.timerDurationTotal {
+		for _, line := range header {
 			formattedLines = formattedLines + line + "\n"
 		}
 		_, g.err = fmt.Fprint(g.logFile, formattedLines)
 	} else {
 		timerPaused := pad(fmt.Sprintf("Timer paused:   %s", lock.Format(g.timeLayout)), g.logInfoPadding)
 		timerUnpaused := pad(fmt.Sprintf("Timer unpaused: %s", time.Now().Format(g.timeLayout)), g.logInfoPadding)
-		lines = []string{dashes, timerPaused, timerUnpaused, dashes}
-		for _, line := range lines {
+		pauses := []string{dashes, timerPaused, timerUnpaused, dashes}
+		for _, line := range pauses {
 			formattedLines = formattedLines + line + "\n"
 		}
 		_, g.err = fmt.Fprint(g.logFile, formattedLines)
@@ -422,13 +422,6 @@ func (g *Game) overwriteLastSecond() {
 	}
 }
 
-// Check if log progress was read successfully and user wants to use it rather than start new timer.
-func (g *Game) isTimerSetToUseLogFileProgress() bool {
-	return g.progressReadFromLogFile &&
-		g.minuteDurationToggle == int(g.timerDurationLeft.Minutes()) &&
-		int(g.timerDurationLeft.Seconds()) > 0
-}
-
 // typical method required by ebiten to set layout.
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return int(float32(g.windowWidth) * g.windowMultiplier),
@@ -470,6 +463,15 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				}, op)
 		}
 	}
+}
+
+// Check if log progress was read successfully and user wants to use it rather than start new timer.
+func (g *Game) isTimerSetToUseLogFileProgress() bool {
+	minsLeft := int(g.timerDurationLeft.Minutes())
+	secsLeft := int(g.timerDurationLeft.Seconds()) - minsLeft*60
+	return g.progressReadFromLogFile &&
+		g.minuteDurationToggle == int(g.timerDurationLeft.Minutes()) &&
+		g.secondDurationToggle == secsLeft
 }
 
 // attempt to read time from any line in log file.
