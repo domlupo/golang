@@ -193,19 +193,14 @@ func (g *Game) startSessionTimer() {
 		}
 	}
 
-	g.checkFileLock(true)
+	g.acquireFileLock()
 }
 
 // entry point before event loop.
 func main() {
 	g := newGame()
-	if readCatLogCmdFromCLI(g.logFilepath, g.catLogCmds) {
-		return
-	}
-	g.checkFileLock(false)
 
 	g.mplusFaceSource, _ = text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
-
 	var monitors []*ebiten.MonitorType
 	monitors = ebiten.AppendMonitors(monitors)
 	// TODO: Remove before release in order to avoid bugs for customers which own this monitor
@@ -215,11 +210,13 @@ func main() {
 			g.windowMultiplier = 1.5
 		}
 	}
-
 	ebiten.SetWindowSize(
 		int(float32(g.windowWidth)*g.windowMultiplier),
 		int(float32(g.windowHeight)*g.windowMultiplier))
 
+	if readCatLogCmdFromCLI(g.logFilepath, g.catLogCmds) {
+		return
+	}
 	minsFromCLI := readMinsFromCLI()
 	file, durationLeft, durationTotal := readTimerProgressFromLog(g.logFilepath, g.timeLayout)
 
@@ -341,7 +338,7 @@ func readTimerProgressFromLog(filename string, layout string) (*os.File, time.Du
 }
 
 // Prevents two focus timers from ticking at once. The last second logged is used as a lock.
-func (g *Game) checkFileLock(writeInitialFileInfo bool) {
+func (g *Game) acquireFileLock() {
 	// format initial file info. This is needed to determine which line number the lock is located on.
 	minStr := "minutes"
 	if g.minuteDurationToggle == 1 {
@@ -370,12 +367,12 @@ func (g *Game) checkFileLock(writeInitialFileInfo bool) {
 	}
 
 	var formattedLines string
-	if writeInitialFileInfo && !g.isTimerSetToUseLogFileProgress() {
+	if !g.isTimerSetToUseLogFileProgress() {
 		for _, line := range lines {
 			formattedLines = formattedLines + line + "\n"
 		}
 		_, g.err = fmt.Fprint(g.logFile, formattedLines)
-	} else if writeInitialFileInfo && g.isTimerSetToUseLogFileProgress() {
+	} else {
 		timerPaused := pad(fmt.Sprintf("Timer paused:   %s", lock.Format(g.timeLayout)), g.logInfoPadding)
 		timerUnpaused := pad(fmt.Sprintf("Timer unpaused: %s", time.Now().Format(g.timeLayout)), g.logInfoPadding)
 		lines = []string{dashes, timerPaused, timerUnpaused, dashes}
