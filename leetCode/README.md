@@ -1,9 +1,15 @@
 # LeetCode
 
+## Need to practice
+
+- how to implement min and max heaps after import "container/heap"
+
+## Need to learn
+
+- how hash sets and hash maps are implemented.
+
 ## Revisit
 
-- 703
-  - Kth Largest Element in a stream requires heap import and knowing interfaces.
 - 157
   - Read N Characters Given Read4
   - This one's explanation is confusing
@@ -39,6 +45,33 @@
 - When _, ok := contains[n]. ok is true if contains[n] was ever set. Even for contains[n] = false.
 - fmt.Println(string('a'-32)) lower to upper
 - fmt.Println(string('A'+32)) upper to lower
+
+## Min and Max Heaps
+
+- examples are LeetCode 703 and 1086
+- complex to implement in Golang
+- remember to call Heap.Push(*IntHeap, int) and Heap.Pop(*IntHeap).(int)
+
+```
+// IntHeap is a min-heap of ints.
+type IntHeap []int
+
+func (h IntHeap) Len() int           { return len(h) }
+func (h IntHeap) Less(i, j int) bool { return h[i] < h[j] }
+func (h IntHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+
+func (h *IntHeap) Push(x any) {
+	*h = append(*h, x.(int))
+}
+
+func (h *IntHeap) Pop() any {
+	old := *h
+	n := len(old)
+	x := old[n-1]
+	*h = old[0 : n-1]
+	return x
+}
+```
 
 ### Binary Search Tree
 
