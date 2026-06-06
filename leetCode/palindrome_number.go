@@ -7,11 +7,11 @@ func isPalindrome(x int) bool {
 		return false
 	}
 
-	xRemainder := x
+	rem := x
 	var reversed int
-	for xRemainder > 0 {
-		reversed = reversed*10 + xRemainder%10
-		xRemainder /= 10
+	for rem > 0 {
+		reversed = reversed*10 + rem%10
+		rem /= 10
 	}
 
 	return x == reversed
