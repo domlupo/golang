@@ -3,7 +3,7 @@
 package main
 
 func lengthOfLastWord(s string) int {
-	length := 0
+	var length int
 	i := len(s) - 1
 	for s[i] == ' ' {
 		i--
