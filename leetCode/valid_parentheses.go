@@ -13,7 +13,7 @@ func isValid(s string) bool {
 	for _, r := range s {
 		leftBracket, ok := leftBrackets[r]
 		if ok && len(stack) > 0 && stack[len(stack)-1] == leftBracket {
-			stack = stack[0 : len(stack)-1]
+			stack = stack[:len(stack)-1]
 		} else if ok {
 			return false
 		} else {
