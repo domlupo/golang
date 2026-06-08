@@ -6,6 +6,7 @@ func searchInsert(nums []int, target int) int {
 	l := 0
 	r := len(nums) - 1
 
+	// when target is not found, l is always equal to r + 1
 	for l <= r {
 		mid := (l + r) / 2
 		if nums[mid] == target {
