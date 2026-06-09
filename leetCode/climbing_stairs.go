@@ -5,14 +5,14 @@ package main
 // iterative (best space and time complexity)
 
 func climbStairs(n int) int {
-	lower := 1
-	upper := 2
+	prev := 1
+	curr := 2
 
 	for ; n > 1; n-- {
-		lower, upper = upper, lower+upper
+		prev, curr = curr, prev+curr
 	}
 
-	return lower
+	return prev
 }
 
 // dynamic programming
