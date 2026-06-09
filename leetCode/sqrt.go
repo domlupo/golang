@@ -3,15 +3,15 @@
 package main
 
 func mySqrt(x int) int {
-	l := 0
+	var l int
 	r := x
 
 	for l <= r {
-		mid := l + (r-l)/2
-		if mid*mid > x {
-			r = mid - 1
+		m := l + (r-l)/2
+		if m*m > x {
+			r = m - 1
 		} else {
-			l = mid + 1
+			l = m + 1
 		}
 	}
 
