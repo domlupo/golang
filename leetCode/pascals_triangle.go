@@ -5,7 +5,7 @@
 package main
 
 func generate(numRows int) [][]int {
-	t := [][]int{[]int{1}}
+	t := [][]int{{1}}
 
 	for numRows > 1 {
 		numRows--

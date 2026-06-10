@@ -2,14 +2,14 @@
 
 package main
 
-// optimal due to computation trick n := p * (rowIndex - k + 1) / k
+// optimal due to computation trick next := prev * (rowIndex - col + 1) / col
 func getRow(rowIndex int) []int {
 	t := []int{1}
-	p := 1
-	for k := 1; k <= rowIndex; k++ {
-		n := p * (rowIndex - k + 1) / k
-		t = append(t, n)
-		p = n
+	prev := 1
+	for col := 1; col <= rowIndex; col++ {
+		next := prev * (rowIndex - col + 1) / col
+		t = append(t, next)
+		prev = next
 	}
 	return t
 }

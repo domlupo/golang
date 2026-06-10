@@ -73,6 +73,20 @@ func (h *IntHeap) Pop() any {
 }
 ```
 
+### Pascal's Triangle trick
+
+next := prev * (rowIndex - col + 1) / col
+
+where rowIndex starts at 0 and col starts at 0.
+
+e.g. row 4 calculations
+
+col 0 -> 1
+col 1 -> 4 := 1 * (4 - 1 + 1 ) / 1
+col 2 -> 6 := 4 * (4 - 2 + 1 ) / 2
+col 3 -> 4 := 6 * (4 - 3 + 1 ) / 3
+col 4 -> 1 := 4 * (4 - 4 + 1 ) / 4
+
 ### Binary Search Tree
 
 - Clarify with interviewer or LeetCode question if the values are unique or not.
