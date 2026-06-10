@@ -12,11 +12,7 @@ func isSymmetric(root *TreeNode) bool {
 		stack = stack[2:]
 		if l == nil && r == nil {
 			continue
-		}
-		if l == nil || r == nil {
-			return false
-		}
-		if l.Val != r.Val {
+		} else if l == nil || r == nil || l.Val != r.Val {
 			return false
 		}
 		stack = append(stack, l.Left, r.Right, l.Right, r.Left)
@@ -26,15 +22,11 @@ func isSymmetric(root *TreeNode) bool {
 }
 
 // recursive
-func symmetric(n1, n2 *TreeNode) bool {
-	if n1 == nil && n2 == nil {
+func sym(l, r *TreeNode) bool {
+	if l == nil && r == nil {
 		return true
-	}
-	if n1 == nil || n2 == nil {
+	} else if l == nil || r == nil || l.Val != r.Val {
 		return false
 	}
-	if n1.Val != n2.Val {
-		return false
-	}
-	return symmetric(n1.Left, n2.Right) && symmetric(n1.Right, n2.Left)
+	return sym(l.Left, r.Right) && sym(l.Right, r.Left)
 }
