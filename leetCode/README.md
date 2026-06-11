@@ -73,6 +73,19 @@ func (h *IntHeap) Pop() any {
 }
 ```
 
+### Tree Traversals
+
+For pre-order, in-order and post-order, left always occurs before right but when root is traversed
+changes.
+
+   1
+  / \
+ 2   3
+
+pre-order -> root left right -> 1 2 3
+in-order -> left root right -> 2 1 3
+post-order -> left right root -> 2 3 1
+
 ### Pascal's Triangle trick
 
 next := prev * (rowIndex - col + 1) / col

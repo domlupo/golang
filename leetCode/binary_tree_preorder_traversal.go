@@ -5,22 +5,16 @@ package main
 // iterative
 func preorderTraversal(root *TreeNode) []int {
 	var t []int
-
-	if root == nil {
-		return t
-	}
-
 	s := []*TreeNode{root}
-	for len(s) != 0 {
+
+	for len(s) > 0 {
 		curr := s[len(s)-1]
 		s = s[:len(s)-1]
+		if curr == nil {
+			continue
+		}
 		t = append(t, curr.Val)
-		if curr.Right != nil {
-			s = append(s, curr.Right)
-		}
-		if curr.Left != nil {
-			s = append(s, curr.Left)
-		}
+		s = append(s, curr.Right, curr.Left)
 	}
 
 	return t
