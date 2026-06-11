@@ -2,20 +2,19 @@
 
 package main
 
-// iteration skipped
 func maxDepth(root *TreeNode) int {
-	stack := []*TreeNode{root}
+	q := []*TreeNode{root}
 	depths := []int{1}
 	var depth int
 
-	for len(stack) > 0 {
-		curr := stack[0]
+	for len(q) > 0 {
+		curr := q[0]
 		d := depths[0]
-		stack = stack[1:]
+		q = q[1:]
 		depths = depths[1:]
 		if curr != nil {
 			depth = max(depth, d)
-			stack = append(stack, curr.Left, curr.Right)
+			q = append(q, curr.Left, curr.Right)
 			depths = append(depths, d+1, d+1)
 		}
 	}
