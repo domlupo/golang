@@ -4,20 +4,20 @@ package main
 
 // iterative
 func postorderTraversal(root *TreeNode) []int {
-	var v []int
+	var ans []int
 	s := []*TreeNode{root}
-	for len(s) != 0 {
+
+	for len(s) > 0 {
 		curr := s[len(s)-1]
 		s = s[:len(s)-1]
 		if curr == nil {
 			continue
 		}
-		v = append([]int{curr.Val}, v...)
-		s = append(s, curr.Left)
-		s = append(s, curr.Right)
+		s = append([]int{curr.Val}, ans...)
+		s = append(s, curr.Left, curr.Right
 	}
 
-	return v
+	return ans
 }
 
 // recursive
