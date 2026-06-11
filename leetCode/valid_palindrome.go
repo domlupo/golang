@@ -3,23 +3,21 @@
 package main
 
 func isPalindrome2(s string) bool {
-	var p1 int
-	p2 := len(s) - 1
+	var l int
+	r := len(s) - 1
 
-	for p1 < p2 {
-		if !isAlphaNumeric(s[p1]) {
-			p1++
-			continue
+	for l < r {
+		for l < r && !isAlphaNumeric(s[l]) {
+			l++
 		}
-		if !isAlphaNumeric(s[p2]) {
-			p2--
-			continue
+		for l < r && !isAlphaNumeric(s[r]) {
+			r--
 		}
-		if lower(s[p1]) != lower(s[p2]) {
+		if lower(s[l]) != lower(s[r]) {
 			return false
 		}
-		p1++
-		p2--
+		l++
+		r--
 	}
 
 	return true
@@ -33,10 +31,5 @@ func lower(b byte) byte {
 }
 
 func isAlphaNumeric(b byte) bool {
-	if (b >= 'a' && b <= 'z') ||
-		(b >= 'A' && b <= 'Z') ||
-		(b >= '0' && b <= '9') {
-		return true
-	}
-	return false
+	return b >= 'a' && b <= 'z' || b >= 'A' && b <= 'Z' || b >= '0' && b <= '9'
 }
