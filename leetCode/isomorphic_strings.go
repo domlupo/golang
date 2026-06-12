@@ -3,25 +3,19 @@
 package main
 
 func isIsomorphic(s string, t string) bool {
-	sToT := make(map[byte]byte)
-	tToS := make(map[byte]byte)
+	st := make(map[byte]byte)
+	ts := make(map[byte]byte)
 
 	for i := 0; i < len(s); i++ {
-		sC := s[i]
-		tC := t[i]
+		tMap, stOk := st[s[i]]
+		sMap, tsOk := ts[t[i]]
 
-		sMap, sOk := sToT[sC]
-		tMap, tOk := tToS[tC]
-
-		if sOk && sMap != tC {
+		if !stOk && !tsOk {
+			st[s[i]] = t[i]
+			ts[t[i]] = s[i]
+		} else if tMap != t[i] || sMap != s[i] {
 			return false
 		}
-		if tOk && tMap != sC {
-			return false
-		}
-
-		sToT[sC] = tC
-		tToS[tC] = sC
 	}
 
 	return true
