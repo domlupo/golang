@@ -3,15 +3,10 @@
 package main
 
 func hammingWeight(n int) int {
-	var a int
-	for {
-		if n%2 == 1 {
-			a++
-		}
-		if n == 0 || n == 1 {
-			break
-		}
+	var ans int
+	for n > 0 {
+		ans += n % 2
 		n /= 2
 	}
-	return a
+	return ans
 }
