@@ -3,12 +3,14 @@
 package main
 
 func convertToTitle(columnNumber int) string {
-	var result string
-	for columnNumber > 0 {
-		columnNumber--
-		charCode := 'A' + columnNumber%26
-		result = string(rune(charCode)) + result
-		columnNumber /= 26
-	}
-	return result
-}
+  var ans string
+
+  for columnNumber > 0 {
+    columnNumber--
+    c := 'A' + columnNumber%26
+    ans = string(c) + ans
+    columnNumber /= 26
+  }
+
+  return ans
+
