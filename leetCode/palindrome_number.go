@@ -8,11 +8,11 @@ func isPalindrome(x int) bool {
 	}
 
 	rem := x
-	var reversed int
+	var rev int
 	for rem > 0 {
-		reversed = reversed*10 + rem%10
+		rev = rev*10 + rem%10
 		rem /= 10
 	}
 
-	return x == reversed
+	return x == rev
 }
