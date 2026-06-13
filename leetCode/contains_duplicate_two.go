@@ -3,14 +3,13 @@
 package main
 
 func containsNearbyDuplicate(nums []int, k int) bool {
-	lastSeen := make(map[int]int)
+	seen := make(map[int]int)
 
-	for i, n := range nums {
-		ls, ok := lastSeen[n]
-		if ok && i-ls <= k {
+	for ni, n := range nums {
+		if i, ok := seen[n]; ok && ni-i <= k {
 			return true
 		}
-		lastSeen[n] = i
+		seen[n] = ni
 	}
 
 	return false
