@@ -13,7 +13,7 @@
 - 157
   - Read N Characters Given Read4
   - This one's explanation is confusing
-- 222, 408, 1089
+- 408, 1089
   - This is harder than an easy
 - 170, 225, 232
   - Very few companies have used this recently and it is an implement class
