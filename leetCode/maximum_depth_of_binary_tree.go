@@ -3,23 +3,26 @@
 package main
 
 func maxDepth(root *TreeNode) int {
-	q := []*TreeNode{root}
-	depths := []int{1}
-	var depth int
+	if root == nil {
+		return 0
+	}
 
+	q := []*TreeNode{root}
+	d := []int{1}
+	var maxD int
 	for len(q) > 0 {
-		curr := q[0]
-		d := depths[0]
+		n := q[0]
+		depth := d[0]
 		q = q[1:]
-		depths = depths[1:]
-		if curr != nil {
-			depth = max(depth, d)
-			q = append(q, curr.Left, curr.Right)
-			depths = append(depths, d+1, d+1)
+		d = d[1:]
+		if n != nil {
+			maxD = max(maxD, depth)
+			q = append(q, n.Left, n.Right)
+			d = append(d, depth+1, depth+1)
 		}
 	}
 
-	return depth
+	return maxD
 }
 
 // recursion
