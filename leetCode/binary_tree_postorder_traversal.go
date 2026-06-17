@@ -13,8 +13,8 @@ func postorderTraversal(root *TreeNode) []int {
 		if curr == nil {
 			continue
 		}
-		s = append([]int{curr.Val}, ans...)
-		s = append(s, curr.Left, curr.Right
+		ans = append([]int{curr.Val}, ans...)
+		s = append(s, curr.Left, curr.Right)
 	}
 
 	return ans
