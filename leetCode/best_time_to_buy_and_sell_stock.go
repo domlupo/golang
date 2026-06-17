@@ -2,10 +2,8 @@
 
 package main
 
-import "math"
-
 func maxProfit(prices []int) int {
-	m := math.MaxInt
+	m := prices[0]
 	var profit int
 
 	for _, p := range prices {
