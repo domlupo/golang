@@ -7,11 +7,13 @@ func isPalindrome2(s string) bool {
 	r := len(s) - 1
 
 	for l < r {
-		for l < r && !isAlphaNumeric(s[l]) {
+		if !isAlphaNumeric(s[l]) {
 			l++
+			continue
 		}
-		for l < r && !isAlphaNumeric(s[r]) {
+		if !isAlphaNumeric(s[r]) {
 			r--
+			continue
 		}
 		if lower(s[l]) != lower(s[r]) {
 			return false
