@@ -9,8 +9,8 @@ func isAnagram(s string, t string) bool {
 
 	counts := make(map[byte]int)
 	for i := 0; i < len(s); i++ {
-		counts[s[i]] = counts[s[i]] + 1
-		counts[t[i]] = counts[t[i]] - 1
+		counts[s[i]]++
+		counts[t[i]]--
 	}
 
 	for _, v := range counts {

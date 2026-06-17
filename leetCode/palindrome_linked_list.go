@@ -17,7 +17,6 @@ func isPalindromeLinkedList(head *ListNode) bool {
 	for curr != nil {
 		save := curr.Next
 		curr.Next = prev
-
 		prev, curr = curr, save
 	}
 	rev := prev
