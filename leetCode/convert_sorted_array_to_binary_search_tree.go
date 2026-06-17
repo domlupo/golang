@@ -6,11 +6,11 @@ func sortedArrayToBST(nums []int) *TreeNode {
 	if len(nums) == 0 {
 		return nil
 	}
-	mid := len(nums) / 2
+	m := len(nums) / 2
 	n := &TreeNode{
-		Val:   nums[mid],
-		Left:  sortedArrayToBST(nums[:mid]),
-		Right: sortedArrayToBST(nums[mid+1:]),
+		Val:   nums[m],
+		Left:  sortedArrayToBST(nums[:m]),
+		Right: sortedArrayToBST(nums[m+1:]),
 	}
 	return n
 }
