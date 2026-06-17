@@ -3,18 +3,18 @@
 package main
 
 func isSameTree(p *TreeNode, q *TreeNode) bool {
-	stack := []*TreeNode{p, q}
+	queue := []*TreeNode{p, q}
 
-	for len(stack) > 0 {
-		n1 := stack[0]
-		n2 := stack[1]
-		stack = stack[2:]
+	for len(queue) > 0 {
+		n1 := queue[0]
+		n2 := queue[1]
+		queue = queue[2:]
 		if n1 == nil && n2 == nil {
 			continue
 		} else if n1 == nil || n2 == nil || n1.Val != n2.Val {
 			return false
 		}
-		stack = append(stack, n1.Left, n2.Left, n1.Right, n2.Right)
+		queue = append(queue, n1.Left, n2.Left, n1.Right, n2.Right)
 	}
 
 	return true
