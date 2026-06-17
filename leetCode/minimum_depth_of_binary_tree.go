@@ -4,9 +4,9 @@ package main
 
 // iterative
 func minDepth(root *TreeNode) int {
-	min := 0
+	m := 0
 	if root == nil {
-		return min
+		return m
 	}
 
 	nodes := []*TreeNode{root}
@@ -14,7 +14,7 @@ func minDepth(root *TreeNode) int {
 	for len(nodes) != 0 {
 		curr := nodes[0]
 		depth := depths[0]
-		min = depth
+		m = depth
 
 		nodes = nodes[1:]
 		depths = depths[1:]
@@ -31,7 +31,7 @@ func minDepth(root *TreeNode) int {
 			depths = append(depths, depth+1)
 		}
 	}
-	return min
+	return m
 }
 
 // recursive
@@ -45,10 +45,9 @@ func minDepthRecursive(root *TreeNode) int {
 
 	if l == 0 {
 		return r + 1
-	}
-	if r == 0 {
+	} else if r == 0 {
 		return l + 1
+	} else {
+		return min(l, r) + 1
 	}
-
-	return min(l, r) + 1
 }
