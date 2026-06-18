@@ -5,31 +5,30 @@ package main
 import "strconv"
 
 func binaryTreePaths(root *TreeNode) []string {
-	var o []string
+	var ans []string
+	paths := []string{strconv.Itoa(root.Val)}
+	nodes := []*TreeNode{root}
 
-	p := []string{strconv.Itoa(root.Val)}
-	n := []*TreeNode{root}
-	for len(n) > 0 {
-		currN := n[len(n)-1]
-		currP := p[len(p)-1]
+	for len(nodes) > 0 {
+		n := nodes[0]
+		p := paths[0]
+		nodes = nodes[1:]
+		paths = paths[1:]
 
-		n = n[:len(n)-1]
-		p = p[:len(p)-1]
-
-		if currN.Left == nil && currN.Right == nil {
-			o = append(o, currP)
+		if n.Left == nil && n.Right == nil {
+			ans = append(ans, p)
 		}
-		if currN.Right != nil {
-			n = append(n, currN.Right)
-			path := currP + "->" + strconv.Itoa(currN.Right.Val)
-			p = append(p, path)
+		if n.Right != nil {
+			nodes = append(nodes, n.Right)
+			p := p + "->" + strconv.Itoa(n.Right.Val)
+			paths = append(paths, p)
 		}
-		if currN.Left != nil {
-			n = append(n, currN.Left)
-			path := currP + "->" + strconv.Itoa(currN.Left.Val)
-			p = append(p, path)
+		if n.Left != nil {
+			nodes = append(nodes, n.Left)
+			p := p + "->" + strconv.Itoa(n.Left.Val)
+			paths = append(paths, p)
 		}
 	}
 
-	return o
+	return ans
 }
