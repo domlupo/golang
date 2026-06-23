@@ -6,36 +6,31 @@ func addBinary(a string, b string) string {
 	var reversedSum []rune
 	var carry bool
 
-	for i := 0; ; i++ {
-		if i >= len(a) && i >= len(b) && !carry {
-			break
+	for i := 1; i <= len(a) || i <= len(b) || carry; i++ {
+		var sum int
+		if i <= len(a) && a[len(a)-i] == '1' {
+			sum++
 		}
-
-		total := 0
-		if i < len(a) && a[len(a)-i-1] == '1' {
-			total++
-		}
-		if i < len(b) && b[len(b)-i-1] == '1' {
-			total++
+		if i <= len(b) && b[len(b)-i] == '1' {
+			sum++
 		}
 		if carry {
-			total++
+			sum++
 		}
 
-		carry = false
-		switch total {
+		switch sum {
 		case 0:
 			reversedSum = append(reversedSum, '0')
+			carry = false
 		case 1:
 			reversedSum = append(reversedSum, '1')
+			carry = false
 		case 2:
 			carry = true
 			reversedSum = append(reversedSum, '0')
 		case 3:
 			carry = true
 			reversedSum = append(reversedSum, '1')
-		default:
-			panic("total cannot exceed 3")
 		}
 	}
 
