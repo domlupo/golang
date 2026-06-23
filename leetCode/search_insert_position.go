@@ -9,10 +9,10 @@ func searchInsert(nums []int, target int) int {
 	// when target is not found, l is always equal to r + 1
 	for l <= r {
 		m := (l + r) / 2
-		if nums[m] > target {
-			r = m - 1
-		} else {
+		if nums[m] < target {
 			l = m + 1
+		} else {
+			r = m - 1
 		}
 	}
 
