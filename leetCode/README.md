@@ -168,3 +168,15 @@ func gcd(v1, v2 int) int{
   }
   return v1
 }
+
+### strings.Join(x, "")
+
+can create a string from:
+
+  x := []byte{'a', 'b', 'c'}
+  string(x)
+
+but use strings.Join(x, "") for below:
+
+  x := []string{"a", "b", "c"}
+  strings.Join(x, "")
