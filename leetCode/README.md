@@ -136,6 +136,11 @@ i := math.MinInt
 i -= 1
 i *= -1 is still a negative number
 
+math.MaxInt32 is 2147483647
+math.MinInt32 is -2147483648
+math.MaxInt is 9223372036854775807
+math.MinInt is -9223372036854775808
+
 ### Brian Kernighan's algorithm to set count bits
 
 func countSetBits(n int) int {
