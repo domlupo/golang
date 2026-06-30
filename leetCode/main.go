@@ -6,7 +6,9 @@ import (
 )
 
 func main() {
-	problems := []int{1, 9, 13, 14, 20, 21, 26, 27, 28, 35, 58, 66, 67, 69, 70, 83, 88, 94, 100, 101,
+	// TODO: document via code why specific problems are skipped
+
+	easy := []int{1, 9, 13, 14, 20, 21, 26, 27, 28, 35, 58, 66, 67, 69, 70, 83, 88, 94, 100, 101,
 		104, 108, 110, 111, 112, 118, 119, 121, 125, 136, 141, 144, 145, 160, 163, 168, 169, 171, 190,
 		191, 202, 203, 205, 206, 217, 219, 222, 226, 228, 231, 234, 242, 243, 246, 252, 257, 258, 263,
 		266, 268, 270, 278, 283, 290, 292, 293, 303, 326, 338, 342, 344, 345, 346, 349, 350, 359, 367,
@@ -18,6 +20,14 @@ func main() {
 		844, 859, 860, 867, 868, 872, 876, 883, 884, 888, 892, 896, 897, 905, 908, 914, 917, 922, 925,
 		929, 933, 938, 941, 942, 944, 953, 961, 965, 976, 977, 989, 993, 997, 999}
 
-	i := rand.IntN(len(problems))
-	fmt.Printf("Random problem number %d of %d problems total.\n", problems[i], len(problems))
+	medium := []int{2, 3, 5, 6, 7}
+
+	hard := []int{4}
+
+	i := rand.IntN(len(easy))
+	fmt.Printf("Easy: %d of %d problems total.\n", easy[i], len(easy))
+	i = rand.IntN(len(medium))
+	fmt.Printf("Medium: %d of %d problems total.\n", medium[i], len(medium))
+	i = rand.IntN(len(hard))
+	fmt.Printf("Hard: %d of %d problems total.\n", hard[i], len(hard))
 }
