@@ -10,6 +10,10 @@
 
 ## Revisit
 
+- 22
+  - Generate Parenthesis
+  - time and space complexity aka Catalan numbers.
+  - This seems useful https://leetcode.com/problems/generate-parentheses/solutions/3473534/generate-parentheses-by-leetcode-sf26/comments/2217787/
 - 157
   - Read N Characters Given Read4
   - This one's explanation is confusing
