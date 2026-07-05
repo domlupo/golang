@@ -4,11 +4,11 @@ package main
 
 func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
 	dummy := &ListNode{}
-	var carry int
 	curr := dummy
+	var carry int
 
-	for l1 != nil || l2 != nil || carry == 1 {
-		var sum int
+	for l1 != nil || l2 != nil || carry != 0 {
+		sum := carry
 		if l1 != nil {
 			sum += l1.Val
 			l1 = l1.Next
@@ -17,14 +17,13 @@ func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
 			sum += l2.Val
 			l2 = l2.Next
 		}
-		sum += carry
 
 		carry = sum / 10
-		n := &ListNode{
+		next := &ListNode{
 			Val: sum % 10,
 		}
-		curr.Next = n
-		curr = n
+		curr.Next = next
+		curr = next
 	}
 
 	return dummy.Next
