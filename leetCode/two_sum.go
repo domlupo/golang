@@ -1,4 +1,7 @@
 // https://leetcode.com/problems/two-sum/
+// N is the length of nums
+// time complexity is O(N)
+// space complexity is O(N)
 
 package main
 
