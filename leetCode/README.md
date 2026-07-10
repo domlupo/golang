@@ -188,3 +188,17 @@ but use strings.Join(x, "") for below:
 
   x := []string{"a", "b", "c"}
   strings.Join(x, "")
+
+### Complicated space complexities
+
+Remember, permutation is where position matters and combination is collection only.
+
+TODO: verify these space complexities are correct, I think they are wrong and differ by problem.
+
+permutations: N!
+
+               k      N!
+combinations: C  = --------
+               N   (N-k)!k!
+
+subsets: 2^N
