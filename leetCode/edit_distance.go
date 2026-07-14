@@ -26,7 +26,7 @@ func minDistance(word1 string, word2 string) int {
 				insert := mem[r][c-1]
 				delete := mem[r-1][c]
 				replace := mem[r-1][c-1]
-				mem[r][c] = 1 + min(insert, delete, replace)
+				mem[r][c] = 1 + min72(insert, delete, replace)
 			}
 		}
 	}
@@ -34,7 +34,7 @@ func minDistance(word1 string, word2 string) int {
 	return mem[len(word1)][len(word2)]
 }
 
-func min(a, b, c int) int {
+func min72(a, b, c int) int {
 	if a <= b && a <= c {
 		return a
 	}

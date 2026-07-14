@@ -21,7 +21,7 @@ func backtrack77(ans *[][]int, comb []int, k, start, n int) {
 
 	for i := start; i <= n; i++ {
 		comb = append(comb, i)
-		backtrack(ans, comb, k, i+1, n)
+		backtrack77(ans, comb, k, i+1, n)
 		comb = comb[:len(comb)-1]
 	}
 }
