@@ -1,4 +1,7 @@
-// https://leetcode.com/problems/roman-to-integer/description/
+// https://leetcode.com/problems/roman-to-integer/
+// N is the length of s
+// time complexity is O(1) since the max roman numeral value is 3999.
+// space complexity is O(1)
 
 package main
 

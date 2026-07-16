@@ -1,14 +1,15 @@
 // https://leetcode.com/problems/longest-common-prefix/
+// N is the length of strs
+// time complexity is O(N*log(N))
+// space complexity is O(log(N)) from slices.Sort
+// TODO: Revisit there are better solutions
 
 package main
 
+import "slices"
+
 func longestCommonPrefix(strs []string) string {
-	for i := 0; i < len(strs)-1; i++ {
-		if i >= 0 && strs[i] > strs[i+1] {
-			strs[i], strs[i+1] = strs[i+1], strs[i]
-			i -= 2
-		}
-	}
+	slices.Sort(strs)
 
 	first := strs[0]
 	last := strs[len(strs)-1]

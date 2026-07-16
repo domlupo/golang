@@ -1,4 +1,7 @@
 // https://leetcode.com/problems/palindrome-number/
+// N is the value of x
+// time complexity is O(log10(N))
+// space complexity is O(1)
 
 package main
 

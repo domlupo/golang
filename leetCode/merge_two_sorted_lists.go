@@ -1,6 +1,7 @@
 // https://leetcode.com/problems/merge-two-sorted-lists/
-
-// No test file since test setup is complex.
+// M is number of list1 nodes, N is the numbers of list2 nodes.
+// time complexity is O(M + N)
+// space complexity is O(1)
 
 package main
 

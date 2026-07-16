@@ -1,4 +1,7 @@
-// https://leetcode.com/problems/valid-parentheses/description/
+// https://leetcode.com/problems/valid-parentheses/
+// N is the length of s
+// time complexity is O(N)
+// space complexity is O(N)
 
 package main
 
