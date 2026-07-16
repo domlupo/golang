@@ -7,6 +7,8 @@
 ## Need to learn
 
 - how hash sets and hash maps are implemented.
+- Morris traversal (in order tree traversal only using O(1) space).
+  See LeetCode 99 Recover Binary Search Tree
 
 ## Revisit
 
@@ -202,3 +204,26 @@ combinations: C  = --------
                N   (N-k)!k!
 
 subsets: 2^N
+
+### Finding two swapped values in a sorted array
+
+There are two cases to handle.
+
+The first is when the swapped values are next to each other.
+      _ _
+1 2 3 5 4 6
+The second is when the swapped values are not next to each other.
+      _   _
+1 2 3 6 5 4
+
+Below is an example from LeetCode #99 Recover Binary Search Tree
+
+var first, second *TreeNode
+for i:=0; i<len(nodes)-1; i++ {
+    if nodes[i+1].Val < nodes[i].Val && first == nil {
+        first = nodes[i]
+        second = nodes[i+1]
+    } else if nodes[i+1].Val < nodes[i].Val {
+        second = nodes[i+1]
+    }
+}
