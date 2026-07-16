@@ -5,7 +5,7 @@
 
 package main
 
-func twoSum(nums []int, target int) []int {
+func twoSum1(nums []int, target int) []int {
 	complements := make(map[int]int)
 
 	for ni, n := range nums {
