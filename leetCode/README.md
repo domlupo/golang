@@ -227,3 +227,12 @@ for i:=0; i<len(nodes)-1; i++ {
         second = nodes[i+1]
     }
 }
+
+### Golang standard library sort
+
+slices.Sort()
+time complexity is O(n*log(n))
+space complexity is O(log(n))
+
+Don't use gnome sort aka stupid sort.
+Gnome sort is O(n*n) time complexity and O(1) space complexity.
