@@ -12,7 +12,7 @@
 
 ## Revisit
 
-- 71, 95, 96
+- 71, 95, 96, 105, 106
   - skipped for no particular reason
 - 22
   - Generate Parenthesis
