@@ -236,3 +236,9 @@ space complexity is O(log(n))
 
 Don't use gnome sort aka stupid sort.
 Gnome sort is O(n*n) time complexity and O(1) space complexity.
+
+### Morris Traversal
+
+LeetCode 114 Flatten Binary Tree To Linked List has good solution to learn Morris Traversal
+
+https://leetcode.com/problems/flatten-binary-tree-to-linked-list
