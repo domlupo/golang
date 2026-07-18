@@ -5,14 +5,14 @@
 
 package main
 
-type Node1 struct {
+type Node116 struct {
 	Val   int
-	Left  *Node1
-	Right *Node1
-	Next  *Node1
+	Left  *Node116
+	Right *Node116
+	Next  *Node116
 }
 
-func connect(root *Node1) *Node1 {
+func connect(root *Node116) *Node116 {
 	if root == nil {
 		return root
 	}
