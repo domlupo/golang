@@ -242,3 +242,8 @@ Gnome sort is O(n*n) time complexity and O(1) space complexity.
 LeetCode 114 Flatten Binary Tree To Linked List has good solution to learn Morris Traversal
 
 https://leetcode.com/problems/flatten-binary-tree-to-linked-list
+
+### Questions to ask interviewer
+
+- If input can me modified
+- Edge cases
