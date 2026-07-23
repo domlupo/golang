@@ -12,8 +12,8 @@
 
 ## Revisit
 
-- 71, 95, 96, 105, 106
-  - skipped for no particular reason
+- 71, 95, 96, 105, 106, 139
+  - skipped and need to return
 - 22
   - Generate Parenthesis
   - time and space complexity aka Catalan numbers.
