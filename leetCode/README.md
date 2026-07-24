@@ -43,8 +43,9 @@
 ## Tips
 
 - Can convert a string "s" into bytes via "bytes := []byte(s)".
+- strings are immutable in Golang
 - Can do s = "1" + s to avoid string mutation
-- To get integer do, i, _ := strconv.Atoi(string(number1[p1]))
+- To get integer do, i, err := strconv.Atoi(string(number1[p1]))
 - It is usually easiest to form strings by using s := rune[] or s := byte[] then string(s).
 - string('A'+1) -> B, string('A'+2) -> C.
 - strconv.Itoa(1)+"->"+strconv.Itoa(2) returns "1->2"
