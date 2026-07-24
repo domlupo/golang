@@ -245,5 +245,15 @@ https://leetcode.com/problems/flatten-binary-tree-to-linked-list
 
 ### Questions to ask interviewer
 
-- If input can me modified
-- Edge cases
+- If input can me modified?
+- Edge cases? e.g. 64 bit vs 32 bit
+- What data structures can I import?
+
+### Golang deleting a key from a maps
+
+delete(mapName, keyName) is most correct.
+
+Using delete ensures for val, ok := mapName[keyName], ok will be false instead of true. 
+If you instead do mapName[keyName] = nil, ok will be true instead of false.
+
+Another option is to check if val is equal to nil but that is a bit strange.
