@@ -12,8 +12,10 @@
 
 ## Revisit
 
-- 71, 95, 96, 105, 106, 139, 148
+- 71, 95, 96, 105, 106, 139, 148, 155
   - skipped and need to return
+- 156
+  - Seems strange and only Linkedin has used recently
 - 22
   - Generate Parenthesis
   - time and space complexity aka Catalan numbers.
