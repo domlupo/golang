@@ -40,7 +40,9 @@
 
 - 175, 181, 182, 183, 196, 197, 511, 512, 577, 584, 586, 595, 596, 597, 603, 607, 610, 613, 619,
   620, 627, 1050, 1068, 1069, 1075, 1076, 1082, 1083, 1084
-  - SQL question. I think this is for data engineers?
+  - Easy SQL question. I think this is for data engineers?
+- 176, 177, 178
+  - Med SQL question. I think this is for data engineers?
 - 193, 195
   - bash
 
