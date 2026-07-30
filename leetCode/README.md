@@ -176,6 +176,11 @@ count = 2
 100 &= 011 -> 000
 count = 3
 
+### List of common algorithms
+
+- Rabin Karp algorithm uses hashing, rolling hash and pattern matching to find a short pattern
+  inside a larger text. You can also use bitmask. See LeetCode 187
+
 ### Greatest Common Divisor found from Euclid's algorithm
 
 func gcd(v1, v2 int) int{
