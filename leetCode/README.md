@@ -14,10 +14,6 @@
 
 - 71, 95, 96, 105, 106, 139, 148, 155
   - skipped and need to return
-- 156
-  - Question is strange and only Linkedin has used recently
-- 164
-  - Solution is strange and very few companies used recently
 - 22
   - Generate Parenthesis
   - time and space complexity aka Catalan numbers.
@@ -45,6 +41,9 @@
   - Med SQL question. I think this is for data engineers?
 - 193, 195
   - bash
+- 156 Question is strange and only Linkedin has used recently
+- 164 Solution is strange and very few companies used recently
+- 186 Easier than 151 and very few companies used recently
 
 ## Tips
 
