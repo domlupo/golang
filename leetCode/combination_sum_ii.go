@@ -5,7 +5,7 @@ package main
 func combinationSum2(candidates []int, target int) [][]int {
 	var ans [][]int
 	var comb []int
-	sort(candidates)
+	sort40(candidates)
 	backtrack2(target, 0, comb, candidates, &ans)
 	return ans
 }
@@ -39,7 +39,7 @@ func backtrack2(
 	}
 }
 
-func sort(a []int) {
+func sort40(a []int) {
 	for i := 0; i < len(a)-1; i++ {
 		if i >= 0 && a[i] > a[i+1] {
 			a[i], a[i+1] = a[i+1], a[i]
