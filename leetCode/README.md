@@ -40,7 +40,9 @@
 - 176, 177, 178, 180, 184
   - Med SQL question. I think this is for data engineers?
 - 193, 195
-  - bash
+  - Easy bash
+- 192, 194
+  - Med bash
 - 156 Question is strange and only Linkedin has used recently
 - 164 Solution is strange and very few companies used recently
 - 186 Easier than 151 and very few companies used recently
