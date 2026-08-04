@@ -261,6 +261,7 @@ https://leetcode.com/problems/flatten-binary-tree-to-linked-list
 - If input can me modified?
 - Edge cases? e.g. 64 bit vs 32 bit
 - What data structures can I import?
+- Is the tree a binary search tree?
 
 ### Golang deleting a key from a maps
 
