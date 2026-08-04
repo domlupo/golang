@@ -1,32 +1,33 @@
 // https://leetcode.com/problems/count-complete-tree-nodes/
+// N is the number of nodes, D is depth
+// time complexity is O(D*D) aka O(log(N) * log(N))
+// space complexity is O(1)
 
 package main
 
 func countNodes(root *TreeNode) int {
-	if root == nil {
-		return 0
+	var ans int
+
+	n := root
+	for n != nil {
+		l := rightDepth(n.Left)
+		r := rightDepth(n.Right)
+		ans += 1 << l
+		if l == r {
+			n = n.Left
+		} else {
+			n = n.Right
+		}
 	}
 
-	l := depth1(root.Left)
-	r := depth1(root.Right)
-
-	ans := 1 << r
-	if l == r {
-		ans += countNodes(root.Right)
-	} else {
-		ans += countNodes(root.Left)
-	}
 	return ans
 }
 
-func depth1(n *TreeNode) int {
-	if n == nil {
-		return 0
+func rightDepth(n *TreeNode) int {
+	var d int
+	for n != nil {
+		n = n.Right
+		d++
 	}
-	return 1 + depth1(n.Left)
+	return d
 }
-
-// 4 -> 2 + 1 + 1
-// 5 -> 2 + 2 + 1
-// 6 -> 4 + 1 + 1
-// 7 -> 4 + 2 + 1
