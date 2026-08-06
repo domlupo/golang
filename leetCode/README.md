@@ -274,7 +274,8 @@ https://leetcode.com/problems/flatten-binary-tree-to-linked-list
 
 ### Questions to ask interviewer
 
-- If input can me modified?
+- Do I need to explicitly write out imports?
+- If input should be modified or not modified?
 - Edge cases? e.g. 64 bit vs 32 bit
 - What data structures can I import?
 - Is the tree a binary search tree?
