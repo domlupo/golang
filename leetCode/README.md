@@ -67,9 +67,10 @@
 
 ## Min and Max Heaps
 
-- examples are LeetCode 703 and 1086
+- examples are LeetCode 253, 703 and 1086
 - complex to implement in Golang
 - remember to call Heap.Push(*IntHeap, int) and Heap.Pop(*IntHeap).(int)
+- need to learn how to use non trivial types for priority queue e.g. []int, see LeetCode 253
 
 ```
 // IntHeap is a min-heap of ints.
@@ -250,6 +251,18 @@ space complexity is O(log(n))
 
 Don't use gnome sort aka stupid sort.
 Gnome sort is O(n*n) time complexity and O(1) space complexity.
+
+example sorting intervals [][]int
+
+[[0,30],[5,10],[15,20],[0, 15]] -> [[0 30] [0 15] [5 10] [15 20]]
+
+slices.SortFunc(intervals, func(a, b []int) int {
+  if a[0] < b[0] {
+    return -1
+  } else {
+    return 1
+  }
+})
 
 ### Morris Traversal
 
