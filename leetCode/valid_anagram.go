@@ -1,4 +1,7 @@
 // https://leetcode.com/problems/valid-anagram/
+// N is the max length of s and t
+// time complexity is O(N)
+// space complexity is O(1)
 
 package main
 
@@ -7,16 +10,17 @@ func isAnagram(s string, t string) bool {
 		return false
 	}
 
-	counts := make(map[byte]int)
+	var counts [26]int
 	for i := 0; i < len(s); i++ {
-		counts[s[i]]++
-		counts[t[i]]--
+		counts[s[i]-'a']++
+		counts[t[i]-'a']--
 	}
 
-	for _, v := range counts {
-		if v != 0 {
+	for _, count := range counts {
+		if count != 0 {
 			return false
 		}
 	}
+
 	return true
 }
