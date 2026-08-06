@@ -43,10 +43,11 @@
   - Easy bash
 - 192, 194
   - Med bash
-- 156 Question is strange and only Linkedin has used recently
+- 156 only Linkedin and question is strange
 - 164 Solution is strange and very few companies used recently
 - 186 Easier than 151 and very few companies used recently
-- 251 only Airbnb has used recently
+- 251 only Airbnb
+- 254 only Linkedin
 
 ## Tips
 
