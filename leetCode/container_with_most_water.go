@@ -1,4 +1,7 @@
 // https://leetcode.com/problems/container-with-most-water/
+// N is the length of height
+// time complexity is O(N)
+// space complexity is O(1)
 
 package main
 
