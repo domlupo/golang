@@ -288,3 +288,9 @@ Using delete ensures for val, ok := mapName[keyName], ok will be false instead o
 If you instead do mapName[keyName] = nil, ok will be true instead of false.
 
 Another option is to check if val is equal to nil but that is a bit strange.
+
+
+### Comparing slices and arrays
+
+- compare arrays with a == b
+- compare slices with slices.Equal(a, b)
