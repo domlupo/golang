@@ -1,14 +1,17 @@
 // https://leetcode.com/problems/best-time-to-buy-and-sell-stock/
+// N is the length of prices
+// time complexity is O(N)
+// space complexity is O(1)
 
 package main
 
 func maxProfit(prices []int) int {
-	m := prices[0]
+	cost := prices[0]
 	var profit int
 
-	for _, p := range prices {
-		profit = max(profit, p-m)
-		m = min(m, p)
+	for _, price := range prices {
+		profit = max(profit, price-cost)
+		cost = min(cost, price)
 	}
 
 	return profit
