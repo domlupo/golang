@@ -67,6 +67,36 @@
 - fmt.Println(string('a'-32)) lower to upper
 - fmt.Println(string('A'+32)) upper to lower
 
+## Data structures
+
+- heap / priority queue
+- trie
+- array
+- monotonic stack
+- linked list
+- tries
+- trees
+- graphs
+
+## Problem types
+
+- arrays and hashing
+- two pointers
+- sliding window
+- stack
+- binary search
+- linked list
+- trees
+- heap / priority queue
+- backtracking
+- tries
+- graphs
+- dynamic programming
+- greedy
+- intervals
+- math
+- bit manipulation
+
 ## Min and Max Heaps
 
 - examples are LeetCode 253, 703 and 1086
