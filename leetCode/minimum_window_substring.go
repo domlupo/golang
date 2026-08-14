@@ -36,7 +36,7 @@ func minWindow(s string, t string) string {
 				ans = str
 				minWindow = len(ans)
 			}
-			lc := convert(s[l])
+			lc := convert76(s[l])
 			sFreq[lc]--
 			if sFreq[lc] == tFreq[lc]-1 {
 				created--
