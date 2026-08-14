@@ -12,7 +12,7 @@
 
 ## Revisit
 
-- 71, 95, 96, 105, 106, 139, 148, 155
+- 71, 95, 96, 105, 106, 139, 148
   - skipped and need to return
 - 22
   - Generate Parenthesis
@@ -276,7 +276,7 @@ https://leetcode.com/problems/flatten-binary-tree-to-linked-list
 
 - Do I need to explicitly write out imports?
 - If input should be modified or not modified?
-- Edge cases? e.g. 64 bit vs 32 bit
+- Edge cases? e.g. 64 bit vs 32 bit, invalid cases like popping an empty array 
 - What data structures can I import?
 - Is the tree a binary search tree?
 
