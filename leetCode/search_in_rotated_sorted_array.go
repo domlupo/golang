@@ -1,31 +1,33 @@
 // https://leetcode.com/problems/search-in-rotated-sorted-array/
+// N is the length of nums
+// time complexity is O(log(N))
+// space complexity is O(1)
 
 package main
 
-func search1(nums []int, target int) int {
-	// binary search to find split point
+func search33(nums []int, target int) int {
 	var l int
 	r := len(nums) - 1
-	for l <= r {
+
+	// find split
+	for l < r {
 		m := (l + r) / 2
-		if nums[m] > nums[len(nums)-1] {
-			l = m + 1
+		if nums[m] < nums[len(nums)-1] {
+			r = m
 		} else {
-			r = m - 1
+			l = m + 1
 		}
 	}
 
-	// binary search both sides of split point
-	left := s(nums, 0, l-1, target)
-	right := s(nums, l, len(nums)-1, target)
-	if left == -1 {
-		return right
+	split := l
+	if target >= nums[split] && target <= nums[len(nums)-1] {
+		l = split
+		r = len(nums) - 1
 	} else {
-		return left
+		l = 0
+		r = split - 1
 	}
-}
 
-func s(nums []int, l, r, target int) int {
 	for l <= r {
 		m := (l + r) / 2
 		if nums[m] == target {
@@ -36,5 +38,6 @@ func s(nums []int, l, r, target int) int {
 			l = m + 1
 		}
 	}
+
 	return -1
 }
