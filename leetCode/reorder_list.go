@@ -19,20 +19,14 @@ func reorderList(head *ListNode) {
 	for curr != nil {
 		next := curr.Next
 		curr.Next = prev
-		prev = curr
-		curr = next
+		prev, curr = curr, next
 	}
 
 	// merge left and reversed right
-	l := head
-	r := prev
-	for r.Next != nil {
-		save := l.Next
-		l.Next = r
-		l = save
-
-		save = r.Next
-		r.Next = l
-		r = save
+	p1, p2 := head, prev
+	for p2.Next != nil {
+		s1, s2 := p1.Next, p2.Next
+		p1.Next, p2.Next = p2, p1.Next
+		p1, p2 = s1, s2
 	}
 }
