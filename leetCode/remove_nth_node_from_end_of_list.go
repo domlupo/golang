@@ -1,4 +1,7 @@
 // https://leetcode.com/problems/remove-nth-node-from-end-of-list/
+// N is the number of nodes
+// time complexity is O(N)
+// space complexity is O(1)
 
 package main
 
