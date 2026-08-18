@@ -1,4 +1,7 @@
 // https://leetcode.com/problems/add-two-numbers
+// N is the nodes in l1, M is the nodes in l2
+// time complexity is O(max(N, M))
+// space complexity is O(1)
 
 package main
 
