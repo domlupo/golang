@@ -2,13 +2,16 @@
 
 ## Need to practice
 
-- how to implement min and max heaps after import "container/heap"
+- multiple imports
+- morris traversal
+- heap implementation
+- trie implementation
+- LRU implementation
+- divide and conquer (e.g. 23 merge k sorted lists)
 
 ## Need to learn
 
 - how hash sets and hash maps are implemented.
-- Morris traversal (in order tree traversal only using O(1) space).
-  See LeetCode 99 Recover Binary Search Tree
 
 ## Revisit
 
@@ -99,28 +102,35 @@
 
 ## Min and Max Heaps
 
-- examples are LeetCode 253, 703 and 1086
+- examples are LeetCode 23, 703 and 1086
 - complex to implement in Golang
-- remember to call Heap.Push(*IntHeap, int) and Heap.Pop(*IntHeap).(int)
-- need to learn how to use non trivial types for priority queue e.g. []int, see LeetCode 253
+- try to think of ways to keep size of heap small e.g. push and pop 
+  nodes of linked list as you go rather than push all node values first.
 
 ```
-// IntHeap is a min-heap of ints.
-type IntHeap []int
+import "container/heap"
 
-func (h IntHeap) Len() int           { return len(h) }
-func (h IntHeap) Less(i, j int) bool { return h[i] < h[j] }
-func (h IntHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+h := &Heap{}
+heap.Init(h)
+heap.Push(h, x)
+n := heap.Pop(h).(*ListNode)
 
-func (h *IntHeap) Push(x any) {
-	*h = append(*h, x.(int))
+// minimum val *ListNode heap
+type Heap []*ListNode
+
+func (h Heap) Len() int           { return len(h) }
+func (h Heap) Less(i, j int) bool { return h[i].Val < h[j].Val }
+func (h Heap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+
+func (h *Heap) Push(x any) {
+	*h = append(*h, x.(*ListNode))
 }
 
-func (h *IntHeap) Pop() any {
+func (h *Heap) Pop() any {
 	old := *h
-	n := len(old)
-	x := old[n-1]
-	*h = old[0 : n-1]
+	n := len(old)-1
+	x := old[n]
+	*h = old[:n]
 	return x
 }
 ```
