@@ -28,7 +28,7 @@ func main() {
 		235, 236, 237, 238, 240, 241, 245, 247, 249, 250, 253, 271, 287, 347, 424, 567, 739, 853, 875,
 		931, 981}
 
-	hard := []int{42, 76, 84, 239}
+	hard := []int{23, 25, 42, 76, 84, 239}
 
 	i := rand.IntN(len(easy))
 	fmt.Printf("Easy: %d of %d problems total.\n", easy[i], len(easy))
