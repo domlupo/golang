@@ -1,4 +1,7 @@
 // https://leetcode.com/problems/same-tree
+// N is the length of nodes, H is the height of the tree
+// time complexity is O(N)
+// space complexity is O(H), O(N) for skewed tree
 
 package main
 
