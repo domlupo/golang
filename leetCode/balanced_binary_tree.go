@@ -1,4 +1,7 @@
 // https://leetcode.com/problems/balanced-binary-tree/
+// N is the number of nodes, H is the height
+// time complexity is O(N)
+// space complexity is O(H), O(N) for skewed tree
 
 package main
 
