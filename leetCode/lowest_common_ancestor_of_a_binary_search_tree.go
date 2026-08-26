@@ -10,7 +10,7 @@ func lowestCommonAncestor(root, p, q *TreeNode) *TreeNode {
 	right := max(p.Val, q.Val)
 
 	n := root
-	for n != nil {
+	for {
 		if n.Val > left && n.Val < right || n.Val == left || n.Val == right {
 			return n
 		}
@@ -20,5 +20,4 @@ func lowestCommonAncestor(root, p, q *TreeNode) *TreeNode {
 			n = n.Right
 		}
 	}
-	panic("no answer found")
 }
