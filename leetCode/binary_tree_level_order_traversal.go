@@ -7,27 +7,18 @@ package main
 
 func levelOrder(root *TreeNode) [][]int {
 	var ans [][]int
-	depths := []int{1}
-	queue := []*TreeNode{root}
-
-	for len(queue) != 0 {
-		n := queue[0]
-		d := depths[0]
-		queue = queue[1:]
-		depths = depths[1:]
-
-		if n == nil {
-			continue
-		}
-
-		if d > len(ans) {
-			ans = append(ans, []int{})
-		}
-		ans[d-1] = append(ans[d-1], n.Val)
-
-		queue = append(queue, n.Left, n.Right)
-		depths = append(depths, d+1, d+1)
-	}
-
+	travel128(root, 0, &ans)
 	return ans
+}
+
+func travel128(n *TreeNode, depth int, ans *[][]int) {
+	if n == nil {
+		return
+	}
+	if depth == len(*ans) {
+		*ans = append(*ans, []int{})
+	}
+	(*ans)[depth] = append((*ans)[depth], n.Val)
+	travel128(n.Left, depth+1, ans)
+	travel128(n.Right, depth+1, ans)
 }
