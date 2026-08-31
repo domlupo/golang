@@ -7,24 +7,17 @@ package main
 
 func rightSideView(root *TreeNode) []int {
 	var ans []int
-	var nextDepth int
-	depths := []int{0}
-	nodes := []*TreeNode{root}
-
-	for len(nodes) != 0 {
-		n := nodes[0]
-		d := depths[0]
-		nodes = nodes[1:]
-		depths = depths[1:]
-		if n == nil {
-			continue
-		} else if d == nextDepth {
-			ans = append(ans, n.Val)
-			nextDepth++
-		}
-		nodes = append(nodes, n.Right, n.Left)
-		depths = append(depths, d+1, d+1)
-	}
-
+	addRight(root, 0, &ans)
 	return ans
+}
+
+func addRight(n *TreeNode, depth int, ans *[]int) {
+	if n == nil {
+		return
+	}
+	if len(*ans) == depth {
+		*ans = append(*ans, n.Val)
+	}
+	addRight(n.Right, depth+1, ans)
+	addRight(n.Left, depth+1, ans)
 }
