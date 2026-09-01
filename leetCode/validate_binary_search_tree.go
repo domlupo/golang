@@ -1,29 +1,24 @@
 // https://leetcode.com/problems/validate-binary-search-tree/
-// M is the number of nodes in tree
-// time complexity is O(M)
-// space complexity is O(M)
+// N is the number of nodes in tree
+// time complexity is O(N)
+// space complexity is O(N)
 
 package main
 
 import "math"
 
 func isValidBST(root *TreeNode) bool {
-	l := valid98(root.Left, math.MinInt, root.Val)
-	r := valid98(root.Right, root.Val, math.MaxInt)
-	return l && r
+	return valid98(root, math.MinInt, math.MaxInt)
 }
 
 func valid98(n *TreeNode, minimum, maximum int) bool {
 	if n == nil {
 		return true
 	}
-
 	if n.Val >= maximum || n.Val <= minimum {
 		return false
 	}
-
-	l := valid98(n.Left, minimum, min(n.Val, maximum))
-	r := valid98(n.Right, max(minimum, n.Val), maximum)
-
+	l := valid98(n.Left, minimum, n.Val)
+	r := valid98(n.Right, n.Val, maximum)
 	return l && r
 }
