@@ -6,20 +6,19 @@
 package main
 
 func kthSmallest(root *TreeNode, k int) int {
-	n := root
 	var stack []*TreeNode
-	for n != nil || len(stack) > 0 {
-		for n != nil {
-			stack = append(stack, n)
-			n = n.Left
+	curr := root
+	for {
+		for curr != nil {
+			stack = append(stack, curr)
+			curr = curr.Left
 		}
-		n = stack[len(stack)-1]
+		curr = stack[len(stack)-1]
 		stack = stack[:len(stack)-1]
 		if k == 1 {
-			return n.Val
+			return curr.Val
 		}
 		k--
-		n = n.Right
+		curr = curr.Right
 	}
-	panic("no answer found")
 }
