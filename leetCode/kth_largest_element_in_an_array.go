@@ -8,7 +8,7 @@ package main
 import "container/heap"
 
 func findKthLargest(nums []int, k int) int {
-	h := &IntHeap{}
+	h := &MinHeap703{}
 	for _, n := range nums {
 		heap.Push(h, n)
 		if h.Len() > k {

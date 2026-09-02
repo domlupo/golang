@@ -1,49 +1,52 @@
 // https://leetcode.com/problems/kth-largest-element-in-a-stream/
+// K is passed k, N is number of times Add is called.
+// time complexity for Add called N times is O(N*log(K)).
+// space complexity is O(K)
 
 package main
 
 import "container/heap"
 
 type KthLargest struct {
-	k       int
-	minHeap *IntHeap
+	HeapSize   int
+	MinHeap703 *MinHeap703
 }
 
-func Constructor3(k int, nums []int) KthLargest {
-	minHeap := &IntHeap{}
-	heap.Init(minHeap)
-	kthLargest := KthLargest{k: k, minHeap: minHeap}
-	for _, num := range nums {
-		kthLargest.Add(num)
+func Constructor703(k int, nums []int) KthLargest {
+	h := &MinHeap703{}
+	heap.Init(h)
+	for _, n := range nums {
+		heap.Push(h, n)
+		if h.Len() > k {
+			heap.Pop(h)
+		}
 	}
-	return kthLargest
+	return KthLargest{
+		HeapSize:   k,
+		MinHeap703: h,
+	}
 }
 
 func (this *KthLargest) Add(val int) int {
-	if this.minHeap.Len() < this.k {
-		heap.Push(this.minHeap, val)
-	} else if val > (*this.minHeap)[0] {
-		heap.Pop(this.minHeap)
-		heap.Push(this.minHeap, val)
+	heap.Push(this.MinHeap703, val)
+	if this.MinHeap703.Len() > this.HeapSize {
+		heap.Pop(this.MinHeap703)
 	}
-	return (*this.minHeap)[0]
+	return (*this.MinHeap703)[0]
 }
 
-// IntHeap is a min-heap of ints.
-type IntHeap []int
+type MinHeap703 []int
 
-func (h IntHeap) Len() int           { return len(h) }
-func (h IntHeap) Less(i, j int) bool { return h[i] < h[j] }
-func (h IntHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
-
-func (h *IntHeap) Push(x any) {
+func (h MinHeap703) Len() int           { return len(h) }
+func (h MinHeap703) Less(i, j int) bool { return h[i] < h[j] }
+func (h MinHeap703) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+func (h *MinHeap703) Push(x any) {
 	*h = append(*h, x.(int))
 }
-
-func (h *IntHeap) Pop() any {
+func (h *MinHeap703) Pop() any {
 	old := *h
-	n := len(old)
-	x := old[n-1]
-	*h = old[:n-1]
+	n := len(old) - 1
+	x := old[n]
+	*h = old[:n]
 	return x
 }
