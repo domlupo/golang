@@ -1,5 +1,37 @@
 # LeetCode
 
+## Memorize
+
+- heap interface implementation and usage.
+- slices.SortFunc implementation
+- Morris Traversal
+- fmt.Println(string('a'-32)) lower to upper
+- fmt.Println(string('A'+32)) upper to lower
+- index has higher priority than pointer dereferencing (*heap)[0]
+
+## Tips
+
+- Can convert a string "s" into bytes via "bytes := []byte(s)".
+- strings are immutable in Golang
+- Can do s = "1" + s to avoid string mutation
+- To get integer do, i, err := strconv.Atoi(string(number1[p1]))
+- It is usually easiest to form strings by using s := rune[] or s := byte[] then string(s).
+- string('A'+1) -> B, string('A'+2) -> C.
+- strconv.Itoa(1)+"->"+strconv.Itoa(2) returns "1->2"
+- s := "hello", s[5:] is "". Even though intuitively 5 is out of bounds
+- odd position bit mask is 0x55555555 -> 0x55555555 & 0b11111111 -> 0b01010101
+- even position bit mask:  0xAAAAAAAA -> 0xAAAAAAAA & 0b11111111 -> 0b10101010
+- power of two check: (n & (n-1)) == 0. power of two means only 1 bit is set.
+- When _, ok := contains[n]. ok is true if contains[n] was ever set. Even for contains[n] = false.
+
+### Questions to ask interviewer
+
+- Do I need to explicitly write out imports?
+- If input should be modified or not modified?
+- Edge cases? e.g. 64 bit vs 32 bit, invalid cases like popping an empty array
+- What data structures can I import?
+- Is the tree a binary search tree?
+
 ## Need to practice
 
 - multiple imports
@@ -53,23 +85,6 @@
 - 254 only Linkedin
 - 255 not many companies use
 
-## Tips
-
-- Can convert a string "s" into bytes via "bytes := []byte(s)".
-- strings are immutable in Golang
-- Can do s = "1" + s to avoid string mutation
-- To get integer do, i, err := strconv.Atoi(string(number1[p1]))
-- It is usually easiest to form strings by using s := rune[] or s := byte[] then string(s).
-- string('A'+1) -> B, string('A'+2) -> C.
-- strconv.Itoa(1)+"->"+strconv.Itoa(2) returns "1->2"
-- s := "hello", s[5:] is "". Even though intuitively 5 is out of bounds
-- odd position bit mask is 0x55555555 -> 0x55555555 & 0b11111111 -> 0b01010101
-- even position bit mask:  0xAAAAAAAA -> 0xAAAAAAAA & 0b11111111 -> 0b10101010
-- power of two check: (n & (n-1)) == 0. power of two means only 1 bit is set.
-- When _, ok := contains[n]. ok is true if contains[n] was ever set. Even for contains[n] = false.
-- fmt.Println(string('a'-32)) lower to upper
-- fmt.Println(string('A'+32)) upper to lower
-
 ## Data structures
 
 - heap / priority queue
@@ -104,7 +119,7 @@
 
 - examples are LeetCode 23, 703 and 1086
 - complex to implement in Golang
-- try to think of ways to keep size of heap small e.g. push and pop 
+- try to think of ways to keep size of heap small e.g. push and pop
   nodes of linked list as you go rather than push all node values first.
 
 ```
@@ -312,23 +327,14 @@ LeetCode 114 Flatten Binary Tree To Linked List has good solution to learn Morri
 
 https://leetcode.com/problems/flatten-binary-tree-to-linked-list
 
-### Questions to ask interviewer
-
-- Do I need to explicitly write out imports?
-- If input should be modified or not modified?
-- Edge cases? e.g. 64 bit vs 32 bit, invalid cases like popping an empty array 
-- What data structures can I import?
-- Is the tree a binary search tree?
-
 ### Golang deleting a key from a maps
 
 delete(mapName, keyName) is most correct.
 
-Using delete ensures for val, ok := mapName[keyName], ok will be false instead of true. 
+Using delete ensures for val, ok := mapName[keyName], ok will be false instead of true.
 If you instead do mapName[keyName] = nil, ok will be true instead of false.
 
 Another option is to check if val is equal to nil but that is a bit strange.
-
 
 ### Comparing slices and arrays
 
