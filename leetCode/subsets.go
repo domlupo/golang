@@ -1,13 +1,12 @@
 // https://leetcode.com/problems/subsets/
-// time complexity is complex
-// space complexity is complex
+// time complexity is O(n * 2^n)
+// space complexity O(2^n)
 
 package main
 
 func subsets(nums []int) [][]int {
 	var ans [][]int
-	var comb []int
-	backtrack78(&ans, comb, nums, 0)
+	backtrack78(&ans, []int{}, nums, 0)
 	return ans
 }
 
@@ -26,22 +25,30 @@ func backtrack78(ans *[][]int, comb, nums []int, index int) {
 }
 
 // nums = [1, 2, 3]
-// comb index
-// [] 0
-//
-// [1] 1
-// [] 1
-//
-// [1, 2] 2
-// [1] 2
-// [2] 2
-// [] 2
-//
-// [1, 2, 3] 3
-// [1, 2] 3
-// [1, 3] 3
-// [1] 3
-// [2, 3] 3
-// [2] 3
-// [3] 3
-// [] 3
+
+// 1
+// _
+
+// -----------------------
+
+// 1 2
+// 2
+
+// 2
+// _
+
+// -----------------------
+
+// 1 2 3
+// 1 2
+
+// 2 3
+// 2
+
+// 2 3
+// 3
+
+// 3
+// _
+
+// -----------------------
