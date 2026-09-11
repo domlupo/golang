@@ -2,10 +2,12 @@
 
 package main
 
+import "slices"
+
 func combinationSum2(candidates []int, target int) [][]int {
 	var ans [][]int
 	var comb []int
-	sort40(candidates)
+	slices.Sort(candidates)
 	backtrack2(target, 0, comb, candidates, &ans)
 	return ans
 }
@@ -36,14 +38,5 @@ func backtrack2(
 		comb = append(comb, candidates[i])
 		backtrack2(remain-candidates[i], i+1, comb, candidates, ans)
 		comb = comb[:len(comb)-1]
-	}
-}
-
-func sort40(a []int) {
-	for i := 0; i < len(a)-1; i++ {
-		if i >= 0 && a[i] > a[i+1] {
-			a[i], a[i+1] = a[i+1], a[i]
-			i -= 2
-		}
 	}
 }
