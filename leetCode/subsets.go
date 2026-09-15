@@ -1,6 +1,6 @@
 // https://leetcode.com/problems/subsets/
 // time complexity is O(n * 2^n)
-// space complexity O(2^n)
+// space complexity O(n), and O(2^n) for output.
 
 package main
 
