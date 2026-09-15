@@ -1,34 +1,36 @@
 // https://leetcode.com/problems/permutations-ii/
+// N is the length of nums
+// time complexity is O(N * N!)
+// space complexity is O(N)
 
 package main
 
 func permuteUnique(nums []int) [][]int {
 	var ans [][]int
-	var perm []int
 	counter := make(map[int]int)
 	for _, n := range nums {
 		counter[n]++
 	}
-	backtrack4(perm, &ans, counter, len(nums))
+	backtrack47(&ans, []int{}, nums, counter)
 	return ans
 }
 
-func backtrack4(perm []int, ans *[][]int, counter map[int]int, size int) {
-	if len(perm) == size {
-		deepCopy := make([]int, size)
-		copy(deepCopy, perm)
+func backtrack47(ans *[][]int, comb, nums []int, counter map[int]int) {
+	if len(comb) == len(nums) {
+		deepCopy := make([]int, len(comb))
+		copy(deepCopy, comb)
 		*ans = append(*ans, deepCopy)
 		return
 	}
 
-	for num, count := range counter {
+	for n, count := range counter {
 		if count == 0 {
 			continue
 		}
-		perm = append(perm, num)
-		counter[num]--
-		backtrack4(perm, ans, counter, size)
-		counter[num]++
-		perm = perm[:len(perm)-1]
+		comb = append(comb, n)
+		counter[n]--
+		backtrack47(ans, comb, nums, counter)
+		counter[n]++
+		comb = comb[:len(comb)-1]
 	}
 }
