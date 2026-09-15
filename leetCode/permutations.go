@@ -4,35 +4,30 @@
 
 package main
 
+import "slices"
+
 func permute(nums []int) [][]int {
 	var ans [][]int
-	var curr []int
-	backtrack3(nums, curr, &ans)
+	backtrack46(&ans, []int{}, nums)
 	return ans
 }
 
-func backtrack3(nums, curr []int, ans *[][]int) {
-	if len(curr) == len(nums) {
-		deepCopy := make([]int, len(curr))
-		copy(deepCopy, curr)
+func backtrack46(ans *[][]int, comb, nums []int) {
+	if len(comb) == len(nums) {
+		deepCopy := make([]int, len(comb))
+		copy(deepCopy, comb)
 		*ans = append(*ans, deepCopy)
 		return
 	}
 
 	for _, n := range nums {
-		var exists bool
-		for _, v := range curr {
-			if v == n {
-				exists = true
-				break
-			}
+		if slices.Contains(comb, n) {
+			continue
 		}
 
-		if !exists {
-			curr = append(curr, n)
-			backtrack3(nums, curr, ans)
-			curr = curr[:len(curr)-1]
-		}
+		comb = append(comb, n)
+		backtrack46(ans, comb, nums)
+		comb = comb[:len(comb)-1]
 	}
 }
 
