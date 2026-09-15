@@ -1,42 +1,35 @@
 // https://leetcode.com/problems/combination-sum-ii/
+// N is the length of candidates
+// time complexity is O(2^N)
+// space complexity is O(N)
 
 package main
 
 import "slices"
 
 func combinationSum2(candidates []int, target int) [][]int {
-	var ans [][]int
-	var comb []int
 	slices.Sort(candidates)
-	backtrack2(target, 0, comb, candidates, &ans)
+	var ans [][]int
+	backtrack40(&ans, []int{}, candidates, target)
 	return ans
 }
 
-func backtrack2(
-	remain, start int,
-	comb, candidates []int,
-	ans *[][]int,
-) {
-	if remain == 0 {
-		newComb := make([]int, len(comb))
-		copy(newComb, comb)
-		*ans = append(*ans, newComb)
+func backtrack40(ans *[][]int, comb, nums []int, remainder int) {
+	if remainder == 0 {
+		deepCopy := make([]int, len(comb))
+		copy(deepCopy, comb)
+		*ans = append(*ans, deepCopy)
 		return
-	} else if remain < 0 {
+	} else if remainder < 0 {
 		return
 	}
 
-	for i := start; i < len(candidates); i++ {
-		// skip duplicates. For [1 1 2 5 6 7 10] this line ensures
-		// only the first occurred 1 is considered to get [1, 2, 5] and [1, 7]
-		// The second occurred 1 is only considered if the first one was also
-		// considered. This gets [1, 1, 6].
-		if i > start && candidates[i] == candidates[i-1] {
-			continue
-		}
-
-		comb = append(comb, candidates[i])
-		backtrack2(remain-candidates[i], i+1, comb, candidates, ans)
+	for i := 0; i < len(nums); i++ {
+		comb = append(comb, nums[i])
+		backtrack40(ans, comb, nums[i+1:], remainder-nums[i])
 		comb = comb[:len(comb)-1]
+		for i+1 < len(nums) && nums[i] == nums[i+1] {
+			i++
+		}
 	}
 }
