@@ -1,35 +1,44 @@
 // https://leetcode.com/problems/generate-parentheses/
+// https://en.wikipedia.org/wiki/Catalan_number
+// N is passed n
+// time complexity is O((N * 4^N)/n^3/2)) -> O(4^N/sqrt(N))
+// space complexity is O(N)
 
 package main
 
 func generateParenthesis(n int) []string {
-	return backtrack("", 0, 0, n)
-}
-
-func backtrack(s string, lCount, rCount, pairCount int) []string {
 	var ans []string
-
-	if len(s) == 2*pairCount {
-		ans = append(ans, s)
-	}
-	if lCount < pairCount {
-		ans = append(ans, backtrack(s+"(", lCount+1, rCount, pairCount)...)
-	}
-	if rCount < lCount {
-		ans = append(ans, backtrack(s+")", lCount, rCount+1, pairCount)...)
-	}
-
+	backtrack(&ans, "", 0, 0, n*2)
 	return ans
 }
 
-// n == 1
-// ( -> ()
+func backtrack(ans *[]string, str string, l, r, sum int) {
+	if r > l || l > sum/2 {
+		return
+	} else if l+r == sum {
+		*ans = append(*ans, str)
+		return
+	}
 
-// n == 2
-// (() -> (())
-// ()( -> ()()
+	backtrack(ans, str+"(", l+1, r, sum)
+	backtrack(ans, str+")", l, r+1, sum)
+}
 
-// n == 3
-// ((( -> ((()))
-// (() -> (())() and (()())
-// ()( -> ()()() and ()(()
+// cancel if right is greater than left or left greater than half
+
+// n = 2
+// ( -> ok
+// ) -> cancel
+
+// () -> ok
+// (( -> ok
+
+// ()( -> ok
+// ()) -> cancel
+// (() -> ok
+// ((( -> cancel
+
+// ()() -> ok
+// ()(( -> cancel
+// (()) -> ok
+// (()( -> cancel
