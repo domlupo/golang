@@ -1,17 +1,17 @@
 // https://leetcode.com/problems/climbing-stairs/
+// N is the length of nums
+// time complexity is O(N)
+// space complexity is O(1)
 
 package main
 
 // iterative (best space and time complexity)
 
 func climbStairs(n int) int {
-	prev := 1
-	curr := 2
-
-	for ; n > 1; n-- {
+	prev, curr := 1, 1
+	for range n {
 		prev, curr = curr, prev+curr
 	}
-
 	return prev
 }
 
