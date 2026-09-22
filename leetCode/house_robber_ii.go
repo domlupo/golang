@@ -9,15 +9,13 @@ func rob213(nums []int) int {
 	if len(nums) == 1 {
 		return nums[0]
 	}
-	robFirst := robHouses(nums, 0, len(nums)-1)
-	robLast := robHouses(nums, 1, len(nums))
-	return max(robFirst, robLast)
+	return max(robHouses(nums[1:]), robHouses(nums[:len(nums)-1]))
 }
 
-func robHouses(nums []int, start, end int) int {
+func robHouses(nums []int) int {
 	var prev, curr int
-	for i := start; i < end; i++ {
-		prev, curr = curr, max(curr, prev+nums[i])
+	for _, n := range nums {
+		prev, curr = curr, max(curr, prev+n)
 	}
 	return curr
 }
