@@ -13,7 +13,15 @@ func rob(nums []int) int {
 	return curr
 }
 
-// 0 = max(0, nums[n], 0)
-// 1 = max(nums[n-1], nums[n])
-// 2 = max(mem[n-1], mem[n-2] + nums[n])
-// 3 = max(mem[n-1], mem[n-2] + nums[n]
+// [1, 2, 3, 1]
+
+// i = 0 -> 1
+// i = 1 -> 1 or 2
+// i = 2 -> (1 + 3) or max at prior index
+// i = 3 -> (1 + 3) or (1 + 2) or (1 + 1)
+// i = 3 -> max at prior index or curr index + max at two index back
+
+// i = 0 -> prev, curr = 0, 1
+// i = 1 -> prev, curr = 1, max(1, 0+2)
+// i = 2 -> prev, curr = 2, max(2, 1+3)
+// i = 3 -> prev, curr = 4, max(4, 2+1)
