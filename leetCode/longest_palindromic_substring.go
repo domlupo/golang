@@ -1,4 +1,7 @@
 // https://leetcode.com/problems/longest-palindromic-substring/
+// N is the length of string
+// time complexity is O(N^2)
+// space complexity is O(1)
 
 package main
 
