@@ -8,25 +8,20 @@ package main
 import "math"
 
 func maxProduct(nums []int) int {
-	product := 1
-	maxProduct := math.MinInt
+	ans := math.MinInt
 
-	for i := range nums {
-		product *= nums[i]
-		maxProduct = max(maxProduct, product)
-		if product == 0 {
-			product = 1
+	var prefix, suffix int
+	for i := 0; i < len(nums); i++ {
+		if prefix == 0 {
+			prefix = 1
 		}
+		if suffix == 0 {
+			suffix = 1
+		}
+		prefix *= nums[i]
+		suffix *= nums[len(nums)-1-i]
+		ans = max(ans, prefix, suffix)
 	}
 
-	product = 1
-	for i := len(nums) - 1; i >= 0; i-- {
-		product *= nums[i]
-		maxProduct = max(maxProduct, product)
-		if product == 0 {
-			product = 1
-		}
-	}
-
-	return maxProduct
+	return ans
 }
