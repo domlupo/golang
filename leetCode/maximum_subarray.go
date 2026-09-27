@@ -8,16 +8,14 @@ package main
 import "math"
 
 func maxSubArray(nums []int) int {
-	var currSum int
+	var sum int
 	maxSum := math.MinInt
-
 	for _, n := range nums {
-		currSum += n
-		if n > currSum {
-			currSum = n
+		sum += n
+		if n > sum {
+			sum = n
 		}
-		maxSum = max(maxSum, currSum)
+		maxSum = max(maxSum, sum)
 	}
-
 	return maxSum
 }
