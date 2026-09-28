@@ -1,18 +1,20 @@
 // https://leetcode.com/problems/jump-game-ii/
+// N is the length of nums
+// time complexity is O(N)
+// space complexity is O(1)
 
 package main
 
 func jump(nums []int) int {
-	var maxReachable, jumps, jumpTo int
+	var jumps, maxPos, pos int
 
-	for i := 0; i < len(nums)-1; i++ {
-		if i+nums[i] > maxReachable {
-			maxReachable = i + nums[i]
-		}
-
-		if i == jumpTo {
+	for i, n := range nums {
+		maxPos = max(maxPos, i+n)
+		if pos >= len(nums)-1 {
+			break
+		} else if i == pos {
 			jumps++
-			jumpTo = maxReachable
+			pos = maxPos
 		}
 	}
 
