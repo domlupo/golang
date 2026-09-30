@@ -21,10 +21,5 @@ func insert(intervals [][]int, newInterval []int) [][]int {
 		i++
 	}
 	ans = append(ans, merged)
-	for i < len(intervals) {
-		ans = append(ans, intervals[i])
-		i++
-	}
-
-	return ans
+	return append(ans, intervals[i:]...)
 }
