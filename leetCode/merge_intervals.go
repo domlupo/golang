@@ -18,10 +18,8 @@ func merge56(intervals [][]int) [][]int {
 	})
 
 	merged := intervals[0]
-	for i := 1; i <= len(intervals); i++ {
-		if i == len(intervals) {
-			ans = append(ans, merged)
-		} else if merged[1] >= intervals[i][0] {
+	for i := 1; i < len(intervals); i++ {
+		if merged[1] >= intervals[i][0] {
 			r := max(merged[1], intervals[i][1])
 			merged = []int{merged[0], r}
 		} else {
@@ -30,5 +28,5 @@ func merge56(intervals [][]int) [][]int {
 		}
 	}
 
-	return ans
+	return append(ans, merged)
 }
