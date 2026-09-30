@@ -6,23 +6,22 @@
 package main
 
 func insert(intervals [][]int, newInterval []int) [][]int {
+	var i int
 	var ans [][]int
-	i := 0
-	n := len(intervals)
+	merged := newInterval
 
-	for i < n && newInterval[0] > intervals[i][1] {
+	for i < len(intervals) && merged[0] > intervals[i][1] {
 		ans = append(ans, intervals[i])
 		i++
 	}
-
-	for i < n && newInterval[1] >= intervals[i][0] {
-		newInterval[0] = min(newInterval[0], intervals[i][0])
-		newInterval[1] = max(newInterval[1], intervals[i][1])
+	for i < len(intervals) && intervals[i][0] <= merged[1] {
+		l := min(merged[0], intervals[i][0])
+		r := max(merged[1], intervals[i][1])
+		merged = []int{l, r}
 		i++
 	}
-	ans = append(ans, newInterval)
-
-	for i < n {
+	ans = append(ans, merged)
+	for i < len(intervals) {
 		ans = append(ans, intervals[i])
 		i++
 	}
