@@ -5,27 +5,30 @@
 
 package main
 
-func merge56(intervals [][]int) [][]int {
-	for i := 0; i < len(intervals)-1; i++ {
-		if i >= 0 && intervals[i][0] > intervals[i+1][0] {
-			intervals[i], intervals[i+1] = intervals[i+1], intervals[i]
-			i -= 2
-		}
-	}
+import "slices"
 
+func merge56(intervals [][]int) [][]int {
 	var ans [][]int
-	start := intervals[0][0]
-	end := intervals[0][1]
-	for _, i := range intervals {
-		if end >= i[0] {
-			end = max(end, i[1])
+	slices.SortFunc(intervals, func(a, b []int) int {
+		if a[0] < b[0] {
+			return -1
 		} else {
-			ans = append(ans, []int{start, end})
-			start = i[0]
-			end = i[1]
+			return 1
+		}
+	})
+
+	merged := intervals[0]
+	for i := 1; i <= len(intervals); i++ {
+		if i == len(intervals) {
+			ans = append(ans, merged)
+		} else if merged[1] >= intervals[i][0] {
+			r := max(merged[1], intervals[i][1])
+			merged = []int{merged[0], r}
+		} else {
+			ans = append(ans, merged)
+			merged = intervals[i]
 		}
 	}
-	ans = append(ans, []int{start, end})
 
 	return ans
 }
