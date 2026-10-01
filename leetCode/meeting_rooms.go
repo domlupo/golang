@@ -1,17 +1,25 @@
 // https://leetcode.com/problems/meeting-rooms/
+// N is the length of intervals
+// time complexity is O(N*log(N))
+// space complexity is O(log(N))) Golang SortFunc uses pdqsort.
 
 package main
 
-func canAttendMeetings(intervals [][]int) bool {
-	for i := 0; i < len(intervals)-1; i++ {
-		if i >= 0 && intervals[i][0] > intervals[i+1][0] {
-			intervals[i], intervals[i+1] = intervals[i+1], intervals[i]
-			i -= 2
-		}
-	}
+import "slices"
 
-	for i := 0; i < len(intervals)-1; i++ {
-		if intervals[i][1] > intervals[i+1][0] {
+func canAttendMeetings(intervals [][]int) bool {
+	slices.SortFunc(intervals, func(a, b []int) int {
+		if a[0] < b[0] {
+			return -1
+		} else {
+			return 1
+		}
+	})
+
+	for i := 1; i < len(intervals); i++ {
+		l := intervals[i-1]
+		r := intervals[i]
+		if l[1] > r[0] {
 			return false
 		}
 	}
