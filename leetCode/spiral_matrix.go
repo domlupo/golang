@@ -12,7 +12,7 @@ func spiralOrder(matrix [][]int) []int {
 	var ans []int
 	var r, c, rDelta int
 	cDelta := 1
-	for top <= bottom && left <= right {
+	for len(matrix) < len(matrix)*len(matrix[0]) {
 		if cDelta == 1 && c == right {
 			rDelta = 1
 			cDelta = 0
