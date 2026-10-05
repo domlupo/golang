@@ -1,13 +1,15 @@
 // https://leetcode.com/problems/missing-number/
+// N is the length of nums
+// time complexity is O(N)
+// space complexity is O(1)
 
 package main
 
 func missingNumber(nums []int) int {
-	var sum int
-	var noMissing int
-	for ni, n := range nums {
-		sum += n
-		noMissing += (ni + 1)
+	ans := len(nums)
+	for i := range nums {
+		ans ^= i
+		ans ^= nums[i]
 	}
-	return noMissing - sum
+	return ans
 }
