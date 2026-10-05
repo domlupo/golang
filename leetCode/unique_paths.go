@@ -1,27 +1,24 @@
 // https://leetcode.com/problems/unique-paths/
 // m is number of rows and n is numbers of columns
 // time complexity is O(m*n)
-// space complexity is O(m*n)
+// space complexity is O(n)
 
 package main
 
 func uniquePaths(m int, n int) int {
-	var mem [][]int
-	for range m {
-		arr := make([]int, n)
-		arr[0] = 1
-		mem = append(mem, arr)
+	dp := make([]int, n+1)
+
+	for i := 1; i < n+1; i++ {
+		dp[i] = 1
 	}
 
-	for i := range n {
-		mem[0][i] = 1
-	}
-
-	for r := 1; r < m; r++ {
-		for c := 1; c < n; c++ {
-			mem[r][c] = mem[r-1][c] + mem[r][c-1]
+	for range m - 1 {
+		curr := make([]int, n+1)
+		for c := 1; c < n+1; c++ {
+			curr[c] = dp[c] + curr[c-1]
 		}
+		dp = curr
 	}
 
-	return mem[m-1][n-1]
+	return dp[n]
 }
