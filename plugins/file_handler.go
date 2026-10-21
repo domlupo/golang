@@ -76,7 +76,8 @@ func (f fileHandler) readObstacleLUT(obstacles obstacles, g grid) obstacleLUT {
 		logger.log(
 			errorLevel,
 			setupLogic,
-			fmt.Sprintf("fileHandler.readObstacleLUT: file handler could not read json file: %v", err))
+			fmt.Sprintf("fileHandler.readObstacleLUT: file handler could not open json file: %v", err))
+		return f.writeObstacleLUT(obstacles, g)
 	}
 	defer file.Close()
 
@@ -149,7 +150,8 @@ func (f fileHandler) readNodeLUT(nodes nodes, obstacleLUT obstacleLUT, g grid) n
 		logger.log(
 			errorLevel,
 			setupLogic,
-			fmt.Sprintf("fileHandler.readNodeLUT: file handler could not read json file: %v", err))
+			fmt.Sprintf("fileHandler.readNodeLUT: file handler could not open json file: %v", err))
+		return f.writeNodeLUT(nodes, obstacleLUT, g)
 	}
 	defer file.Close()
 
