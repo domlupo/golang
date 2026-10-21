@@ -91,7 +91,13 @@ func (f fileHandler) readObstacleLUT(obstacles obstacles, g grid) obstacleLUT {
 	}
 
 	entries := make([]obstacleLUTEntry, 0, g.basePixels)
-	json.Unmarshal(bytes, &entries)
+	if err := json.Unmarshal(bytes, &entries); err != nil {
+		logger.log(
+			errorLevel,
+			setupLogic,
+			fmt.Sprintf("fileHandler.readObstacleLUT: file handler could not parse json file: %v", err))
+		return f.writeObstacleLUT(obstacles, g)
+	}
 
 	oLUT := make(obstacleLUT, g.basePixels)
 	for _, e := range entries {
@@ -126,9 +132,12 @@ func (f fileHandler) writeObstacleLUT(obstacles obstacles, g grid) obstacleLUT {
 		entries = append(entries, obstacleLUTEntry{Key: k, Value: v})
 	}
 
-	data, _ := json.Marshal(entries)
+	data, err := json.Marshal(entries)
+	if err != nil {
+		panic(err)
+	}
 	fileName := f.fileName(fObstacle, obstacles.key())
-	err := os.WriteFile(fmt.Sprintf("%s/%s", f.directoryName, fileName), data, 0644)
+	err = os.WriteFile(fmt.Sprintf("%s/%s", f.directoryName, fileName), data, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -165,7 +174,13 @@ func (f fileHandler) readNodeLUT(nodes nodes, obstacleLUT obstacleLUT, g grid) n
 	}
 
 	entries := make([]nodeLUTEntry, 0, g.basePixels)
-	json.Unmarshal(bytes, &entries)
+	if err := json.Unmarshal(bytes, &entries); err != nil {
+		logger.log(
+			errorLevel,
+			setupLogic,
+			fmt.Sprintf("fileHandler.readNodeLUT: file handler could not parse json file: %v", err))
+		return f.writeNodeLUT(nodes, obstacleLUT, g)
+	}
 
 	nLUT := make(nodeLUT, g.basePixels)
 	for _, e := range entries {
@@ -196,9 +211,12 @@ func (f fileHandler) writeNodeLUT(nodes nodes, obstacleLUT obstacleLUT, g grid) 
 		entries = append(entries, nodeLUTEntry{Key: k, Value: v})
 	}
 
-	data, _ := json.Marshal(entries)
+	data, err := json.Marshal(entries)
+	if err != nil {
+		panic(err)
+	}
 	fileName := f.fileName(fNode, nodes.key())
-	err := os.WriteFile(fmt.Sprintf("%s/%s", f.directoryName, fileName), data, 0644)
+	err = os.WriteFile(fmt.Sprintf("%s/%s", f.directoryName, fileName), data, 0644)
 	if err != nil {
 		panic(err)
 	}
