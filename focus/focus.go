@@ -141,33 +141,6 @@ func (g *Game) Update() error {
 				log.Fatal(g.err)
 			}
 		}
-
-		go func() {
-			for {
-				select {
-				case <-g.secondTicker.C:
-					g.overwriteLastSecond()
-				case <-g.minuteTicker.C:
-					durationLeft := g.timerDurationLeft - (time.Since(g.sessionStartTime))
-					minsLeft := int(durationLeft.Minutes())
-					secsLeft := int(durationLeft.Seconds()) - minsLeft*60
-
-					if g.minuteDurationToggle > g.logMinsElapsedThresholdMins {
-						_, g.err = fmt.Fprintf(g.logFile,
-							"%*.1f%% %s %*d minutes %0*d seconds left\n",
-							g.logPercentPadding,
-							g.progressPercent,
-							time.Now().Format(g.timeLayout),
-							g.logMinutePadding,
-							minsLeft,
-							g.logSecondPadding,
-							secsLeft)
-					}
-				default:
-					time.Sleep(1 * time.Microsecond)
-				}
-			}
-		}()
 	}
 
 	if g.intProgressPercent == maxPercentage {
@@ -181,8 +154,6 @@ func (g *Game) Update() error {
 func (g *Game) startSessionTimer() {
 	g.timerSessionStarted = true
 	g.sessionStartTime = time.Now()
-	g.minuteTicker = *time.NewTicker(1 * time.Minute)
-	g.secondTicker = *time.NewTicker(1 * time.Second)
 
 	if !g.isTimerSetToUseLogFileProgress() {
 		g.timerDurationTotal = time.Duration(g.minuteDurationToggle) * time.Minute
@@ -194,6 +165,35 @@ func (g *Game) startSessionTimer() {
 	}
 
 	g.acquireFileLock()
+	g.minuteTicker = *time.NewTicker(1 * time.Minute)
+	g.secondTicker = *time.NewTicker(1 * time.Second)
+	go g.tickLogFile()
+}
+
+// write to the log file on each ticker tick.
+func (g *Game) tickLogFile() {
+	for {
+		select {
+		case <-g.secondTicker.C:
+			g.overwriteLastSecond()
+		case <-g.minuteTicker.C:
+			durationLeft := g.timerDurationLeft - (time.Since(g.sessionStartTime))
+			minsLeft := int(durationLeft.Minutes())
+			secsLeft := int(durationLeft.Seconds()) - minsLeft*60
+
+			if g.minuteDurationToggle > g.logMinsElapsedThresholdMins {
+				_, g.err = fmt.Fprintf(g.logFile,
+					"%*.1f%% %s %*d minutes %0*d seconds left\n",
+					g.logPercentPadding,
+					g.progressPercent,
+					time.Now().Format(g.timeLayout),
+					g.logMinutePadding,
+					minsLeft,
+					g.logSecondPadding,
+					secsLeft)
+			}
+		}
+	}
 }
 
 // entry point before event loop.
