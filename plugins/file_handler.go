@@ -89,7 +89,7 @@ func (f fileHandler) readObstacleLUT(obstacles obstacles, g grid) obstacleLUT {
 		return f.writeObstacleLUT(obstacles, g)
 	}
 
-	entries := make([]obstacleLUTEntry, g.basePixels)
+	entries := make([]obstacleLUTEntry, 0, g.basePixels)
 	json.Unmarshal(bytes, &entries)
 
 	oLUT := make(obstacleLUT, g.basePixels)
@@ -120,7 +120,7 @@ func (f fileHandler) readObstacleLUT(obstacles obstacles, g grid) obstacleLUT {
 func (f fileHandler) writeObstacleLUT(obstacles obstacles, g grid) obstacleLUT {
 	oLUT := obstacles.setupObstacleLUT(g)
 
-	entries := make([]obstacleLUTEntry, g.basePixels)
+	entries := make([]obstacleLUTEntry, 0, len(oLUT))
 	for k, v := range oLUT {
 		entries = append(entries, obstacleLUTEntry{Key: k, Value: v})
 	}
@@ -162,7 +162,7 @@ func (f fileHandler) readNodeLUT(nodes nodes, obstacleLUT obstacleLUT, g grid) n
 		return f.writeNodeLUT(nodes, obstacleLUT, g)
 	}
 
-	entries := make([]nodeLUTEntry, g.basePixels)
+	entries := make([]nodeLUTEntry, 0, g.basePixels)
 	json.Unmarshal(bytes, &entries)
 
 	nLUT := make(nodeLUT, g.basePixels)
@@ -189,7 +189,7 @@ func (f fileHandler) readNodeLUT(nodes nodes, obstacleLUT obstacleLUT, g grid) n
 func (f fileHandler) writeNodeLUT(nodes nodes, obstacleLUT obstacleLUT, g grid) nodeLUT {
 	nLUT := nodes.setupNodeLUT(obstacleLUT, g)
 
-	entries := make([]nodeLUTEntry, g.basePixels)
+	entries := make([]nodeLUTEntry, 0, len(nLUT))
 	for k, v := range nLUT {
 		entries = append(entries, nodeLUTEntry{Key: k, Value: v})
 	}
