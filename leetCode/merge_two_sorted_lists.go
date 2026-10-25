@@ -12,24 +12,24 @@ type ListNode struct {
 
 func mergeTwoSortedLists(list1 *ListNode, list2 *ListNode) *ListNode {
 	dummy := &ListNode{}
-	ptr := dummy
+	curr := dummy
+	p1, p2 := list1, list2
 
-	for list1 != nil && list2 != nil {
-		if list1.Val < list2.Val {
-			ptr.Next = list1
-			list1 = list1.Next
+	for p1 != nil && p2 != nil {
+		if p1.Val <= p2.Val {
+			curr.Next = p1
+			p1 = p1.Next
 		} else {
-			ptr.Next = list2
-			list2 = list2.Next
+			curr.Next = p2
+			p2 = p2.Next
 		}
-		ptr = ptr.Next
+		curr = curr.Next
 	}
-
-	if list1 != nil {
-		ptr.Next = list1
+	if p1 != nil {
+		curr.Next = p1
 	}
-	if list2 != nil {
-		ptr.Next = list2
+	if p2 != nil {
+		curr.Next = p2
 	}
 
 	return dummy.Next
