@@ -1,4 +1,7 @@
 // https://leetcode.com/problems/isomorphic-strings/
+// N is the max length of s and t
+// time complexity is O(N)
+// space complexity is O(N)
 
 package main
 
