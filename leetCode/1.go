@@ -5,7 +5,7 @@
 
 package main
 
-func twoSum1(nums []int, target int) []int {
+func twoSum(nums []int, target int) []int {
 	complements := make(map[int]int)
 
 	for ni, n := range nums {
@@ -15,5 +15,5 @@ func twoSum1(nums []int, target int) []int {
 		complements[target-n] = ni
 	}
 
-	panic("twoSum: no solution found")
+	panic("no answer found")
 }

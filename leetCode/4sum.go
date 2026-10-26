@@ -16,7 +16,7 @@ func kSum(nums []int, target, start, k int) [][]int {
 	var ans [][]int
 
 	if k == 2 {
-		return twoSum(nums, target, start)
+		return twoSumFunc(nums, target, start)
 	}
 
 	for i := start; i < len(nums); i++ {
@@ -31,7 +31,7 @@ func kSum(nums []int, target, start, k int) [][]int {
 	return ans
 }
 
-func twoSum(nums []int, target, l int) [][]int {
+func twoSumFunc(nums []int, target, l int) [][]int {
 	var ans [][]int
 	r := len(nums) - 1
 	for l < r {
