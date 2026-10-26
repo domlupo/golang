@@ -1,4 +1,7 @@
 // https://leetcode.com/problems/majority-element/
+// N is the length of nums
+// time complexity is O(N)
+// space complexity is O(1)
 
 package main
 
