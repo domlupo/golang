@@ -1,4 +1,7 @@
 // https://leetcode.com/problems/palindrome-linked-list/
+// N is the number of nodes in linked list
+// time complexity is O(N)
+// space complexity is O(1)
 
 package main
 
@@ -15,14 +18,13 @@ func isPalindromeLinkedList(head *ListNode) bool {
 	var prev *ListNode
 	curr := slow
 	for curr != nil {
-		save := curr.Next
-		curr.Next = prev
-		prev, curr = curr, save
+		save := prev
+		prev, curr = curr, curr.Next
+		prev.Next = save
 	}
-	rev := prev
 
 	// compare
-	p1 := rev
+	p1 := prev
 	p2 := head
 	for p1 != nil && p2 != nil {
 		if p1.Val != p2.Val {
