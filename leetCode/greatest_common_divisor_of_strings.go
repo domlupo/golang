@@ -7,10 +7,10 @@ func gcdOfStrings(str1 string, str2 string) string {
 		return ""
 	}
 
-	a, b := len(str1), len(str2)
-	for b != 0 {
-		a, b = b, a%b
+	gcd, rem := len(str1), len(str2)
+	for rem != 0 {
+		gcd, rem = rem, gcd%rem
 	}
 
-	return str1[0:a]
+	return str1[0:gcd]
 }

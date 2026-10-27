@@ -244,11 +244,14 @@ count = 3
 
 ### Greatest Common Divisor found from Euclid's algorithm
 
-func gcd(v1, v2 int) int{
-  for v2 != 0 {
-    v1, v2 = v2, v1%v2
+gcd does not have to be > rem because on the first for loop they will
+switch values and then rem will begin to reduce to 0.
+
+func calculate(gcd, rem int) int{
+  for rem != 0 {
+    gcd, rem = rem, gcd%rem
   }
-  return v1
+  return gcd
 }
 
 ### strings.Join(x, "")
