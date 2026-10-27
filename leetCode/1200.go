@@ -1,7 +1,7 @@
 // https://leetcode.com/problems/minimum-absolute-difference/
-// N is the length of nums
-// time complexity is O(N)
-// space complexity is O(N)
+// N is the length of arr
+// time complexity is O(N*log(N))
+// space complexity is O(log(N)). Golang uses pdqsort.
 
 package main
 
