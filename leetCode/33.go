@@ -6,10 +6,9 @@
 package main
 
 func search33(nums []int, target int) int {
-	var l int
-	r := len(nums) - 1
+	l, r := 0, len(nums)-1
 
-	// find split
+	// set both l and r to split point which is the lowest value in nums
 	for l < r {
 		m := (l + r) / 2
 		if nums[m] < nums[len(nums)-1] {
