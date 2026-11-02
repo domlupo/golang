@@ -1,7 +1,7 @@
 // https://leetcode.com/problems/longest-substring-without-repeating-characters/
 // N is the length of s
 // time complexity is O(N)
-// space complexity is O(1)
+// space complexity is O(1) because at most 26 characters
 
 package main
 
