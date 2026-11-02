@@ -6,8 +6,8 @@
 package main
 
 func maxArea(height []int) int {
-	var ans, l int
-	r := len(height) - 1
+	var ans int
+	l, r := 0, len(height)-1
 
 	for l < r {
 		w := r - l
