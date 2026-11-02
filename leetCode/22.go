@@ -8,20 +8,22 @@ package main
 
 func generateParenthesis(n int) []string {
 	var ans []string
-	backtrack(&ans, "", 0, 0, n*2)
+	backtrack22(&ans, []byte{}, n*2, 0, 0)
 	return ans
 }
 
-func backtrack(ans *[]string, str string, l, r, sum int) {
-	if r > l || l > sum/2 {
-		return
-	} else if l+r == sum {
-		*ans = append(*ans, str)
+func backtrack22(ans *[]string, comb []byte, size, l, r int) {
+	if len(comb) == size {
+		*ans = append(*ans, string(comb))
 		return
 	}
 
-	backtrack(ans, str+"(", l+1, r, sum)
-	backtrack(ans, str+")", l, r+1, sum)
+	if l+1 <= size/2 {
+		backtrack22(ans, append(comb, '('), size, l+1, r)
+	}
+	if r+1 <= l {
+		backtrack22(ans, append(comb, ')'), size, l, r+1)
+	}
 }
 
 // cancel if right is greater than left or left greater than half
