@@ -7,19 +7,19 @@ package main
 
 // single pass solution
 func sortColors(nums []int) {
-	var l, curr int
-	r := len(nums) - 1
+	i, l, r := 0, 0, len(nums)-1
 
-	for curr <= r {
-		if nums[curr] == 0 {
-			nums[l], nums[curr] = nums[curr], nums[l]
+	for i <= r {
+		switch nums[i] {
+		case 0:
+			nums[l], nums[i] = nums[i], nums[l]
 			l++
-			curr++
-		} else if nums[curr] == 2 {
-			nums[r], nums[curr] = nums[curr], nums[r]
+			i++
+		case 2:
+			nums[r], nums[i] = nums[i], nums[r]
 			r--
-		} else {
-			curr++
+		default:
+			i++
 		}
 	}
 }
@@ -36,7 +36,7 @@ func sortColors1(nums []int) {
 		}
 	}
 
-	for i := 0; i < len(nums); i++ {
+	for i := range nums {
 		if zeros > 0 {
 			nums[i] = 0
 			zeros--
