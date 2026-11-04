@@ -6,24 +6,23 @@
 package main
 
 func isValidSudoku(board [][]byte) bool {
-	var rows, cols, boxes [9]int
-	for r := range 9 {
-		for c := range 9 {
+	var rows, cols, squares [9]int
+
+	for r := range board {
+		for c := range board[0] {
 			if board[r][c] == '.' {
 				continue
 			}
 
-			v := board[r][c]
-			bit := 1 << (v - 1)
-			i := (r/3)*3 + c/3
-
-			if rows[r]&bit != 0 || cols[c]&bit != 0 || boxes[i]&bit != 0 {
+			b := 1 << int(board[r][c]-1)
+			s := ((r / 3) * 3) + c/3
+			if rows[r]&b != 0 || cols[c]&b != 0 || squares[s]&b != 0 {
 				return false
 			}
 
-			rows[r] |= bit
-			cols[c] |= bit
-			boxes[i] |= bit
+			rows[r] |= b
+			cols[c] |= b
+			squares[s] |= b
 		}
 	}
 
