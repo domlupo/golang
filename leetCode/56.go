@@ -8,7 +8,6 @@ package main
 import "slices"
 
 func merge56(intervals [][]int) [][]int {
-	var ans [][]int
 	slices.SortFunc(intervals, func(a, b []int) int {
 		if a[0] < b[0] {
 			return -1
@@ -17,16 +16,16 @@ func merge56(intervals [][]int) [][]int {
 		}
 	})
 
-	merged := intervals[0]
-	for i := 1; i < len(intervals); i++ {
-		if merged[1] >= intervals[i][0] {
-			r := max(merged[1], intervals[i][1])
-			merged = []int{merged[0], r}
+	var ans [][]int
+	m := intervals[0]
+	for _, inter := range intervals {
+		if m[1] < inter[0] {
+			ans = append(ans, m)
+			m = inter
 		} else {
-			ans = append(ans, merged)
-			merged = intervals[i]
+			m[1] = max(inter[1], m[1])
 		}
 	}
 
-	return append(ans, merged)
+	return append(ans, m)
 }
